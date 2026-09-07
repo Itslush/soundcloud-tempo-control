@@ -26,6 +26,7 @@ jobs:
       - run: npm run release
         env:
           ASTRO_TELEMETRY_DISABLED: '1'
+          PUBLIC_API_BASE: 'https://88.96.45.138/soundcloud-tempo-control/'
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

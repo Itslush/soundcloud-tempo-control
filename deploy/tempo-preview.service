@@ -1,0 +1,27 @@
+[Unit]
+Description=SoundCloud Tempo Control preview
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tempo
+Group=tempo
+WorkingDirectory=/opt/tempo-preview
+Environment=HOST=127.0.0.1
+Environment=PORT=4322
+Environment=PUBLIC_ORIGIN=https://itslush.github.io
+Environment=TRUST_LOOPBACK_PROXY=1
+ExecStart=/opt/node-v24.20.0-linux-x64/bin/node /opt/tempo-preview/server/app.mjs
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+MemoryMax=320M
+TasksMax=32
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

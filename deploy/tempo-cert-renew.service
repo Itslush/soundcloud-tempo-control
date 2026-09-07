@@ -1,0 +1,7 @@
+[Unit]
+Description=Renew Tempo preview HTTPS certificate
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/tempo-certbot/bin/certbot renew --quiet --deploy-hook "/usr/bin/systemctl reload nginx"

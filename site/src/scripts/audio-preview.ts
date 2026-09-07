@@ -348,7 +348,7 @@ export class AudioPreview {
     let response: Response;
     try {
       response = await fetch(
-        `${import.meta.env.BASE_URL}api/resolve?url=${encodeURIComponent(url)}`,
+        `${import.meta.env.PUBLIC_API_BASE || import.meta.env.BASE_URL}api/resolve?url=${encodeURIComponent(url)}`,
         {
           signal: AbortSignal.any([
             this.resolveRequest.signal,

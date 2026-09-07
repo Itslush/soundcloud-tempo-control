@@ -1,6 +1,7 @@
 import { createServer } from 'node:http';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { isIP } from 'node:net';
 import { createSoundCloud, ServiceError } from './soundcloud.mjs';
 import { createStaticDelivery, wantsHtml } from './static-delivery.mjs';
 import config from '../scripts/config.cjs';
@@ -25,6 +26,7 @@ export function createApp({
   basePath = siteUrl ? new URL(siteUrl).pathname : '/',
   siteRoot = root,
   staticOptions,
+  trustLoopbackProxy = process.env.TRUST_LOOPBACK_PROXY === '1',
 } = {}) {
   const prefix = '/' + basePath.split('/').filter(Boolean).join('/');
   const base = prefix === '/' ? '/' : prefix + '/';
@@ -53,6 +55,8 @@ export function createApp({
         }
         if (request.headers.origin && request.headers.origin !== allowedOrigin)
           throw new ServiceError(403, 'Request origin is not allowed.');
+        response.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+        response.setHeader('Vary', 'Origin');
         if (pathname === '/api/status')
           return send(response, 200, { soundcloud: service.configured });
         if (pathname !== '/api/resolve')
@@ -60,7 +64,15 @@ export function createApp({
         const now = Date.now();
         for (const [key, entry] of limits)
           if (entry.until <= now) limits.delete(key);
-        const ip = request.socket.remoteAddress;
+        const peer = request.socket.remoteAddress;
+        const forwarded = request.headers['x-real-ip'];
+        const ip =
+          trustLoopbackProxy &&
+          ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(peer) &&
+          typeof forwarded === 'string' &&
+          isIP(forwarded)
+            ? forwarded
+            : peer;
         if (!limits.has(ip) && limits.size >= 2048)
           throw new ServiceError(503, 'Preview is busy. Try again shortly.');
         const entry = limits.get(ip) || { count: 0, until: now + 60000 };

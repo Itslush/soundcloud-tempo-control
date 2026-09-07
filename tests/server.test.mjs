@@ -90,6 +90,7 @@ async function staticFixture(t, options = {}) {
   ]);
   const app = createApp({
     siteRoot,
+    basePath: '/',
     service: { configured: false },
     ...options,
   });
@@ -795,6 +796,7 @@ test('serves assets and API under a configured deployment prefix', async () => {
 
 test('HTTP surface limits requests, methods and cross-site access', async () => {
   const app = createApp({
+    basePath: '/',
     origin: 'https://tempo.test',
     service: { configured: true, resolve: async () => track },
   });
@@ -804,6 +806,14 @@ test('HTTP surface limits requests, methods and cross-site access', async () => 
     assert.deepEqual(await (await fetch(base + '/api/status')).json(), {
       soundcloud: true,
     });
+    const cors = await fetch(base + '/api/status', {
+      headers: { Origin: 'https://tempo.test' },
+    });
+    assert.equal(
+      cors.headers.get('access-control-allow-origin'),
+      'https://tempo.test',
+    );
+    assert.equal(cors.headers.get('vary'), 'Origin');
     assert.equal(
       (await fetch(base + '/api/resolve', { method: 'POST' })).status,
       405,
@@ -829,6 +839,36 @@ test('HTTP surface limits requests, methods and cross-site access', async () => 
   }
 });
 
+test('proxy client addresses are trusted only when explicitly enabled', async (t) => {
+  for (const trustLoopbackProxy of [false, true]) {
+    const app = createApp({
+      basePath: '/',
+      trustLoopbackProxy,
+      service: { configured: true, resolve: async () => track },
+    });
+    await new Promise((resolve) => app.listen(0, '127.0.0.1', resolve));
+    t.after(() => {
+      app.closeAllConnections();
+      app.close();
+    });
+    const url = `http://127.0.0.1:${app.address().port}/api/resolve`;
+    for (let i = 0; i < 20; i++) {
+      assert.equal(
+        (await fetch(url, { headers: { 'X-Real-IP': '192.0.2.1' } })).status,
+        200,
+      );
+    }
+    assert.equal(
+      (await fetch(url, { headers: { 'X-Real-IP': '192.0.2.1' } })).status,
+      429,
+    );
+    assert.equal(
+      (await fetch(url, { headers: { 'X-Real-IP': '192.0.2.2' } })).status,
+      trustLoopbackProxy ? 200 : 429,
+    );
+  }
+});
+
 test('disconnecting a browser aborts its pending server request', async () => {
   let received;
   let aborted;
@@ -839,6 +879,7 @@ test('disconnecting a browser aborts its pending server request', async () => {
     aborted = resolve;
   });
   const app = createApp({
+    basePath: '/',
     service: {
       configured: true,
       resolve: (url, signal) =>

@@ -11,7 +11,7 @@ interface Props {
 }
 const {
   title,
-  description = 'Tempo control, saved speeds and shareable timelines. Right inside SoundCloud.',
+  description = 'Change playback speed on SoundCloud. Save speeds for individual tracks and share tempo timelines.',
 } = Astro.props;
 const links = [
   ['Download', ''],
@@ -44,11 +44,7 @@ const links = [
     <header class="site-header">
       <div class="site-header-inner shell">
         <a class="brand" href={route()} aria-label="Tempo Control home"
-          ><Logo /><span
-            ><strong>Tempo Control</strong><small
-              >For SoundCloud · v{release.version}</small
-            ></span
-          ></a
+          ><Logo /><strong>Tempo Control</strong></a
         >
         <nav aria-label="Main navigation">
           {

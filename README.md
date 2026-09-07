@@ -19,7 +19,7 @@ An unofficial SoundCloud playback controller with per-track speeds, optional pit
 
 ## Status
 
-This is a source preview, not a fully verified release. Extreme slowdown can produce unstable pitch, and the latest local browser run passed 18 of 19 suites, with an audio-boundary capture failure still open. The website and backend are not deployed. See the [current audit](docs/MAINTAINABILITY.md) for results and known limitations.
+This is a source preview, not a fully verified release. Extreme slowdown can produce unstable pitch, and the latest local browser run passed 18 of 19 suites, with an audio-boundary capture failure still open. The website is hosted on GitHub Pages; backend deployment is pending. See the [current audit](docs/MAINTAINABILITY.md) for results and known limitations.
 
 ## Architecture
 
@@ -37,22 +37,13 @@ Source-position checks use a 50 µs tolerance against the audio-context clock, n
 
 Muted live tests, generated-signal tests and sampled-output checks cover different risks. None substitutes for continuous captured audio or listening. Exact artifact hashes, failed runs and remaining gates are recorded in [playback evidence](docs/LOW_RATE_PLAYBACK.md) and [release review](docs/CODE_REVIEW.md).
 
-## Run locally
+## Use it
 
-Use Node 24, npm and Python 3.12 or newer. Open `soundcloud-tempo-control.code-workspace` in your editor, then:
+Visit [SoundCloud Tempo Control](https://itslush.github.io/soundcloud-tempo-control/) for installation, the guide and the interactive preview. Install the script through a userscript manager to use it on SoundCloud.
 
-```sh
-npm ci --ignore-scripts
-npm run setup:backend
-npm run build
-npm start
-```
+The website is static. SoundCloud-link preview loading is pending backend deployment; you can preview a local audio file or use the synth fallback. Local files stay in your browser.
 
-Open http://127.0.0.1:4322/. SoundCloud links load through yt-dlp without API credentials. Backend setup installs a pinned version in a local Python environment. The synth sample and local audio preview also work without that setup. See [backend setup](docs/BACKEND.md).
-
-Press Play to load the default Drown (Sewerslvt Remix) demo. It does not fetch or play on page load. If loading fails, the demo offers a synth sample instead. Use the track disclosure to choose another SoundCloud link or local file.
-
-`npm run dev` starts the Astro development site. `npm start` serves the built site and API together. Rebuild after changing source. No command publishes the project.
+For contributor setup, see [development](docs/DEVELOPMENT.md).
 
 ## Project layout
 

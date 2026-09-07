@@ -1,0 +1,16 @@
+{
+  "revision": "57b93f4e9206a089a45387eaa39bdc9f310d3308",
+  "sha256": "fe0e23b6bb5dbffb231a91e7dc39f9d2a7d10c7f793fb0237d819ca748f7f778",
+  "replacements": [
+    {
+      "find": "audioSamples += count;",
+      "replace": "inputSamples += count;",
+      "count": 1
+    },
+    {
+      "find": "++audioBufferIndex;",
+      "replace": "audioSamples = bufferEnd;\n\t\t\t\t\t++audioBufferIndex;",
+      "count": 1
+    }
+  ]
+}

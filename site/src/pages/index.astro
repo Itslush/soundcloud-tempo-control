@@ -1,0 +1,139 @@
+---
+import Page from '../layouts/Page.astro';
+import Icon from '../components/Icon.astro';
+import TimelineDemo from '../components/TimelineDemo.astro';
+import Capture from '../components/Capture.astro';
+import CaptureViewer from '../components/CaptureViewer.astro';
+import { installUrl, route, release } from '../lib/release';
+---
+
+<Page title="SoundCloud tempo control">
+  <section class="hero shell" aria-labelledby="hero-title">
+    <div class="hero-copy">
+      <h1 id="hero-title">SoundCloud,<br />{' '}at your tempo.</h1><p>
+        Adjust speed. Save and share your changes.
+      </p><div class="hero-actions">
+        <a class="button primary" href={installUrl}
+          ><Icon name="download" />Install userscript</a
+        ><a class="text-link" href="#install"
+          >Setup guide<Icon name="arrow" size={20} /></a
+        >
+      </div>
+    </div>
+    <TimelineDemo />
+  </section>
+  <section class="product-proof shell" aria-labelledby="proof-title">
+    <article class="proof-row proof-player">
+      <div class="proof-copy">
+        <h2 id="proof-title">Right in the player.</h2>
+        <p>Set a speed. Tap the bookmark to remember it for that track.</p>
+      </div>
+      <Capture
+        image="player-controls.png"
+        full="soundcloud-player.png"
+        title="Tempo controls in SoundCloud"
+        variant="capture-player"
+        alt="Real player controls: 0.9× speed, adjustment arrows, tempo slider, filled saved bookmark and settings gear."
+      />
+    </article>
+    <article class="proof-row">
+      <div class="proof-copy">
+        <h2>Tempo timelines</h2>
+        <p>
+          Start at 1×, slow to 0.75×, then ease back to 0.90×. Set the fade
+          duration for each change.
+        </p>
+      </div>
+      <Capture
+        image="timeline-curve.png"
+        mobile="timeline-detail.png"
+        full="soundcloud-timeline.png"
+        title="Saved tempo timeline"
+        focusAt={[0.6, 0.37]}
+        variant="capture-timeline"
+        alt="The real editor's saved curve moves from 1× to 0.75× and back to 0.9×, joined by smooth fades."
+      />
+    </article>
+    <article class="proof-row">
+      <div class="proof-copy">
+        <h2>Saved speeds</h2>
+        <p>Save a different speed for each track.</p>
+      </div>
+      <Capture
+        image="saved-tracks.png"
+        mobile="saved-tracks-mobile.png"
+        full="soundcloud-settings.png"
+        title="Saved track tempos"
+        variant="capture-memory"
+        alt="One track with a saved 0.9× speed and tempo timeline in the settings panel."
+      />
+    </article>
+    <article class="proof-row">
+      <div class="proof-copy">
+        <h2>Share a timeline</h2>
+        <p>
+          A tempo link carries the points, fades and pitch mode. Your friend
+          previews it, then chooses Apply once or Save timeline.
+        </p>
+        <p class="proof-detail">
+          Both listeners need Tempo Control. <a href={route('guide/#sharing')}
+            >How sharing works</a
+          >
+        </p>
+      </div>
+      <Capture
+        image="share-actions.png"
+        mobile="share-actions-mobile.png"
+        full="shared-preview.png"
+        title="Receiving a shared timeline"
+        focusAt={[0.85, 0.89]}
+        variant="capture-sharing"
+        alt="The received-link preview with enabled Apply once and Save timeline buttons."
+      />
+    </article>
+  </section>
+  <section
+    class="install-section shell"
+    id="install"
+    aria-labelledby="install-title"
+  >
+    <div>
+      <h2 id="install-title">Install Tempo Control</h2><p>
+        Free to use. No account beyond SoundCloud.
+      </p><a class="text-link" href={route('guide/')}
+        >Full setup guide<Icon name="arrow" size={20} /></a
+      >
+    </div>
+    <ol class="install-steps">
+      <li>
+        <h3>Get Violentmonkey</h3><p>
+          A userscript manager runs Tempo Control in your browser.
+        </p><a
+          href="https://violentmonkey.github.io/get-it/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Get Violentmonkey<Icon name="external" size={15} /></a
+        >
+      </li>
+      <li>
+        <h3>Install Tempo Control</h3><p>
+          Open the script, then confirm the installation in your manager.
+        </p><a href={installUrl}
+          >Install v{release.version}<Icon name="download" size={16} /></a
+        >
+      </li>
+      <li>
+        <h3>Open SoundCloud</h3><p>
+          Reload the page and choose a track. The tempo slider sits in the
+          player.
+        </p><a
+          href="https://soundcloud.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Open SoundCloud<Icon name="external" size={15} /></a
+        >
+      </li>
+    </ol>
+  </section>
+  <CaptureViewer />
+</Page>

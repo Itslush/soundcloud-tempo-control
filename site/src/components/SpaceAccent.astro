@@ -1,0 +1,55 @@
+---
+const stars = [
+  [38, 72, 'diamond', 0.7, 0.35, 0],
+  [184, 126, 'ray', 1.15, 0.48, 12],
+  [346, 44, 'pair', 0.8, 0.4, 30],
+  [594, 118, 'diamond', 0.65, 0.3, 0],
+  [826, 64, 'ray', 0.8, 0.4, 0],
+  [912, 228, 'diamond', 0.8, 0.36, 0],
+  [68, 318, 'ray', 0.7, 0.33, 18],
+  [262, 246, 'diamond', 0.8, 0.4, 0],
+  [458, 198, 'pair', 0.6, 0.32, -24],
+  [718, 286, 'ray', 1.3, 0.5, 0],
+  [846, 398, 'diamond', 0.65, 0.3, 0],
+  [144, 480, 'pair', 0.7, 0.34, 15],
+  [364, 386, 'ray', 0.75, 0.38, 40],
+  [540, 454, 'diamond', 0.7, 0.35, 0],
+  [64, 640, 'ray', 1.1, 0.45, 0],
+  [282, 598, 'diamond', 0.65, 0.3, 0],
+  [462, 714, 'ray', 0.65, 0.36, 24],
+  [668, 580, 'pair', 0.8, 0.36, -18],
+  [872, 678, 'ray', 1.2, 0.48, 10],
+  [170, 776, 'diamond', 0.8, 0.4, 0],
+  [610, 794, 'diamond', 0.6, 0.3, 0],
+  [776, 758, 'ray', 0.6, 0.32, 45],
+] as const;
+---
+
+<svg class="space-accent" aria-hidden="true" focusable="false">
+  <defs>
+    <path id="space-ray" d="M0-4 .7-1 3.5 0 .7.8 0 4.5-.7.8-3.5 0-.7-1Z"></path>
+    <path id="space-diamond" d="M0-1.8 1.1 0 0 1.8-1.1 0Z"></path>
+    <g id="space-pair">
+      <circle r="0.85"></circle>
+      <path d="M4-3.5 4.65-2.5 4-1.5 3.35-2.5Z"></path>
+    </g>
+    <pattern
+      id="space-field"
+      width="960"
+      height="840"
+      patternUnits="userSpaceOnUse"
+    >
+      {
+        stars.map(([x, y, shape, scale, opacity, rotation], index) => (
+          <use
+            href={`#space-${shape}`}
+            transform={`translate(${x} ${y}) rotate(${rotation}) scale(${scale})`}
+            fill={index % 3 ? 'var(--star-cool)' : 'var(--star-warm)'}
+            opacity={opacity}
+          />
+        ))
+      }
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#space-field)"></rect>
+</svg>

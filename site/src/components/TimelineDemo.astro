@@ -1,0 +1,257 @@
+---
+import Icon from './Icon.astro';
+import Select from './Select.astro';
+import NumberField from './NumberField.astro';
+import { demoTrack } from '../lib/demo-track';
+---
+
+<figure
+  class="timeline-demo"
+  data-mode="timeline"
+  data-compare="adjusted"
+  data-playback="idle"
+>
+  <div class="demo-surface">
+    <header class="demo-heading">
+      <strong>Try a different tempo</strong>
+    </header>
+    <div class="preview-meta">
+      <span id="preview-title">{demoTrack.title}</span>
+    </div>
+    <div class="preview-transport">
+      <button type="button" id="preview-play">Play</button>
+      <output id="preview-readout" aria-label="Current playback"
+        >0:00 · 1× now</output
+      >
+      <button type="button" id="preview-compare" aria-pressed="false" disabled
+        >Listen to original</button
+      >
+      <label class="preview-volume"
+        >Volume<input
+          type="range"
+          id="preview-volume"
+          min="0"
+          max="0.5"
+          step="0.01"
+          value="0.15"
+        /></label
+      >
+    </div>
+    <label class="preview-seek"
+      ><span class="sr-only">Playback position</span><input
+        id="preview-seek"
+        type="range"
+        min="0"
+        max="24"
+        step="0.1"
+        value="0"
+        disabled
+      /></label
+    >
+    <div class="preview-mode-row">
+      <div class="preview-mode" role="group" aria-label="Playback mode">
+        <button id="preview-fixed" type="button" aria-pressed="false"
+          >Fixed speed</button
+        >
+        <button id="preview-timeline" type="button" aria-pressed="true"
+          >Timeline</button
+        >
+      </div>
+      <input
+        id="preview-follow"
+        type="checkbox"
+        checked
+        hidden
+        aria-label="Follow timeline"
+      />
+      <Select
+        id="demo-pitch"
+        label="Demo pitch mode"
+        prefix="Pitch:"
+        value="natural"
+        options={[
+          { value: 'natural', label: 'Natural' },
+          { value: 'preserve', label: 'Preserve key' },
+        ]}
+      />
+      <button type="button" id="demo-copy" disabled
+        ><Icon name="link" size={18} /><span id="demo-copy-label"
+          >Copy link</span
+        ></button
+      >
+    </div>
+    <div id="preview-fixed-controls" class="simple-control" hidden>
+      <NumberField
+        id="demo-speed-number"
+        label="Fixed playback speed"
+        value={1}
+        min={0.25}
+        max={4}
+        step={0.025}
+        unit="×"
+        class="exact-speed"
+      />
+      <div class="speed-rail">
+        <input
+          id="demo-speed"
+          type="range"
+          min="0.25"
+          max="2"
+          step="0.025"
+          value="1"
+          aria-label="Fixed playback speed slider"
+        />
+        <svg
+          class="speed-ticks"
+          viewBox="0 0 35 6"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <path
+            d={Array.from({ length: 36 }, (_, index) =>
+              index % 5 ? `M${index} 0v3` : '',
+            ).join('')}></path>
+          <path
+            class="major"
+            d={Array.from(
+              { length: 8 },
+              (_, index) => `M${index * 5} 0v6`,
+            ).join('')}></path>
+        </svg>
+      </div>
+    </div>
+    <div class="demo-editor-heading">
+      <strong>Tempo timeline</strong>
+      <span class="legend"
+        ><i></i> Tempo <span class="legend-normal">1× original</span></span
+      >
+    </div>
+    <div class="demo-tools">
+      <button type="button" id="zoom-out" aria-label="Zoom out preview" disabled
+        ><Icon name="minus" size={16} /></button
+      >
+      <button type="button" id="zoom-in" aria-label="Zoom in preview"
+        ><Icon name="plus" size={16} /></button
+      >
+      <span id="demo-zoom">Time zoom 1×</span>
+      <div class="demo-history" role="group" aria-label="Timeline editing">
+        <button id="demo-undo" type="button" disabled>Undo</button>
+        <button id="demo-redo" type="button" disabled>Redo</button>
+        <button id="preview-reset" type="button">Reset demo</button>
+      </div>
+    </div>
+    <svg
+      class="demo-graph"
+      id="demo-graph"
+      viewBox="0 0 800 260"
+      role="group"
+      aria-label="Tempo timeline. Select a point to adjust its speed."
+    >
+      <g id="demo-grid"></g>
+      <path id="demo-curve" fill="none" stroke="var(--accent)" stroke-width="3"
+      ></path>
+      <g id="demo-nodes"></g>
+      <g id="demo-playhead" aria-hidden="true" pointer-events="none">
+        <line
+          x1="0"
+          x2="0"
+          y1="20"
+          y2="212"
+          stroke="var(--ink)"
+          stroke-width="1"
+          stroke-dasharray="3 4"></line>
+        <circle id="demo-playhead-dot" cx="0" cy="130" r="4" fill="var(--ink)"
+        ></circle>
+      </g>
+    </svg>
+    <span id="demo-node-help" class="sr-only"
+      >Drag up or down, or use the arrow keys. Shift changes speed by 0.01.</span
+    >
+    <div class="demo-pan" hidden>
+      <label for="demo-pan">Scroll timeline</label><input
+        id="demo-pan"
+        type="range"
+        value="0"
+        min="0"
+        max="0"
+        step="0.1"
+      />
+    </div>
+    <div class="demo-point-editor">
+      <NumberField
+        id="demo-point-rate"
+        label="Target speed"
+        value={0.9}
+        min={0.25}
+        max={2}
+        step={0.025}
+        unit="×"
+        visibleLabel
+      />
+    </div>
+    <details class="demo-details">
+      <summary>Point timing</summary>
+      <div class="point-fields">
+        <NumberField
+          id="demo-point-time"
+          label="Reach at (s)"
+          actionLabel="point time"
+          value={18}
+          min={0}
+          step={0.1}
+          visibleLabel
+        />
+        <NumberField
+          id="demo-point-fade"
+          label="Fade (s)"
+          actionLabel="fade duration"
+          value={8}
+          min={0}
+          step={0.1}
+          visibleLabel
+        />
+      </div>
+    </details>
+    <details class="demo-details" id="preview-loader">
+      <summary>Try your own track</summary>
+      <form id="preview-link-form">
+        <label for="preview-url">SoundCloud link</label>
+        <div class="preview-link-row">
+          <input
+            id="preview-url"
+            type="url"
+            placeholder="https://soundcloud.com/artist/track"
+            required
+            maxlength="2048"
+          />
+          <button type="submit">Load</button>
+        </div>
+      </form>
+      <label class="preview-file"
+        >Or choose an audio file<input
+          id="preview-file"
+          type="file"
+          accept="audio/*,.flac,.wav,.mp3,.m4a,.ogg"
+        /></label
+      >
+      <a id="preview-credit" hidden target="_blank" rel="noopener noreferrer"
+        >Listen on SoundCloud</a
+      >
+    </details>
+    <button type="button" id="preview-sample" class="preview-fallback" hidden
+      >Use synth sample</button
+    >
+  </div>
+  <figcaption id="demo-status" role="status"></figcaption>
+  <textarea
+    id="demo-copy-fallback"
+    aria-label="Select and copy the tempo link"
+    readonly
+    hidden></textarea>
+  <noscript
+    ><p>
+      The interactive preview needs JavaScript. Downloads and guides still work.
+    </p></noscript
+  >
+</figure>
+<script src="../scripts/demo.ts"></script>

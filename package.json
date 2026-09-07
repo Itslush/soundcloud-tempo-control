@@ -1,0 +1,43 @@
+{
+  "name": "soundcloud-tempo-control",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SoundCloud tempo userscript and its download website",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "build:script": "node scripts/build-userscript.cjs",
+    "build:playback-candidate": "node tests/build-playback-candidate.cjs",
+    "build": "npm run build:script && astro build --root site",
+    "release": "node scripts/build-userscript.cjs --release && astro build --root site",
+    "dev": "npm run build:script && astro dev --root site --host 127.0.0.1",
+    "preview": "astro preview --root site --host 127.0.0.1",
+    "start": "node --env-file-if-exists=.env server/app.mjs",
+    "setup:backend": "node scripts/setup-backend.mjs",
+    "setup:decoder-probe": "node scripts/setup-decoder-probe.mjs",
+    "test:audio-candidate": "node --test tests/rate-clock.test.mjs tests/bounded-source.test.mjs tests/pcm-window.test.mjs tests/natural-output.test.mjs tests/buffered-transport.test.mjs tests/media-facade.test.mjs tests/playback-gate.test.mjs tests/playback-owner.test.mjs tests/source-binding.test.mjs tests/preserve-output.test.mjs tests/preserve-worklet.test.mjs tests/audio-dependencies.test.mjs tests/buffered-playback.test.cjs tests/output-level.test.cjs tests/wasm-buffered-route.test.cjs tests/wasm-lifecycle.test.cjs tests/audio-bundle.test.cjs tests/tempo-editor-playback.test.mjs",
+    "test:server": "node --test tests/server.test.mjs tests/ytdlp.test.mjs",
+    "test:unit": "node scripts/test-unit.cjs",
+    "test:host-clock": "node --test tests/host-clock.test.mjs tests/soundcloud-host-clock.test.mjs tests/playback-owner-host.test.mjs tests/buffered-playback-host.test.mjs",
+    "test:transfer": "node tests/transfer-budget.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build:script && node --check dist/soundcloud-tempo-control.user.js && node tests/verify-clean-build.cjs && node tests/verify-dependency.cjs && node tests/verify-buffered-cursor.cjs && npm run test:unit",
+    "test:browser": "python tests/run.py",
+    "format": "prettier --write src scripts server tests/*.cjs tests/*.mjs site/src site/astro.config.mjs *.json *.md docs/*.md *.code-workspace .github/workflows/*.yml"
+  },
+  "devDependencies": {
+    "@fontsource-variable/mulish": "5.3.0",
+    "@types/node": "26.4.1",
+    "astro": "7.3.1",
+    "esbuild": "0.28.2",
+    "prettier": "3.6.2",
+    "prettier-plugin-astro": "0.14.1",
+    "typescript": "7.0.2"
+  },
+  "dependencies": {
+    "hls.js": "1.7.2",
+    "mediabunny": "1.55.7"
+  }
+}

@@ -1,0 +1,73 @@
+---
+import Icon from './Icon.astro';
+import { route } from '../lib/release';
+import evidence from '../../../docs/screenshot-evidence.json';
+
+interface Props {
+  image: string;
+  mobile?: string;
+  full: string;
+  title: string;
+  alt: string;
+  variant?: string;
+  focusAt?: [number, number];
+}
+
+const { image, mobile, full, title, alt, variant = '', focusAt } = Astro.props;
+const findCapture = (name: string) => {
+  const capture = evidence.screenshots.find((item) => item.file === name);
+  if (!capture) throw new Error(`Missing verified capture: ${name}`);
+  return capture;
+};
+const desktop = findCapture(image);
+const narrow = mobile ? findCapture(mobile) : null;
+const original = findCapture(full);
+const player = full === 'soundcloud-player.png' ? desktop.clip : null;
+const focus = focusAt
+  ? { x: original.cssWidth * focusAt[0], y: original.cssHeight * focusAt[1] }
+  : player
+    ? { x: player.x + player.width / 2, y: player.y + player.height / 2 }
+    : null;
+---
+
+<figure class:list={['product-capture', variant]}>
+  <a
+    class="capture-link"
+    href={route(`screenshots/${full}`)}
+    target="_blank"
+    rel="noopener noreferrer"
+    data-capture
+    data-title={title}
+    data-native-width={original.cssWidth}
+    data-native-height={original.cssHeight}
+    data-focus-x={focus?.x}
+    data-focus-y={focus?.y}
+    aria-label={`View full interface: ${title}`}
+  >
+    <div class="capture-surface">
+      <picture>
+        {
+          narrow && (
+            <source
+              media="(max-width: 600px)"
+              srcset={route(`screenshots/${mobile}`)}
+              width={narrow.width}
+              height={narrow.height}
+            />
+          )
+        }
+        <img
+          src={route(`screenshots/${image}`)}
+          width={desktop.width}
+          height={desktop.height}
+          loading="lazy"
+          decoding="async"
+          alt={alt}
+        />
+      </picture>
+    </div>
+    <span class="capture-open"
+      >View full interface<Icon name="expand" size={18} /></span
+    >
+  </a>
+</figure>

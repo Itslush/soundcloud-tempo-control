@@ -1,0 +1,42 @@
+---
+import Page from '../layouts/Page.astro';
+import Icon from '../components/Icon.astro';
+import { release, route } from '../lib/release';
+---
+
+<Page
+  title="Support"
+  description="Optional support for SoundCloud Tempo Control. Every feature stays free."
+>
+  <section class="support-page shell">
+    <div class="support-copy">
+      <h1>Support the project</h1><p>
+        Donations are optional. All features are free.
+      </p>
+      {
+        release.paypalUrl ? (
+          <a
+            class="button primary"
+            href={release.paypalUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Icon name="heart" />
+            Support via PayPal
+            <Icon name="external" size={18} />
+          </a>
+        ) : (
+          <p class="small-note">Donations aren’t enabled yet.</p>
+        )
+      }
+      {
+        release.paypalUrl && (
+          <p class="small-note">Opens PayPal. Choose an amount there.</p>
+        )
+      }
+      <a class="text-link" href={route('guide/')}
+        >Setup and help<Icon name="arrow" size={18} /></a
+      >
+    </div>
+  </section>
+</Page>

@@ -1,0 +1,57 @@
+name: Test
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci --ignore-scripts
+      - run: npm run setup:backend
+      - run: npm run setup:decoder-probe
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run build
+        env:
+          ASTRO_TELEMETRY_DISABLED: '1'
+      - run: npm run test:transfer
+      - run: python -m pip install -r tests/requirements.txt
+      - run: python -m playwright install --with-deps chromium
+      - run: python tests/test-transition-completion.py
+      - run: python tests/test-repeat-completion.py
+      - run: python tests/test-baseline-diagnostics.py
+      - run: npm run test:browser
+      - name: Natural output candidate
+        run: |
+          python tests/verify-natural-chunks.py
+          python tests/verify-natural-output.py
+          python tests/verify-natural-truncate.py
+          python tests/verify-buffered-transport.py --local-only
+      - name: Website regressions
+        run: |
+          node server/app.mjs &
+          preview_pid=$!
+          trap 'kill "$preview_pid"' EXIT
+          for attempt in $(seq 1 20); do
+            curl --silent --fail http://127.0.0.1:4322/api/status && break
+            sleep 0.25
+          done
+          python tests/verify-demo.py
+          python tests/verify-site.py
+          python tests/verify-site-presentation.py
+          python tests/verify-number-fields.py
+          python tests/verify-slider-ticks.py
+          python tests/verify-hero.py
+          python tests/verify-captures.py
+          python tests/verify-interface.py
+          python tests/verify-demo-recovery.py
+          python tests/verify-preview-lifecycle.py
+          python tests/verify-navigation.py

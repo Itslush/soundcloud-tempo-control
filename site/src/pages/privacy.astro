@@ -1,0 +1,47 @@
+---
+import Page from '../layouts/Page.astro';
+---
+
+<Page title="Privacy">
+  <article class="reading shell">
+    <h1>Privacy</h1><section>
+      <h2>The userscript</h2><p>
+        Tempo Control stores preferences and saved timelines in your browser’s
+        local storage on SoundCloud. It does not send listening history or those
+        settings to a project server.
+      </p><p>
+        Installation downloads the revision-pinned Signalsmith library from
+        jsDelivr through your userscript manager. Buffered playback loads the
+        checksum-pinned Mediabunny decoder from jsDelivr when needed and reads
+        audio directly from SoundCloud. Your manager also contacts the published
+        update address when checking for updates. SoundCloud’s own service and
+        privacy practices still apply.
+      </p>
+    </section><section>
+      <h2>Shared links</h2><p>
+        A tempo link contains the track path, duration, tempo points, fades and
+        pitch mode in its URL fragment. Anyone you send the link to can read
+        those settings. Fragments are normally not sent in the initial HTTP
+        request, but page scripts and anyone with the link can access them.
+      </p>
+    </section><section>
+      <h2>This website</h2><p>
+        This site includes no analytics, advertising scripts or payment embeds.
+        Fonts and screenshots are served with the site. A hosting provider may
+        keep normal access logs.
+      </p><p>
+        The synth sample and audio files play locally. Chosen files are not
+        uploaded. Loading a SoundCloud link sends that link to this site's
+        backend and SoundCloud. The backend temporarily caches track details and
+        stream links for one minute. Audio streams directly from SoundCloud to
+        your browser. It is not stored by this site. Copy link writes to the
+        clipboard when pressed.
+      </p>
+    </section><section>
+      <h2>Optional support</h2><p>
+        When enabled, the support button opens PayPal. Payment details are
+        handled there, not by this website.
+      </p>
+    </section>
+  </article>
+</Page>

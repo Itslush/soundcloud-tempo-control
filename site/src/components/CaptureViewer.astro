@@ -1,0 +1,41 @@
+---
+import Icon from './Icon.astro';
+---
+
+<dialog class="capture-viewer" aria-labelledby="capture-title">
+  <header class="viewer-header">
+    <h2 id="capture-title"></h2>
+    <button type="button" class="viewer-close" aria-label="Close image viewer"
+      ><Icon name="close" size={20} /><span>Close</span></button
+    >
+  </header>
+  <div class="viewer-tools" role="group" aria-label="Image zoom">
+    <button type="button" class="viewer-fit">Fit</button>
+    <button type="button" class="viewer-actual">Actual size</button>
+    <button type="button" class="viewer-out" aria-label="Zoom out image"
+      ><Icon name="minus" size={18} /></button
+    >
+    <output class="viewer-zoom" aria-live="polite">100%</output>
+    <button type="button" class="viewer-in" aria-label="Zoom in image"
+      ><Icon name="plus" size={18} /></button
+    >
+    <a class="viewer-original" target="_blank" rel="noopener noreferrer"
+      >Open original<Icon name="external" size={16} /></a
+    >
+  </div>
+  <div
+    class="viewer-stage"
+    tabindex="0"
+    role="region"
+    aria-label="Full screenshot. Scroll to inspect when zoomed in. Escape closes the viewer."
+  >
+    <img class="viewer-image" alt="" hidden />
+    <p class="viewer-loading" role="status">Loading screenshot…</p>
+    <p class="viewer-error" role="alert" hidden>
+      Couldn’t load this screenshot. <button type="button" class="viewer-retry"
+        >Try again</button
+      > or use Open original.
+    </p>
+  </div>
+</dialog>
+<script src="../scripts/captures.ts"></script>

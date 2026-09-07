@@ -1,0 +1,8 @@
+{
+  "file": "wasm-factory.mjs",
+  "sha256": "14c2c5858daff55746fb6c61dee3a67a9fc5ba5edf57ce715559297c041d3d89",
+  "upstreamFile": "SignalsmithStretch.js",
+  "upstreamSha256": "fe0e23b6bb5dbffb231a91e7dc39f9d2a7d10c7f793fb0237d819ca748f7f778",
+  "derivation": "The first top-level SignalsmithStretch declaration, unchanged, followed by a default export. No upstream node wrapper or processor registration is included.",
+  "license": "MIT"
+}

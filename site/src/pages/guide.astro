@@ -1,0 +1,82 @@
+---
+import Page from '../layouts/Page.astro';
+import { installUrl, route } from '../lib/release';
+---
+
+<Page title="Setup guide">
+  <article class="reading shell">
+    <h1>Setup guide</h1>
+    <ol>
+      <li>
+        Install <a href="https://violentmonkey.github.io/get-it/"
+          >Violentmonkey</a
+        >, or a compatible userscript manager.
+      </li><li>
+        Open the <a href={installUrl}>Tempo Control userscript</a> and confirm Install.
+        If you see source code instead, use your manager’s “Install from URL” option
+        on the published site, or paste the script into a new script for local testing.
+      </li><li>
+        Reload SoundCloud and choose a track. Use the tempo controls in the
+        bottom player.
+      </li>
+    </ol>
+    <section>
+      <h2>Find your speed</h2><p>
+        The slider goes from 0.025× to 2× in 0.025× steps. Type an exact value
+        for up to 4×. Double-click the number or slider to reset to 1×;
+        Shift-click the arrows for 0.01× adjustments.
+      </p><p>
+        Use the bookmark button to remember a track’s speed. The gear opens
+        settings, saved tracks and the tempo editor.
+      </p>
+    </section>
+    <section id="sharing">
+      <h2>Send your version</h2><p>
+        Open the tempo editor and choose Copy link. It includes the track, tempo
+        points, fades and pitch mode. Your friend needs Tempo Control installed
+        to preview and apply it.
+      </p><p>
+        For everyday sharing, enable “Include tempo in copied links” in
+        settings. Then copying the current, loaded track’s full SoundCloud link
+        can include your adjustments. Unloaded tracks and short links may stay
+        unchanged.
+      </p><p>
+        Without the script, the link still opens the normal SoundCloud track.
+        Opening a tempo link does not automatically play audio or overwrite
+        saved settings.
+      </p>
+    </section>
+    <section id="limits">
+      <h2>Pitch modes</h2><p>
+        Natural mode changes pitch with speed. Preserve key keeps the original
+        key using Signalsmith when the player’s audio routing is available, with
+        browser correction as a fallback at 0.25× or higher. Lower speeds use
+        buffered audio and require a supported stream. Preserve key below 0.25×
+        requires WASM.
+      </p><p>
+        Time-stretching can introduce artifacts, especially at extreme speeds.
+        Processing adds some latency. The Output level setting applies to both
+        pitch modes across SoundCloud.
+      </p>
+    </section>
+    <section>
+      <h2>Where things are stored</h2><p>
+        Settings and saved timelines stay in SoundCloud’s local site storage in
+        this browser. Export a backup from settings before clearing browser
+        data.
+      </p><a href={route('privacy/')}>Privacy details</a>
+    </section>
+    <section id="troubleshooting">
+      <h2>If something isn’t working</h2>
+      <p>
+        Missing controls? Check that Tempo Control is enabled in your userscript
+        manager, then reload SoundCloud. Disable older copies of the script.
+      </p>
+      <p>
+        For audio problems, switch off WASM in settings and try Browser
+        processing. If a website preview fails to load, choose Retry, load an
+        audio file or use the synth sample.
+      </p>
+    </section>
+  </article>
+</Page>

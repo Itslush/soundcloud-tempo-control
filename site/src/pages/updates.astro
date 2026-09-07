@@ -1,0 +1,22 @@
+---
+import Page from '../layouts/Page.astro';
+import { Content } from '../../../CHANGELOG.md';
+import { installUrl, release } from '../lib/release';
+---
+
+<Page title="Updates">
+  <article class="reading shell">
+    <Content /><section>
+      <h2>How updates work</h2><p>
+        When installed from the published website, your userscript manager
+        checks for newer versions. After an update, Tempo Control shows a small
+        notice the next time you open SoundCloud.
+      </p><p>
+        Coming from a 5.x development build? Install v1.0.0 manually once. Keep
+        only one copy enabled; your saved settings stay in place.
+      </p><a class="button primary" href={installUrl}
+        >Install v{release.version}</a
+      >
+    </section>
+  </article>
+</Page>

@@ -1,0 +1,71 @@
+---
+import Icon from './Icon.astro';
+interface Props {
+  id: string;
+  label: string;
+  actionLabel?: string;
+  value: number;
+  min: number;
+  max?: number;
+  step: number;
+  unit?: string;
+  visibleLabel?: boolean;
+  class?: string;
+}
+const {
+  id,
+  label,
+  actionLabel = label.toLowerCase(),
+  value,
+  min,
+  max,
+  step,
+  unit,
+  visibleLabel = false,
+  class: className,
+} = Astro.props;
+---
+
+<div class:list={['number-field', className]}>
+  <label for={id} class:list={{ 'sr-only': !visibleLabel }}>{label}</label>
+  <div class="number-stepper" data-number-field>
+    <button
+      type="button"
+      class="number-step"
+      data-step="-1"
+      aria-label={`Decrease ${actionLabel}`}
+      aria-controls={id}
+      disabled
+    >
+      <Icon name="minus" size={16} />
+    </button>
+    <div class="number-value">
+      <input
+        id={id}
+        type="number"
+        inputmode="decimal"
+        {value}
+        {min}
+        {max}
+        {step}
+      />
+      {
+        unit && (
+          <span class="number-unit" aria-hidden="true">
+            {unit}
+          </span>
+        )
+      }
+    </div>
+    <button
+      type="button"
+      class="number-step"
+      data-step="1"
+      aria-label={`Increase ${actionLabel}`}
+      aria-controls={id}
+      disabled
+    >
+      <Icon name="plus" size={16} />
+    </button>
+  </div>
+</div>

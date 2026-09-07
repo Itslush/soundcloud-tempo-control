@@ -1,0 +1,299 @@
+{
+  "capturedAt": "2026-09-06T20:36:48.075248+00:00",
+  "capture": "Exact built userscript UI on a real public music track in isolated Chrome; early injection, not Violentmonkey. Captures are browser screenshots with source metadata added to PNG headers; screenshot pixels are unchanged. Narrow captures are resized desktop-browser windows, not physical mobile devices.",
+  "track": "https://soundcloud.com/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix",
+  "artifactSha256": "789a8430f052ed86b1bc3c096a19f3cb5c98b653e8a3aae66fe42849d68355cb",
+  "artifactBytes": 480040,
+  "nonAudioDerivation": {
+    "scheme": "outside-audioModules-declaration-v1",
+    "derivedFromArtifactSha256": "789a8430f052ed86b1bc3c096a19f3cb5c98b653e8a3aae66fe42849d68355cb",
+    "sha256": "7a76688f5e96721809e5853b1e167e1ac09b6f59bdfd283c22c8eccc716c278d",
+    "scope": "Retrospectively derived from the exact captured artifact. Verifies bytes outside the parsed audio bundle, not audio behavior or a new capture."
+  },
+  "captureScriptSha256": "6001e826bd23dea210a294291ccb20f76231cb36cf190652c6ebd5df3735d8d2",
+  "outputProbeSha256": "37ef28ac38eba3046e8b6783c4bfa4073173b62f90992d2ff522603ba420397d",
+  "muting": [
+    "--mute-audio",
+    "native media muted with zero volume before play",
+    "permanent final destination gain zero"
+  ],
+  "deviceScaleFactor": 3,
+  "muted": true,
+  "screenshots": [
+    {
+      "file": "soundcloud-player.png",
+      "width": 4320,
+      "height": 3240,
+      "cssWidth": 1440.0,
+      "cssHeight": 1080.0,
+      "url": "https://soundcloud.com/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix",
+      "state": "Drown (Sewerslvt Remix) selected on its actual public SoundCloud page, playback paused, tempo 0.90\u00d7 saved.",
+      "clip": null,
+      "sha256": "d0f1a74227e980f2f3095ed151e437482f736d36e62598882043f8ba48702bef"
+    },
+    {
+      "file": "player-controls.png",
+      "width": 876,
+      "height": 126,
+      "cssWidth": 292.0,
+      "cssHeight": 42.0,
+      "url": "https://soundcloud.com/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix",
+      "state": "Genuine footer controls at 0.90\u00d7 with remembered tempo.",
+      "clip": {
+        "x": 710,
+        "y": 1035,
+        "width": 292,
+        "height": 42
+      },
+      "sha256": "b4e5f23b0804244d52ab79c04165122bfb2c7119a28ecdee61756d7db9613732"
+    },
+    {
+      "file": "soundcloud-timeline.png",
+      "width": 2160,
+      "height": 2244,
+      "cssWidth": 720.0,
+      "cssHeight": 748.0,
+      "url": "https://soundcloud.com/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix",
+      "state": "Three-point natural-pitch timeline saved and enabled, smooth fades, selected 0.90\u00d7 point.",
+      "clip": null,
+      "sha256": "dabdf5264d2542ca1539309da7d4e517fa49a0ba00e48c600d7b16064a07a97a"
+    },
+    {
+      "file": "timeline-curve.png",
+      "width": 2058,
+      "height": 660,
+      "cssWidth": 686.0,
+      "cssHeight": 220.0,
+      "url": "https://soundcloud.com/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix",
+      "state": "Complete saved 1\u00d7 \u2192 0.75\u00d7 \u2192 0.90\u00d7 curve, close speed range.",
+      "clip": null,
+      "sha256": "48ee38d188f0039bfc96d9d51559052fbb2cc0c5520147e7d878b5f01e0f71cf"
+    },
+    {
+      "file": "timeline-detail.png",
+      "width": 996,
+      "height": 660,
+      "cssWidth": 332.0,
+      "cssHeight": 220.0,
+      "url": "https://soundcloud.com/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix",
+      "state": "Same saved curve rendered by the real editor in a narrow desktop browser window.",
+      "clip": null,
+      "sha256": "53e6812d8557b0e3d799485fad980d8f03f811a896c2241c8bc1326aca2d610e"
+    },
+    {
+      "file": "soundcloud-settings.png",
+      "width": 1800,
+      "height": 1092,
+      "cssWidth": 600.0,
+      "cssHeight": 364.0,
+      "url": "https://soundcloud.com/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix",
+      "state": "One real music track, Drown, with its saved 0.90\u00d7 speed and enabled three-point timeline; copied-link tempo sharing enabled.",
+      "clip": null,
+      "sha256": "f8f05b2552cf269c62efab49e7866d7f81a6addab6054a1514316a655e6ecd08"
+    },
+    {
+      "file": "saved-tracks.png",
+      "width": 1758,
+      "height": 276,
+      "cssWidth": 586.0,
+      "cssHeight": 92.0,
+      "url": "https://soundcloud.com/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix",
+      "state": "One genuine Drown saved-library row containing both 0.90\u00d7 speed and Timeline controls, created entirely through the UI.",
+      "clip": {
+        "x": 427,
+        "y": 497.5,
+        "width": 586,
+        "height": 92
+      },
+      "sha256": "57fc8b5aeb96f211251759efd7bf176e1116f1e556d4cd064cd633b8988560e9"
+    },
+    {
+      "file": "saved-tracks-mobile.png",
+      "width": 1020,
+      "height": 243,
+      "cssWidth": 340.0,
+      "cssHeight": 81.0,
+      "url": "https://soundcloud.com/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix",
+      "state": "The same genuine Drown speed-and-timeline row in a 390-pixel-wide desktop-browser viewport.",
+      "clip": null,
+      "sha256": "caaa0ab93507e8793c3e8e5c5825904d9ac56fd02a2f02139886dfcac307aa75"
+    },
+    {
+      "file": "shared-preview.png",
+      "width": 2160,
+      "height": 2178,
+      "cssWidth": 720.0,
+      "cssHeight": 726.0,
+      "url": "https://soundcloud.com/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix#sct=SCT1.eyJ2IjoxLCJ0cmFjayI6Ii9zZXdlcnNsdnQvYnJpbmctbWUtdGhlLWhvcml6b24tZHJvd24tc2V3ZXJzbHZ0LXJlbWl4IiwiZHVyYXRpb24iOjQ5Ni41MDM1NTk5OTk5OTk4LCJwb2ludHMiOlt7InQiOjAsInIiOjEsImQiOjAsImMiOiJpbnN0YW50In0seyJ0IjoxNjYsInIiOjAuNzUsImQiOjEyNCwiYyI6InNtb290aCJ9LHsidCI6MzcyLCJyIjowLjksImQiOjE2NiwiYyI6InNtb290aCJ9XSwicGl0Y2giOiJuYXR1cmFsIn0",
+      "state": "Actual Drown music timeline link opened in a fresh receiving context after selecting and pausing its track; Apply once and Save timeline are available, neither used yet.",
+      "clip": null,
+      "sha256": "9b60381832c42d1d7db9edd8b006cfb5ea5343f4f2561ec3549647e70d775c44"
+    },
+    {
+      "file": "share-actions.png",
+      "width": 2058,
+      "height": 153,
+      "cssWidth": 686.0,
+      "cssHeight": 51.0,
+      "url": "https://soundcloud.com/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix#sct=SCT1.eyJ2IjoxLCJ0cmFjayI6Ii9zZXdlcnNsdnQvYnJpbmctbWUtdGhlLWhvcml6b24tZHJvd24tc2V3ZXJzbHZ0LXJlbWl4IiwiZHVyYXRpb24iOjQ5Ni41MDM1NTk5OTk5OTk4LCJwb2ludHMiOlt7InQiOjAsInIiOjEsImQiOjAsImMiOiJpbnN0YW50In0seyJ0IjoxNjYsInIiOjAuNzUsImQiOjEyNCwiYyI6InNtb290aCJ9LHsidCI6MzcyLCJyIjowLjksImQiOjE2NiwiYyI6InNtb290aCJ9XSwicGl0Y2giOiJuYXR1cmFsIn0",
+      "state": "Real Drown recipient preview with enabled Apply once / Save timeline choices; the shared tempo has not been applied or saved.",
+      "clip": {
+        "x": 377,
+        "y": 779.5,
+        "width": 686,
+        "height": 51
+      },
+      "sha256": "9cade177caf70a89372a6975dea48a634b99881ae511ad7e3956f7bc085c08d8"
+    },
+    {
+      "file": "share-actions-mobile.png",
+      "width": 996,
+      "height": 261,
+      "cssWidth": 332.0,
+      "cssHeight": 87.0,
+      "url": "https://soundcloud.com/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix#sct=SCT1.eyJ2IjoxLCJ0cmFjayI6Ii9zZXdlcnNsdnQvYnJpbmctbWUtdGhlLWhvcml6b24tZHJvd24tc2V3ZXJzbHZ0LXJlbWl4IiwiZHVyYXRpb24iOjQ5Ni41MDM1NTk5OTk5OTk4LCJwb2ludHMiOlt7InQiOjAsInIiOjEsImQiOjAsImMiOiJpbnN0YW50In0seyJ0IjoxNjYsInIiOjAuNzUsImQiOjEyNCwiYyI6InNtb290aCJ9LHsidCI6MzcyLCJyIjowLjksImQiOjE2NiwiYyI6InNtb290aCJ9XSwicGl0Y2giOiJuYXR1cmFsIn0",
+      "state": "Real Drown recipient preview with enabled Apply once / Save timeline choices; the shared tempo has not been applied or saved.",
+      "clip": {
+        "x": 29,
+        "y": 811.5,
+        "width": 332,
+        "height": 87
+      },
+      "sha256": "93aaee42b9dc5c7c9623d813be20aec1e2881471ef5a2327822e6a2c3acddeab"
+    }
+  ],
+  "actions": [
+    "Selected and paused the public Drown music track, then saved 0.90\u00d7 through the actual tempo field and bookmark control.",
+    "Saved and enabled a three-point timeline; copied its actual SCT1 link.",
+    "Selected and paused Drown in a fresh receiving context, opened the actual copied link, verified both recipient actions without saved recipient data, then saved through the UI."
+  ],
+  "pageErrors": [],
+  "status": "CAPTURED",
+  "browser": "144.0.7559.110",
+  "selection": {
+    "heroBefore": "Play",
+    "playbackAlreadyObserved": false,
+    "cancelledPendingSelection": false,
+    "footerBeforePlayback": "Play current"
+  },
+  "observedTitle": "Current track: Bring Me The Horizon - Drown (Sewerslvt Remix)\nBring Me The Horizon - Drown (Sewerslvt Remix)",
+  "sharedLink": "https://soundcloud.com/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix#sct=SCT1.eyJ2IjoxLCJ0cmFjayI6Ii9zZXdlcnNsdnQvYnJpbmctbWUtdGhlLWhvcml6b24tZHJvd24tc2V3ZXJzbHZ0LXJlbWl4IiwiZHVyYXRpb24iOjQ5Ni41MDM1NTk5OTk5OTk4LCJwb2ludHMiOlt7InQiOjAsInIiOjEsImQiOjAsImMiOiJpbnN0YW50In0seyJ0IjoxNjYsInIiOjAuNzUsImQiOjEyNCwiYyI6InNtb290aCJ9LHsidCI6MzcyLCJyIjowLjksImQiOjE2NiwiYyI6InNtb290aCJ9XSwicGl0Y2giOiJuYXR1cmFsIn0",
+  "sharedPayload": {
+    "v": 1,
+    "track": "/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix",
+    "duration": 496.5035599999998,
+    "points": [
+      {
+        "t": 0,
+        "r": 1,
+        "d": 0,
+        "c": "instant"
+      },
+      {
+        "t": 166,
+        "r": 0.75,
+        "d": 124,
+        "c": "smooth"
+      },
+      {
+        "t": 372,
+        "r": 0.9,
+        "d": 166,
+        "c": "smooth"
+      }
+    ],
+    "pitch": "natural"
+  },
+  "timeline": {
+    "data": {
+      "v": 1,
+      "track": "/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix",
+      "duration": 496.5035599999998,
+      "points": [
+        {
+          "t": 0,
+          "r": 1,
+          "d": 0,
+          "c": "instant"
+        },
+        {
+          "t": 166,
+          "r": 0.75,
+          "d": 124,
+          "c": "smooth"
+        },
+        {
+          "t": 372,
+          "r": 0.9,
+          "d": 166,
+          "c": "smooth"
+        }
+      ],
+      "pitch": "natural"
+    },
+    "enabled": true
+  },
+  "savedLibraryText": "sewerslvt / bring-me-the-horizon-drown-sewerslvt-remix\n\u00d7\nTimeline",
+  "audio": {
+    "media": [
+      {
+        "time": 0.050911,
+        "readyState": 4,
+        "duration": 496.5035599999998,
+        "paused": true,
+        "muted": true,
+        "volume": 0
+      }
+    ],
+    "contexts": [
+      {
+        "state": "running",
+        "sampleRate": 96000,
+        "sinkGain": 0
+      }
+    ]
+  },
+  "recipientSelection": {
+    "heroBefore": "Play",
+    "playbackAlreadyObserved": false,
+    "cancelledPendingSelection": false,
+    "footerBeforePlayback": "Play current"
+  },
+  "recipientAudio": {
+    "media": [
+      {
+        "time": 0.04481,
+        "readyState": 4,
+        "duration": 496.5035599999998,
+        "paused": true,
+        "muted": true,
+        "volume": 0
+      }
+    ],
+    "contexts": [
+      {
+        "state": "running",
+        "sampleRate": 96000,
+        "sinkGain": 0
+      }
+    ]
+  },
+  "recipientClosedAudioContexts": [
+    {
+      "state": "closed",
+      "sampleRate": 96000,
+      "sinkGain": 0
+    }
+  ],
+  "recipientContextClosed": true,
+  "trackPlaybackObserved": true,
+  "closedAudioContexts": [
+    {
+      "state": "closed",
+      "sampleRate": 96000,
+      "sinkGain": 0
+    }
+  ],
+  "contextClosed": true,
+  "browserClosed": true
+}

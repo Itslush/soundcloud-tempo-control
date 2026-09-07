@@ -1,0 +1,55 @@
+{
+  "folders": [{ "path": "." }],
+  "settings": {
+    "files.eol": "\n",
+    "editor.tabSize": 2,
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/.venv": true,
+      "**/__pycache__": true,
+    },
+    "search.exclude": {
+      "dist": true,
+      "site/public/downloads": true,
+      "vendor/signalsmith/SignalsmithStretch.js": true,
+      "test-results": true,
+    },
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Set up track loader",
+        "type": "shell",
+        "command": "npm run setup:backend",
+        "problemMatcher": [],
+      },
+      {
+        "label": "Build userscript",
+        "type": "shell",
+        "command": "npm run build:script",
+        "problemMatcher": [],
+      },
+      {
+        "label": "Develop website",
+        "type": "shell",
+        "command": "npm run dev",
+        "isBackground": true,
+        "problemMatcher": [],
+      },
+      {
+        "label": "Run website and API",
+        "type": "shell",
+        "command": "npm start",
+        "isBackground": true,
+        "problemMatcher": [],
+      },
+      {
+        "label": "Test",
+        "type": "shell",
+        "command": "npm test",
+        "problemMatcher": [],
+      },
+    ],
+  },
+}

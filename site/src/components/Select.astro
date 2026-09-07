@@ -1,0 +1,76 @@
+---
+interface Props {
+  id: string;
+  label: string;
+  options: { value: string; label: string }[];
+  value: string;
+  prefix?: string;
+}
+const { id, label, options, value, prefix } = Astro.props;
+---
+
+<div class="select-control" data-select>
+  <label class="sr-only" id={`${id}-label`} for={id}>{label}</label>
+  <select id={id}>
+    {
+      options.map((option) => (
+        <option value={option.value} selected={option.value === value}>
+          {option.label}
+        </option>
+      ))
+    }
+  </select>
+  <button
+    class="select-trigger"
+    type="button"
+    aria-labelledby={`${id}-label ${id}-value`}
+    aria-haspopup="listbox"
+    aria-expanded="false"
+    aria-controls={`${id}-options`}
+    hidden
+  >
+    <span class="select-value-wrap">
+      {
+        prefix && (
+          <>
+            <span class="select-prefix" aria-hidden="true">
+              {prefix}
+            </span>{' '}
+          </>
+        )
+      }
+      <span class="select-value" id={`${id}-value`}
+        >{options.find((option) => option.value === value)?.label}</span
+      >
+    </span>
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"
+      ><path
+        d="m4 6 4 4 4-4"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"></path></svg
+    >
+  </button>
+  <div
+    class="select-options"
+    id={`${id}-options`}
+    role="listbox"
+    aria-label={label}
+    hidden
+  >
+    {
+      options.map((option) => (
+        <button
+          type="button"
+          role="option"
+          aria-selected={option.value === value}
+          data-value={option.value}
+          tabindex="-1"
+        >
+          {option.label}
+        </button>
+      ))
+    }
+  </div>
+</div>
+<script src="../scripts/select.ts"></script>

@@ -1,0 +1,85 @@
+---
+import '@fontsource-variable/mulish';
+import '../styles/site.css';
+import '../styles/preview.css';
+import Logo from '../components/Logo.astro';
+import SpaceAccent from '../components/SpaceAccent.astro';
+import { release, route } from '../lib/release';
+interface Props {
+  title: string;
+  description?: string;
+}
+const {
+  title,
+  description = 'Tempo control, saved speeds and shareable timelines. Right inside SoundCloud.',
+} = Astro.props;
+const links = [
+  ['Download', ''],
+  ['Updates', 'updates/'],
+  ['Help', 'guide/'],
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#111111" />
+    <title>{title} · SoundCloud Tempo Control</title>
+    <link rel="icon" type="image/svg+xml" href={route('favicon.svg')} />
+    {
+      release.siteUrl && (
+        <link
+          rel="canonical"
+          href={new URL(Astro.url.pathname, release.siteUrl)}
+        />
+      )
+    }
+  </head>
+  <body>
+    <SpaceAccent />
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="site-header-inner shell">
+        <a class="brand" href={route()} aria-label="Tempo Control home"
+          ><Logo /><span
+            ><strong>Tempo Control</strong><small
+              >For SoundCloud · v{release.version}</small
+            ></span
+          ></a
+        >
+        <nav aria-label="Main navigation">
+          {
+            links.map(([label, path]) => (
+              <a
+                href={route(path)}
+                aria-current={
+                  Astro.url.pathname === route(path) ? 'page' : undefined
+                }
+              >
+                {label}
+              </a>
+            ))
+          }
+        </nav>
+      </div>
+    </header>
+    <main id="main"><slot /></main>
+    <footer class="site-footer shell">
+      <p>Unofficial. Not affiliated with SoundCloud.</p>
+      <nav aria-label="Footer navigation">
+        <a href={route('privacy/')}>Privacy</a>{
+          release.repositoryUrl && (
+            <a href={release.repositoryUrl} rel="noopener noreferrer">
+              Source
+            </a>
+          )
+        }<a href={route('guide/')}>Help</a>{
+          release.paypalUrl && <a href={route('support/')}>Donate</a>
+        }
+      </nav>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,121 @@
+{
+  "version": "32.0.0",
+  "buildNumber": 2285,
+  "exportEvidence": "host-clock-inspection-20260906T201036497285Z.json",
+  "exports": [
+    {
+      "module": "100",
+      "name": "version",
+      "getter": "function(){return Ge}",
+      "configurable": false,
+      "enumerable": true,
+      "setter": null
+    },
+    {
+      "module": "100",
+      "name": "buildNumber",
+      "getter": "function(){return Ze}",
+      "configurable": false,
+      "enumerable": true,
+      "setter": null
+    },
+    {
+      "module": "100",
+      "name": "BasePlayer",
+      "getter": "function(){return re}",
+      "configurable": false,
+      "enumerable": true,
+      "setter": null
+    },
+    {
+      "module": "572",
+      "name": "version",
+      "getter": "function(){return Y}",
+      "configurable": false,
+      "enumerable": true,
+      "setter": null
+    },
+    {
+      "module": "572",
+      "name": "buildNumber",
+      "getter": "function(){return X}",
+      "configurable": false,
+      "enumerable": true,
+      "setter": null
+    },
+    {
+      "module": "572",
+      "name": "HTML5PlayerBase",
+      "getter": "function(){return W}",
+      "configurable": false,
+      "enumerable": true,
+      "setter": null
+    },
+    {
+      "module": "1280",
+      "name": "version",
+      "getter": "function(){return Q}",
+      "configurable": false,
+      "enumerable": true,
+      "setter": null
+    },
+    {
+      "module": "1280",
+      "name": "buildNumber",
+      "getter": "function(){return q}",
+      "configurable": false,
+      "enumerable": true,
+      "setter": null
+    },
+    {
+      "module": "1280",
+      "name": "HLSMSEPlayer",
+      "getter": "function(){return W}",
+      "configurable": false,
+      "enumerable": true,
+      "setter": null
+    }
+  ],
+  "bundle": {
+    "url": "https://a-v2.sndcdn.com/assets/55-70f3b3d1.js",
+    "sha256": "f10e5e5af08140b3ce32b4a995b33b7642b1b042df3c27296bfdfeae81bea561"
+  },
+  "methods": [
+    {
+      "module": "100",
+      "prototype": "BasePlayer",
+      "method": "_updateEndedInState",
+      "sha256": "4b87488df4fbc669f140bc22b20c3792bde259d13439f87fac2f7e2f4514daa7"
+    },
+    {
+      "module": "572",
+      "prototype": "HTML5PlayerBase",
+      "method": "_getTruePosition",
+      "sha256": "d1ddf761395c278e29a3f1428037577d90a00532910bb56f3cd179433023beaa"
+    },
+    {
+      "module": "572",
+      "prototype": "HTML5PlayerBase",
+      "method": "_getPosition",
+      "sha256": "ffe339100a024d0cc96f30e5b312852413568700444a2faa368379f4814b53ff"
+    },
+    {
+      "module": "572",
+      "prototype": "HTML5PlayerBase",
+      "method": "_shouldBeEnded",
+      "sha256": "f1d923b19323b757380dec055605a85e0734efb9be1f1d1138383f0facf0d15d"
+    },
+    {
+      "module": "572",
+      "prototype": "HTML5PlayerBase",
+      "method": "_handleDurationChange",
+      "sha256": "cee858be349e2101d02d6764977cbc6092b102dd8c66be944099067b44bea382"
+    },
+    {
+      "module": "1280",
+      "prototype": "HLSMSEPlayer",
+      "method": "_shouldBeEnded",
+      "sha256": "81653e3dbff82a7fbb9e22c489ada4893e4d6d17aa23c2049705527a9b33832a"
+    }
+  ]
+}

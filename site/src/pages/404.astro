@@ -1,0 +1,13 @@
+---
+import Page from '../layouts/Page.astro';
+import { route } from '../lib/release';
+---
+
+<Page title="Page not found"
+  ><section class="reading shell">
+    <h1>This track ends here.</h1><p>The page couldn’t be found.</p><a
+      class="button primary"
+      href={route()}>Back to Tempo Control</a
+    >
+  </section></Page
+>

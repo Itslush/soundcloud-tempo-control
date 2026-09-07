@@ -1,0 +1,5 @@
+vendor/
+dist/
+site/public/downloads/
+site/public/audio/
+package-lock.json

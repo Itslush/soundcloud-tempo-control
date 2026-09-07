@@ -1,0 +1,17 @@
+node_modules/
+.venv/
+dist/
+site/public/downloads/
+site/.astro/
+.astro/
+test-results/
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+.env
+.env.*
+!.env.example
+*.zip
+site/public/audio/
+site/public/licenses/

@@ -6,7 +6,7 @@ import Logo from '../components/Logo.astro';
 import SpaceAccent from '../components/SpaceAccent.astro';
 import { release, route } from '../lib/release';
 interface Props {
-  title: string;
+  title?: string;
   description?: string;
 }
 const {
@@ -27,7 +27,7 @@ const links = [
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <meta name="theme-color" content="#111111" />
-    <title>{title} · SoundCloud Tempo Control</title>
+    <title>{title ? `${title} · SoundCloud Tempo Control` : 'SoundCloud Tempo Control'}</title>
     <link rel="icon" type="image/svg+xml" href={route('favicon.svg')} />
     {
       release.siteUrl && (

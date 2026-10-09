@@ -77,6 +77,8 @@ test('website stars drift at 1.5x, turn smoothly, wrap, and pause without jumps'
     assert.ok(frames.size <= 1);
   }
   visible([{ isIntersecting: true }]);
+  assert.equal(active, true);
+  assert.equal(preferences.has('(prefers-reduced-motion: reduce)'), false);
   step();
   let lastAngle,
     turning = 0,

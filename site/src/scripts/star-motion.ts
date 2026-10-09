@@ -6,7 +6,6 @@ const toggle = document.querySelector<HTMLButtonElement>('#site-star-motion');
 const status = document.querySelector('#site-star-status');
 
 if (field && pattern) {
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const forced = matchMedia('(forced-colors: active)');
   const key = 'soundcloud.tempo.siteStarMotion';
   let choice: string | null = null;
@@ -20,7 +19,7 @@ if (field && pattern) {
   toggle?.closest('details')?.removeAttribute('hidden');
 
   function sync() {
-    const enabled = choice === 'on' || (choice !== 'off' && !reduced.matches);
+    const enabled = choice !== 'off';
     const active = visible && !document.hidden && enabled && !forced.matches;
     field!.toggleAttribute('data-visible', active);
     toggle?.setAttribute('aria-pressed', String(enabled));
@@ -50,7 +49,6 @@ if (field && pattern) {
     sync();
   }).observe(field);
   document.addEventListener('visibilitychange', sync);
-  reduced.addEventListener('change', sync);
   forced.addEventListener('change', sync);
   window.addEventListener('pagehide', () => drift(0));
   window.addEventListener('pageshow', sync);

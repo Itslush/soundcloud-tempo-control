@@ -28,6 +28,13 @@ const links = [
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <meta name="theme-color" content="#111111" />
+    <script is:inline>
+      try {
+        const theme = localStorage.getItem('soundcloud.tempo.siteTheme');
+        if (theme === 'light' || theme === 'oled')
+          document.documentElement.dataset.theme = theme;
+      } catch {}
+    </script>
     <title>
       {
         title
@@ -85,6 +92,38 @@ const links = [
             stroke-width="1.5"></path></svg
         ></summary
       >
+      <div class="site-theme-options" role="group" aria-label="Website theme">
+        {
+          [
+            ['light', 'Light'],
+            ['charcoal', 'Charcoal'],
+            ['oled', 'OLED'],
+          ].map(([value, label]) => (
+            <button
+              class="button"
+              type="button"
+              data-site-theme={value}
+              aria-pressed={value === 'charcoal' ? 'true' : 'false'}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                aria-hidden="true"
+              >
+                <path
+                  d="m3 8 3 3 7-7"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+              </svg>
+              {label}
+            </button>
+          ))
+        }
+      </div>
+      <p id="site-theme-status" role="status"></p>
       <button
         class="button"
         id="site-star-motion"
@@ -107,3 +146,5 @@ const links = [
     </footer>
   </body>
 </html>
+
+<script src="../scripts/site-theme.ts"></script>

@@ -1,5 +1,15 @@
 # Demo and screenshot checks
 
+## Website themes follow-up
+
+The website now offers Light, Charcoal and OLED under Appearance. The existing shared tokens carry the choice through page text, preview/editor controls and image dialogs. Charcoal stays the default; stored choices load before the page modules to avoid a dark flash. The plugin and its built v1.1.1 artifact are unchanged.
+
+Star motion now defaults to On as requested, even with a reduced-motion browser preference. A saved Off choice still wins. Forced colours and hidden/offscreen pausing remain intact; the rest of the interface still respects reduced motion.
+
+`verify-site-themes.py` checks three themes at 320, 390 and 1440 px, calculated text/control contrast, keyboard selection, a single selected state, one-row choices, preview controls, image dialogs, reload, four secondary routes, cross-tab updates, invalid/removed preferences, blocked storage and applying Light with page modules blocked. Desktop and mobile captures were inspected. `verify-star-motion.py` now checks the new default and persistence of an explicit Off. The production build, TypeScript, shared-motion test and website presentation checks also pass.
+
+Scoped Anti Slop gate: no identity, layout or copy rewrite; palette changes implement the requested themes. The original logo and screenshots remain unfiltered. Selected themes have a checkmark as well as colour, and controls reuse the existing outlined styling. Contrast is calculated for each theme; hidden no-JavaScript controls and storage-error feedback remain. No new dependencies, audio changes, backend changes or changelog entry. The existing full-CI library-layout failure is outside this website change; these checks do not claim a clean full-suite run.
+
 ## Star consistency follow-up
 
 Edge on the connected desktop reported `prefers-reduced-motion: reduce`, with a visible page but no scheduled star movement. The public download page moved in isolated Chrome. This explains the reported difference without assuming the Windows preference itself was disabled.

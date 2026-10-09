@@ -28,6 +28,31 @@
   color: var(--ink);
   background: var(--ground);
 }
+:root[data-theme='light'] {
+  color-scheme: light;
+  --ground: #f7f7f5;
+  --surface: #fff;
+  --raised: #ededeb;
+  --ink: #202020;
+  --muted: #5d5d5d;
+  --line: #c4c4c1;
+  --control: #777;
+  --control-hover: #444;
+  --accent: #b33b00;
+  --accent-hover: #913000;
+  --on-accent: #fff;
+  --graph-grid: #b8b8b5;
+  --graph-label: #5d5d5d;
+  --node-outline: #913000;
+  --star-cool: #43556b;
+  --star-warm: #695942;
+  --track: #777;
+}
+:root[data-theme='oled'] {
+  --ground: #000;
+  --surface: #0b0b0b;
+  --raised: #161616;
+}
 * {
   box-sizing: border-box;
 }
@@ -482,10 +507,34 @@ input[type='range']::-moz-range-thumb {
 .site-appearance button[aria-pressed='true'] {
   border-color: var(--accent);
   color: var(--accent);
+  background: var(--ground);
 }
 .site-appearance button {
   background: var(--ground);
 }
+.site-theme-options {
+  display: flex;
+  flex-wrap: wrap;
+  max-width: 360px;
+  gap: 8px;
+  margin-block: 8px 16px;
+}
+.site-theme-options .button {
+  flex: 1;
+  gap: 4px;
+  padding-inline: 6px;
+  font-size: 14px;
+}
+.site-theme-options button[aria-pressed='false'] svg {
+  visibility: hidden;
+}
+#site-theme-status,
+#site-star-status {
+  max-width: 60ch;
+  margin-block: 8px;
+  background: var(--ground);
+}
+#site-theme-status:empty,
 #site-star-status:empty {
   display: none;
 }
@@ -960,7 +1009,8 @@ h3 {
   }
 }
 @media (forced-colors: active) {
-  :root {
+  :root,
+  :root[data-theme] {
     --ground: Canvas;
     --surface: Canvas;
     --raised: Canvas;
@@ -989,7 +1039,7 @@ h3 {
   --tempo-fg: var(--ink);
   --tempo-muted: var(--muted);
   --tempo-surface: var(--surface);
-  --tempo-track: var(--line);
+  --tempo-track: var(--control);
   --tempo-accent: var(--accent);
   --tempo-accent-surface: transparent;
   --tempo-accent-hover: #ff550015;
@@ -1043,7 +1093,7 @@ h3 {
 #demo-shared-editor textarea {
   color: inherit;
   background: var(--ground);
-  border: 1px solid var(--line);
+  border: 1px solid var(--control);
   font: inherit;
 }
 #demo-shared-editor .tempo-choice-list {

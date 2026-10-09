@@ -245,9 +245,30 @@
 .number-stepper[data-disabled] input {
   color: var(--muted);
 }
-.exact-speed {
-  flex: 0 0 192px;
-  font-size: 16px;
+#preview-fixed-controls {
+  margin-block: 16px;
+}
+.fixed-adjustment {
+  display: grid;
+  grid-template-columns: 192px minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+  margin-block: 16px;
+  font-size: 14px;
+}
+.adjustment-rail input {
+  width: 100%;
+  margin: 0;
+}
+.adjustment-rail {
+  padding-top: 26px;
+}
+.adjustment-limits {
+  display: flex;
+  justify-content: space-between;
+  padding-inline: 6px;
+  color: var(--muted);
+  font-size: 12px;
 }
 .demo-heading {
   flex-wrap: wrap;
@@ -478,32 +499,6 @@
   color: var(--accent);
   font-size: 14px;
 }
-.speed-rail {
-  flex: 1;
-  min-width: 40px;
-  position: relative;
-}
-.speed-rail input {
-  width: 100%;
-  margin: 0;
-}
-.speed-ticks {
-  position: absolute;
-  inset: calc(50% + 9px) 6px auto;
-  width: calc(100% - 12px);
-  height: 6px;
-  overflow: visible;
-  pointer-events: none;
-}
-.speed-ticks path {
-  fill: none;
-  stroke: var(--muted);
-  stroke-width: 1px;
-  vector-effect: non-scaling-stroke;
-}
-.speed-ticks .major {
-  stroke: var(--ink);
-}
 .demo-tools button {
   min-height: 44px;
   min-width: 44px;
@@ -590,11 +585,12 @@
   .point-fields {
     grid-template-columns: 1fr;
   }
-  .simple-control {
-    flex-wrap: wrap;
+  .fixed-adjustment {
+    grid-template-columns: 1fr;
+    gap: 0;
   }
-  .simple-control .exact-speed {
-    flex-basis: 100%;
+  .adjustment-rail {
+    padding-top: 0;
   }
   .preview-volume {
     width: 100%;

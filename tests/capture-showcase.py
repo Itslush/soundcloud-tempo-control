@@ -209,7 +209,7 @@ def load_track(page, url):
         raise AssertionError(f'Unrecognized actual track control: {action}')
     expect(page.locator('#rate-number')).to_be_visible(timeout=15000)
     page.locator('.playbackSoundBadge__titleLink').wait_for()
-    expect(page.locator('.playbackSoundBadge__titleLink')).to_have_attribute('href', re.compile(re.escape(url.rsplit('/', 1)[-1])))
+    expect(page.locator('.playbackSoundBadge__titleLink')).to_have_attribute('href', re.compile(re.escape(urlparse(url).path.rsplit('/', 1)[-1])))
     footer = page.locator('.playControls__play')
     footer_action = footer.get_attribute('title')
     selection['footerBeforePlayback'] = footer_action
@@ -253,18 +253,16 @@ def capture_recipient(browser, evidence, injection):
     observe_page(incoming, 'recipient')
     incoming.on('pageerror', lambda error: evidence['pageErrors'].append(str(error)))
     try:
-        evidence['recipientSelection'] = load_track(incoming, TRACK)
-        assert stored_timeline(incoming) is None
-        incoming.goto(evidence['sharedLink'], wait_until='domcontentloaded', timeout=45000)
+        evidence['recipientSelection'] = load_track(incoming, TRACK + '?sct=' + evidence['sharedLink'].split('#sct=', 1)[1])
         expect(incoming.locator('.tempo-editor')).to_be_visible(timeout=15000)
         expect(incoming.locator('.editor-apply-once')).to_be_enabled()
         expect(incoming.locator('.editor-apply-once')).to_have_attribute('aria-pressed', 'false')
         expect(incoming.locator('.editor-save')).to_be_enabled()
+        choose_option(incoming.locator('.speed-range'), 'fine')
         expect(incoming.locator('.editor-status')).to_have_text('')
         assert incoming.locator('.editor-track').evaluate('element=>element.href') == TRACK
         expect(incoming.locator('.editor-point-picker option')).to_have_count(3)
         assert stored_timeline(incoming) is None
-        choose_option(incoming.locator('.speed-range'), 'fine')
         incoming.locator('.tempo-editor header strong').click()
         record_image(incoming, 'shared-preview.png', evidence, selector='.tempo-editor', state='Actual Drown music timeline link opened in a fresh receiving context after selecting and pausing its track; Apply once and Save timeline are available, neither used yet.')
         for width, name in [(1440, 'share-actions.png'), (390, 'share-actions-mobile.png')]:
@@ -377,7 +375,7 @@ def main():
             page.set_viewport_size({'width': 1440, 'height': 1080})
             page.locator('.editor-link').click()
             link = page.evaluate('navigator.clipboard.readText()')
-            assert link.startswith(TRACK + '#sct=SCT1.'), link
+            assert link.startswith('https://itslush.github.io/soundcloud-tempo-control/share/#sct=SCT1.'), link
             payload = link.split('#sct=SCT1.', 1)[1]
             shared = json.loads(base64.urlsafe_b64decode(payload + '=' * (-len(payload) % 4)))
             assert shared['track'] == TRACK_PATH and [point['r'] for point in shared['points']] == [1, .75, .9], shared

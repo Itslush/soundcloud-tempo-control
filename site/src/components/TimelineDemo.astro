@@ -79,56 +79,59 @@ import { demoTrack } from '../lib/demo-track';
           >Copy link</span
         ></button
       >
-      <NumberField
-        id="demo-key-shift"
-        label="Key shift"
-        value={0}
-        min={-12}
-        max={12}
-        step={0.5}
-        unit="st"
-        visibleLabel
-      />
     </div>
-    <div id="preview-fixed-controls" class="simple-control" hidden>
-      <NumberField
-        id="demo-speed-number"
-        label="Fixed playback speed"
-        value={1}
-        min={0.25}
-        max={4}
-        step={0.025}
-        unit="×"
-        class="exact-speed"
-      />
-      <div class="speed-rail">
-        <input
-          id="demo-speed"
-          type="range"
-          min="0.25"
-          max="2"
-          step="0.025"
-          value="1"
-          aria-label="Fixed playback speed slider"
-        />
-        <svg
-          class="speed-ticks"
-          viewBox="0 0 35 6"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          <path
-            d={Array.from({ length: 36 }, (_, index) =>
-              index % 5 ? `M${index} 0v3` : '',
-            ).join('')}></path>
-          <path
-            class="major"
-            d={Array.from(
-              { length: 8 },
-              (_, index) => `M${index * 5} 0v6`,
-            ).join('')}></path>
-        </svg>
-      </div>
+    <div id="preview-fixed-controls" hidden>
+      {
+        [
+          {
+            id: 'demo-speed-number',
+            slider: 'demo-speed',
+            label: 'Tempo',
+            value: 1,
+            min: 0.25,
+            max: 4,
+            step: 0.025,
+            unit: '×',
+          },
+          {
+            id: 'demo-key-shift',
+            slider: 'demo-key-slider',
+            label: 'Key shift',
+            value: 0,
+            min: -12,
+            max: 12,
+            step: 0.5,
+            unit: 'st',
+          },
+        ].map(({ slider, ...control }) => (
+          <div class="fixed-adjustment">
+            <NumberField {...control} visibleLabel />
+            <div class="adjustment-rail">
+              <input
+                id={slider}
+                type="range"
+                min={control.min}
+                max={control.max}
+                step={control.step}
+                value={control.value}
+                aria-label={`${control.label} slider`}
+              />
+              <div class="adjustment-limits" aria-hidden="true">
+                <>
+                  <span>
+                    {control.min}
+                    {control.unit}
+                  </span>
+                  <span>
+                    {control.max}
+                    {control.unit}
+                  </span>
+                </>
+              </div>
+            </div>
+          </div>
+        ))
+      }
     </div>
     <div id="demo-shared-editor"></div>
     <details class="demo-details" id="preview-loader">

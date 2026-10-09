@@ -39,8 +39,6 @@ if (dialog) {
   let fit = false;
   let scrollStyle = '';
   let request = 0;
-  let focusX = 0;
-  let focusY = 0;
 
   function setZoom(value: number, fitted = false) {
     const previous = zoom;
@@ -85,11 +83,7 @@ if (dialog) {
       loading.hidden = true;
       stage.setAttribute('aria-busy', 'false');
       sizeButtons.forEach((button) => (button.disabled = false));
-      setZoom(1);
-      stage.scrollTo(
-        Math.max(0, focusX - stage.clientWidth / 2),
-        Math.max(0, focusY - stage.clientHeight / 2),
-      );
+      fitImage();
     } catch {
       if (current !== request) return;
       loading.hidden = true;
@@ -115,9 +109,7 @@ if (dialog) {
         opener = link;
         nativeWidth = Number(link.dataset.nativeWidth) || 720;
         nativeHeight = Number(link.dataset.nativeHeight) || 720;
-        focusX = Number(link.dataset.focusX) || 0;
-        focusY = Number(link.dataset.focusY) || 0;
-        title.textContent = link.dataset.title || 'Full interface';
+        title.textContent = link.dataset.title || 'Screenshot';
         original.href = link.href;
         image.alt = link.querySelector('img')?.alt || title.textContent || '';
         scrollStyle = document.documentElement.style.overflow;

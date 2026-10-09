@@ -1,15 +1,15 @@
 import { tempoFieldStyle } from './tempo-fields.js';
 import { editorStyle } from './tempo-editor-style.js';
 
-export function editorTemplate() {
+export function editorTemplate(inline = false) {
   return `
       <style>${editorStyle}${tempoFieldStyle}
 .editor-lanes,.pitch-options{display:flex;align-items:center;gap:8px;margin:12px 0;flex-wrap:wrap}
 .editor-lanes [aria-pressed="true"]{color:var(--tempo-fg);border-color:var(--tempo-accent)}
 </style>
       <header><strong>Tempo timeline</strong><button class="editor-close" type="button">Close</button></header>
-      <a class="editor-track" target="_blank" rel="noopener noreferrer"></a>
-      <output class="playback-state" aria-live="polite"></output>
+      <a class="editor-track" target="_blank" rel="noopener noreferrer" ${inline ? 'hidden' : ''}></a>
+      <output class="playback-state" aria-live="polite" ${inline ? 'hidden' : ''}></output>
       <label class="editor-enable" hidden><input class="editor-enabled" type="checkbox">Use saved timeline</label>
       <div class="editor-lanes" role="group" aria-label="Automation lane"><button type="button" data-lane="tempo" aria-pressed="true">Tempo</button><button type="button" data-lane="pitch" aria-pressed="false">Pitch</button></div>
       <div class="pitch-options" hidden><label>Arrow step <input class="pitch-step" type="number" min="0.001" max="12" step="0.1" value="0.5"> st</label><button type="button" class="pitch-clear">Remove pitch automation</button></div>
@@ -32,6 +32,7 @@ export function editorTemplate() {
         <div class="timeline-limits" aria-hidden="true"><span>0:00</span><span class="timeline-end"></span></div>
       </div>
       <div class="editor-readout"><span class="point-readout"></span></div>
+      ${inline ? '<details class="editor-advanced"><summary>Advanced<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></summary>' : ''}
       <label>Point <select class="editor-point-picker" aria-label="Selected tempo point"></select></label>
       <div class="editor-fields">
         <label>Reach at (seconds)<input class="point-time" type="number" min="0" step="0.1"></label>
@@ -45,10 +46,11 @@ export function editorTemplate() {
       </div>
       <label class="editor-pitch-label">Pitch<select class="editor-pitch"><option value="natural">Natural</option><option value="preserve">Preserve key</option></select></label>
       <label class="editor-pitch-label">Key shift<input class="editor-key-shift" type="number" min="-12" max="12" step="0.5" value="0"> semitones</label>
+      ${inline ? '</details>' : ''}
       <div class="editor-actions">
         <button class="editor-revert" type="button" hidden>Discard edits</button>
         <button class="editor-link" type="button">Copy link</button>
-        <button class="editor-apply-once" type="button" aria-pressed="false">Apply once</button>
+        <button class="editor-apply-once" type="button" aria-pressed="false" ${inline ? 'hidden' : ''}>Apply once</button>
         <button class="editor-save primary" type="button">Save timeline</button>
       </div>
       <details class="editor-sharing">

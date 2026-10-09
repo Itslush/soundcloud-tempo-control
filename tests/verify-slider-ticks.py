@@ -2,9 +2,10 @@ import os
 
 from playwright.sync_api import expect, sync_playwright
 
-from userscript_fixture import ROOT, browser_options, tempo_tick_geometry, userscript_source
+from userscript_fixture import ROOT, browser_options, tempo_tick_geometry, userscript_source, serve_site
 
-BASE = os.environ.get('SITE_URL', 'http://127.0.0.1:4322/')
+server, default_base = serve_site()
+BASE = os.environ.get('SITE_URL', default_base)
 
 
 def check_sizes(page, ruler, slider, thumb_width, widths, intervals=35):
@@ -41,12 +42,21 @@ with sync_playwright() as runtime:
             site.on('pageerror', lambda error: errors.append(str(error)))
             site.goto(BASE, wait_until='networkidle')
             site.locator('#preview-fixed').click()
-            check_sizes(site, site.locator('.speed-ticks'), site.locator('#demo-speed'), 12, [1440, 768, 390])
+            for width in [1440, 768, 390]:
+                site.set_viewport_size({'width': width, 'height': 1000})
+                for control, step in [('#demo-speed', '1.025'), ('#demo-key-slider', '1.5')]:
+                    slider = site.locator(control)
+                    slider.fill('1')
+                    slider.press('ArrowRight')
+                    expect(slider).to_have_value(step)
+                    expect(slider).to_have_css('--range-thumb-opacity', '1')
+                    assert slider.evaluate('el=>getComputedStyle(el).backgroundImage') != 'none'
             if scale == 2:
-                site.locator('.speed-rail').screenshot(path=str(ROOT / 'test-results/slider-ticks-site.png'))
+                site.locator('#preview-fixed-controls').screenshot(path=str(ROOT / 'test-results/slider-ticks-site.png'))
             assert site.locator('audio').evaluate('audio => audio.paused && !audio.currentSrc')
             assert not errors, errors
             context.close()
-        print('Both rulers: equally spaced centers, thumb-travel endpoints, 1x alignment and 0.025x keys passed at 3 widths, 4 CSS scales and 3 device scales. The userscript marks all 71 slider stops. No audio loaded.')
+        print('Userscript ruler: all 71 stops aligned across zoom and DPR. Website: both styled sliders remain visible and keyboard-adjustable at 3 widths and device scales. No audio loaded.')
     finally:
         browser.close()
+        server.shutdown()

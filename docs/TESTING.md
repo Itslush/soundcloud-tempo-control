@@ -24,6 +24,7 @@ For website checks, start `npm start` in another terminal:
 ```sh
 python tests/verify-demo.py
 python tests/verify-site.py
+python tests/verify-site-polish.py
 python tests/verify-site-presentation.py
 python tests/verify-number-fields.py
 python tests/verify-slider-ticks.py
@@ -39,6 +40,8 @@ python tests/verify-navigation.py
 ```
 
 `SITE_URL` overrides the default http://127.0.0.1:4322/. Screenshots and test output go to ignored `test-results/`. Browser checks run muted.
+
+`verify-site-polish.py` serves the built site locally and measures a generated tone through the demo's actual audio processor. It checks fractional shifts, pitch points, original comparison, independent fixed/timeline settings, visible matching sliders and the Advanced disclosure. `star-motion.test.cjs` exercises the shipped motion script over 120,000 simulated frames, including tile wrapping, direction continuity, reduced motion and pause/resume.
 
 `npm test` builds and verifies the userscript, then runs the complete Node suite through `npm run test:unit`. That command discovers every `tests/*.test.cjs` and `tests/*.test.mjs` suite, including transport, lifecycle, host recovery and server checks. CI prepares the decoder fixture first and runs the suite once. Use `npm run test:unit` alone when testing without rebuilding published userscript files; focused commands remain available for development.
 

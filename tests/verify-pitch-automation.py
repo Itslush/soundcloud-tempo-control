@@ -105,6 +105,7 @@ def main():
         b = graph.bounding_box()
         site.mouse.dblclick(b['x']+44+(b['width']-56)*.6,b['y']+60/220*b['height'])
         assert site.locator('.point').count() == 2
+        site.locator('.editor-advanced summary').click()
         site.locator('.point-rate').fill('1.5')
         site.locator('.point-rate').press('Tab')
         site.locator('.editor-save').click()
@@ -114,16 +115,9 @@ def main():
             site.set_viewport_size({'width':width,'height':1000})
             assert site.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
             site.locator('.tempo-editor-inline').screenshot(path=str(ROOT/f'test-results/site-pitch-{width}.png'))
-        site.locator('.star-settings summary').click()
-        site.locator('#site-stars').uncheck()
-        assert not site.locator('.space-accent').evaluate("el=>el.hasAttribute('data-visible')")
-        expect(site.locator('#site-star-speed')).to_be_disabled()
-        site.locator('#site-stars').check()
-        site.locator('#site-star-speed').fill('4')
-        site.locator('#site-star-speed').dispatch_event('input')
-        assert site.evaluate("getComputedStyle(document.querySelector('.space-accent>rect')).animationDuration") == '3.75s'
+        expect(site.locator('#site-stars, #site-star-speed, .star-settings')).to_have_count(0)
         site.emulate_media(reduced_motion='reduce')
-        assert site.evaluate("getComputedStyle(document.querySelector('.space-accent>rect')).animationName") == 'star-drift'
+        expect(site.locator('.space-accent')).not_to_have_attribute('data-visible', '')
         code = 'SCT1.' + base64.urlsafe_b64encode(json.dumps(saved).encode()).decode().rstrip('=')
         site.goto('http://127.0.0.1:4323/soundcloud-tempo-control/share/#sct=' + code)
         expect(site.locator('#share-summary')).to_contain_text('Pitch timeline')

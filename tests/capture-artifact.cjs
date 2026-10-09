@@ -25,9 +25,10 @@ function inspect(code) {
 }
 
 function verify(code, evidence) {
+  const artifactSha256 = hash(code);
+  if (artifactSha256 === evidence.artifactSha256)
+    return { artifactSha256, scope: 'captured-artifact' };
   const current = inspect(code);
-  if (current.artifactSha256 === evidence.artifactSha256)
-    return { ...current, scope: 'captured-artifact' };
   const proof = evidence.nonAudioDerivation;
   if (
     proof?.scheme !== 'outside-audioModules-declaration-v1' ||

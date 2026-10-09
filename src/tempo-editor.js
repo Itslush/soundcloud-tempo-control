@@ -56,7 +56,9 @@ export function createTempoEditor(api) {
         ])
       : data.points;
   const laneStep = () =>
-    lane === 'pitch' ? Number(el('.pitch-step').value) || 0.5 : readTempoIncrement();
+    lane === 'pitch'
+      ? Number(el('.pitch-step').value) || 0.5
+      : readTempoIncrement();
   let timer = 0;
   let graphWidth = 660;
 
@@ -389,7 +391,9 @@ export function createTempoEditor(api) {
     syncControls();
     if (panel && !panel.hidden)
       status(
-        'Playing track changed. This draft still belongs to the track shown above.',
+        draft?.track === key
+          ? ''
+          : 'Playing track changed. This draft still belongs to the track shown above.',
       );
   }
 
@@ -423,7 +427,7 @@ export function createTempoEditor(api) {
     if (!api.inline) panel.setAttribute('popover', 'manual');
     else panel.classList.add('tempo-editor-inline');
     panel.hidden = true;
-    panel.innerHTML = editorTemplate();
+    panel.innerHTML = editorTemplate(Boolean(api.inline));
     api.root.append(panel);
     for (const button of panel.querySelectorAll('[data-lane]'))
       button.onclick = () => {
@@ -785,6 +789,8 @@ export function createTempoEditor(api) {
       if (['Enter', ' '].includes(e.key)) {
         e.preventDefault();
         refresh();
+        const advanced = panel.querySelector('.editor-advanced');
+        if (advanced) advanced.open = true;
         el(
           target.dataset.kind === 'ramp'
             ? '.point-duration'
@@ -901,6 +907,7 @@ export function createTempoEditor(api) {
     el('.editor-output').hidden = true;
     refresh();
     status('Unsaved changes');
+    if (api.inline) api.refresh();
   }
   function updatePoint() {
     const p = lanePoints()[selected];
@@ -1413,6 +1420,15 @@ export function createTempoEditor(api) {
     open,
     validate,
     draftProfile: () => (draft ? draftData() : null),
+    draftPlayback(time) {
+      return draft
+        ? {
+            rate: evaluate(draft, time),
+            pitch: draft.pitch ?? api.defaultPitchMode,
+            keyShift: profilePitchAt(draft, time),
+          }
+        : null;
+    },
     loadDraft(data) {
       draft = validate(data);
       selected = 0;

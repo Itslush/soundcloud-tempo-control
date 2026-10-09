@@ -13,7 +13,7 @@ const get = <T extends Element>(id: string) =>
 const surface = document.querySelector<HTMLElement>('.timeline-demo')!;
 const pitchInput = get<HTMLSelectElement>('demo-pitch');
 const keyInput = get<HTMLInputElement>('demo-key-shift');
-const keyShift = () => editor.keyShift() ?? (Number(keyInput.value) || 0);
+const keySlider = get<HTMLInputElement>('demo-key-slider');
 const status = get<HTMLElement>('demo-status');
 const follow = get<HTMLInputElement>('preview-follow');
 const seek = get<HTMLInputElement>('preview-seek');
@@ -81,7 +81,9 @@ const editor = createTempoEditor({
 
 function currentRate() {
   if (original) return 1;
-  return follow.checked ? (editor.value() ?? fixedRate) : fixedRate;
+  return follow.checked
+    ? (editor.draftPlayback(preview.audio.currentTime)?.rate ?? fixedRate)
+    : fixedRate;
 }
 
 function syncMode() {
@@ -90,15 +92,15 @@ function syncMode() {
   get('preview-fixed').setAttribute('aria-pressed', String(!follow.checked));
   get('preview-timeline').setAttribute('aria-pressed', String(follow.checked));
   get<HTMLElement>('preview-fixed-controls').hidden = follow.checked;
+  get<HTMLElement>('demo-shared-editor').hidden = !follow.checked;
   pitchInput.closest<HTMLElement>('.select-control')!.hidden = follow.checked;
-  keyInput.closest<HTMLElement>('.number-field')!.hidden = follow.checked;
   compare.setAttribute('aria-pressed', String(original));
   compare.textContent = original ? 'Back to adjusted' : 'Listen to original';
   get('demo-copy-label').textContent = original
     ? 'Copy adjusted link'
     : 'Copy link';
   exact.value = String(fixedRate);
-  slider.value = String(Math.min(fixedRate, 2));
+  slider.value = String(fixedRate);
   syncRange(slider);
   slider.setAttribute('aria-valuetext', `${fixedRate} times speed`);
   syncNumbers();
@@ -166,16 +168,16 @@ compare.addEventListener('click', () => {
   syncMode();
 });
 
-function applyAudio() {
+function applyAudio(labels = true) {
+  const draft = follow.checked
+    ? editor.draftPlayback(preview.audio.currentTime)
+    : null;
   preview.apply(
-    currentRate(),
-    !original &&
-      (follow.checked
-        ? (editor.pitchMode() ?? pitchInput.value)
-        : pitchInput.value) === 'preserve',
-    original ? 0 : follow.checked ? keyShift() : Number(keyInput.value) || 0,
+    original ? 1 : (draft?.rate ?? fixedRate),
+    !original && (draft?.pitch ?? pitchInput.value) === 'preserve',
+    original ? 0 : (draft?.keyShift ?? (Number(keyInput.value) || 0)),
   );
-  renderPlayback();
+  if (labels) renderPlayback();
 }
 
 function renderPlayback(labels = true) {
@@ -197,14 +199,7 @@ function animate(time: number) {
   frame = 0;
   if (preview.audio.paused || document.hidden) return;
   if (time - lastAudioFrame >= 50) {
-    preview.apply(
-      currentRate(),
-      !original &&
-        (follow.checked
-          ? (editor.pitchMode() ?? pitchInput.value)
-          : pitchInput.value) === 'preserve',
-      original ? 0 : follow.checked ? keyShift() : Number(keyInput.value) || 0,
-    );
+    applyAudio(false);
     lastAudioFrame = time;
   }
   const labels = time - lastLabelFrame >= 100;
@@ -396,15 +391,7 @@ preview.audio.addEventListener('playing', () => {
   playbackState();
 });
 preview.audio.addEventListener('timeupdate', () => {
-  if (document.hidden)
-    preview.apply(
-      currentRate(),
-      !original &&
-        (follow.checked
-          ? (editor.pitchMode() ?? pitchInput.value)
-          : pitchInput.value) === 'preserve',
-      original ? 0 : follow.checked ? keyShift() : Number(keyInput.value) || 0,
-    );
+  if (document.hidden) applyAudio(false);
 });
 document.addEventListener('visibilitychange', playbackState);
 seek.addEventListener('input', () => {
@@ -414,12 +401,17 @@ seek.addEventListener('input', () => {
 get<HTMLInputElement>('preview-volume').addEventListener('input', (event) => {
   preview.audio.volume = Number((event.target as HTMLInputElement).value);
 });
-pitchInput.addEventListener('change', applyAudio);
+pitchInput.addEventListener('change', () => applyAudio());
 keyInput.addEventListener('change', () => {
   keyInput.value = String(clamp(Number(keyInput.value) || 0, -12, 12));
-  editor.setKeyShift(Number(keyInput.value));
+  keySlider.value = keyInput.value;
+  syncRange(keySlider);
   syncNumbers();
   applyAudio();
+});
+keySlider.addEventListener('input', () => {
+  keyInput.value = keySlider.value;
+  keyInput.dispatchEvent(new Event('change', { bubbles: true }));
 });
 
 get<HTMLInputElement>('preview-file').addEventListener('change', (event) => {

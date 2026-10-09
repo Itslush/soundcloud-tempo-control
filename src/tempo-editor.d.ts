@@ -14,6 +14,9 @@ export function createTempoEditor(api: Record<string, unknown>): {
   keyShift(): number | null;
   pitchMode(): string | null;
   draftProfile(): TempoProfile | null;
+  draftPlayback(
+    time: number,
+  ): { rate: number; pitch: string; keyShift: number } | null;
   loadDraft(data: unknown): void;
   changeTrack(track: string): void;
   observe(audio: HTMLMediaElement): void;

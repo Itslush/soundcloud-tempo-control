@@ -1,6 +1,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { inspect, verify } = require('./capture-artifact.cjs');
+const { createHash } = require('node:crypto');
 const original =
   '(() => {const audioModules = {rate: 1}; const label = "tempo";})();';
 const identity = inspect(original);
@@ -18,6 +19,14 @@ test('exact captures need no retrospective derivation', () => {
     verify(original, { artifactSha256: identity.artifactSha256 }).scope,
     'captured-artifact',
   );
+});
+test('exact captures accept a flattened bundle without weakening mismatch checks', () => {
+  const code = '(() => {const rate = 1;})();';
+  const proof = {
+    artifactSha256: createHash('sha256').update(code).digest('hex'),
+  };
+  assert.equal(verify(code, proof).scope, 'captured-artifact');
+  assert.throws(() => verify(code.replace('1', '2'), proof));
 });
 test('audio-only edits retain original capture attribution', () => {
   const result = verify(original.replace('rate: 1', 'rate: 2'), evidence);

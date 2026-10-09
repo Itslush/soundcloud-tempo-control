@@ -2,10 +2,12 @@ import hashlib
 import json
 import os
 import subprocess
+from urllib.parse import urljoin
 from playwright.sync_api import sync_playwright, expect
-from userscript_fixture import ROOT, browser_options
+from userscript_fixture import ROOT, browser_options, serve_site
 
-BASE = os.environ.get('SITE_URL', 'http://127.0.0.1:4322/')
+server, default_base = serve_site()
+BASE = os.environ.get('SITE_URL', default_base)
 evidence = json.loads((ROOT / 'docs/screenshot-evidence.json').read_text(encoding='utf-8'))
 assert evidence['deviceScaleFactor'] == 3
 assert evidence['muted'] is True
@@ -56,7 +58,9 @@ with sync_playwright() as playwright:
             expect(page.locator('.viewer-image')).to_be_visible()
             expect(page.locator('.viewer-image')).to_have_attribute('alt', image.get_attribute('alt'))
             expect(page.locator('.viewer-stage')).to_have_accessible_name('Full screenshot. Scroll to inspect when zoomed in. Escape closes the viewer.')
-            expect(page.locator('.viewer-zoom')).to_have_text('100%')
+            assert page.locator('.viewer-stage').evaluate('stage => { const image = stage.querySelector("img").getBoundingClientRect(); return image.width <= stage.clientWidth && image.height <= stage.clientHeight; }'), width
+            assert page.locator('.viewer-image').get_attribute('src').endswith(link.get_attribute('href'))
+            page.locator('.viewer-actual').click()
             focal = [link.get_attribute('data-focus-x'), link.get_attribute('data-focus-y')]
             if all(focal):
                 assert page.locator('.viewer-stage').evaluate('''(stage, focal) => {
@@ -80,13 +84,13 @@ with sync_playwright() as playwright:
         assert page.evaluate('document.documentElement.scrollWidth <= document.documentElement.clientWidth'), width
         measurements.append({'width': width, 'images': page.locator('.product-capture img').evaluate_all('images => images.map(image => ({source: image.currentSrc.split("/").pop(), width: image.getBoundingClientRect().width, height: image.getBoundingClientRect().height}))')})
     page.goto(BASE)
-    page.route('**/shared-preview.png', lambda route: route.abort())
+    page.route('**/share-actions.png', lambda route: route.abort())
     page.locator('a[data-capture]').last.click()
     expect(page.locator('.viewer-error')).to_be_visible()
     expect(page.locator('.viewer-fit')).to_be_disabled()
     expect(page.locator('.viewer-in')).to_be_disabled()
-    expect(page.locator('.viewer-original')).to_have_attribute('href', BASE + 'screenshots/shared-preview.png')
-    page.unroute('**/shared-preview.png')
+    expect(page.locator('.viewer-original')).to_have_attribute('href', BASE + 'screenshots/share-actions.png')
+    page.unroute('**/share-actions.png')
     page.locator('.viewer-retry').click()
     expect(page.locator('.viewer-image')).to_be_visible()
     page.locator('.viewer-close').click()
@@ -96,8 +100,9 @@ with sync_playwright() as playwright:
     fallback.goto(BASE)
     expect(fallback.locator('a[data-capture]')).to_have_count(4)
     for link in fallback.locator('a[data-capture]').all():
-        assert no_js.request.get(link.get_attribute('href') if link.get_attribute('href').startswith('http') else BASE.rstrip('/') + link.get_attribute('href')).ok
+        assert no_js.request.get(urljoin(BASE, link.get_attribute('href'))).ok
     assert not errors, errors
     browser.close()
+    server.shutdown()
     (ROOT / 'test-results/capture-verification.json').write_text(json.dumps(measurements, indent=2) + '\n', encoding='utf-8')
     print('Passed: 4 genuine capture views at 7 widths, responsive sources at DPR 2, focal subject visibility, focus restoration, Escape, zoom, loading failure/retry, no-JS originals and muted provenance.')

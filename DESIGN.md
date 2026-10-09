@@ -66,7 +66,9 @@ Tempo and Pitch are independent graph lanes using the same points, fade timing, 
 
 The website embeds the real editor rather than maintaining a second approximation. Fixed controls are hidden in Timeline mode, where the editor owns pitch and tempo. Copy links lead to the existing website's share page, which validates the embedded data and offers installation, adjusted playback or the original SoundCloud track. A separate custom hostname requires DNS and is not configured by the source.
 
-Website and plugin star speed use a 15-second base divided by the chosen 0.5–4× speed; default 2× gives 7.5 seconds. Both have an on/off toggle. Start from reduced-motion preferences until a user explicitly chooses; explicit On affects only stars. Disable the speed field when motion is off. Keep stars behind opaque content.
+Website stars move at a fixed 1.5×, with no motion settings on the page. Interpolate the heading smoothly between random directions over random periods. Keep their velocity continuous and wrap the repeating pattern by whole tiles. Pause offscreen, in hidden tabs, with reduced motion and with forced colours. Plugin appearance settings remain unchanged. Keep stars behind opaque content.
+
+The website timeline previews its current draft, including semitone changes and pitch automation. Put detailed point, pitch and fade fields in a closed Advanced disclosure; graph keyboard shortcuts open it before focusing a field. Keep the volume thumb visible without hover. Screenshot previews and enlarged views show current, focused control crops rather than full-page captures, and open fitted to the viewer.
 
 No generated imagery, promotional claims, testimonials, counters, new icon library or additional content sections are part of this change. Shadows are limited to floating menus. Arrows operate numeric controls or disclose choices; they are not decorative calls to action.
 

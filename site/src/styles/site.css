@@ -460,6 +460,35 @@ input[type='range']::-moz-range-thumb {
   color: var(--muted);
   font-size: 15px;
 }
+.site-appearance {
+  margin-top: 24px;
+}
+.site-appearance summary {
+  background: var(--ground);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  list-style: none;
+  width: fit-content;
+  min-height: 44px;
+  cursor: pointer;
+}
+.site-appearance summary::-webkit-details-marker {
+  display: none;
+}
+.site-appearance[open] summary svg {
+  transform: rotate(180deg);
+}
+.site-appearance button[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.site-appearance button {
+  background: var(--ground);
+}
+#site-star-status:empty {
+  display: none;
+}
 .sr-only,
 .skip-link:not(:focus) {
   position: absolute;

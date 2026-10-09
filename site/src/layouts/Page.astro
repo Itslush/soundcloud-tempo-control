@@ -71,6 +71,28 @@ const links = [
     </header>
     <main id="main"><slot /></main>
     <Donations />
+    <details class="site-appearance shell" hidden>
+      <summary
+        >Appearance <svg
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
+          aria-hidden="true"
+          ><path
+            d="m4 6 4 4 4-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"></path></svg
+        ></summary
+      >
+      <button
+        class="button"
+        id="site-star-motion"
+        type="button"
+        aria-pressed="false">Animate stars</button
+      >
+      <p id="site-star-status" role="status"></p>
+    </details>
     <footer class="site-footer shell">
       <p>Unofficial. Not affiliated with SoundCloud.</p>
       <nav aria-label="Footer navigation">

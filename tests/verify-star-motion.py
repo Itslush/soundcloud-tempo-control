@@ -1,0 +1,76 @@
+import os
+
+from playwright.sync_api import expect, sync_playwright
+from userscript_fixture import ROOT, browser_options, serve_site
+
+
+server, local = serve_site()
+base = os.environ.get('SITE_URL', local)
+with sync_playwright() as playwright:
+    browser = playwright.chromium.launch(**browser_options(), headless=True)
+    context = browser.new_context(viewport={'width': 1440, 'height': 900}, reduced_motion='reduce')
+    page = context.new_page()
+    errors = []
+    page.on('pageerror', lambda error: errors.append(str(error)))
+    page.goto(base, wait_until='networkidle')
+    field = page.locator('.space-accent')
+    pattern = field.locator('pattern')
+    expect(field).not_to_have_attribute('data-visible', '')
+    assert pattern.get_attribute('patternTransform') is None
+    expect(page.locator('#site-star-motion')).to_be_hidden()
+    page.locator('.site-appearance summary').click()
+    toggle = page.locator('#site-star-motion')
+    expect(toggle).to_have_text('Star motion: Off')
+    toggle.focus()
+    page.keyboard.press('Space')
+    expect(toggle).to_have_attribute('aria-pressed', 'true')
+    page.reload(wait_until='networkidle')
+    expect(field).to_have_attribute('data-visible', '')
+    expect(toggle).to_be_hidden()
+    clip = {'x': 0, 'y': 100, 'width': 1440, 'height': 750}
+    first = page.screenshot(clip=clip)
+    page.wait_for_timeout(1500)
+    second = page.screenshot(clip=clip)
+    assert first != second, 'Transforms changed but the visible stars did not move'
+    page.screenshot(path=str(ROOT / 'test-results/site-stars-moving.png'))
+    other = context.new_page()
+    other.goto(base + 'guide/', wait_until='networkidle')
+    expect(other.locator('.space-accent')).to_have_attribute('data-visible', '')
+    other.locator('.site-appearance summary').click()
+    other.locator('#site-star-motion').click()
+    expect(toggle).to_have_attribute('aria-pressed', 'false')
+    page.bring_to_front()
+    page.wait_for_timeout(100)
+    first = page.screenshot(clip=clip)
+    page.wait_for_timeout(250)
+    assert page.screenshot(clip=clip) == first, 'Off should stop the actual rendered stars'
+    page.locator('.site-appearance summary').click()
+    toggle.click()
+    page.emulate_media(forced_colors='active')
+    expect(field).to_be_hidden()
+    expect(field).not_to_have_attribute('data-visible', '')
+    page.emulate_media(forced_colors='none')
+    expect(field).to_have_attribute('data-visible', '')
+    page.set_viewport_size({'width': 390, 'height': 844})
+    toggle.scroll_into_view_if_needed()
+    assert page.evaluate('document.documentElement.scrollWidth === document.documentElement.clientWidth')
+    assert toggle.bounding_box()['height'] >= 44
+    page.screenshot(path=str(ROOT / 'test-results/site-stars-setting-mobile.png'))
+    blocked = browser.new_context(reduced_motion='reduce')
+    blocked.add_init_script("Storage.prototype.setItem = () => { throw new Error('Storage blocked'); }")
+    blocked_page = blocked.new_page()
+    blocked_page.goto(base, wait_until='networkidle')
+    blocked_page.locator('.site-appearance summary').click()
+    blocked_page.locator('#site-star-motion').click()
+    expect(blocked_page.locator('#site-star-status')).to_contain_text('could not save')
+    expect(blocked_page.locator('.space-accent')).to_have_attribute('data-visible', '')
+    blocked.close()
+    no_script = browser.new_context(java_script_enabled=False)
+    no_script_page = no_script.new_page()
+    no_script_page.goto(base)
+    expect(no_script_page.locator('.site-appearance')).to_be_hidden()
+    no_script.close()
+    assert not errors, errors
+    browser.close()
+server.shutdown()
+print('Passed: actual rendered star movement, reduced-motion default and explicit override, keyboard, reload, cross-tab setting, forced colours, mobile layout, blocked storage and no-JavaScript fallback.')

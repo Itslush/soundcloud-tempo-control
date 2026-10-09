@@ -2,6 +2,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import subprocess
 
 from playwright.sync_api import expect, sync_playwright
 
@@ -95,7 +96,7 @@ def fixture(browser):
 
 
 def live(browser):
-    source = (ROOT / 'src/tempo-appearance.js').read_bytes()
+    source = subprocess.check_output([os.environ.get('NODE', 'node'), '-p', "require('./tests/module-fixture.cjs')(['tempo-appearance.js'])"], cwd=ROOT)
     context = browser.new_context(viewport={'width': 1440, 'height': 1000})
     context.add_init_script('''
         window.appearanceMedia = new Set();
@@ -127,6 +128,8 @@ def live(browser):
         for mode, background in [('charcoal', 'rgb(17, 17, 17)'), ('oled', 'rgb(0, 0, 0)')]:
             page.evaluate('(mode) => appearanceProbe.setMode(mode)', mode)
             expect(page.locator('body')).to_have_css('background-color', background)
+            before = page.locator('body').evaluate('el => getComputedStyle(el).backgroundPosition')
+            page.wait_for_function('before => getComputedStyle(document.body).backgroundPosition !== before', arg=before)
             surface = 'rgb(32, 32, 32)' if mode == 'charcoal' else 'rgb(11, 11, 11)'
             expect(page.locator('.playControls__inner')).to_have_css('background-color', surface)
             expect(page.locator('.playControls__prev')).to_have_css('background-color', surface)

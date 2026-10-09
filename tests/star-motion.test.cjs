@@ -1,14 +1,15 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { readFileSync } = require('node:fs');
 const { runInNewContext } = require('node:vm');
-const { transformSync } = require('esbuild');
+const { buildSync } = require('esbuild');
 
 test('website stars drift at 1.5x, turn smoothly, wrap, and pause without jumps', () => {
-  const code = transformSync(
-    readFileSync('site/src/scripts/star-motion.ts', 'utf8'),
-    { loader: 'ts' },
-  ).code;
+  const code = buildSync({
+    entryPoints: ['site/src/scripts/star-motion.ts'],
+    bundle: true,
+    write: false,
+    format: 'iife',
+  }).outputFiles[0].text;
   let point = [0, 0],
     visible,
     active,
@@ -31,7 +32,7 @@ test('website stars drift at 1.5x, turn smoothly, wrap, and pause without jumps'
   };
   const document = {
     hidden: false,
-    querySelector: () => field,
+    querySelector: (selector) => (selector === '.space-accent' ? field : null),
     addEventListener: (name, fn) => {
       listeners[name] = fn;
     },
@@ -39,6 +40,11 @@ test('website stars drift at 1.5x, turn smoothly, wrap, and pause without jumps'
   runInNewContext(code, {
     document,
     window: {
+      requestAnimationFrame: (fn) => {
+        frames.set(++next, fn);
+        return next;
+      },
+      cancelAnimationFrame: (id) => frames.delete(id),
       addEventListener: (name, fn) => {
         listeners[name] = fn;
       },
@@ -62,11 +68,6 @@ test('website stars drift at 1.5x, turn smoothly, wrap, and pause without jumps'
       }
       observe() {}
     },
-    requestAnimationFrame: (fn) => {
-      frames.set(++next, fn);
-      return next;
-    },
-    cancelAnimationFrame: (id) => frames.delete(id),
   });
   function step() {
     time += 1000 / 60;

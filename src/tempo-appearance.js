@@ -1,3 +1,5 @@
+import { createStarMotion } from './star-motion.js';
+
 export function createTempoAppearance({ onChange, onError } = {}) {
   if (
     (onChange !== undefined && typeof onChange !== 'function') ||
@@ -8,7 +10,8 @@ export function createTempoAppearance({ onChange, onError } = {}) {
   const motionKey = 'soundcloud.tempo.starMotion';
   const speedKey = 'soundcloud.tempo.starSpeed';
   const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)');
-  let speed = 2;
+  const forcedColors = window.matchMedia?.('(forced-colors: active)');
+  let speed = 1.5;
   const motionModes = new Set(['system', 'on', 'off']);
   let motion = 'system';
   const attribute = 'data-tempo-appearance';
@@ -203,15 +206,6 @@ export function createTempoAppearance({ onChange, onError } = {}) {
           background-image: url("data:image/svg+xml,${encodeURIComponent(stars)}");
           background-size: 960px 840px;
           background-repeat: repeat;
-          animation: tempo-star-drift 7.5s linear infinite alternate;
-          animation-play-state: var(--tempo-star-motion, running);
-        }
-        @keyframes tempo-star-drift {
-          from { background-position: 0 0; }
-          to { background-position: 96px 72px; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          ${scope} body { animation: none; }
         }
         ${scope} .l-container {
           background-color: transparent;
@@ -262,6 +256,8 @@ export function createTempoAppearance({ onChange, onError } = {}) {
         else root.setAttribute(attribute, previousAttribute);
       }
     } finally {
+      entry.drift?.(0);
+      entry.drift = undefined;
       entry.style?.remove();
       entry.style = undefined;
       entry.root = undefined;
@@ -306,8 +302,14 @@ export function createTempoAppearance({ onChange, onError } = {}) {
       const element = doc.createElement('style');
       element.textContent = css ||= stylesheet();
       const previous = target.getAttribute(attribute);
+      let position;
       try {
         (doc.head || target).append(element);
+        const index = element.sheet.insertRule(
+          `html[${attribute}] body { background-position: 0 0; }`,
+          element.sheet.cssRules.length,
+        );
+        position = element.sheet.cssRules[index].style;
         target.setAttribute(attribute, next);
       } catch (error) {
         element.remove();
@@ -316,13 +318,13 @@ export function createTempoAppearance({ onChange, onError } = {}) {
       entry.style = element;
       entry.root = target;
       entry.previousAttribute = previous;
+      entry.drift = createStarMotion((x, y) => {
+        position.backgroundPosition = `${x}px ${y}px`;
+      }, doc.defaultView);
       entry.motion = () => {
-        element.textContent =
-          css +
-          `\nhtml[${attribute}] body { animation: ${moving() ? `tempo-star-drift ${15 / speed}s linear infinite alternate` : 'none'}; }` +
-          (doc.hidden
-            ? `\nhtml[${attribute}] body { animation-play-state: paused; }`
-            : '');
+        entry.drift(
+          !doc.hidden && moving() && !forcedColors?.matches ? speed : 0,
+        );
       };
       doc.addEventListener('visibilitychange', entry.motion);
       entry.motion();
@@ -398,8 +400,8 @@ export function createTempoAppearance({ onChange, onError } = {}) {
   function sync(event) {
     if (!storage || event.storageArea !== storage) return;
     if (event.key === speedKey || event.key === null) {
-      const value = event.key === null ? 2 : Number(event.newValue);
-      speed = value >= 0.5 && value <= 4 ? value : 2;
+      const value = event.key === null ? 1.5 : Number(event.newValue);
+      speed = value >= 0.5 && value <= 4 ? value : 1.5;
       refreshMotion();
     }
     if (event.key === motionKey || event.key === null) {
@@ -435,6 +437,7 @@ export function createTempoAppearance({ onChange, onError } = {}) {
   else document.addEventListener('DOMContentLoaded', ready, { once: true });
   window.addEventListener('storage', sync);
   reducedMotion?.addEventListener('change', refreshMotion);
+  forcedColors?.addEventListener('change', refreshMotion);
   return Object.freeze({
     mode: () => selected,
     motion: () => (moving() ? 'on' : 'off'),
@@ -475,6 +478,7 @@ export function createTempoAppearance({ onChange, onError } = {}) {
       disposed = true;
       window.removeEventListener('storage', sync);
       reducedMotion?.removeEventListener('change', refreshMotion);
+      forcedColors?.removeEventListener('change', refreshMotion);
       document.removeEventListener('DOMContentLoaded', ready);
       selected = 'native';
       const failures = [];

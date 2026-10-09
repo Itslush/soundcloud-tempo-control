@@ -19,6 +19,9 @@ function fixture({
   const notifications = [];
   const writes = [];
   const styles = [];
+  const frames = new Map();
+  let frameId = 0,
+    time = 0;
   const windowListeners = new Map();
   const documentListeners = new Map();
   const attributes = new Map();
@@ -48,6 +51,13 @@ function fixture({
       assert.equal(name, 'style');
       return {
         textContent: '',
+        sheet: {
+          cssRules: [],
+          insertRule() {
+            this.cssRules.push({ style: { backgroundPosition: '0px 0px' } });
+            return this.cssRules.length - 1;
+          },
+        },
         remove() {
           const index = styles.indexOf(this);
           if (index >= 0) styles.splice(index, 1);
@@ -58,6 +68,11 @@ function fixture({
     removeEventListener: (name) => documentListeners.delete(name),
   };
   const window = {
+    requestAnimationFrame: (fn) => {
+      frames.set(++frameId, fn);
+      return frameId;
+    },
+    cancelAnimationFrame: (id) => frames.delete(id),
     location: { origin: 'https://soundcloud.com', protocol: 'https:' },
     document,
     localStorage: storage,
@@ -93,6 +108,18 @@ function fixture({
     notifications,
     attributes,
     styles,
+    frames,
+    step() {
+      time += 1000 / 60;
+      const pending = [...frames.values()];
+      frames.clear();
+      pending.forEach((fn) => fn(time));
+    },
+    position() {
+      return styles[0].sheet.cssRules[0].style.backgroundPosition
+        .split(' ')
+        .map(parseFloat);
+    },
     values,
     writes,
     windowListeners,
@@ -342,18 +369,19 @@ test('stars drift without changing host geometry, pause when hidden and respect 
   assert.doesNotMatch(svg, /filter|blur|animate|script|image|foreignObject/);
   assert.equal((css.match(/url\(/g) || []).length, 1);
   assert.ok(css.length < 20000);
-  assert.match(
-    css,
-    /animation: tempo-star-drift 7.5s linear infinite alternate/,
-  );
-  assert.match(css, /prefers-reduced-motion: reduce/);
+  assert.doesNotMatch(css, /tempo-star-drift/);
+  assert.equal(f.appearance.speed(), 1.5);
+  f.step();
+  f.step();
+  assert.ok(Math.abs(Math.hypot(...f.position()) - 10 / 60) < 1e-8);
   f.document.hidden = true;
   f.documentListeners.get('visibilitychange')();
-  assert.match(f.styles[0].textContent, /animation-play-state:\s*paused/);
+  assert.equal(f.frames.size, 0);
   f.document.hidden = false;
   f.documentListeners.get('visibilitychange')();
   assert.equal(f.styles[0].textContent, css);
   f.appearance.dispose();
+  assert.equal(f.frames.size, 0);
 });
 
 test('explicit star motion persists, synchronizes and restores the system default', () => {
@@ -362,23 +390,33 @@ test('explicit star motion persists, synchronizes and restores the system defaul
   assert.equal(f.appearance.motion(), 'on');
   f.appearance.setMotion('on');
   assert.equal(f.values.get('soundcloud.tempo.starMotion'), 'on');
-  assert.match(f.styles[0].textContent, /animation: tempo-star-drift/);
+  assert.equal(f.frames.size, 1);
   f.sync({ key: 'soundcloud.tempo.starMotion', newValue: 'off' });
   assert.equal(f.appearance.motion(), 'off');
-  assert.match(f.styles[0].textContent, /animation: none/);
+  assert.equal(f.frames.size, 0);
   f.appearance.setMode('native');
   assert.equal(f.styles.length, 0);
   f.appearance.setMode('oled');
-  assert.match(f.styles[0].textContent, /animation: none/);
+  assert.equal(f.frames.size, 0);
   f.appearance.setMotion('system');
   assert.equal(f.styles[0].textContent, initial);
   assert.throws(() => f.appearance.setMotion('fast'), /Invalid star motion/);
   f.appearance.setSpeed(4);
   assert.equal(f.appearance.speed(), 4);
   assert.equal(f.values.get('soundcloud.tempo.starSpeed'), '4');
-  assert.match(f.styles[0].textContent, /tempo-star-drift 3.75s/);
+  f.step();
+  const before = f.position();
+  f.step();
+  assert.ok(
+    Math.abs(
+      Math.hypot(...f.position().map((value, i) => value - before[i])) -
+        ((100 / 15) * 4) / 60,
+    ) < 1e-8,
+  );
   f.sync({ key: 'soundcloud.tempo.starSpeed', newValue: '0.5' });
-  assert.match(f.styles[0].textContent, /tempo-star-drift 30s/);
+  assert.equal(f.appearance.speed(), 0.5);
+  f.sync({ key: 'soundcloud.tempo.starSpeed', newValue: null });
+  assert.equal(f.appearance.speed(), 1.5);
   for (const value of [0, 5, NaN, Infinity])
     assert.throws(() => f.appearance.setSpeed(value), /Star speed/);
   f.appearance.dispose();

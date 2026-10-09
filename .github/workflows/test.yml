@@ -48,6 +48,7 @@ jobs:
           python tests/verify-site.py
           python tests/verify-site-polish.py
           python tests/verify-site-presentation.py
+          python tests/verify-star-motion.py
           python tests/verify-number-fields.py
           python tests/verify-slider-ticks.py
           python tests/verify-hero.py

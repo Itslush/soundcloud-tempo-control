@@ -2,16 +2,17 @@ import { controlsStyle } from './tempo-controls-style.js';
 
 function dialTicks() {
   return Array.from({ length: 17 }, (_, index) => {
-    const angle = ((index / 16) * 270 - 135) * Math.PI / 180;
+    const angle = (((index / 16) * 270 - 135) * Math.PI) / 180;
     const inner = index % 4 === 0 ? 12 : 14;
-    const point = (radius) => `${(16 + Math.sin(angle) * radius).toFixed(2)} ${(16 - Math.cos(angle) * radius).toFixed(2)}`;
+    const point = (radius) =>
+      `${(16 + Math.sin(angle) * radius).toFixed(2)} ${(16 - Math.cos(angle) * radius).toFixed(2)}`;
     return `M${point(inner)}L${point(16)}`;
   }).join('');
 }
 
 function faderTicks() {
   return Array.from({ length: 16 }, (_, index) => {
-    const y = (6 + index / 15 * 132).toFixed(2);
+    const y = (6 + (index / 15) * 132).toFixed(2);
     return `M25 ${y}h${index % 4 === 0 || index === 15 ? 6 : 3}`;
   }).join('');
 }
@@ -165,8 +166,8 @@ export function controlsTemplate({
             <label><input type="radio" name="appearance" value="oled">OLED</label>
           </fieldset>
           <label class="random-label"><input id="star-motion" type="checkbox" />Star motion</label>
-          <label class="output-label" for="star-speed">Star speed <output id="star-speed-value">2×</output></label>
-          <input id="star-speed" type="range" min="0.5" max="4" step="0.25" value="2" aria-label="Star motion speed" />
+          <label class="output-label" for="star-speed">Star speed <output id="star-speed-value">1.5×</output></label>
+          <input id="star-speed" type="range" min="0.5" max="4" step="0.25" value="1.5" aria-label="Star motion speed" />
         </details>
         <details class="advanced-audio">
           <summary>Advanced audio</summary>

@@ -127,35 +127,36 @@ with sync_playwright() as p:
     page.locator('input[name=appearance][value=oled]').check()
     page.locator('#apply-saved').press('Escape')
     drift = {'before': page.locator('body').evaluate('el => getComputedStyle(el).backgroundPosition')}
-    assert page.locator('body').evaluate('el => getComputedStyle(el).animationDuration') == '7.5s'
     page.wait_for_timeout(1500)
     drift['after'] = page.locator('body').evaluate('el => getComputedStyle(el).backgroundPosition')
     assert drift['before'] != drift['after'], drift
     page.emulate_media(reduced_motion='reduce')
-    assert page.locator('body').evaluate('el => getComputedStyle(el).animationName') == 'none'
+    page.wait_for_timeout(100)
+    stopped = page.locator('body').evaluate('el => getComputedStyle(el).backgroundPosition')
+    page.wait_for_timeout(250)
+    assert page.locator('body').evaluate('el => getComputedStyle(el).backgroundPosition') == stopped
     page.locator('.settings-button').click()
     page.locator('#star-motion').check()
     page.locator('#star-speed').fill('4')
     page.locator('#apply-saved').press('Escape')
-    assert page.locator('body').evaluate('el => getComputedStyle(el).animationName') == 'tempo-star-drift'
-    assert page.locator('body').evaluate('el => getComputedStyle(el).animationDuration') == '3.75s'
     actual_before = page.locator('body').evaluate('el => getComputedStyle(el).backgroundPosition')
     page.wait_for_timeout(1500)
     actual_after = page.locator('body').evaluate('el => getComputedStyle(el).backgroundPosition')
     assert actual_before != actual_after, (actual_before, actual_after)
     page.reload()
-    assert page.locator('body').evaluate('el => getComputedStyle(el).animationName') == 'tempo-star-drift'
+    resumed = page.locator('body').evaluate('el => getComputedStyle(el).backgroundPosition')
+    page.wait_for_function('before => getComputedStyle(document.body).backgroundPosition !== before', arg=resumed)
     page.locator('.settings-button').click()
     page.locator('.appearance-settings summary').click()
     expect(page.locator('#star-motion')).to_be_checked()
     expect(page.locator('#star-speed')).to_have_value('4')
     page.locator('#star-motion').uncheck()
-    assert page.locator('body').evaluate('el => getComputedStyle(el).animationName') == 'none'
     expect(page.locator('#star-speed')).to_be_disabled()
-    assert page.locator('body').evaluate('el => getComputedStyle(el).animationName') == 'none'
     page.locator('#apply-saved').press('Escape')
     page.emulate_media(reduced_motion='no-preference')
-    assert page.locator('body').evaluate('el => getComputedStyle(el).animationName') == 'none'
+    stopped = page.locator('body').evaluate('el => getComputedStyle(el).backgroundPosition')
+    page.wait_for_timeout(250)
+    assert page.locator('body').evaluate('el => getComputedStyle(el).backgroundPosition') == stopped
     page.set_viewport_size({'width': 390, 'height': 844})
     page.locator('.settings-button').click()
     page.screenshot(path=str(ROOT/'test-results/control-settings-mobile.png'))

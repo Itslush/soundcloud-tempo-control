@@ -1,9 +1,9 @@
 {
-  "capturedAt": "2026-10-09T21:14:11.368171+00:00",
+  "capturedAt": "2026-10-09T21:33:34.708665+00:00",
   "capture": "Exact built userscript UI on a real public music track in isolated Chrome; early injection, not Violentmonkey. Captures are browser screenshots with source metadata added to PNG headers; screenshot pixels are unchanged. Narrow captures are resized desktop-browser windows, not physical mobile devices.",
   "track": "https://soundcloud.com/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix",
-  "artifactSha256": "77f92189943e9fd6bd5d0ca8ec18e8e0fc976cf01c207512667f563a38b692d5",
-  "artifactBytes": 976282,
+  "artifactSha256": "dd0f834645f0c48c4f506dc5383efb0bed07f4c446466e73e88b23470c6511fc",
+  "artifactBytes": 977083,
   "captureScriptSha256": "ff24b1d650178e3093a85a5f42293269e347e0bf35cf5d220c01c17251232bcf",
   "outputProbeSha256": "b1604e43b080fdd484da86466308294b800f146cb24d6e1b7030b14f7a81b59f",
   "muting": [
@@ -23,7 +23,7 @@
       "url": "https://soundcloud.com/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix",
       "state": "Drown (Sewerslvt Remix) selected on its actual public SoundCloud page, playback paused, tempo 0.90\u00d7 saved.",
       "clip": null,
-      "sha256": "f3fce62c910b9b46f688aff49c3484552c726ffed387dd024cc0b23c4fb04d0c"
+      "sha256": "925a9931e5a0723d21344ec9a6a243345ffef6f66bb7d1204e21be82a8ee954f"
     },
     {
       "file": "player-controls.png",
@@ -233,7 +233,7 @@
   "audio": {
     "media": [
       {
-        "time": 0.056043,
+        "time": 0.051638,
         "readyState": 4,
         "duration": 496.5035599999998,
         "paused": true,
@@ -258,7 +258,7 @@
   "recipientAudio": {
     "media": [
       {
-        "time": 0.07755,
+        "time": 0.044153,
         "readyState": 4,
         "duration": 496.5035599999998,
         "paused": true,

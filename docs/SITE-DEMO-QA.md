@@ -1,5 +1,23 @@
 # Demo and screenshot checks
 
+## Star consistency follow-up
+
+Edge on the connected desktop reported `prefers-reduced-motion: reduce`, with a visible page but no scheduled star movement. The public download page moved in isolated Chrome. This explains the reported difference without assuming the Windows preference itself was disabled.
+
+The download page now has a collapsed Appearance section with a persistent Star motion On/Off override. Without a saved choice it still respects reduced motion. Forced colours and hidden/offscreen pausing still apply. The plugin uses the same random-turn drift function, defaults to 1.5×, and preserves saved speeds and explicit motion preferences. No audio or backend code changed.
+
+Verification for this change:
+
+- 561 Node tests, TypeScript, production release build and transfer checks passed.
+- Shared-motion tests ran 120,000 simulated frames and checked speed, smooth turns, wrapping and lifecycle pausing. Appearance tests checked callback cleanup and stored settings.
+- `verify-star-motion.py` compared actual rendered screenshots, not only transform values. Reduced-motion defaults, explicit override, keyboard, reload, cross-tab changes, forced colours, mobile layout, denied storage and the no-JavaScript fallback passed.
+- `verify-control-styles.py` checked real plugin background-position movement, reduced-motion override, saved speed and stopping. `verify-appearance.py` passed theme/frame lifecycle fixtures and the signed-out public SoundCloud route with muted media.
+- The screenshot capture was refreshed against v1.1.1. It remains an isolated-browser capture, not evidence of an installed manager update.
+
+Scoped Anti Slop gate: existing identity, colours, typography, page hierarchy and links remain unchanged. The new disclosure uses the existing chevron and outlined button styling; On/Off text does not depend on colour. Keyboard and mobile checks cover the new control. Storage failure reports that the setting lasts for this visit. Without JavaScript the control is hidden and the stars remain static. The requested background motion is the only animation added to the plugin. No copy claims, testimonials, decorative effects or changelog entry were added.
+
+Maintainability review: one small motion implementation replaces the two different animation paths; each caller owns its preferences and visibility. Per-frame plugin updates touch one owned CSS rule, not the whole stylesheet or host inline styles. Cleanup cancels callbacks before removing styles. No dependency, share format, audio state or stored profile format changed. The prior audio-boundary limitation below remains unverified by this appearance-only change.
+
 Scope: website controls, draft playback, star motion and screenshot presentation. No backend, crossfade or audio-processor code changed. No changelog entry was added.
 
 ## Evidence

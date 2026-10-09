@@ -79,6 +79,18 @@ async function fixture() {
     createMediaElementSource() {
       return new Node(this, 'source');
     }
+    createBufferSource() {
+      const node = new Node(this, 'tail');
+      node.playbackRate = { value: 1 };
+      node.start = (time, offset) => {
+        node.started = { time, offset };
+      };
+      node.stop = () => {
+        node.stopped = true;
+      };
+      this.nodes.push(node);
+      return node;
+    }
     close() {
       this.state = 'closed';
       this.dispatchEvent(new Event('statechange'));
@@ -214,16 +226,81 @@ function downstreamUnchanged(f) {
   assert.deepEqual([...f.output.connections], [f.downstream, f.observer]);
 }
 
+test('crossfade keeps the outgoing processor alive and restores native gain on cancellation', async () => {
+  const f = await fixture();
+  f.state.enabled = true;
+  f.refresh();
+  await settle();
+  assert.equal(f.api.active(f.audio), true);
+  const oldProcessor = f.nodes[0];
+  assert.equal(
+    f.api.crossfadeReady(f.audio, { preserve: true, shift: 0, rate: 0.5 }),
+    true,
+  );
+  const overlap = f.api.beginCrossfade(f.audio, {}, 2, 0.5, 5, {
+    duration: 13,
+  });
+  const tail = f.context.nodes.find((node) => node.kind === 'tail');
+  const head = f.context.nodes.filter((node) => node.kind === 'tail')[1];
+  assert.deepEqual(tail.started, { time: 0, offset: 2 });
+  assert.equal(
+    head.started.time,
+    tail.started.time,
+    'incoming and outgoing start on the same clock',
+  );
+  assert.equal(oldProcessor.port.closed, false);
+  assert.equal(f.input.connections.has(oldProcessor), false);
+  assert.equal(gainTo(f.mediaSource, f.output), 0);
+  downstreamUnchanged(f);
+  f.audio.dispatchEvent(new Event('emptied'));
+  assert.equal(oldProcessor.port.closed, false);
+  f.refresh();
+  await settle();
+  assert.equal(f.nodes.length, 2);
+  const tailLevel = [...tail.connections][0];
+  f.setLevel({ volume: 0.4, outputDb: 6 });
+  assert.equal(tailLevel.gain.value, 0.4 * 10 ** (6 / 20));
+  f.setLevel({ muted: true });
+  assert.equal(tailLevel.gain.value, 0);
+  f.setLevel({ muted: false, outputDb: 0 });
+  overlap.fadeIn(f.audio, 4);
+  overlap.dispose();
+  assert.equal(oldProcessor.port.closed, true);
+  assert.equal(tail.connections.size, 0);
+  assert.equal(head.connections.size, 0);
+  assert.equal(gainTo(f.mediaSource, f.output), 1);
+  assert.equal(f.subscribers.size, 1);
+  f.context.close();
+});
+
+test('positive gain applies exactly once in native and buffered playback and survives handback', async () => {
+  const f = await fixture();
+  f.setLevel({ volume: 1, outputDb: 6 });
+  const expected = 10 ** (6 / 20);
+  assert.equal(gainTo(f.mediaSource, f.output), expected);
+  const lease = f.api.acquireBuffered(f.audio, f.hooks);
+  await lease.ready;
+  assert.equal(gainTo(lease.input, f.output), expected);
+  f.setLevel({ outputDb: 24.5 });
+  assert.equal(gainTo(lease.input, f.output), 10 ** (24.5 / 20));
+  await lease.release(1);
+  assert.equal(gainTo(f.mediaSource, f.output), 10 ** (24.5 / 20));
+  f.setLevel({ outputDb: -6 });
+  assert.equal(gainTo(f.mediaSource, f.output), 1);
+  f.context.close();
+  assert.equal(f.subscribers.size, 0);
+});
+
 test('the graph stays unchanged before acquisition and dry-buffered-dry preserves downstream routing', async () => {
   const f = await fixture();
   assert.equal(f.api.hasGraph(f.audio), true);
   assert.equal(f.api.hasGraph({}), false);
-  assert.equal(f.context.nodes.length, 4);
+  assert.equal(f.context.nodes.length, 5);
   assert.deepEqual([...f.dry.connections], [f.output]);
   assert.deepEqual([...f.wet.connections], [f.output]);
-  assert.equal(f.subscribers.size, 0);
+  assert.equal(f.subscribers.size, 1);
   f.refresh();
-  assert.equal(f.context.nodes.length, 4);
+  assert.equal(f.context.nodes.length, 5);
   const lease = f.api.acquireBuffered(f.audio, f.hooks);
   assert.equal(lease.context, f.context);
   assert.equal(gainTo(f.mediaSource, f.output), 0);
@@ -248,8 +325,8 @@ test('the graph stays unchanged before acquisition and dry-buffered-dry preserve
   f.mediaSource.connect(f.observer);
   const second = f.api.acquireBuffered(f.audio, f.hooks);
   await second.ready;
-  assert.equal(f.context.nodes.length, 8);
-  assert.equal(f.subscribers.size, 1);
+  assert.equal(f.context.nodes.length, 9);
+  assert.equal(f.subscribers.size, 2);
   await second.release(undefined, { restore: false });
   assert.equal(f.restores[1].restore, false);
   assert.equal(gainTo(f.mediaSource, f.output), 1);
@@ -342,7 +419,7 @@ test('allocation and native rewiring failures restore the original route without
     'disconnectWet',
   ]) {
     const f = await fixture();
-    const allocation = { mix: 4, nativeGate: 5, bufferedInput: 6 }[failure];
+    const allocation = { mix: 5, nativeGate: 6, bufferedInput: 7 }[failure];
     f.context.failure = (stage, from, to) =>
       (allocation !== undefined &&
         stage === 'allocate' &&
@@ -364,7 +441,7 @@ test('allocation and native rewiring failures restore the original route without
     assert.deepEqual([...f.dry.connections], [f.output], failure);
     assert.deepEqual([...f.wet.connections], [f.output], failure);
     assert.equal(gainTo(f.mediaSource, f.output), 1, failure);
-    assert.equal(f.subscribers.size, 0, failure);
+    assert.equal(f.subscribers.size, 1, failure);
     assert.equal(f.parks.length, 0, failure);
     downstreamUnchanged(f);
     const lease = f.api.acquireBuffered(f.audio, f.hooks);
@@ -436,7 +513,7 @@ test('a reused gate survives a later buffered-input allocation failure without d
   f.context.failure = (stage) => stage === 'allocate';
   assert.throws(() => f.api.acquireBuffered(f.audio, f.hooks), /Injected/);
   assert.equal(gainTo(f.mediaSource, f.output), 1);
-  assert.equal(f.subscribers.size, 1);
+  assert.equal(f.subscribers.size, 2);
   downstreamUnchanged(f);
   const next = f.api.acquireBuffered(f.audio, f.hooks);
   await next.ready;
@@ -477,7 +554,7 @@ test('missing graphs and invalid hooks do not allocate or alter native routing',
     /active native audio graph/,
   );
   assert.throws(() => f.api.acquireBuffered(f.audio, {}), /ownership hooks/);
-  assert.equal(f.context.nodes.length, 4);
+  assert.equal(f.context.nodes.length, 5);
   assert.equal(gainTo(f.mediaSource, f.output), 1);
   f.context.close();
 });

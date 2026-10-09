@@ -81,13 +81,36 @@ function fixture(data = profile(), enabled = true) {
 function sharedProfile(link) {
   const url = new URL(link);
   assert.equal(url.origin, 'https://soundcloud.com');
-  assert.ok(url.hash.startsWith('#sct=SCT1.'));
+  assert.equal(url.hash, '');
+  assert.ok(url.searchParams.get('sct').startsWith('SCT1.'));
   return JSON.parse(
-    Buffer.from(url.hash.slice('#sct=SCT1.'.length), 'base64url').toString(
-      'utf8',
-    ),
+    Buffer.from(
+      url.searchParams.get('sct').slice('SCT1.'.length),
+      'base64url',
+    ).toString('utf8'),
   );
 }
+
+test('saved timeline opt-out is deterministic; shared key shifts and existing tempo links are retained', () => {
+  const data = { ...profile(), keyShift: -5 };
+  const { editor, api } = fixture(data);
+  api.applySaved = false;
+  editor.changeTrack(track);
+  editor.observe(media());
+  assert.equal(editor.value(), null);
+  api.applySaved = true;
+  editor.refreshSaved(track);
+  assert.equal(editor.value(), 1);
+  assert.equal(editor.keyShift(), -5);
+  for (const value of [-13, 13, NaN, Infinity, '3'])
+    assert.throws(() => editor.validate({ ...data, keyShift: value }));
+  editor.setKeyShift(3);
+  api.keyShift = editor.keyShift();
+  const link = editor.shareLink(`https://soundcloud.com${track}?si=example`);
+  assert.equal(sharedProfile(link).keyShift, 3);
+  assert.equal(new URL(link).searchParams.get('si'), 'example');
+  assert.equal(editor.shareLink(link), link);
+});
 
 test('playback schedule is immutable and retains object and function identity across ticks', () => {
   const { editor } = fixture();
@@ -95,6 +118,9 @@ test('playback schedule is immutable and retains object and function identity ac
   editor.changeTrack(track);
   editor.observe(audio);
   const schedule = editor.playbackSchedule(audio);
+  assert.equal(schedule.isConstantFrom(0), false);
+  assert.equal(schedule.isConstantFrom(15), false);
+  assert.equal(schedule.isConstantFrom(20), true);
   assert.ok(Object.isFrozen(schedule));
   assert.throws(() => {
     schedule.minimumRate = 4;
@@ -235,7 +261,7 @@ test('saved replacements invalidate identity without changing an existing schedu
   assert.equal(current.rateAt(0), 0.8);
 });
 
-test('minimum rate includes every point and production validation retains the 0.025 bound', () => {
+test('minimum rate includes every point and clamps legacy slowdown to 0.25', () => {
   const data = profile({ rates: [1.2, 0.7] });
   data.points.push({ t: 30, r: 0.025, d: 5, c: 'smooth' });
   data.points.push({ t: 40, r: 4, d: 5, c: 'ease-out' });
@@ -243,19 +269,19 @@ test('minimum rate includes every point and production validation retains the 0.
   const audio = media();
   editor.changeTrack(track);
   editor.observe(audio);
-  assert.equal(editor.playbackSchedule(audio).minimumRate, 0.025);
+  assert.equal(editor.playbackSchedule(audio).minimumRate, 0.25);
   for (const time of [NaN, Infinity, -Infinity, '15', null])
     assert.throws(() => editor.playbackSchedule(audio).rateAt(time), /finite/);
   data.points[2].r = 0.024999999999;
-  assert.throws(() => editor.validate(data), /0\.025/);
+  assert.throws(() => editor.validate(data), /Invalid points/);
 });
 
 test('low-rate node validation accepts exact endpoints and rejects underflow before rounding', () => {
   const { editor } = fixture();
   for (const rate of [0.025, 0.05, 0.1, 0.249, 0.25, 4]) {
     const validated = editor.validate(profile({ rates: [rate, rate] }));
-    assert.equal(validated.points[0].r, rate);
-    assert.equal(validated.points[1].r, rate);
+    assert.equal(validated.points[0].r, Math.max(0.25, rate));
+    assert.equal(validated.points[1].r, Math.max(0.25, rate));
   }
   for (const rate of [
     -1,
@@ -279,7 +305,7 @@ test('low-rate node validation accepts exact endpoints and rejects underflow bef
   }
 });
 
-test('every low-rate curve survives saved reload with its full unrounded interpolation', () => {
+test('every curve survives saved reload with full unrounded interpolation above the floor', () => {
   const curves = {
     instant: () => 0,
     linear: (x) => x,
@@ -288,8 +314,8 @@ test('every low-rate curve survives saved reload with its full unrounded interpo
     smooth: (x) => x * x * (3 - 2 * x),
   };
   for (const [curve, transform] of Object.entries(curves)) {
-    const data = profile({ curve, rates: [0.1, 0.025] });
-    data.points.push({ t: 30, r: 0.05, d: 5, c: curve });
+    const data = profile({ curve, rates: [0.5, 0.25] });
+    data.points.push({ t: 30, r: 0.4, d: 5, c: curve });
     const first = fixture(data);
     const audio = media();
     first.editor.changeTrack(track);
@@ -300,30 +326,30 @@ test('every low-rate curve survives saved reload with its full unrounded interpo
     reloaded.editor.changeTrack(track);
     reloaded.editor.observe(audio);
     const after = reloaded.editor.playbackSchedule(audio);
-    assert.equal(after.minimumRate, 0.025);
+    assert.equal(after.minimumRate, 0.25);
     for (const x of [0, 0.001, 1 / 3, 0.5, 0.999]) {
       const downTime = 10 + x * 10;
       const upTime = 25 + x * 5;
       assert.ok(
         Math.abs(
           after.rateAt(downTime) -
-            (0.1 - 0.075 * transform((downTime - 10) / 10)),
+            (0.5 - 0.25 * transform((downTime - 10) / 10)),
         ) < 1e-14,
       );
       assert.ok(
         Math.abs(
-          after.rateAt(upTime) - (0.025 + 0.025 * transform((upTime - 25) / 5)),
+          after.rateAt(upTime) - (0.25 + 0.15 * transform((upTime - 25) / 5)),
         ) < 1e-14,
       );
       assert.equal(after.rateAt(downTime), before.rateAt(downTime));
     }
     for (const [time, expected] of [
-      [-1, 0.1],
-      [0, 0.1],
-      [20, 0.025],
-      [25, 0.025],
-      [30, 0.05],
-      [60, 0.05],
+      [-1, 0.5],
+      [0, 0.5],
+      [20, 0.25],
+      [25, 0.25],
+      [30, 0.4],
+      [60, 0.4],
     ])
       assert.equal(after.rateAt(time), expected);
   }
@@ -340,13 +366,20 @@ test('shared low-rate timelines retain nodes, fade settings, pitch mode and reci
     sender.editor.observe(audio);
     const link = sender.editor.shareLink(`https://soundcloud.com${track}`);
     const decoded = sharedProfile(link);
-    assert.deepEqual(decoded, data);
+    assert.deepEqual(decoded, {
+      ...data,
+      keyShift: 0,
+      points: data.points.map((point) => ({
+        ...point,
+        r: Math.max(0.25, point.r),
+      })),
+    });
     const receiver = fixture(decoded);
     const otherAudio = media();
     receiver.editor.changeTrack(track);
     receiver.editor.observe(otherAudio);
     const received = receiver.editor.playbackSchedule(otherAudio);
-    assert.equal(received.minimumRate, 0.025);
+    assert.equal(received.minimumRate, 0.25);
     assert.equal(receiver.editor.pitchMode(), pitch);
     for (const time of [0, 10, 13.333333333, 20, 22.5, 25, 30, 60])
       assert.equal(
@@ -370,18 +403,23 @@ test('single low-speed shares encode the current rate without a saved timeline',
     const decoded = sharedProfile(
       editor.shareLink(`https://soundcloud.com${track}`),
     );
-    assert.deepEqual(decoded.points, [{ t: 0, r: rate, d: 0, c: 'instant' }]);
+    assert.deepEqual(decoded.points, [
+      { t: 0, r: Math.max(0.25, rate), d: 0, c: 'instant' },
+    ]);
     assert.equal(decoded.duration, audio.duration);
     assert.equal(decoded.pitch, 'natural');
     const recipient = fixture(decoded);
     const recipientAudio = media();
     recipient.editor.changeTrack(track);
     recipient.editor.observe(recipientAudio);
-    assert.equal(recipient.editor.validate(decoded).points[0].r, rate);
+    assert.equal(
+      recipient.editor.validate(decoded).points[0].r,
+      Math.max(0.25, rate),
+    );
     for (const time of [0, 1, 30, 60])
       assert.equal(
         recipient.editor.playbackSchedule(recipientAudio).rateAt(time),
-        rate,
+        Math.max(0.25, rate),
       );
     api.rate = 0.024999999999;
     assert.equal(
@@ -400,9 +438,9 @@ test('invalid subminimum stored replacement cannot activate or alter an existing
   save(profile({ rates: [0.025, 0.024999999999] }));
   editor.refreshSaved(track);
   assert.equal(editor.playbackSchedule(audio), null);
-  assert.equal(original.minimumRate, 0.025);
-  assert.equal(original.rateAt(0), 0.025);
-  assert.equal(original.rateAt(20), 0.1);
+  assert.equal(original.minimumRate, 0.25);
+  assert.equal(original.rateAt(0), 0.25);
+  assert.equal(original.rateAt(20), 0.25);
 });
 
 test('single-point schedules stay constant and mismatched stored tracks are not activated', () => {
@@ -426,4 +464,105 @@ test('single-point schedules stay constant and mismatched stored tracks are not 
   editor.refreshSaved(track);
   assert.equal(editor.playbackSchedule(audio), null);
   assert.equal(schedule.rateAt(10), 0.775);
+});
+test('pitch-only automation wakes in hidden tabs, interpolates, shares and stops on manual override', () => {
+  const data = {
+    ...profile(),
+    keyShift: 0.25,
+    pitchPoints: [
+      { t: 0, k: 0.25, d: 0, c: 'instant' },
+      { t: 20, k: 2.75, d: 10, c: 'linear' },
+    ],
+  };
+  data.points = [{ t: 0, r: 1, d: 0, c: 'instant' }];
+  const { editor, api, timers } = fixture(data);
+  let refreshes = 0;
+  api.refresh = () => refreshes++;
+  const audio = media(false);
+  editor.changeTrack(track);
+  editor.observe(audio);
+  editor.wake();
+  assert.equal(timers.size, 1);
+  const schedule = editor.playbackSchedule(audio);
+  assert.equal(schedule.isConstantFrom(15), false);
+  assert.equal(schedule.isConstantFrom(20), true);
+  audio.currentTime = 15;
+  audio.dispatchEvent(new Event('timeupdate'));
+  assert.equal(editor.keyShift(), 1.5);
+  assert.ok(refreshes > 0);
+  api.keyShift = editor.keyShift();
+  const shared = sharedProfile(
+    editor.shareLink('https://soundcloud.com' + track),
+  );
+  assert.equal(shared.keyShift, 0.25);
+  assert.deepEqual(shared.pitchPoints, data.pitchPoints);
+  editor.setKeyShift(-2.35);
+  assert.equal(editor.keyShift(), -2.35);
+  const overridden = sharedProfile(
+    editor.shareLink('https://soundcloud.com' + track),
+  );
+  assert.equal(overridden.keyShift, -2.35);
+  assert.equal(overridden.pitchPoints, undefined);
+  editor.suspend();
+  assert.equal(timers.size, 0);
+});
+
+test('pitch automation validates order, limits, curves, rounding and fractional endpoints', () => {
+  const { editor } = fixture();
+  const lane = [
+    { t: 0, k: -0.5, d: 0, c: 'instant' },
+    { t: 20, k: 2.35, d: 10, c: 'smooth' },
+  ];
+  const data = { ...profile(), keyShift: 0.5, pitchPoints: lane };
+  assert.equal(editor.validate(data).pitchPoints[1].k, 2.35);
+  for (const change of [
+    { k: 12.001 },
+    { k: NaN },
+    { k: '2' },
+    { t: 0 },
+    { d: 21 },
+    { c: 'unknown' },
+  ]) {
+    assert.throws(() =>
+      editor.validate({
+        ...data,
+        pitchPoints: [lane[0], { ...lane[1], ...change }],
+      }),
+    );
+  }
+  assert.throws(() => editor.validate({ ...data, pitchPoints: [] }));
+  assert.throws(() =>
+    editor.validate({
+      ...data,
+      pitchPoints: [lane[0], { t: 0.0001, k: 0, d: 0, c: 'instant' }],
+    }),
+  );
+});
+
+test('each pitch curve reaches fractional nodes precisely without changing tempo', () => {
+  for (const [curve, expected] of [
+    ['instant', -1.5],
+    ['linear', -0.5],
+    ['ease-in', -1.25],
+    ['ease-out', 0.25],
+    ['smooth', -0.875],
+  ]) {
+    const data = {
+      ...profile(),
+      pitchPoints: [
+        { t: 0, k: -1.5, d: 0, c: 'instant' },
+        { t: 20, k: 2.5, d: 10, c: curve },
+      ],
+    };
+    const { editor } = fixture(data);
+    const audio = media();
+    editor.changeTrack(track);
+    editor.observe(audio);
+    audio.currentTime = 12.5;
+    assert.equal(editor.keyShift(), expected, curve);
+    audio.currentTime = 20;
+    assert.equal(editor.keyShift(), 2.5);
+    audio.currentTime = 0;
+    assert.equal(editor.keyShift(), -1.5);
+  }
 });

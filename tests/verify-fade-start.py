@@ -1,7 +1,7 @@
 import json
 
 from playwright.sync_api import sync_playwright, expect
-from userscript_fixture import ROOT, browser_options, userscript_source
+from userscript_fixture import choose_option, ROOT, browser_options, userscript_source
 
 
 def edit(page, name, value):
@@ -35,9 +35,9 @@ def main():
             page.locator('.point-add').click()
             edit(page, 'time', time)
             edit(page, 'rate', rate)
-            page.locator('.point-curve').select_option('smooth')
+            choose_option(page.locator('.point-curve'), 'smooth')
             edit(page, 'duration', fade)
-        page.locator('.speed-range').select_option('fine')
+        choose_option(page.locator('.speed-range'), 'fine')
         handle = page.get_by_role('slider', name='Fade start', exact=True)
         expect(handle).to_be_visible()
         expect(handle).to_have_attribute('aria-valuenow', '150')
@@ -79,7 +79,7 @@ def main():
         expect(handle).to_be_visible()
         page.locator('.zoom-fit').click()
         edit(page, 'duration', 120)
-        page.locator('.speed-range').select_option('fine')
+        choose_option(page.locator('.speed-range'), 'fine')
         page.locator('.editor-save').click()
         for width in [1050, 390]:
             page.set_viewport_size({'width': width, 'height': 844})
@@ -88,7 +88,7 @@ def main():
             assert label['x'] >= bounds['x']
             assert label['x'] + label['width'] <= bounds['x'] + bounds['width']
             page.locator('.tempo-editor').screenshot(path=str(ROOT / f'test-results/fade-start-{width}.png'))
-        page.locator('.point-curve').select_option('instant')
+        choose_option(page.locator('.point-curve'), 'instant')
         expect(handle).to_have_count(0)
         assert not errors, errors
         browser.close()

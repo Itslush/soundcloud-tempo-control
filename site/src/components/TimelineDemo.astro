@@ -13,7 +13,7 @@ import { demoTrack } from '../lib/demo-track';
 >
   <div class="demo-surface">
     <header class="demo-heading">
-      <strong>Try a different tempo</strong>
+      <strong>Preview</strong>
     </header>
     <div class="preview-meta">
       <span id="preview-title">{demoTrack.title}</span>
@@ -79,6 +79,16 @@ import { demoTrack } from '../lib/demo-track';
           >Copy link</span
         ></button
       >
+      <NumberField
+        id="demo-key-shift"
+        label="Key shift"
+        value={0}
+        min={-12}
+        max={12}
+        step={0.5}
+        unit="st"
+        visibleLabel
+      />
     </div>
     <div id="preview-fixed-controls" class="simple-control" hidden>
       <NumberField
@@ -120,98 +130,7 @@ import { demoTrack } from '../lib/demo-track';
         </svg>
       </div>
     </div>
-    <div class="demo-editor-heading">
-      <strong>Tempo timeline</strong>
-      <span class="legend"
-        ><i></i> Tempo <span class="legend-normal">1× original</span></span
-      >
-    </div>
-    <div class="demo-tools">
-      <button type="button" id="zoom-out" aria-label="Zoom out preview" disabled
-        ><Icon name="minus" size={16} /></button
-      >
-      <button type="button" id="zoom-in" aria-label="Zoom in preview"
-        ><Icon name="plus" size={16} /></button
-      >
-      <span id="demo-zoom">Time zoom 1×</span>
-      <div class="demo-history" role="group" aria-label="Timeline editing">
-        <button id="demo-undo" type="button" disabled>Undo</button>
-        <button id="demo-redo" type="button" disabled>Redo</button>
-        <button id="preview-reset" type="button">Reset demo</button>
-      </div>
-    </div>
-    <svg
-      class="demo-graph"
-      id="demo-graph"
-      viewBox="0 0 800 260"
-      role="group"
-      aria-label="Tempo timeline. Select a point to adjust its speed."
-    >
-      <g id="demo-grid"></g>
-      <path id="demo-curve" fill="none" stroke="var(--accent)" stroke-width="3"
-      ></path>
-      <g id="demo-nodes"></g>
-      <g id="demo-playhead" aria-hidden="true" pointer-events="none">
-        <line
-          x1="0"
-          x2="0"
-          y1="20"
-          y2="212"
-          stroke="var(--ink)"
-          stroke-width="1"
-          stroke-dasharray="3 4"></line>
-        <circle id="demo-playhead-dot" cx="0" cy="130" r="4" fill="var(--ink)"
-        ></circle>
-      </g>
-    </svg>
-    <span id="demo-node-help" class="sr-only"
-      >Drag up or down, or use the arrow keys. Shift changes speed by 0.01.</span
-    >
-    <div class="demo-pan" hidden>
-      <label for="demo-pan">Scroll timeline</label><input
-        id="demo-pan"
-        type="range"
-        value="0"
-        min="0"
-        max="0"
-        step="0.1"
-      />
-    </div>
-    <div class="demo-point-editor">
-      <NumberField
-        id="demo-point-rate"
-        label="Target speed"
-        value={0.9}
-        min={0.25}
-        max={2}
-        step={0.025}
-        unit="×"
-        visibleLabel
-      />
-    </div>
-    <details class="demo-details">
-      <summary>Point timing</summary>
-      <div class="point-fields">
-        <NumberField
-          id="demo-point-time"
-          label="Reach at (s)"
-          actionLabel="point time"
-          value={18}
-          min={0}
-          step={0.1}
-          visibleLabel
-        />
-        <NumberField
-          id="demo-point-fade"
-          label="Fade (s)"
-          actionLabel="fade duration"
-          value={8}
-          min={0}
-          step={0.1}
-          visibleLabel
-        />
-      </div>
-    </details>
+    <div id="demo-shared-editor"></div>
     <details class="demo-details" id="preview-loader">
       <summary>Try your own track</summary>
       <form id="preview-link-form">

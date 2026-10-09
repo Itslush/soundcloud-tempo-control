@@ -1,17 +1,11 @@
 {
-  "capturedAt": "2026-09-06T20:36:48.075248+00:00",
+  "capturedAt": "2026-09-07T14:03:27.852498+00:00",
   "capture": "Exact built userscript UI on a real public music track in isolated Chrome; early injection, not Violentmonkey. Captures are browser screenshots with source metadata added to PNG headers; screenshot pixels are unchanged. Narrow captures are resized desktop-browser windows, not physical mobile devices.",
   "track": "https://soundcloud.com/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix",
-  "artifactSha256": "789a8430f052ed86b1bc3c096a19f3cb5c98b653e8a3aae66fe42849d68355cb",
-  "artifactBytes": 480040,
-  "nonAudioDerivation": {
-    "scheme": "outside-audioModules-declaration-v1",
-    "derivedFromArtifactSha256": "789a8430f052ed86b1bc3c096a19f3cb5c98b653e8a3aae66fe42849d68355cb",
-    "sha256": "7a76688f5e96721809e5853b1e167e1ac09b6f59bdfd283c22c8eccc716c278d",
-    "scope": "Retrospectively derived from the exact captured artifact. Verifies bytes outside the parsed audio bundle, not audio behavior or a new capture."
-  },
-  "captureScriptSha256": "6001e826bd23dea210a294291ccb20f76231cb36cf190652c6ebd5df3735d8d2",
-  "outputProbeSha256": "37ef28ac38eba3046e8b6783c4bfa4073173b62f90992d2ff522603ba420397d",
+  "artifactSha256": "f6c45ac26e51ba0933dc4c1221edc70e45e5135a312e64b9b561d37ec3a749cd",
+  "artifactBytes": 906050,
+  "captureScriptSha256": "165a1cc43743e1cca48c32af37cf3727abb9f11045d1021e9551b1a50374cba9",
+  "outputProbeSha256": "b1604e43b080fdd484da86466308294b800f146cb24d6e1b7030b14f7a81b59f",
   "muting": [
     "--mute-audio",
     "native media muted with zero volume before play",
@@ -29,7 +23,7 @@
       "url": "https://soundcloud.com/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix",
       "state": "Drown (Sewerslvt Remix) selected on its actual public SoundCloud page, playback paused, tempo 0.90\u00d7 saved.",
       "clip": null,
-      "sha256": "d0f1a74227e980f2f3095ed151e437482f736d36e62598882043f8ba48702bef"
+      "sha256": "67be06f6955cc2d013be43373cbd75751fec1324c60ab94766395d526402714d"
     },
     {
       "file": "player-controls.png",
@@ -45,7 +39,7 @@
         "width": 292,
         "height": 42
       },
-      "sha256": "b4e5f23b0804244d52ab79c04165122bfb2c7119a28ecdee61756d7db9613732"
+      "sha256": "3c5c34a278ab80f030ea73503539a8f5ab963b9a28512592c6f36d95ed91333a"
     },
     {
       "file": "soundcloud-timeline.png",
@@ -56,7 +50,7 @@
       "url": "https://soundcloud.com/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix",
       "state": "Three-point natural-pitch timeline saved and enabled, smooth fades, selected 0.90\u00d7 point.",
       "clip": null,
-      "sha256": "dabdf5264d2542ca1539309da7d4e517fa49a0ba00e48c600d7b16064a07a97a"
+      "sha256": "9686528abd69acd89a0aefb7e7dc8ce0b0075a1ff973b5dd587df33a6b7acb7f"
     },
     {
       "file": "timeline-curve.png",
@@ -67,7 +61,7 @@
       "url": "https://soundcloud.com/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix",
       "state": "Complete saved 1\u00d7 \u2192 0.75\u00d7 \u2192 0.90\u00d7 curve, close speed range.",
       "clip": null,
-      "sha256": "48ee38d188f0039bfc96d9d51559052fbb2cc0c5520147e7d878b5f01e0f71cf"
+      "sha256": "badcf8a3fe3feaadf985a2a33a902c19c25f8778f8e68057ea26ad78a1c3b5dc"
     },
     {
       "file": "timeline-detail.png",
@@ -78,18 +72,18 @@
       "url": "https://soundcloud.com/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix",
       "state": "Same saved curve rendered by the real editor in a narrow desktop browser window.",
       "clip": null,
-      "sha256": "53e6812d8557b0e3d799485fad980d8f03f811a896c2241c8bc1326aca2d610e"
+      "sha256": "21442d374e71fadbccb4536a8132b16ee05fb19e0ab0e3b4d538f74747e65507"
     },
     {
       "file": "soundcloud-settings.png",
       "width": 1800,
-      "height": 1092,
+      "height": 1068,
       "cssWidth": 600.0,
-      "cssHeight": 364.0,
+      "cssHeight": 356.0,
       "url": "https://soundcloud.com/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix",
       "state": "One real music track, Drown, with its saved 0.90\u00d7 speed and enabled three-point timeline; copied-link tempo sharing enabled.",
       "clip": null,
-      "sha256": "f8f05b2552cf269c62efab49e7866d7f81a6addab6054a1514316a655e6ecd08"
+      "sha256": "923d20fdc8c1a484f882988dc9161411c9d454b0bbb93b1d35b8bd5e574b46a0"
     },
     {
       "file": "saved-tracks.png",
@@ -101,11 +95,11 @@
       "state": "One genuine Drown saved-library row containing both 0.90\u00d7 speed and Timeline controls, created entirely through the UI.",
       "clip": {
         "x": 427,
-        "y": 497.5,
+        "y": 493.5,
         "width": 586,
         "height": 92
       },
-      "sha256": "57fc8b5aeb96f211251759efd7bf176e1116f1e556d4cd064cd633b8988560e9"
+      "sha256": "a4905e020b27b5965be84d9e3e1985eb0c153f741bae37a93749bb045ef46842"
     },
     {
       "file": "saved-tracks-mobile.png",
@@ -116,7 +110,7 @@
       "url": "https://soundcloud.com/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix",
       "state": "The same genuine Drown speed-and-timeline row in a 390-pixel-wide desktop-browser viewport.",
       "clip": null,
-      "sha256": "caaa0ab93507e8793c3e8e5c5825904d9ac56fd02a2f02139886dfcac307aa75"
+      "sha256": "8669d7f0e6ff5cc4909e6c206beaf60d5ddd5f8a2e95f8a760a4adac389f6d44"
     },
     {
       "file": "shared-preview.png",
@@ -127,7 +121,7 @@
       "url": "https://soundcloud.com/sewerslvt/bring-me-the-horizon-drown-sewerslvt-remix#sct=SCT1.eyJ2IjoxLCJ0cmFjayI6Ii9zZXdlcnNsdnQvYnJpbmctbWUtdGhlLWhvcml6b24tZHJvd24tc2V3ZXJzbHZ0LXJlbWl4IiwiZHVyYXRpb24iOjQ5Ni41MDM1NTk5OTk5OTk4LCJwb2ludHMiOlt7InQiOjAsInIiOjEsImQiOjAsImMiOiJpbnN0YW50In0seyJ0IjoxNjYsInIiOjAuNzUsImQiOjEyNCwiYyI6InNtb290aCJ9LHsidCI6MzcyLCJyIjowLjksImQiOjE2NiwiYyI6InNtb290aCJ9XSwicGl0Y2giOiJuYXR1cmFsIn0",
       "state": "Actual Drown music timeline link opened in a fresh receiving context after selecting and pausing its track; Apply once and Save timeline are available, neither used yet.",
       "clip": null,
-      "sha256": "9b60381832c42d1d7db9edd8b006cfb5ea5343f4f2561ec3549647e70d775c44"
+      "sha256": "ed3aa3126f2544f21e5434030453318ab572ec1341fad9b6ad6883a0973c5dbb"
     },
     {
       "file": "share-actions.png",
@@ -143,7 +137,7 @@
         "width": 686,
         "height": 51
       },
-      "sha256": "9cade177caf70a89372a6975dea48a634b99881ae511ad7e3956f7bc085c08d8"
+      "sha256": "4af317f128a77ae48acff330cf0b06e96fc7fc9f3d99b8e20d18f118e43d3889"
     },
     {
       "file": "share-actions-mobile.png",
@@ -159,7 +153,7 @@
         "width": 332,
         "height": 87
       },
-      "sha256": "93aaee42b9dc5c7c9623d813be20aec1e2881471ef5a2327822e6a2c3acddeab"
+      "sha256": "0372b188dc30175147c7bb35bd47dedc3ffadc5b8c13cac82a028afb18284cde"
     }
   ],
   "actions": [
@@ -237,7 +231,7 @@
   "audio": {
     "media": [
       {
-        "time": 0.050911,
+        "time": 0.049157,
         "readyState": 4,
         "duration": 496.5035599999998,
         "paused": true,
@@ -262,7 +256,7 @@
   "recipientAudio": {
     "media": [
       {
-        "time": 0.04481,
+        "time": 0.031356,
         "readyState": 4,
         "duration": 496.5035599999998,
         "paused": true,

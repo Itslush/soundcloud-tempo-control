@@ -140,6 +140,29 @@ function fixture(initial) {
 }
 
 const level = (api, audio) => ({ ...api.readLevel(audio) });
+test('positive and fractional dB persist without overflowing native media volume', () => {
+  const f = fixture();
+  const audio = new f.Audio();
+  f.api.attach(audio);
+  f.references.add(new WeakRef(audio));
+  audio.volume = 0.8;
+  for (const db of [6, 24.5, 48, 0, -6]) {
+    f.api.set(db);
+    assert.equal(f.api.value(), db);
+    assert.equal(
+      f.nativeVolume.get.call(audio),
+      0.8 * 10 ** (Math.min(0, db) / 20),
+    );
+    assert.equal(f.api.readLevel(audio).outputDb, db);
+    f.api.reload();
+    assert.equal(f.api.value(), db);
+  }
+  assert.equal(f.ui.outputSlider.max, '48');
+  for (const invalid of ['', NaN, Infinity, 10000, -25])
+    assert.throws(() => f.api.set(invalid), /Enter a dB/);
+  assert.equal(f.api.value(), -6);
+  assert.equal(fixture(24.5).api.value(), 24.5);
+});
 const collect = (api, audio) => {
   const values = [];
   const stop = api.subscribeLevel(audio, (value) => values.push({ ...value }));
@@ -288,7 +311,10 @@ test('apply, storage and reload update subscribed audio once and preserve scalin
   const a = collect(api, first);
   const b = collect(api, second);
   api.set(-12);
-  assert.equal(ui.outputSlider.style.getPropertyValue('--range-fill'), '50%');
+  assert.equal(
+    ui.outputSlider.style.getPropertyValue('--range-fill'),
+    `${(12 / 36) * 100}%`,
+  );
   assert.equal(a.values.length, 2);
   assert.equal(b.values.length, 2);
   assert.equal(nativeVolume.get.call(first), 0.8 * 10 ** (-12 / 20));
@@ -296,14 +322,20 @@ test('apply, storage and reload update subscribed audio once and preserve scalin
   external('other.setting', '-1');
   assert.equal(a.values.length, 2);
   external(key, '-9');
-  assert.equal(ui.outputSlider.style.getPropertyValue('--range-fill'), '62.5%');
+  assert.equal(
+    ui.outputSlider.style.getPropertyValue('--range-fill'),
+    `${(15 / 36) * 100}%`,
+  );
   assert.equal(a.values.at(-1).outputDb, -9);
   storage.set(key, '-3');
   api.reload();
   assert.equal(b.values.at(-1).outputDb, -3);
   assert.equal(ui.outputSlider.value, '-3');
-  assert.equal(ui.outputValue.textContent, '-3 dB');
-  assert.equal(ui.outputSlider.style.getPropertyValue('--range-fill'), '87.5%');
+  assert.equal(ui.outputValue.value, '-3');
+  assert.equal(
+    ui.outputSlider.style.getPropertyValue('--range-fill'),
+    `${(21 / 36) * 100}%`,
+  );
   flush();
   assert.equal(a.values.length, 4);
   assert.equal(b.values.length, 4);

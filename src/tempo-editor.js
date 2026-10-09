@@ -1,16 +1,36 @@
+import { readPitchSettings, pitchSettingsKey } from './tempo-pitch-settings.js';
+import { readTempoIncrement } from './tempo-increment.js';
+import {
+  encodeTempoCode,
+  decodeTempoCode,
+  tempoShareLink,
+} from './tempo-share.js';
+import { enhanceTempoFields } from './tempo-fields.js';
 import { editorTemplate } from './tempo-editor-template.js';
 import { syncTempoRange } from './tempo-range.js';
+import {
+  validateProfile,
+  evaluatePoints,
+  profilePitchAt,
+  validKeyShift,
+} from './tempo-profile.js';
 
 export function createTempoEditor(api) {
+  const website =
+    api.website ??
+    (typeof __TEMPO_WEBSITE__ === 'string' ? __TEMPO_WEBSITE__ : '');
   const PREFIX = 'soundcloud.tempo.timeline.';
-  const curves = ['instant', 'linear', 'ease-in', 'ease-out', 'smooth'];
   let active = null;
   let key = '';
   let profile = null;
   let scheduleData = null;
+  let scheduleOverride = null;
   let schedule = null;
   let suspended = false;
+  let keyOverride = null;
+  let lastPitch = null;
   let panel = null;
+  let syncFields = () => {};
   let draft = null;
   let selected = 0;
   let imported = null;
@@ -19,9 +39,24 @@ export function createTempoEditor(api) {
   let dragOffset = 0;
   let zoom = 1;
   let viewStart = 0;
-  let speedTop = 2;
-  let speedBottom = 0.025;
-  let speedMode = '2';
+  let lane = 'tempo';
+  let speedTop = 1.5;
+  let speedBottom = 0.75;
+  let speedMode = 'custom';
+  const laneViews = {
+    tempo: [0.75, 1.5],
+    pitch: [readPitchSettings().min, readPitchSettings().max],
+  };
+  const laneField = () => (lane === 'pitch' ? 'k' : 'r');
+  const laneUnit = () => (lane === 'pitch' ? ' st' : '×');
+  const lanePoints = (data = draft) =>
+    lane === 'pitch'
+      ? (data.pitchPoints ?? [
+          { t: 0, k: data.keyShift ?? 0, d: 0, c: 'instant' },
+        ])
+      : data.points;
+  const laneStep = () =>
+    lane === 'pitch' ? Number(el('.pitch-step').value) || 0.5 : readTempoIncrement();
   let timer = 0;
   let graphWidth = 660;
 
@@ -34,7 +69,11 @@ export function createTempoEditor(api) {
   }
 
   function draftData() {
-    return validate({ ...draft, pitch: draft.pitch ?? api.defaultPitchMode });
+    return validate({
+      ...draft,
+      pitch: draft.pitch ?? api.defaultPitchMode,
+      keyShift: draft.keyShift ?? api.keyShift ?? 0,
+    });
   }
 
   function syncControls() {
@@ -83,12 +122,11 @@ export function createTempoEditor(api) {
   async function copyDraft(kind, button) {
     button.disabled = true;
     try {
+      if (api.canShare === false)
+        throw new Error('Sharing needs a full SoundCloud track.');
       const data = draftData();
       const code = encodeProfile(data);
-      const text =
-        kind === 'link'
-          ? `https://soundcloud.com${data.track}#sct=${code}`
-          : code;
+      const text = kind === 'link' ? tempoShareLink(data, website) : code;
       if (kind === 'link' && text.length > 8000) {
         el('.editor-sharing').open = true;
         throw new Error(
@@ -115,27 +153,32 @@ export function createTempoEditor(api) {
 
   function setSpeedRange(mode, center) {
     speedMode = mode;
+    if (mode === 'custom') return;
     if (mode === 'fine' || mode === 'close') {
       const data = imported || draft;
       const width = mode === 'fine' ? 0.5 : 0.2;
       const step = mode === 'fine' ? 0.1 : 0.05;
       const rate =
-        center ?? data.points[Math.min(selected, data.points.length - 1)].r;
-      const bottom = Math.max(0.025, Math.min(4 - width, rate - width / 2));
+        center ??
+        lanePoints(data)[Math.min(selected, lanePoints(data).length - 1)][
+          laneField()
+        ];
+      const bottom = Math.max(0.25, Math.min(4 - width, rate - width / 2));
       speedBottom = round(
-        Math.max(0.025, Math.floor(bottom / step + 1e-9) * step),
+        Math.max(0.25, Math.floor(bottom / step + 1e-9) * step),
       );
       speedTop = round(
         Math.min(4, Math.ceil((bottom + width) / step - 1e-9) * step),
       );
     } else {
-      speedBottom = 0.025;
+      speedBottom = 0.25;
       speedTop = Number(mode);
     }
   }
 
   function revealSpeed(rate) {
-    if (rate >= speedBottom && rate <= speedTop) return;
+    if (speedMode === 'custom' || (rate >= speedBottom && rate <= speedTop))
+      return;
     setSpeedRange(
       ['fine', 'close'].includes(speedMode) ? speedMode : rate > 2 ? '4' : '2',
       rate,
@@ -155,54 +198,22 @@ export function createTempoEditor(api) {
     );
     draw(data);
   }
-  let pendingLink = location.hash.startsWith('#sct=') ? location.href : null;
+  function hasTempoLink() {
+    return (
+      location.hash.startsWith('#sct=') ||
+      (typeof location.search === 'string' &&
+        new URLSearchParams(location.search).has('sct'))
+    );
+  }
+  let pendingLink = hasTempoLink() ? location.href : null;
   window.addEventListener('hashchange', () => {
-    if (location.hash.startsWith('#sct=')) pendingLink = location.href;
+    if (hasTempoLink()) pendingLink = location.href;
     wake();
   });
 
-  function encodeProfile(value) {
-    const bytes = new TextEncoder().encode(JSON.stringify(validate(value)));
-    return (
-      'SCT1.' +
-      btoa(Array.from(bytes, (b) => String.fromCharCode(b)).join(''))
-        .replaceAll('+', '-')
-        .replaceAll('/', '_')
-        .replace(/=+$/, '')
-    );
-  }
-
-  function decodeProfile(text) {
-    let code = text.trim();
-    let linkedTrack = null;
-    if (code.startsWith('https://')) {
-      if (code.length > 8000)
-        throw new Error('Link is too long. Ask for the tempo code instead.');
-      const url = new URL(code);
-      if (
-        url.origin !== 'https://soundcloud.com' ||
-        url.username ||
-        url.password ||
-        !url.hash.startsWith('#sct=')
-      )
-        throw new Error('Use a SoundCloud tempo link.');
-      linkedTrack = api.parseTrack(url.pathname);
-      if (!linkedTrack) throw new Error('The link must point to a track.');
-      code = url.hash.slice(5);
-    }
-    if (code.length > 50000 || !/^SCT1\.[A-Za-z0-9_-]+$/.test(code))
-      throw new Error('Paste a valid SCT1 code or SoundCloud tempo link.');
-    const bytes = Uint8Array.from(
-      atob(code.slice(5).replaceAll('-', '+').replaceAll('_', '/')),
-      (c) => c.charCodeAt(0),
-    );
-    const data = validate(
-      JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)),
-    );
-    if (linkedTrack !== null && linkedTrack !== data.track)
-      throw new Error('The link and tempo settings refer to different tracks.');
-    return data;
-  }
+  const encodeProfile = (value) => encodeTempoCode(validate(value));
+  const decodeProfile = (text) =>
+    decodeTempoCode(text, validate, api.parseTrack, website);
   const round = (n) => Math.round(n * 1000) / 1000;
   const storageKey = (track) => PREFIX + encodeURIComponent(track);
   const timeLabel = (n) =>
@@ -216,62 +227,7 @@ export function createTempoEditor(api) {
           .padStart(3, '0')
           .replace(/0+$/, ''));
 
-  function validate(value) {
-    if (
-      !value ||
-      value.v !== 1 ||
-      typeof value.track !== 'string' ||
-      api.parseTrack(value.track) !== value.track ||
-      !Number.isFinite(value.duration) ||
-      value.duration < 1 ||
-      value.duration > 86400 ||
-      !Array.isArray(value.points) ||
-      !value.points.length ||
-      value.points.length > 200
-    ) {
-      throw new Error('Invalid tempo code or unsupported version.');
-    }
-    const points = value.points.map((p, i) => {
-      if (
-        !p ||
-        ![p.t, p.r, p.d].every(Number.isFinite) ||
-        p.t < 0 ||
-        p.t > value.duration ||
-        p.r < 0.025 ||
-        p.r > 4 ||
-        p.d < 0 ||
-        !curves.includes(p.c) ||
-        (i === 0 && (p.t !== 0 || p.d !== 0)) ||
-        (i > 0 &&
-          (p.t <= value.points[i - 1].t || p.t - p.d < value.points[i - 1].t))
-      ) {
-        throw new Error(
-          'Invalid points: ramps must not overlap and speeds must be 0.025–4×.',
-        );
-      }
-      return { t: round(p.t), r: round(p.r), d: round(p.d), c: p.c };
-    });
-    for (let i = 1; i < points.length; i++) {
-      if (
-        points[i].t <= points[i - 1].t ||
-        round(points[i].t - points[i].d) < points[i - 1].t
-      ) {
-        throw new Error('Points are too close together.');
-      }
-    }
-    if (
-      value.pitch !== undefined &&
-      !['natural', 'preserve'].includes(value.pitch)
-    )
-      throw new Error('Invalid pitch mode.');
-    return {
-      v: 1,
-      track: value.track,
-      duration: value.duration,
-      points,
-      ...(value.pitch === undefined ? {} : { pitch: value.pitch }),
-    };
-  }
+  const validate = (value) => validateProfile(value, api.parseTrack);
 
   function displayedDuration() {
     const element = document.querySelector('.playbackTimeline__duration');
@@ -305,6 +261,7 @@ export function createTempoEditor(api) {
         url.username ||
         url.password ||
         url.hash ||
+        url.searchParams.has('sct') ||
         api.parseTrack(url.pathname) !== key ||
         !key
       )
@@ -319,34 +276,30 @@ export function createTempoEditor(api) {
               duration,
               points: [{ t: 0, r: api.rate, d: 0, c: 'instant' }],
             };
-      url.hash = 'sct=' + encodeProfile({ ...data, pitch: api.pitchMode });
+      url.searchParams.set(
+        'sct',
+        encodeProfile({
+          ...data,
+          pitch: api.pitchMode,
+          keyShift: keyOverride ?? data.keyShift ?? api.keyShift ?? 0,
+          ...(keyOverride === null ? {} : { pitchPoints: undefined }),
+        }),
+      );
+      if (website) return tempoShareLink(decodeProfile(url.href), website);
       return url.href.length <= 8000 ? url.href : text;
     } catch {
       return text;
     }
   }
 
-  function evaluate(data, time) {
-    let previous = data.points[0];
-    for (let index = 1; index < data.points.length; index++) {
-      const point = data.points[index];
-      if (time < point.t) {
-        if (!point.d || point.c === 'instant' || time <= point.t - point.d)
-          return previous.r;
-        let x = Math.max(0, Math.min(1, (time - point.t + point.d) / point.d));
-        if (point.c === 'ease-in') x *= x;
-        else if (point.c === 'ease-out') x = 1 - (1 - x) ** 2;
-        else if (point.c === 'smooth') x = x * x * (3 - 2 * x);
-        return previous.r + (point.r - previous.r) * x;
-      }
-      previous = point;
-    }
-    return previous.r;
-  }
+  const evaluate = (data, time) => evaluatePoints(data.points, time);
 
   function immutableProfile(data) {
-    for (const point of data.points) Object.freeze(point);
-    Object.freeze(data.points);
+    for (const points of [data.points, data.pitchPoints]) {
+      if (!points) continue;
+      for (const point of points) Object.freeze(point);
+      Object.freeze(points);
+    }
     return Object.freeze(data);
   }
 
@@ -354,11 +307,24 @@ export function createTempoEditor(api) {
     if (!key || !active || audio !== active || !running()) return null;
     const data = profile.data;
     if (data.track !== key) return null;
-    if (scheduleData !== data) {
+    if (scheduleData !== data || scheduleOverride !== keyOverride) {
+      const overridden = keyOverride !== null;
       let minimumRate = data.points[0].r;
       for (let index = 1; index < data.points.length; index++)
         minimumRate = Math.min(minimumRate, data.points[index].r);
       schedule = Object.freeze({
+        isConstantFrom(time) {
+          const rate = evaluate(data, time);
+          const pitch = profilePitchAt(data, time);
+          return (
+            data.points.every((point) => point.t < time || point.r === rate) &&
+            (overridden ||
+              !data.pitchPoints ||
+              data.pitchPoints.every(
+                (point) => point.t < time || point.k === pitch,
+              ))
+          );
+        },
         rateAt(sourceSeconds) {
           if (!Number.isFinite(sourceSeconds))
             throw new RangeError('Timeline source time must be finite');
@@ -367,12 +333,14 @@ export function createTempoEditor(api) {
         minimumRate,
       });
       scheduleData = data;
+      scheduleOverride = keyOverride;
     }
     return schedule;
   }
 
   function load() {
     profile = null;
+    keyOverride = null;
     try {
       const saved = JSON.parse(localStorage.getItem(storageKey(key)) || 'null');
       if (saved)
@@ -414,8 +382,9 @@ export function createTempoEditor(api) {
   function changeTrack(next) {
     if (key === next) return;
     key = next;
+    keyOverride = null;
     active = null;
-    suspended = false;
+    suspended = api.applySaved === false;
     load();
     syncControls();
     if (panel && !panel.hidden)
@@ -438,7 +407,7 @@ export function createTempoEditor(api) {
     api.root.querySelector('.settings-button').focus();
   }
   function fit() {
-    if (!panel || panel.hidden) return;
+    if (!panel || panel.hidden || api.inline) return;
     panel.style.width = `${Math.min(720, innerWidth - 24)}px`;
     panel.style.left = `${Math.max(12, (innerWidth - Math.min(720, innerWidth - 24)) / 2)}px`;
     panel.style.top = '50%';
@@ -449,17 +418,58 @@ export function createTempoEditor(api) {
   function create() {
     panel = document.createElement('section');
     panel.className = 'tempo-editor';
-    panel.setAttribute('role', 'dialog');
+    panel.setAttribute('role', api.inline ? 'region' : 'dialog');
     panel.setAttribute('aria-label', 'Tempo timeline editor');
-    panel.setAttribute('popover', 'manual');
+    if (!api.inline) panel.setAttribute('popover', 'manual');
+    else panel.classList.add('tempo-editor-inline');
     panel.hidden = true;
     panel.innerHTML = editorTemplate();
     api.root.append(panel);
+    for (const button of panel.querySelectorAll('[data-lane]'))
+      button.onclick = () => {
+        laneViews[lane] = [speedBottom, speedTop];
+        lane = button.dataset.lane;
+        if (lane === 'pitch' && !draft.pitchPoints)
+          draft.pitchPoints = lanePoints().map((point) => ({ ...point }));
+        [speedBottom, speedTop] = laneViews[lane];
+        speedMode = 'custom';
+        selected = 0;
+        refresh();
+      };
+    el('.pitch-step').value = String(readPitchSettings().step);
+    el('.pitch-step').onchange = () => {
+      const step = Number(el('.pitch-step').value);
+      if (!Number.isFinite(step) || step < 0.001 || step > 12) {
+        el('.pitch-step').value = '0.5';
+        status('Choose a step between 0.001 and 12 semitones.');
+      }
+      try {
+        localStorage.setItem(
+          pitchSettingsKey,
+          JSON.stringify({
+            ...readPitchSettings(),
+            step: Number(el('.pitch-step').value),
+          }),
+        );
+        api.pitchControlsChanged?.();
+      } catch {
+        status('Pitch step could not be saved.');
+      }
+      refresh();
+    };
+    el('.pitch-clear').onclick = () => {
+      delete draft.pitchPoints;
+      lane = 'tempo';
+      [speedBottom, speedTop] = laneViews.tempo;
+      selected = 0;
+      changed();
+    };
     el('.zoom-in').onclick = () => zoomView(2);
     el('.zoom-out').onclick = () => zoomView(0.5);
     el('.zoom-focus').onclick = () => {
       const data = imported || draft;
-      const point = data.points[Math.min(selected, data.points.length - 1)];
+      const point =
+        lanePoints(data)[Math.min(selected, lanePoints(data).length - 1)];
       const fade = point.c === 'instant' ? 0 : point.d;
       const span = Math.min(data.duration, Math.max(1, fade * 1.5));
       zoom = data.duration / span;
@@ -472,35 +482,64 @@ export function createTempoEditor(api) {
     el('.zoom-fit').onclick = () => {
       zoom = 1;
       viewStart = 0;
-      setSpeedRange(
-        (imported || draft).points.some((p) => p.r > 2) ? '4' : '2',
-      );
+      const values = lanePoints(imported || draft).map((p) => p[laneField()]);
+      speedBottom = Math.min(lane === 'pitch' ? -6 : 0.75, ...values);
+      speedTop = Math.max(lane === 'pitch' ? 6 : 1.5, ...values);
+      speedMode = 'custom';
       draw(imported || draft);
     };
     el('.speed-range').onchange = () => {
       setSpeedRange(el('.speed-range').value);
       draw(imported || draft);
     };
+    for (const name of ['min', 'max'])
+      el('.speed-' + name).onchange = () => {
+        const min = el('.speed-min').valueAsNumber;
+        const max = el('.speed-max').valueAsNumber;
+        const valid =
+          Number.isFinite(min) &&
+          Number.isFinite(max) &&
+          min >= (lane === 'pitch' ? -12 : 0.25) &&
+          max <= (lane === 'pitch' ? 12 : 4) &&
+          min < max;
+        for (const bound of ['min', 'max'])
+          el('.speed-' + bound).setAttribute('aria-invalid', String(!valid));
+        if (!valid) {
+          status(
+            (lane === 'pitch'
+              ? 'Use −12 to +12 semitones'
+              : 'Use 0.25× to 4×') + ', with the minimum below the maximum.',
+          );
+          return;
+        }
+        speedBottom = min;
+        speedTop = max;
+        speedMode = 'custom';
+        laneViews[lane] = [min, max];
+        status('');
+        draw(imported || draft);
+      };
     el('.editor-pan').oninput = () => {
       viewStart = Number(el('.editor-pan').value);
       draw(imported || draft);
     };
     el('.editor-point-picker').onchange = () => {
       selected = Number(el('.editor-point-picker').value);
-      const p = draft.points[selected];
+      const p = lanePoints()[selected];
       const span = draft.duration / zoom;
       if (p.t < viewStart || p.t > viewStart + span)
         viewStart = Math.max(
           0,
           Math.min(draft.duration - span, p.t - span / 2),
         );
-      revealSpeed(p.r);
+      revealSpeed(p[laneField()]);
       refresh();
     };
     el('.editor-close').onclick = close;
+    el('.editor-close').hidden = Boolean(api.inline);
     panel.addEventListener('keydown', (e) => {
       e.stopPropagation();
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' && !api.inline) {
         e.preventDefault();
         close();
       }
@@ -539,11 +578,11 @@ export function createTempoEditor(api) {
     el('.point-add').onclick = () =>
       addPoint(
         draft.track === key && active ? active.currentTime : draft.duration / 2,
-        1,
+        lane === 'pitch' ? (draft.keyShift ?? 0) : 1,
       );
     el('.point-remove').onclick = () => {
       if (!selected) return;
-      draft.points.splice(selected, 1);
+      lanePoints().splice(selected, 1);
       selected = Math.max(0, selected - 1);
       normalize();
       changed();
@@ -587,6 +626,7 @@ export function createTempoEditor(api) {
           enabled: true,
           temporary: true,
         };
+        keyOverride = null;
         suspended = false;
         api.refresh();
         syncControls();
@@ -602,6 +642,13 @@ export function createTempoEditor(api) {
     el('.editor-pitch').onchange = () => {
       draft.pitch = el('.editor-pitch').value;
       changed();
+    };
+    el('.editor-key-shift').onchange = () => {
+      const value = Number(el('.editor-key-shift').value);
+      if (validKeyShift(value)) {
+        draft.keyShift = value;
+        changed();
+      } else refresh();
     };
     el('.editor-code').oninput = () => {
       imported = null;
@@ -629,6 +676,8 @@ export function createTempoEditor(api) {
     el('.editor-import').onclick = () => {
       if (!imported) return;
       draft = structuredClone(imported);
+      lane = 'tempo';
+      [speedBottom, speedTop] = laneViews.tempo;
       imported = null;
       selected = 0;
       dirty = true;
@@ -637,6 +686,7 @@ export function createTempoEditor(api) {
       refresh();
       status('Draft loaded.');
     };
+    syncFields = enhanceTempoFields(panel);
     const graph = el('.editor-graph');
     const coords = (event) => {
       const bounds = graph.getBoundingClientRect();
@@ -647,13 +697,13 @@ export function createTempoEditor(api) {
       const rate = speedTop - ((y - 12) / 176) * (speedTop - speedBottom);
       return {
         t: Math.max(0, Math.min(draft.duration, time)),
-        r: Math.max(speedBottom, Math.min(speedTop, rate)),
+        [laneField()]: Math.max(speedBottom, Math.min(speedTop, rate)),
       };
     };
     graph.addEventListener('dblclick', (e) => {
       if (!e.target.closest('[data-index]') && !imported) {
         const p = coords(e);
-        addPoint(p.t, p.r);
+        addPoint(p.t, p[laneField()]);
       }
     });
     graph.addEventListener('pointerdown', (e) => {
@@ -663,7 +713,7 @@ export function createTempoEditor(api) {
       dragging = target.dataset.kind;
       dragOffset =
         dragging === 'ramp'
-          ? coords(e).t - (draft.points[selected].t - draft.points[selected].d)
+          ? coords(e).t - (lanePoints()[selected].t - lanePoints()[selected].d)
           : 0;
       graph.setPointerCapture(e.pointerId);
       e.preventDefault();
@@ -672,8 +722,8 @@ export function createTempoEditor(api) {
     graph.addEventListener('pointermove', (e) => {
       if (!dragging) return;
       const p = coords(e),
-        point = draft.points[selected];
-      const previous = draft.points[selected - 1];
+        point = lanePoints()[selected];
+      const previous = lanePoints()[selected - 1];
       if (dragging === 'ramp')
         point.d = round(
           point.t - Math.max(previous.t, Math.min(point.t, p.t - dragOffset)),
@@ -684,13 +734,21 @@ export function createTempoEditor(api) {
             Math.max(
               previous.t + 0.01,
               Math.min(
-                (draft.points[selected + 1]?.t ?? draft.duration + 0.01) - 0.01,
+                (lanePoints()[selected + 1]?.t ?? draft.duration + 0.01) - 0.01,
                 p.t,
               ),
             ),
           );
-        const step = e.shiftKey ? 0.005 : 0.025;
-        point.r = round(Math.round(p.r / step) * step);
+        const step = e.shiftKey ? laneStep() / 5 : laneStep();
+        point[laneField()] = round(
+          Math.max(
+            lane === 'pitch' ? -12 : 0.25,
+            Math.min(
+              lane === 'pitch' ? 12 : 4,
+              Math.round(p[laneField()] / step) * step,
+            ),
+          ),
+        );
       }
       normalize();
       changed();
@@ -704,6 +762,26 @@ export function createTempoEditor(api) {
       if (!target || imported) return;
       selected = Number(target.dataset.index);
       if (target.dataset.kind === 'ramp' && adjustFadeStart(e)) return;
+      if (
+        target.dataset.kind !== 'ramp' &&
+        ['ArrowUp', 'ArrowDown'].includes(e.key)
+      ) {
+        e.preventDefault();
+        const point = lanePoints()[selected];
+        const step = laneStep() / (e.shiftKey ? 5 : 1);
+        point[laneField()] = round(
+          Math.max(
+            lane === 'pitch' ? -12 : 0.25,
+            Math.min(
+              lane === 'pitch' ? 12 : 4,
+              point[laneField()] + (e.key === 'ArrowUp' ? step : -step),
+            ),
+          ),
+        );
+        changed();
+        el('.point.selected')?.focus({ preventScroll: true });
+        return;
+      }
       if (['Enter', ' '].includes(e.key)) {
         e.preventDefault();
         refresh();
@@ -723,14 +801,14 @@ export function createTempoEditor(api) {
   }
 
   function normalize() {
-    draft.points.forEach((p, i) => {
-      p.d = i ? round(Math.min(p.d, p.t - draft.points[i - 1].t)) : 0;
+    lanePoints().forEach((p, i) => {
+      p.d = i ? round(Math.min(p.d, p.t - lanePoints()[i - 1].t)) : 0;
     });
   }
 
   function adjustFadeStart(event) {
-    const point = draft.points[selected];
-    const previous = draft.points[selected - 1];
+    const point = lanePoints()[selected];
+    const previous = lanePoints()[selected - 1];
     const step = event.shiftKey ? 0.1 : 1;
     const start = point.t - point.d;
     const positions = {
@@ -825,7 +903,7 @@ export function createTempoEditor(api) {
     status('Unsaved changes');
   }
   function updatePoint() {
-    const p = draft.points[selected];
+    const p = lanePoints()[selected];
     const t = Number(el('.point-time').value),
       r = Number(el('.point-rate').value),
       d = Number(el('.point-duration').value);
@@ -842,41 +920,54 @@ export function createTempoEditor(api) {
     p.t = selected
       ? round(
           Math.max(
-            draft.points[selected - 1].t + 0.01,
+            lanePoints()[selected - 1].t + 0.01,
             Math.min(
-              (draft.points[selected + 1]?.t ?? draft.duration + 0.01) - 0.01,
+              (lanePoints()[selected + 1]?.t ?? draft.duration + 0.01) - 0.01,
               t,
             ),
           ),
         )
       : 0;
-    p.r = round(Math.max(0.025, Math.min(4, r)));
-    revealSpeed(p.r);
+    p[laneField()] = round(
+      Math.max(
+        lane === 'pitch' ? -12 : 0.25,
+        Math.min(lane === 'pitch' ? 12 : 4, r),
+      ),
+    );
+    revealSpeed(p[laneField()]);
     p.d = Math.max(0, d);
     p.c = el('.point-curve').value;
     normalize();
     changed();
   }
   function addPoint(time, speed) {
-    if (draft.points.length >= 200) {
+    if (lanePoints().length >= 200) {
       status('Maximum 200 points per timeline.');
       return;
     }
     const t = round(Math.max(0.01, Math.min(draft.duration, time)));
-    if (draft.points.some((p) => Math.abs(p.t - t) < 0.01)) {
+    if (lanePoints().some((p) => Math.abs(p.t - t) < 0.01)) {
       status('A point already exists here. Move it or choose another time.');
       return;
     }
-    const previous = [...draft.points].reverse().find((p) => p.t < t);
+    const previous = [...lanePoints()].reverse().find((p) => p.t < t);
     const point = {
       t,
-      r: round(Math.round(speed / 0.025) * 0.025),
+      [laneField()]: round(
+        Math.max(
+          lane === 'pitch' ? -12 : 0.25,
+          Math.min(
+            lane === 'pitch' ? 12 : 4,
+            Math.round(speed / laneStep()) * laneStep(),
+          ),
+        ),
+      ),
       d: Math.min(4, t - previous.t),
       c: 'linear',
     };
-    draft.points.push(point);
-    draft.points.sort((a, b) => a.t - b.t);
-    selected = draft.points.indexOf(point);
+    lanePoints().push(point);
+    lanePoints().sort((a, b) => a.t - b.t);
+    selected = lanePoints().indexOf(point);
     normalize();
     changed();
   }
@@ -892,6 +983,13 @@ export function createTempoEditor(api) {
     el('.zoom-in').disabled = zoom >= data.duration;
     el('.zoom-out').disabled = zoom <= 1;
     el('.speed-range').value = speedMode;
+    for (const [name, value] of [
+      ['min', speedBottom],
+      ['max', speedTop],
+    ]) {
+      el('.speed-' + name).value = String(value);
+      el('.speed-' + name).setAttribute('aria-invalid', 'false');
+    }
     const pan = el('.editor-pan');
     const visibleRange = `${preciseTime(round(viewStart))}–${preciseTime(round(viewStart + span))}`;
     pan.max = String(Math.max(0, data.duration - span));
@@ -905,21 +1003,23 @@ export function createTempoEditor(api) {
     el('.timeline-navigation').hidden = zoom === 1;
     el('.view-window').textContent = visibleRange;
     el('.timeline-end').textContent = timeLabel(data.duration);
-    const chosen = data.points[Math.min(selected, data.points.length - 1)];
+    const chosen =
+      lanePoints(data)[Math.min(selected, lanePoints(data).length - 1)];
     el('.zoom-focus').hidden = !chosen.d || chosen.c === 'instant';
     el('.point-readout').textContent =
-      `${chosen.r}× · ${chosen.d ? chosen.d + 's fade' : 'Instant'}`;
+      `${chosen[laneField()]}${laneUnit()} · ${chosen.d ? chosen.d + 's fade' : 'Instant'}`;
     const picker = el('.editor-point-picker');
     picker.replaceChildren(
-      ...data.points.map((point, index) => {
+      ...lanePoints(data).map((point, index) => {
         const option = document.createElement('option');
         option.value = index;
-        option.textContent = `${index + 1} · ${preciseTime(point.t)} · ${point.r}×`;
+        option.textContent = `${index + 1} · ${preciseTime(point.t)} · ${point[laneField()]}${laneUnit()}`;
         return option;
       }),
     );
-    picker.value = String(Math.min(selected, data.points.length - 1));
+    picker.value = String(Math.min(selected, lanePoints(data).length - 1));
     picker.disabled = Boolean(imported);
+    syncFields();
     graph.replaceChildren();
     const svg = (name, attrs, label, parent = graph) => {
       const node = document.createElementNS('http://www.w3.org/2000/svg', name);
@@ -947,17 +1047,26 @@ export function createTempoEditor(api) {
       rect.setAttribute(k, v);
     clip.append(rect);
     defs.append(clip);
-    const step = speedMode === 'fine' ? 0.1 : 0.05;
+    const step =
+      speedMode === 'custom'
+        ? [0.025, 0.05, 0.1, 0.25, 0.5, 1, 2, 3, 6].find(
+            (value) => value >= (speedTop - speedBottom) / 8,
+          )
+        : speedMode === 'fine'
+          ? 0.1
+          : 0.05;
     const first = Math.ceil(speedBottom / step - 1e-9);
     const last = Math.floor(speedTop / step + 1e-9);
-    const ticks = ['fine', 'close'].includes(speedMode)
+    const ticks = ['fine', 'close', 'custom'].includes(speedMode)
       ? Array.from({ length: last - first + 1 }, (_, i) =>
           round((first + i) * step),
         )
       : speedTop <= 2
         ? Array.from({ length: speedTop * 4 }, (_, i) => (i + 1) / 4)
         : [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4];
-    if (speedBottom < ticks[0]) ticks.unshift(speedBottom);
+    if (!ticks.includes(speedBottom)) ticks.unshift(speedBottom);
+    if (speedMode === 'custom' && !ticks.includes(speedTop))
+      ticks.push(speedTop);
     for (const r of ticks) {
       svg('line', {
         x1: 44,
@@ -965,14 +1074,19 @@ export function createTempoEditor(api) {
         y1: y(r),
         y2: y(r),
         class: 'grid',
-        ...(r === 1
+        ...(r === (lane === 'pitch' ? 0 : 1)
           ? {
               style:
                 'stroke:var(--tempo-fg);stroke-width:1;stroke-dasharray:3 4',
             }
           : {}),
       });
-      svg('text', { x: 2, y: y(r) + 4 }, `${r}×`);
+      if (
+        r === speedBottom ||
+        (y(speedBottom) - y(r) >= 14 &&
+          (r === speedTop || y(r) - y(speedTop) >= 14))
+      )
+        svg('text', { x: 2, y: y(r) + 4 }, `${r}${laneUnit()}`);
     }
     for (let i = 0; i <= 8; i++) {
       const time = viewStart + (span * i) / 8;
@@ -988,24 +1102,24 @@ export function createTempoEditor(api) {
         span < 10 ? preciseTime(round(time)) : timeLabel(time),
       );
     }
-    let path = `M${x(0)},${y(data.points[0].r)}`;
-    let previous = data.points[0];
-    for (const point of data.points.slice(1)) {
+    let path = `M${x(0)},${y(lanePoints(data)[0][laneField()])}`;
+    let previous = lanePoints(data)[0];
+    for (const point of lanePoints(data).slice(1)) {
       const start = point.c === 'instant' ? point.t : point.t - point.d;
-      path += ` L${x(start)},${y(previous.r)}`;
+      path += ` L${x(start)},${y(previous[laneField()])}`;
       for (let i = 1; i <= 24; i++) {
         const t = start + ((point.t - start) * i) / 24;
-        path += ` L${x(t)},${y(evaluate(data, t))}`;
+        path += ` L${x(t)},${y(evaluatePoints(lanePoints(data), t, laneField()))}`;
       }
       previous = point;
     }
-    path += ` L${x(data.duration)},${y(previous.r)}`;
+    path += ` L${x(data.duration)},${y(previous[laneField()])}`;
     svg('path', {
       d: path,
       class: 'curve',
       'clip-path': 'url(#tempo-plot-clip)',
     });
-    data.points.forEach((p, i) => {
+    lanePoints(data).forEach((p, i) => {
       if (i === selected && i && p.d && p.c !== 'instant')
         svg('rect', {
           x: x(p.t - p.d),
@@ -1025,19 +1139,19 @@ export function createTempoEditor(api) {
         p.t - p.d >= viewStart &&
         p.t - p.d <= viewStart + span
       ) {
-        drawFadeStart(svg, p, data.points[i - 1], x(p.t - p.d));
+        drawFadeStart(svg, p, lanePoints(data)[i - 1], x(p.t - p.d));
       }
       if (
         p.t < viewStart ||
         p.t > viewStart + span ||
-        p.r > speedTop ||
-        p.r < speedBottom
+        p[laneField()] > speedTop ||
+        p[laneField()] < speedBottom
       )
         return;
       if (!imported)
         svg('ellipse', {
           cx: x(p.t),
-          cy: y(p.r),
+          cy: y(p[laneField()]),
           rx: 12,
           ry: 12,
           fill: 'transparent',
@@ -1049,20 +1163,20 @@ export function createTempoEditor(api) {
         });
       const dot = svg('circle', {
         cx: x(p.t),
-        cy: y(p.r),
+        cy: y(p[laneField()]),
         r: 7,
         class: `point ${i === selected ? 'selected' : ''}`,
         'data-index': i,
         'data-kind': 'point',
         tabindex: imported ? -1 : 0,
         role: 'button',
-        'aria-label': `Point ${i + 1}: ${p.t} seconds, ${p.r}×. Enter to edit.`,
+        'aria-label': `Point ${i + 1}: ${p.t} seconds, ${p[laneField()]}${laneUnit()}. Enter to edit.`,
       });
       const title = document.createElementNS(
         'http://www.w3.org/2000/svg',
         'title',
       );
-      title.textContent = `${preciseTime(p.t)} · ${p.r}×`;
+      title.textContent = `${preciseTime(p.t)} · ${p[laneField()]}${laneUnit()}`;
       dot.append(title);
     });
     svg('line', {
@@ -1077,18 +1191,41 @@ export function createTempoEditor(api) {
     });
   }
   function refresh() {
-    const p = draft.points[selected];
+    const p = lanePoints()[selected];
+    for (const button of panel.querySelectorAll('[data-lane]'))
+      button.setAttribute('aria-pressed', String(button.dataset.lane === lane));
+    el('.pitch-options').hidden = lane !== 'pitch';
+    el('.speed-range').closest('label').hidden = lane === 'pitch';
+    el('.target-label').textContent =
+      lane === 'pitch' ? 'Target pitch (semitones)' : 'Target speed';
+    el('.editor-point-picker').setAttribute(
+      'aria-label',
+      'Selected ' + lane + ' point',
+    );
+    el('.editor-graph').setAttribute(
+      'aria-label',
+      lane + ' over original song time',
+    );
+    for (const selector of ['.point-rate', '.speed-min', '.speed-max']) {
+      el(selector).min = lane === 'pitch' ? '-12' : '0.25';
+      el(selector).max = lane === 'pitch' ? '12' : '4';
+    }
+    el('.point-rate').step = String(laneStep());
+    for (const unit of panel.querySelectorAll('.axis-unit'))
+      unit.textContent = laneUnit();
+    el('.editor-key-shift').disabled = Boolean(draft.pitchPoints);
     el('.editor-track').textContent = draft.track;
     el('.editor-track').href = 'https://soundcloud.com' + draft.track;
     el('.point-time').value = p.t;
     el('.point-time').disabled = selected === 0;
-    el('.point-rate').value = p.r;
+    el('.point-rate').value = p[laneField()];
     el('.point-duration').value = p.d;
     el('.point-duration').disabled = selected === 0 || p.c === 'instant';
     el('.point-curve').value = p.c;
     el('.point-curve').disabled = selected === 0;
     el('.point-remove').disabled = selected === 0;
     el('.editor-pitch').value = draft.pitch ?? api.defaultPitchMode;
+    el('.editor-key-shift').value = draft.keyShift ?? 0;
     syncControls();
     draw();
   }
@@ -1130,12 +1267,19 @@ export function createTempoEditor(api) {
         duration,
         points: [{ t: 0, r: api.rate, d: 0, c: 'instant' }],
         pitch: api.pitchMode,
+        keyShift: api.keyShift ?? 0,
       };
+      if (target === key && keyOverride !== null) {
+        draft.keyShift = keyOverride;
+        delete draft.pitchPoints;
+      }
+      lane = 'tempo';
+      [speedBottom, speedTop] = laneViews.tempo;
       selected = 0;
     }
-    api.closeSettings();
+    api.closeSettings?.();
     panel.hidden = false;
-    panel.showPopover?.();
+    if (!api.inline) panel.showPopover?.();
     fit();
     refresh();
     status(
@@ -1143,7 +1287,7 @@ export function createTempoEditor(api) {
         ? 'Unsaved draft restored.'
         : 'Double-click the graph to add a point.',
     );
-    el('.editor-close').focus();
+    if (!api.inline) el('.editor-close').focus();
     wake();
   }
   function openPendingLink() {
@@ -1190,7 +1334,11 @@ export function createTempoEditor(api) {
 
   function tick() {
     const nextRate = value();
-    if (nextRate !== null && nextRate !== api.rate) api.refresh();
+    const nextPitch = effectivePitch();
+    const pitchChanged = nextPitch !== lastPitch;
+    lastPitch = nextPitch;
+    if ((nextRate !== null && nextRate !== api.rate) || pitchChanged)
+      api.refresh();
     updatePlayhead();
     wake();
   }
@@ -1198,7 +1346,9 @@ export function createTempoEditor(api) {
   function wake() {
     openPendingLink();
     const automate =
-      profile?.enabled && !suspended && profile.data.points.length > 1;
+      running() &&
+      (profile.data.points.length > 1 ||
+        (keyOverride === null && profile.data.pitchPoints?.length > 1));
     const animate =
       !document.hidden && panel && !panel.hidden && draft && !imported;
     if (!active || active.paused || active.ended || (!automate && !animate)) {
@@ -1217,7 +1367,7 @@ export function createTempoEditor(api) {
     if (track === key && !profile?.temporary) {
       const wasRunning = running();
       load();
-      suspended = false;
+      suspended = api.applySaved === false;
       if (wasRunning && !profile?.enabled) api.normal();
       else api.refresh();
     }
@@ -1229,16 +1379,48 @@ export function createTempoEditor(api) {
       refreshSaved(key);
     }
   });
+  function effectivePitch() {
+    return (
+      keyOverride ??
+      (running()
+        ? profilePitchAt(profile.data, active?.currentTime || 0)
+        : null)
+    );
+  }
   return {
     wake,
     pitchMode,
     shareLink,
+    keyShift: effectivePitch,
+    setKeyShift(value) {
+      if (!validKeyShift(value)) throw new RangeError('Invalid key shift');
+      keyOverride = value;
+      if (draft?.track === key) {
+        draft.keyShift = value;
+        delete draft.pitchPoints;
+        selected = 0;
+        dirty = true;
+        if (panel && !panel.hidden) {
+          refresh();
+          status('Pitch changed. Save to keep it for this track.');
+        }
+      }
+    },
     observe,
     value,
     playbackSchedule,
     changeTrack,
     open,
     validate,
+    draftProfile: () => (draft ? draftData() : null),
+    loadDraft(data) {
+      draft = validate(data);
+      selected = 0;
+      lane = 'tempo';
+      [speedBottom, speedTop] = laneViews.tempo;
+      dirty = true;
+      open();
+    },
     refreshSaved,
     suspend() {
       suspended = true;

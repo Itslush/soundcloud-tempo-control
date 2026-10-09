@@ -36,7 +36,10 @@ const backup = (
     copyLinks: true,
     preserveKey: false,
     useWasm: true,
-    outputDb: -8,
+    showKey: false,
+    crossfade: true,
+    crossfadeSeconds: 8,
+    outputDb: 24.5,
   },
 });
 
@@ -78,6 +81,39 @@ function fixture(values = {}) {
   return { store, storage, map };
 }
 
+test('fractional pitch, automation and pitch preferences survive a backup round trip', () => {
+  const input = backup();
+  input.preferences.keyShift = -1.25;
+  input.preferences.tempoIncrement = 0.125;
+  input.preferences.pitchControls = {
+    min: -6,
+    max: 6,
+    step: 0.25,
+    notes: true,
+    source: 9,
+  };
+  input.tracks[0].timeline.data.pitchPoints = [
+    { t: 0, k: -0.5, d: 0, c: 'instant' },
+    { t: 30, k: 2.25, d: 10, c: 'smooth' },
+  ];
+  const first = fixture();
+  first.store.commit(first.store.prepare(JSON.stringify(input)));
+  const exported = first.store.exportBackup();
+  const second = fixture();
+  second.store.commit(second.store.prepare(exported));
+  assert.equal(second.store.exportBackup(), exported);
+  assert.equal(second.map.get('soundcloud.tempo.keyShift'), '-1.25');
+  assert.equal(second.map.get('soundcloud.tempo.tempoIncrement'), '0.125');
+  assert.deepEqual(
+    JSON.parse(second.map.get('soundcloud.tempo.pitchControls')),
+    input.preferences.pitchControls,
+  );
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(second.store.timeline(track).data.pitchPoints)),
+    input.tracks[0].timeline.data.pitchPoints,
+  );
+});
+
 test('legacy speeds, disabled speeds and timeline-only tracks share one validated inventory', () => {
   const { store, map } = fixture({
     [fixedKey]: '0.75',
@@ -96,18 +132,21 @@ test('legacy speeds, disabled speeds and timeline-only tracks share one validate
   assert.equal(map.get('unrelated.key'), 'keep');
 });
 
-test('buffered speeds survive legacy reads, disabled saves and fresh store reloads', () => {
+test('legacy speeds below the floor migrate to 0.25 without losing enabled state', () => {
   for (const rate of [0.025, 0.05, 0.1, 0.249, 0.25, 4]) {
     const first = fixture({ [fixedKey]: JSON.stringify(rate) });
-    assert.equal(first.store.speed(track).rate, rate);
+    assert.equal(first.store.speed(track).rate, Math.max(0.25, rate));
     assert.equal(first.store.speed(track).enabled, true);
     first.store.set(track, 'speed', { rate, enabled: false });
     const second = fixture(Object.fromEntries(first.map));
-    assert.equal(second.store.speed(track).rate, rate);
+    assert.equal(second.store.speed(track).rate, Math.max(0.25, rate));
     assert.equal(second.store.speed(track).enabled, false);
     second.store.set(track, 'speed', { rate, enabled: true });
-    assert.equal(second.map.get(fixedKey), JSON.stringify(rate));
-    assert.equal(second.store.tracks()[0].speed.rate, rate);
+    assert.equal(
+      second.map.get(fixedKey),
+      JSON.stringify(Math.max(0.25, rate)),
+    );
+    assert.equal(second.store.tracks()[0].speed.rate, Math.max(0.25, rate));
   }
 });
 
@@ -129,7 +168,7 @@ test('speed boundaries reject before rounding without overwriting a saved low ra
   ]) {
     assert.throws(() => store.set(track, 'speed', { rate, enabled: true }));
     assert.equal(map.get(fixedKey), '0.025');
-    assert.equal(store.speed(track).rate, 0.025);
+    assert.equal(store.speed(track).rate, 0.25);
   }
 });
 
@@ -157,13 +196,16 @@ test('low-rate timelines and fixed speeds survive backup import and export toget
   for (const item of tracks) {
     const saved = second.store.speed(item.track);
     const timeline = second.store.timeline(item.track);
-    assert.equal(saved.rate, item.speed.rate);
+    assert.equal(saved.rate, Math.max(0.25, item.speed.rate));
     assert.equal(saved.enabled, item.speed.enabled);
     assert.equal(timeline.enabled, item.timeline.enabled);
     assert.equal(timeline.data.pitch, 'preserve');
     assert.deepEqual(
       JSON.parse(JSON.stringify(timeline.data.points)),
-      item.timeline.data.points,
+      item.timeline.data.points.map((point) => ({
+        ...point,
+        r: Math.max(0.25, point.r),
+      })),
     );
   }
 });
@@ -219,7 +261,10 @@ test('malformed, unsafe, duplicate, mixed and oversized backups never write', ()
     null,
     {},
     { ...backup(), version: 2 },
-    { ...backup(), preferences: { outputDb: 1 } },
+    { ...backup(), preferences: { outputDb: 10000 } },
+    { ...backup(), preferences: { tempoIncrement: 0 } },
+    { ...backup(), preferences: { tempoIncrement: 1.1 } },
+    { ...backup(), preferences: { tempoIncrement: '0.1' } },
     { ...backup(), preferences: { preserveKey: 'true' } },
     { ...backup(), preferences: { unknown: false } },
     backup([

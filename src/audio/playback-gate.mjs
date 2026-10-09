@@ -1,3 +1,5 @@
+import { validOutputDb } from './output-level.mjs';
+
 const ownedInputs = new WeakSet();
 
 function readLevel(levels) {
@@ -8,9 +10,7 @@ function readLevel(levels) {
     value.volume < 0 ||
     value.volume > 1 ||
     typeof value.muted !== 'boolean' ||
-    !Number.isFinite(value.outputDb) ||
-    value.outputDb < -24 ||
-    value.outputDb > 0
+    !validOutputDb(value.outputDb)
   )
     throw new RangeError('Invalid logical output level');
   return Object.freeze({

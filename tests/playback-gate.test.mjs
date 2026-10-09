@@ -484,7 +484,7 @@ test('invalid logical levels and graph ownership are rejected before gain alloca
     { volume: -0.1, muted: false, outputDb: -6 },
     { volume: 1.1, muted: false, outputDb: -6 },
     { volume: 0.8, muted: 0, outputDb: -6 },
-    { volume: 0.8, muted: false, outputDb: 1 },
+    { volume: 0.8, muted: false, outputDb: 10000 },
     { volume: 0.8, muted: false, outputDb: -25 },
     { volume: 0.8, muted: false, outputDb: NaN },
   ]) {

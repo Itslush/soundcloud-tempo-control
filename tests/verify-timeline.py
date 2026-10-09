@@ -6,7 +6,7 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
 
-from userscript_fixture import userscript_source, browser_options, text_contrast
+from userscript_fixture import choose_option, userscript_source, browser_options, text_contrast
 
 ROOT = Path(__file__).resolve().parent.parent
 TRACK = '/test-artist/first-track'
@@ -65,10 +65,10 @@ def main():
 
             seek(0, 1); seek(10, 1); seek(15, .75); seek(20, .5); seek(100, .5); seek(5, 1)
             for curve, expected in [('ease-in', .969), ('ease-out', .781), ('smooth', .922), ('instant', 1)]:
-                page.locator('.point-curve').select_option(curve)
+                choose_option(page.locator('.point-curve'), curve)
                 page.locator('.editor-save').click()
                 seek(12.5, expected)
-            page.locator('.point-curve').select_option('linear'); page.locator('.editor-save').click()
+            choose_option(page.locator('.point-curve'), 'linear'); page.locator('.editor-save').click()
             page.locator('.tempo-editor summary').click()
             page.locator('.editor-copy').click()
             exported = page.evaluate('copied')
@@ -91,14 +91,16 @@ def main():
             expect(page.locator('.settings-button')).to_be_focused()
             page.locator('.settings-button').click(); page.locator('.open-editor').click()
             expect(page.locator('.editor-import')).to_be_disabled()
-            page.locator('.editor-graph circle').nth(1).focus(); page.locator('.editor-graph circle').nth(1).press('Enter')
+            choose_option(page.locator('.speed-range'), '4')
+            page.locator('.point[data-index="1"]').focus(); page.locator('.point[data-index="1"]').press('Enter')
             expect(page.locator('.point-time')).to_be_focused()
             page.locator('.editor-preview').click()
             expect(page.locator('.editor-import')).to_be_enabled()
             page.locator('.editor-import').click()
             page.locator('.editor-revert').click()
             expect(page.locator('.editor-import')).to_be_disabled()
-            page.locator('.editor-graph circle').nth(1).focus(); page.locator('.editor-graph circle').nth(1).press('Enter')
+            choose_option(page.locator('.speed-range'), '4')
+            page.locator('.point[data-index="1"]').focus(); page.locator('.point[data-index="1"]').press('Enter')
             expect(page.locator('.point-time')).to_be_focused()
             page.locator('.editor-preview').click()
             page.locator('.editor-import').click()
@@ -107,6 +109,7 @@ def main():
             page.locator('.editor-save').click()
             expect(page.locator('.editor-status')).to_contain_text('Not saved')
             page.evaluate('() => {Storage.prototype.setItem=window.originalSet;}')
+            page.locator('.zoom-fit').click()
             graph = page.locator('.editor-graph')
             b = graph.bounding_box()
             graph.dblclick(position={'x': b['width']*.6, 'y': b['height']*.55})
@@ -127,8 +130,9 @@ def main():
             page.locator('.playbackSoundBadge__titleLink').evaluate("el=>el.href='https://soundcloud.com/test-artist/first-track'")
             seek(15, .75)
             page.locator('.settings-button').click(); page.locator('.open-editor').click()
-            page.locator('.editor-graph circle').nth(1).focus()
-            page.locator('.editor-graph circle').nth(1).press('Enter')
+            page.locator('.zoom-fit').click()
+            page.locator('.point[data-index="1"]').focus()
+            page.locator('.point[data-index="1"]').press('Enter')
             expect(page.locator('.point-time')).to_be_focused()
             for width, theme in [(1050,'dark'),(768,'dark'),(1050,'light')]:
                 page.set_viewport_size({'width':width,'height':820})

@@ -1,3 +1,4 @@
+import { tempoFieldStyle } from './tempo-fields.js';
 import { tempoRangeStyle } from './tempo-range.js';
 
 export const controlsStyle = `
@@ -17,7 +18,7 @@ export const controlsStyle = `
 
         .controls {
           display: grid;
-          grid-template-columns: 56px 20px minmax(0, 1fr) 24px 24px;
+          grid-template-columns: 56px 20px minmax(0, 1fr) 132px 24px 24px;
           align-items: center;
           gap: 4px;
           width: 100%;
@@ -26,8 +27,11 @@ export const controlsStyle = `
           font-size: 12px;
         }
 
+        .controls.hide-key { grid-template-columns: 56px 20px minmax(0, 1fr) 24px 24px; }
+
         button,
-        input {
+        input,
+        select {
           font: inherit;
           color: inherit;
         }
@@ -37,7 +41,8 @@ export const controlsStyle = `
         }
 
         button:focus-visible,
-        input:focus-visible {
+        input:focus-visible,
+        select:focus-visible {
           outline: 2px solid var(--tempo-fg);
           outline-offset: 2px;
         }
@@ -67,7 +72,81 @@ export const controlsStyle = `
           position: relative;
           min-width: 0;
           height: 32px;
+        }
+        .slider-wrap[data-style='slider'] {
           transform: translateY(var(--tempo-rail-offset, 0px));
+        }
+        .controls:has(.slider-wrap:not([data-style='slider'])) {
+          grid-template-columns: 56px 20px 36px 132px 24px 24px;
+        }
+        .controls.hide-key:has(.slider-wrap:not([data-style='slider'])) {
+          grid-template-columns: 56px 20px 36px 24px 24px;
+        }
+        .quick-key {
+          display: grid;
+          grid-template-columns: 28px 42px 12px 20px;
+          align-items: center;
+          gap: 4px;
+          margin-left: 16px;
+          font-size: 12px;
+          line-height: 24px;
+        }
+        .fader-value, .fader-reset, .fader-normal, .fader-limit, .fader-level, .fader-ticks { display: none; }
+        #tempo-fader[popover] .fader-value {
+          display: block;
+          text-align: center;
+          font: inherit;
+          font-variant-numeric: tabular-nums;
+          line-height: 24px;
+          margin-bottom: 4px;
+        }
+        #tempo-fader[popover] .fader-reset {
+          display: block;
+          width: 100%;
+          height: 32px;
+          margin-top: 8px;
+          padding: 0;
+          border: 1px solid var(--tempo-track);
+          border-radius: 2px;
+          background: transparent;
+          font-size: 11px;
+        }
+        .fader-reset:hover { background: color-mix(in srgb, var(--tempo-fg) 8%, transparent); }
+        #tempo-fader[popover] .fader-rail { position: relative; margin: 8px 0; }
+        #tempo-fader[popover] .fader-normal {
+          display: block;
+          position: absolute;
+          top: calc(6px + (100% - 12px) * 0.8);
+          right: calc(50% + 16px);
+          transform: translateY(-50%);
+          font-size: 11px;
+          line-height: 12px;
+          pointer-events: none;
+        }
+        #tempo-fader[popover] .fader-normal::before {
+          content: '';
+          position: absolute;
+          left: calc(100% + 4px);
+          width: 6px;
+          top: 50%;
+          border-top: 1px solid var(--tempo-fg);
+        }
+        #tempo-fader[popover] .fader-limit {
+          display: block; position: absolute; right: calc(50% + 16px);
+          font-size: 11px; line-height: 12px; pointer-events: none;
+        }
+        .fader-max { top: 0; }
+        .fader-min { bottom: 0; }
+        #tempo-fader[popover] .fader-ticks {
+          display: block; position: absolute; top: 0; left: calc(50% - 16px);
+          width: 32px; height: 144px; pointer-events: none;
+          fill: none; stroke: var(--tempo-track); stroke-width: 1;
+        }
+        #tempo-fader[popover] .fader-level {
+          display: block; position: absolute; right: calc(50% + 16px);
+          top: calc(6px + (100% - 12px) * var(--position));
+          transform: translateY(-50%); font-size: 11px; line-height: 12px;
+          pointer-events: none;
         }
 
         .ticks {
@@ -89,6 +168,97 @@ export const controlsStyle = `
         .ticks .normal-tick {
           stroke: var(--tempo-fg);
         }
+
+        #rate-dial {
+          display: block;
+          position: relative;
+          width: 32px;
+          height: 32px;
+          margin: auto;
+          padding: 0;
+          border: 0;
+          border-radius: 3px;
+          background: transparent;
+          touch-action: none;
+          cursor: ns-resize;
+          user-select: none;
+        }
+        #rate-dial svg { position: absolute; inset: 0; width: 32px; height: 32px; overflow: visible; }
+        #rate-dial svg path { fill: none; stroke-width: 1.5; stroke-linecap: round; }
+        .dial-track { stroke: var(--tempo-track); }
+        #rate-dial svg .dial-ticks { stroke: var(--tempo-track); stroke-width: 1; }
+        .dial-fill { stroke: var(--tempo-accent); stroke-dasharray: 100; stroke-dashoffset: var(--dial-unfilled, 50); }
+        .dial-zero { stroke: var(--tempo-fg); }
+        #rate-dial circle { fill: color-mix(in srgb, var(--tempo-fg) 10%, var(--tempo-surface)); }
+        #rate-dial:hover circle, #rate-dial:active circle { fill: color-mix(in srgb, var(--tempo-fg) 18%, var(--tempo-surface)); }
+        #rate-dial span {
+          position: absolute;
+          inset: 8px;
+          transform: rotate(var(--dial-angle, 0deg));
+        }
+        #rate-dial span::before {
+          content: '';
+          display: block;
+          width: 2px;
+          height: 6px;
+          margin: 0 auto;
+          background: var(--tempo-accent);
+        }
+        #rate-dial[hidden], #rate-slider[hidden], #vertical-toggle[hidden] { display: none; }
+        #vertical-toggle {
+          display: grid;
+          place-items: center;
+          width: 32px;
+          height: 32px;
+          margin: auto;
+          padding: 6px;
+          border: 0;
+          border-radius: 3px;
+          background: transparent;
+        }
+        #vertical-toggle:hover, #vertical-toggle[aria-expanded='true'] {
+          background: color-mix(in srgb, var(--tempo-fg) 8%, transparent);
+        }
+        #vertical-toggle svg {
+          width: 20px;
+          height: 20px;
+          fill: none;
+          stroke: currentColor;
+          stroke-width: 1.5;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+        }
+        #tempo-fader[popover] {
+          position: fixed;
+          inset: auto;
+          margin: 0;
+          padding: 8px;
+          width: 96px;
+          border: 1px solid color-mix(in srgb, var(--tempo-fg) 35%, var(--tempo-surface));
+          border-radius: 4px;
+          background: var(--tempo-surface, #f2f2f2);
+          color: var(--tempo-fg);
+          font: inherit;
+        }
+        .slider-wrap[data-style='dial'] .ticks,
+        .slider-wrap[data-style='vertical'] .ticks { display: none; }
+        .slider-wrap[data-style='vertical'] #rate-slider {
+          width: 32px;
+          height: 144px;
+          --range-thumb-opacity: 1;
+          border: 0;
+          padding: 0;
+          margin: auto;
+          writing-mode: vertical-lr;
+          direction: rtl;
+          background: linear-gradient(to top, var(--tempo-accent) var(--range-fill, 0%), var(--tempo-track) var(--range-fill, 0%)) center / 2px calc(100% - 12px) no-repeat;
+        }
+        .slider-wrap[data-style='vertical'] #rate-slider::-webkit-slider-runnable-track { width: 2px; height: 100%; }
+        .slider-wrap[data-style='vertical'] #rate-slider::-webkit-slider-thumb { margin-top: 0; margin-left: -5px; }
+        .slider-wrap[data-style='vertical'] #rate-slider::-moz-range-track { width: 2px; height: 100%; }
+        .control-style-label, .key-shift-label { display: flex; align-items: center; gap: 12px; margin: 12px 0; flex-wrap: wrap; }
+        .key-shift-label input { width: 58px; }
+        .settings select { font: inherit; color: inherit; background: var(--tempo-surface); border: 1px solid var(--tempo-track); min-height: 32px; }
 
         @media (forced-colors: active) {
           .slider-wrap {
@@ -134,6 +304,28 @@ export const controlsStyle = `
           align-items: center;
           gap: 8px;
         }
+        .settings[data-choosing-style] .quick-settings,
+        .settings[data-choosing-style] #saved-filter,
+        .settings[data-choosing-style] .saved-count,
+        .settings[data-choosing-style] .saved-list,
+        .settings[data-choosing-style] .saved-more,
+        .settings[data-choosing-style] .open-editor,
+        .settings[data-choosing-style] .appearance-options,
+        .settings[data-choosing-style] .appearance-settings summary,
+        .settings[data-choosing-style] .settings-tools > details:not(.appearance-settings) {
+          display: none;
+        }
+        .settings[data-choosing-style] header {
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        .settings[data-choosing-style] .settings-tools {
+          border: 0;
+          margin: 0;
+        }
+        .settings[data-choosing-style] .close-settings {
+          min-height: 44px;
+        }
 
         .quick-settings {
           display: flex;
@@ -151,6 +343,14 @@ export const controlsStyle = `
           padding: 5px 0;
         }
 
+        .crossfade-debug pre {
+          white-space: pre-wrap;
+          overflow-wrap: anywhere;
+          max-height: 180px;
+          overflow: auto;
+          font-size: 11px;
+          line-height: 1.5;
+        }
         .settings button {
           min-height: 28px;
           padding: 3px 6px;
@@ -180,10 +380,14 @@ export const controlsStyle = `
         }
         .output-label {
           display: flex;
+          align-items: center;
           justify-content: space-between;
           gap: 12px;
           margin-top: 12px;
         }
+
+        .output-entry { display: flex; align-items: center; gap: 6px; }
+        #output-value { width: 84px; min-height: 32px; padding: 4px 8px; border: 1px solid var(--tempo-track); border-radius: 2px; text-align: right; font-variant-numeric: tabular-nums; }
 
         #output-level {
           display: block;
@@ -431,10 +635,11 @@ export const controlsStyle = `
           stroke-linejoin: round;
         }
 
-        @media (max-width: 850px) {
+        @media (max-width: 960px) {
+          .controls { gap: 3px; }
           :host {
-            flex-basis: 208px !important;
-            min-width: 208px !important;
+            flex-basis: var(--tempo-compact-width, 292px) !important;
+            min-width: var(--tempo-compact-width, 292px) !important;
           }
         }
 
@@ -443,7 +648,17 @@ export const controlsStyle = `
           color: #fff;
         }
 
-        ${tempoRangeStyle}
+        ${tempoRangeStyle}${tempoFieldStyle}
+.quick-key .tempo-number{display:contents}
+.quick-key .tempo-number input{grid-column:2;grid-row:1;width:42px;height:32px;padding:0;border:0;background:transparent;text-align:center;color:inherit;font:inherit;font-variant-numeric:tabular-nums}
+.quick-key .tempo-number-arrows{grid-column:4;grid-row:1}
+.quick-key .tempo-number-arrows button{width:20px}
+.quick-key .key-unit{grid-column:3;grid-row:1}
+#tempo-settings input[type='range']{--range-thumb-opacity:1}
+.settings .tempo-choice-trigger{min-height:36px;padding:6px 10px;border:1px solid var(--tempo-track);border-radius:3px;background:var(--tempo-surface)}
+.control-style-label .tempo-choice{min-width:164px}
+.quick-key{white-space:nowrap}
+
 
         .memory,
         .settings-button {
@@ -535,4 +750,10 @@ export const controlsStyle = `
         [hidden] {
           display: none !important;
         }
-      `;
+
+.pitch-bounds{display:grid;gap:12px;margin:12px 0}
+.pitch-bounds label,.increment-label{display:grid;grid-template-columns:minmax(0,1fr) 90px 16px;gap:8px;align-items:center}
+.increment-label{margin:12px 0}
+.pitch-bounds .tempo-number,.increment-label .tempo-number{border:1px solid var(--tempo-track);border-radius:3px;min-height:36px}
+.pitch-bounds .tempo-number input,.increment-label .tempo-number input{width:64px;text-align:center}
+`;

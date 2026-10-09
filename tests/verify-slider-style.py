@@ -108,8 +108,9 @@ def check_states(page, slider, captures, touch=False, disabled=False):
     assert slider.bounding_box()['height'] >= 32
     assert slider.get_attribute('aria-label') or slider.evaluate('input => input.labels.length > 0')
     away(page, slider)
-    opacity(slider, 1 if touch else 0)
-    if not touch:
+    always_visible = slider.evaluate('input => Boolean(input.closest(".settings"))')
+    opacity(slider, 1 if touch or always_visible else 0)
+    if not touch and not always_visible:
         idle = slider.screenshot(animations='disabled')
         idle_pixels(idle)
         captures.append((slider.get_attribute('id') + ' idle', idle))
@@ -193,7 +194,7 @@ def run_context(browser, touch):
         footer = native.locator('#rate-slider')
         check_states(native, footer, captures, touch)
         native.locator('.settings-button').click()
-        native.locator('.advanced-audio summary').click()
+        native.locator('.advanced-audio > summary').click()
         output = native.locator('#output-level')
         check_states(native, output, captures, touch)
         native.evaluate('''() => {
@@ -202,7 +203,7 @@ def run_context(browser, touch):
             window.dispatchEvent(new StorageEvent('storage', {key, newValue: '-12'}));
         }''')
         expect(output).to_have_value('-12')
-        expect(native.locator('#output-value')).to_have_text('-12 dB')
+        expect(native.locator('#output-value')).to_have_value('-12')
         fill_matches(output)
         native.locator('.open-editor').click()
         expect(native.locator('#timeline-pan')).to_be_disabled()

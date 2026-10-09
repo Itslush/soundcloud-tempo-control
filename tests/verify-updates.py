@@ -1,9 +1,11 @@
 import json
+import re
 from playwright.sync_api import sync_playwright, expect
-from userscript_fixture import ROOT, userscript_source, browser_options
+from userscript_fixture import ROOT, userscript_source, userscript_bytes, browser_options
 
 KEY = 'soundcloud.tempo.seenVersion'
 VERSION = json.loads((ROOT/'package.json').read_text(encoding='utf-8'))['version']
+homepage = re.search(r'^// @homepageURL\s+(https://\S+)', userscript_bytes().decode('utf-8'), re.MULTILINE)
 
 with sync_playwright() as p:
     browser = p.chromium.launch(**browser_options(), headless=True, args=['--mute-audio'])
@@ -18,7 +20,9 @@ with sync_playwright() as p:
     page.evaluate('key=>localStorage.setItem(key,"0.9.0")', KEY)
     page.reload()
     expect(page.locator('.release-notice')).to_contain_text(f'v{VERSION}')
-    expect(page.locator('.release-notice a')).to_have_count(0)
+    expect(page.locator('.release-notice a')).to_have_count(1 if homepage else 0)
+    if homepage:
+        expect(page.locator('.release-notice a')).to_have_attribute('href', homepage.group(1).rstrip('/')+'/updates/')
     page.locator('.release-notice button').click()
     expect(page.locator('.release-notice')).to_have_count(0)
     page.reload()

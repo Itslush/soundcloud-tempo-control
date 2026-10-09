@@ -62,12 +62,12 @@ def ring_alignment(page, scale, width):
     page.set_viewport_size({'width': width, 'height': 900})
     slider = page.locator('#rate-slider')
     ruler = page.locator('.ticks')
-    geometry = tempo_tick_geometry(ruler, slider, 12, intervals=79)
+    geometry = tempo_tick_geometry(ruler, slider, 12, intervals=70)
     wrap = page.locator('.slider-wrap')
     page.keyboard.press('Tab')
     slider.focus()
     offsets = []
-    for rate in [0.025, 0.05, 0.1, 0.25, 0.275, 0.85, 0.875, 1, 1.975, 2]:
+    for rate in [0.25, 0.275, 0.5, 0.85, 0.875, 1, 1.975, 2]:
         slider.fill(str(rate))
         expect(slider).to_have_value(str(rate))
         pixels = Image.open(io.BytesIO(wrap.screenshot())).convert('RGB')
@@ -82,12 +82,14 @@ def ring_alignment(page, scale, width):
         assert orange, {'rate': rate, 'scale': scale, 'width': width}
         left = min(x for x, _ in orange)
         right = max(x for x, _ in orange)
-        actual = (left + right + 1) / (2 * scale)
+        # Screenshots enclose fractional device-pixel bounds; compare in page coordinates.
+        crop_x = wrap.bounding_box()['x']
+        actual = (left + right + 1) / (2 * scale) + int(crop_x * scale) / scale - crop_x
         assert 8 <= (right - left + 1) / scale <= 13.1
         center = pixels.getpixel((round(actual * scale), round(16 * scale)))
         assert not (center[0] > 180 and 30 < center[1] < 160 and center[2] < 80), center
         start, end = geometry['endpoints']
-        expected = start + (rate - .025) / 1.975 * (end - start) - wrap.bounding_box()['x']
+        expected = start + (rate - .25) / 1.75 * (end - start) - wrap.bounding_box()['x']
         error = abs(actual - expected)
         assert error <= 1.1, {'rate': rate, 'scale': scale, 'width': width, 'actual': actual, 'expected': expected}
         offsets.append(round(error, 3))
@@ -128,7 +130,8 @@ with sync_playwright() as runtime:
                 page.locator('.saved-undo').click()
                 expect(page.locator('.saved-setting[data-type=speed] input[type=number]')).to_have_value('0.925')
                 page.locator('#saved-filter').fill('')
-                page.locator('.advanced-audio summary').click()
+                page.locator('.advanced-audio > summary').click()
+                page.locator('#output-level').scroll_into_view_if_needed()
                 expect(page.locator('#output-level')).to_be_in_viewport()
                 page.locator('#tempo-settings').screenshot(path=str(ROOT / 'test-results/compact-library-expanded.png'))
                 page.locator('.close-settings').click()

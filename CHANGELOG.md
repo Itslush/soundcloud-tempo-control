@@ -1,27 +1,37 @@
 # Changelog
 
-## 1.0.0
+## 1.1.0
 
-First release version. Replaces the earlier 5.x development numbering.
+If you have a 5.x development build, install this version manually once and
+disable the old copy. Your saved settings stay in place. Installed 1.0.0 copies
+can update through the userscript manager.
 
-- Natural-pitch tempo control from 0.025–4×; slider capped at 2× with 0.025× steps. Speeds below 0.25× use buffered playback on supported streams.
-- Thin sliders with outlined handles on hover, keyboard focus and touch. Tempo ticks mark every 0.025× stop, aligned with the rail and fill.
-- Optional Charcoal and OLED SoundCloud themes under Appearance. SoundCloud's own theme remains the default.
-- Per-track tempo memory, artwork indicators and optional 50/50 playback.
-- Artwork and opted-in copied-link metadata in SoundCloud's same-origin embedded track view, with navigation cleanup.
-- Cover indicators also recognize tracks that use their artist's avatar as artwork.
-- Track duration is read correctly for sharing and editing before playback starts.
-- A compact, independently scrolling saved-speed and timeline library, search, removal undo and validated backup import/export.
-- Shareable tempo timelines with adjustable fades and per-timeline pitch mode.
-- Optional Preserve key using the pinned Signalsmith library, with a WASM toggle and browser fallback.
-- Reused worklets, guarded restart priming and stale-update protection across pauses, seeks and track changes.
-- Global output-level setting shared by both pitch modes.
-- Download website with live audio preview, custom menus and an optional SoundCloud resolver backend.
-- Custom numeric steppers, stable expanded-editor layout and a subtle star background. Drown (Sewerslvt Remix) is the click-to-play demo.
-- Explicit Fixed speed and Timeline modes, Original comparison, undo/redo, touch-friendly graph handles and smoother reduced-motion-aware feedback.
-- SoundCloud link loading through checksum-pinned yt-dlp, without API credentials. Cached requests, bounded extraction jobs and cancellation.
-- Metadata-aware sharing, stream retry, HTML error pages and bounded compressed static delivery.
-- Optional support page and generated release metadata.
-- A dismissible notice after an installed version changes.
+### Playback and controls
 
-Previous development builds require one manual replacement with this release. Settings keep their existing storage keys. See docs/TESTING.md for verified coverage and remaining checks.
+- Adjust speed from 0.25× to 4×. The horizontal slider stops at 2×; the number field, dial and vertical slider reach 4×.
+- Choose a control style on first install or in Appearance. Set the default tempo increment and show or hide semitone adjustment.
+- Shift pitch by semitones, with your own range and increment. Preserve key separates pitch from speed when audio processing is available.
+- Save speeds for individual tracks. The bookmark and artwork show which tracks have saved settings.
+- Draw tempo and pitch changes on a timeline, with gradual fades or instant changes. Preview once or save for later.
+- Share settings in a link. The preview lets you apply them once or save them without replacing anything automatically.
+- Search saved tracks, undo removals and export a backup for another browser.
+- Choose SoundCloud, Charcoal or OLED styling. Toggle star motion or change its speed.
+- Set output gain in decibels. Optional crossfade preloads the next track when its stream is available; unsupported streams play normally.
+
+### Website
+
+- Preview a track with fixed speed or a timeline. Compare with the original, edit points and undo changes.
+- The default demo is Drown (Sewerslvt Remix). It loads after you press Play.
+- Setup, sharing and troubleshooting instructions are in the guide.
+- Optional crypto donations list the address and network for each currency.
+
+### Development details
+
+- Audio processing uses bundled Signalsmith and Mediabunny libraries. Browser pitch correction remains available as a fallback.
+- Audio processing handles pauses, seeks and track changes without recreating a worklet for every action.
+- Copied-link settings and artwork indicators also work in supported embedded SoundCloud track views.
+- The website's optional track resolver uses pinned yt-dlp with request caching, job limits and cancellation.
+- Shared previews include track metadata. Stream requests can retry, and the server returns HTML error pages and compressed static files.
+- Userscript updates show a dismissible notice when the installed version changes.
+
+See docs/TESTING.md for coverage and remaining checks.

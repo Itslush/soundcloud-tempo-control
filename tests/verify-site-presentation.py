@@ -2,10 +2,11 @@ import json
 import os
 
 from playwright.sync_api import expect, sync_playwright
-from userscript_fixture import ROOT, browser_options
+from userscript_fixture import ROOT, browser_options, serve_site
 
 
-BASE = os.environ.get('SITE_URL', 'http://127.0.0.1:4322/')
+server, default_base = serve_site()
+BASE = os.environ.get('SITE_URL', default_base)
 REMOVED = [
     'Timeline active', 'Selected point 3', 'Drag points to change speed.',
     'Player controls at 0.90×.', 'Fade duration for the selected change.',
@@ -24,7 +25,7 @@ with sync_playwright() as playwright:
     page.on('request', lambda request: resolves.append(request.url) if '/api/resolve' in request.url else None)
     for width in [320, 390, 768, 1440]:
         page.set_viewport_size({'width': width, 'height': 900})
-        for route in ['', 'guide/', 'support/', 'updates/', 'privacy/']:
+        for route in ['', 'guide/', 'updates/', 'privacy/']:
             response = page.goto(BASE + route, wait_until='networkidle')
             assert response.ok
             header = page.locator('.site-header')
@@ -57,6 +58,18 @@ with sync_playwright() as playwright:
             assert geometry['animation'] == 'none' and geometry['gradients'] == 0, geometry
             assert len(geometry['symbols']) >= 3 and geometry['period'] < geometry['height'], geometry
             page.evaluate('scrollTo(0, document.documentElement.scrollHeight)')
+            page.locator('.star-settings summary').click()
+            stars = page.locator('#site-star-speed')
+            expect(stars).to_be_visible()
+            page.mouse.move(0, 0)
+            expect(stars).to_have_css('--range-thumb-opacity', '1')
+            fill, expected = stars.evaluate('''el => [
+                parseFloat(el.style.getPropertyValue('--range-fill')),
+                100 * (el.valueAsNumber - Number(el.min)) / (Number(el.max) - Number(el.min))
+            ]''')
+            assert abs(fill - expected) < .001
+            if not route and width in [390, 1440]:
+                stars.locator('..').screenshot(path=str(ROOT / f'test-results/affordance-site-stars-{width}.png'))
             assert abs(header.bounding_box()['y']) < 1, (width, route)
             if not route:
                 body = page.locator('body').inner_text()
@@ -66,9 +79,9 @@ with sync_playwright() as playwright:
                 page.locator('#install').evaluate('element => element.scrollIntoView()')
                 assert page.locator('#install').bounding_box()['y'] >= header.bounding_box()['height'], width
                 expect(page.get_by_label('Target speed', exact=True)).to_be_visible()
-                page.locator('#demo-nodes .node').last.focus()
+                page.locator('.point').last.focus()
                 page.keyboard.press('ArrowDown')
-                expect(page.locator('#demo-point-rate')).to_have_value('0.875')
+                expect(page.locator('.point-rate')).to_have_value('0.875')
                 page.locator('#preview-fixed').click()
                 expect(page.locator('#preview-fixed')).to_have_attribute('aria-pressed', 'true')
                 page.locator('#preview-timeline').click()
@@ -78,9 +91,25 @@ with sync_playwright() as playwright:
     page.emulate_media(forced_colors='active')
     expect(page.locator('.space-accent')).to_be_hidden()
     page.emulate_media(forced_colors='none', reduced_motion='reduce')
-    assert page.locator('.space-accent').evaluate('element => getComputedStyle(element).animationName') == 'none'
+    assert page.locator('.space-accent > rect').evaluate('element => getComputedStyle(element).animationName') == 'none'
+    page.emulate_media(reduced_motion='no-preference')
+    page.goto(BASE)
+    drift = page.locator('.space-accent > rect').evaluate('''element => {
+        const animation = element.getAnimations()[0];
+        if (!animation) throw new Error('Stars are not animated');
+        animation.pause(); animation.currentTime = 0;
+        const before = getComputedStyle(element).transform;
+        animation.currentTime = 3750;
+        return {before, after:getComputedStyle(element).transform};
+    }''')
+    assert drift['before'] != drift['after'], drift
+    for width in [1440, 390]:
+        page.set_viewport_size({'width': width, 'height': 900})
+        page.locator('.timeline-demo').scroll_into_view_if_needed()
+        page.screenshot(path=str(ROOT/f'test-results/tempo-preview-{width}.png'))
     assert not resolves, resolves
     assert not errors, errors
     browser.close()
+    server.shutdown()
     (ROOT / 'test-results/site-presentation.json').write_text(json.dumps(measurements, indent=2) + '\n', encoding='utf-8')
     print('Passed: full-width sticky header, unobscured anchors, full-page varied stars without glow, no hint clutter, working mode/node controls, forced colours and no automatic track fetch at 4 widths on 5 routes.')

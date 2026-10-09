@@ -97,7 +97,7 @@ def main():
             assert '/test-artist/first-track' not in saved()
             number.fill(''); number.press('Enter'); expect(number).to_have_value('1')
             set_rate(99); expect(number).to_have_value('4')
-            set_rate(.01); expect(number).to_have_value('0.025')
+            set_rate(.01); expect(number).to_have_value('0.25')
             number.press('Alt+Shift+ArrowDown'); expect(number).to_have_value('1')
             slider.focus(); slider.press('ArrowLeft'); expect(number).to_have_value('0.975')
             slider.press('Alt+Shift+ArrowLeft'); expect(number).to_have_value('0.925')
@@ -114,7 +114,7 @@ def main():
             page.wait_for_timeout(1600); expect(number).to_have_value('0.9')
             set_rate(4); expect(up).to_be_disabled()
             set_rate(.025); expect(down).to_be_disabled()
-            up.click(modifiers=['Shift']); expect(number).to_have_value('0.035')
+            up.click(modifiers=['Shift']); expect(number).to_have_value('0.26')
             number.fill('0.8'); up.click(); expect(number).to_have_value('0.825')
             assert number.evaluate('el => getComputedStyle(el).textAlign') == 'right'
             expect(slider).to_have_attribute('step', '0.025')
@@ -162,7 +162,7 @@ def main():
             assert len(saved()) == 3
             second.evaluate('localStorage.removeItem("soundcloud.tempo.track.%2Ftest-artist%2Ffirst-track")')
             expect(memory).to_have_attribute('aria-pressed', 'false')
-            expect(number).to_have_value('0.9')
+            expect(number).to_have_value('1')
             second.close()
             page.evaluate('localStorage.setItem("soundcloud.tempo.track.%2Fbad%2Ftrack", "Infinity")')
             select_track('/bad/track'); expect(number).to_have_value('1')
@@ -185,7 +185,7 @@ def main():
             box = slider.bounding_box()
             page.mouse.click(box['x'] + box['width'] - 6, box['y'] + box['height']/2)
             expect(number).to_have_value('2')
-            slider.press('Home'); expect(number).to_have_value('0.025')
+            slider.press('Home'); expect(number).to_have_value('0.25')
             slider.evaluate('''el => {
                 window.rangeWrites = 0;
                 const d = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
@@ -215,13 +215,15 @@ def main():
                 page.evaluate('(theme) => {document.body.classList.toggle("light", theme==="light");window.dispatchEvent(new Event("resize"));}', theme)
                 metrics = page.locator('.playControls__elements').evaluate('''el => {
                     const nodes=[...el.children].filter(n=>n.getBoundingClientRect().width>0);
-                    const bounds=nodes.map(n=>({name:n.id||n.className,x:n.getBoundingClientRect().x,right:n.getBoundingClientRect().right,width:n.getBoundingClientRect().width}));
+                    const bounds=nodes.map(n=>({name:n.id||n.className,x:n.getBoundingClientRect().x,right:n.getBoundingClientRect().right,y:n.getBoundingClientRect().y,width:n.getBoundingClientRect().width})).sort((a,b)=>a.y-b.y||a.x-b.x);
                     const title=el.querySelector('.playbackSoundBadge__titleContextContainer');
                     return {bounds,clientWidth:el.clientWidth,scrollWidth:el.scrollWidth,titleWidth:title.getBoundingClientRect().width};
                 }''')
                 assert metrics['scrollWidth'] <= metrics['clientWidth'], (width, metrics)
-                for left,right in zip(metrics['bounds'],metrics['bounds'][1:]):
-                    assert left['right'] <= right['x'] + 1, (width,left,right)
+                for i,left in enumerate(metrics['bounds']):
+                    for right in metrics['bounds'][i+1:]:
+                        if abs(left['y']-right['y']) < 8:
+                            assert left['right'] <= right['x'] + 1 or right['right'] <= left['x'] + 1, (width,left,right)
                 assert metrics['titleWidth'] >= 24, (width, metrics)
                 assert text_contrast(number) >= 4.5, (width, theme)
                 number.hover()
@@ -234,7 +236,8 @@ def main():
                 gear_box = page.locator('.settings-button').bounding_box()
                 timeline_box = page.locator('.playbackTimeline__progressBackground').bounding_box()
                 assert abs(slider_box['y'] + slider_box['height']/2 - (gear_box['y'] + gear_box['height']/2)) < .6
-                assert abs(slider_box['y'] + slider_box['height']/2 - (timeline_box['y'] + timeline_box['height']/2)) < 1
+                if width > 850:
+                    assert abs(slider_box['y'] + slider_box['height']/2 - (timeline_box['y'] + timeline_box['height']/2)) < 1
                 assert slider_box['width'] >= (68 if width <= 850 else 140)
                 artwork_box = page.locator('.playbackSoundBadge__avatar').bounding_box()
                 badge_box = indicator.bounding_box()

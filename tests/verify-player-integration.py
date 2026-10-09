@@ -26,7 +26,7 @@ with sync_playwright() as p:
     assert metrics['tempoColor'] == metrics['progressColor'], metrics
     page.locator('.playControls__elements').screenshot(path=str(ROOT/'test-results/live-player-alignment.png'))
     page.locator('.settings-button').click()
-    page.locator('.advanced-audio summary').click()
+    page.locator('.advanced-audio > summary').click()
     page.locator('#use-wasm').uncheck()
     page.locator('#output-level').fill('-9')
     page.locator('.settings').screenshot(path=str(ROOT/'test-results/live-audio-settings.png'))

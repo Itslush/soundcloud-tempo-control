@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
 
-from userscript_fixture import userscript_source, browser_options
+from userscript_fixture import choose_option, userscript_source, browser_options
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -18,33 +18,33 @@ def main():
         page.goto('https://soundcloud.com/test-artist/first-track')
         page.evaluate("()=>{window.audio=new Audio();audio.muted=true;Object.defineProperty(audio,'duration',{value:200});document.body.append(audio);}")
         page.locator('.settings-button').click();page.locator('.open-editor').click()
-        expect(page.locator('.speed-range')).to_have_value('2')
+        expect(page.locator('.speed-range')).to_have_value('custom')
         expect(page.locator('.zoom-out')).to_be_disabled()
         page.locator('.zoom-in').click()
         expect(page.locator('.zoom-label')).to_have_text('Time zoom 2×')
         graph=page.locator('.editor-graph');b=graph.bounding_box()
         page.mouse.dblclick(b['x']+44+(b['width']-56)/2,b['y']+100/220*b['height'])
         assert abs(float(page.locator('.point-time').input_value())-100)<0.2
-        expect(page.locator('.point-rate')).to_have_value('1.025')
+        expect(page.locator('.point-rate')).to_have_value('1.125')
         page.locator('.point-rate').fill('0.75');page.locator('.point-rate').press('Tab')
-        page.locator('.speed-range').select_option('4')
+        choose_option(page.locator('.speed-range'), '4')
         expect(page.locator('.point-rate')).to_have_value('0.75')
         page.locator('.zoom-fit').click()
-        expect(page.locator('.speed-range')).to_have_value('2')
+        expect(page.locator('.speed-range')).to_have_value('custom')
         expect(page.locator('.editor-pan')).to_be_disabled()
         for _ in range(8):page.locator('.zoom-in').click()
         expect(page.locator('.zoom-in')).to_be_disabled()
         expect(page.locator('.zoom-label')).to_have_text('Time zoom 200×')
         page.locator('.editor-pan').evaluate("el=>el.value='190'")
         page.locator('.editor-pan').dispatch_event('input')
-        page.locator('.editor-point-picker').select_option('0')
+        choose_option(page.locator('.editor-point-picker'), '0')
         assert float(page.locator('.editor-pan').input_value())==0
         page.locator('.zoom-fit').click()
-        page.locator('.editor-point-picker').select_option('1')
+        choose_option(page.locator('.editor-point-picker'), '1')
         page.locator('.zoom-focus').click()
         assert 30<float(page.locator('.zoom-label').inner_text().split()[2][:-1])<35
         expect(page.locator('.ramp')).to_be_visible()
-        page.locator('.speed-range').select_option('close')
+        choose_option(page.locator('.speed-range'), 'close')
         expect(page.locator('.point-rate')).to_have_value('0.75')
         labels=page.locator('.editor-graph text').all_text_contents()
         assert '0.65×' in labels and '0.85×' in labels,labels
@@ -58,33 +58,33 @@ def main():
         page.mouse.up()
         expect(page.locator('.point-rate')).to_have_value('0.775')
         page.locator('.point-rate').fill('0.9'); page.locator('.point-rate').press('Tab')
-        page.locator('.speed-range').select_option('fine')
+        choose_option(page.locator('.speed-range'), 'fine')
         rates = [label for label in page.locator('.editor-graph text').all_text_contents() if label.endswith('×')]
         assert rates == ['0.6×', '0.7×', '0.8×', '0.9×', '1×', '1.1×', '1.2×'], rates
-        for value in ['0.025', '0.05', '0.1', '0.25', '0.837', '4']:
+        for value in ['0.25', '0.275', '0.5', '0.837', '4']:
             page.locator('.point-rate').fill(value); page.locator('.point-rate').press('Tab')
             rates = [float(label[:-1]) for label in page.locator('.editor-graph text').all_text_contents() if label.endswith('×')]
-            assert all(rate == .025 or abs(rate * 10 - round(rate * 10)) < .0001 for rate in rates), rates
+            assert all(rate == .25 or abs(rate * 10 - round(rate * 10)) < .0001 for rate in rates), rates
             expect(page.locator('.point-rate')).to_have_value(value)
         for width in [1050,768,440]:
             page.set_viewport_size({'width':width,'height':900})
             panel=page.locator('.tempo-editor')
             assert panel.evaluate('el=>el.scrollWidth<=el.clientWidth+1')
             page.screenshot(path=str(ROOT/f'test-results/editor-zoom-{width}.png'))
-            page.locator('.point-rate').fill('0.025'); page.locator('.point-rate').press('Tab')
+            page.locator('.point-rate').fill('0.25'); page.locator('.point-rate').press('Tab')
             for mode in ['2', '4', 'fine', 'close']:
-                page.locator('.speed-range').select_option(mode)
+                choose_option(page.locator('.speed-range'), mode)
                 labels = page.locator('.editor-graph text').evaluate_all('''items => items
                     .filter(item => item.textContent.endsWith('×'))
                     .map(item => ({text: item.textContent, top: item.getBoundingClientRect().top,
                         bottom: item.getBoundingClientRect().bottom}))
                     .sort((a, b) => a.top - b.top)''')
-                assert labels[-1]['text'] == '0.025×', labels
+                assert labels[-1]['text'] == '0.25×', labels
                 assert all(a['bottom'] <= b['top'] for a, b in zip(labels, labels[1:])), labels
-                expect(page.locator('.point-rate')).to_have_value('0.025')
+                expect(page.locator('.point-rate')).to_have_value('0.25')
                 graph.screenshot(path=str(ROOT/f'test-results/editor-low-{width}-{mode}.png'))
             page.locator('.point-rate').fill('0.05'); page.locator('.point-rate').press('Tab')
-            expect(page.locator('.point-rate')).to_have_value('0.05')
+            expect(page.locator('.point-rate')).to_have_value('0.25')
         assert not errors,errors
         page.reload()
         page.locator('.playbackTimeline__duration').evaluate('''el => {

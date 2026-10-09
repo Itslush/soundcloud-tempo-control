@@ -1,3 +1,10 @@
+import {
+  readPitchSettings,
+  pitchSettingsKey,
+  validPitchSettings,
+} from './tempo-pitch-settings.js';
+import { readTempoIncrement, tempoIncrementKey, validTempoIncrement } from './tempo-increment.js';
+import { enhanceTempoFields } from './tempo-fields.js';
 import { controlsTemplate } from './tempo-controls-template.js';
 import * as audioModules from './audio/index.mjs';
 import { syncTempoRange } from './tempo-range.js';
@@ -6,6 +13,7 @@ import { createStretchNode } from './tempo-dependency.js';
 import { createOutputLevel } from './tempo-output.js';
 import { createWasmAudio } from './tempo-wasm.js';
 import { createBufferedPlayback } from './tempo-buffered.js';
+import { createCrossfade } from './tempo-crossfade.js';
 import { createTempoEditor } from './tempo-editor.js';
 import { createTempoLibrary, createTempoStore } from './tempo-library.js';
 import { createTempoEmbeddedPages } from './tempo-embedded-pages.js';
@@ -32,9 +40,12 @@ import { showReleaseNotice } from './tempo-updates.js';
   const PITCH_STORAGE = 'soundcloud.tempo.preserveKey';
   const WASM_STORAGE = 'soundcloud.tempo.useWasm';
   let timeline = null;
+  let contextLink = null;
   let bufferedAudio = null;
+  let crossfade = null;
+  let badgeAnimations = [];
   let appearance = null;
-  const MIN = 0.025;
+  const MIN = 0.25;
   const MAX = 4;
   const SLIDER_MAX = 2;
   const SLIDER_STEP = 0.025;
@@ -55,7 +66,10 @@ import { showReleaseNotice } from './tempo-updates.js';
       }
     } catch {}
   }
-  const RANDOM_STORAGE = 'soundcloud.tempo.randomSaved';
+  const SAVED_STORAGE = 'soundcloud.tempo.applySaved';
+  const STYLE_STORAGE = 'soundcloud.tempo.controlStyle';
+  const SHOW_KEY_STORAGE = 'soundcloud.tempo.showKey';
+  const KEY_SHIFT_STORAGE = 'soundcloud.tempo.keyShift';
   const TRACK_LINK = '.playControls__soundBadge .playbackSoundBadge__titleLink';
   const proto = HTMLMediaElement.prototype;
   const pitchNames = [
@@ -73,6 +87,7 @@ import { showReleaseNotice } from './tempo-updates.js';
   const known = new WeakSet();
   const references = new Set();
   let ui;
+  let controlSetupShown = false;
   let mountQueued = false;
   let savedRefreshFrame = 0;
   let failure = '';
@@ -81,7 +96,8 @@ import { showReleaseNotice } from './tempo-updates.js';
   let savedRate = null;
   let trackKey = '';
   let lastTrackKey = '';
-  let randomSaved = readRandomSetting();
+  let applySaved = readSavedSetting();
+  let keyShift = readKeyShift();
   let preserveKey = readPitchSetting();
   let useWasm = readWasmSetting();
 
@@ -102,12 +118,62 @@ import { showReleaseNotice } from './tempo-updates.js';
   let artworkDirty = true;
   let artworkFrame = 0;
 
-  function readRandomSetting() {
+  function readSavedSetting() {
     try {
-      return localStorage.getItem(RANDOM_STORAGE) === 'true';
+      return localStorage.getItem(SAVED_STORAGE) !== 'false';
     } catch {
-      return false;
+      return true;
     }
+  }
+
+  function readKeyShift() {
+    try {
+      const value = Number(localStorage.getItem(KEY_SHIFT_STORAGE));
+      return Number.isFinite(value) && Math.abs(value) <= 12 ? value : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  function readControlStyle() {
+    try {
+      const value = localStorage.getItem(STYLE_STORAGE);
+      return ['slider', 'dial', 'vertical'].includes(value) ? value : 'slider';
+    } catch {
+      return 'slider';
+    }
+  }
+
+  function syncControlStyle() {
+    if (!ui) return;
+    const style = readControlStyle();
+    let showKey = true;
+    try {
+      showKey = localStorage.getItem(SHOW_KEY_STORAGE) !== 'false';
+    } catch {}
+    ui.root.querySelector('.quick-key').hidden = !showKey;
+    ui.root.querySelector('#show-key').checked = showKey;
+    ui.root.querySelector('.controls').classList.toggle('hide-key', !showKey);
+    const keySpace = showKey ? 0 : 136;
+    ui.host.style.flexBasis = `${(style === 'slider' ? 416 : 312) - keySpace}px`;
+    ui.host.style.minWidth = `${(style === 'slider' ? 320 : 312) - keySpace}px`;
+    ui.host.style.setProperty('--tempo-compact-width', `${308 - keySpace}px`);
+    ui.root.querySelector('.slider-wrap').dataset.style = style;
+    ui.root.querySelector('#control-style').value = style;
+    ui.slider.hidden = style === 'dial';
+    ui.slider.max = String(style === 'vertical' ? MAX : SLIDER_MAX);
+    ui.dial.hidden = style !== 'dial';
+    ui.verticalToggle.hidden = style !== 'vertical';
+    if (style === 'vertical') ui.fader.setAttribute('popover', 'auto');
+    else {
+      if (ui.fader.matches(':popover-open')) ui.fader.hidePopover();
+      ui.fader.removeAttribute('popover');
+    }
+    ui.slider.setAttribute(
+      'aria-orientation',
+      style === 'vertical' ? 'vertical' : 'horizontal',
+    );
+    render();
   }
 
   function readPitchSetting() {
@@ -154,8 +220,13 @@ import { showReleaseNotice } from './tempo-updates.js';
   }
 
   function currentTrackKey() {
-    const href = document.querySelector(TRACK_LINK)?.getAttribute('href');
-    return parseTrackKey(href);
+    const anchor = document.querySelector(TRACK_LINK);
+    const href = anchor?.getAttribute('href');
+    return parseTrackKey(
+      contextLink?.anchor === anchor && href === contextLink.shared
+        ? contextLink.original
+        : href,
+    );
   }
 
   function parseTrackKey(href) {
@@ -226,6 +297,24 @@ import { showReleaseNotice } from './tempo-updates.js';
       return false;
     }
     bufferedAudio?.changeTrack(trackKey, next);
+    for (const animation of badgeAnimations) animation.cancel();
+    badgeAnimations = [];
+    if (
+      trackKey &&
+      next &&
+      !matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      badgeAnimations = [
+        ...document.querySelectorAll(
+          '.playControls__soundBadge .playbackSoundBadge__avatar, .playControls__soundBadge .playbackSoundBadge__titleContextContainer',
+        ),
+      ].map((element) =>
+        element.animate([{ opacity: 0.25 }, { opacity: 1 }], {
+          duration: 240,
+          easing: 'ease-out',
+        }),
+      );
+    }
     trackKey = next;
     timeline?.changeTrack(next);
     if (!next) {
@@ -240,13 +329,7 @@ import { showReleaseNotice } from './tempo-updates.js';
       return false;
     }
     lastTrackKey = next;
-    rate = savedRate ?? 1;
-    if (randomSaved && savedRate !== null && savedRate !== 1) {
-      rate =
-        crypto.getRandomValues(new Uint32Array(1))[0] < 2147483648
-          ? savedRate
-          : 1;
-    }
+    rate = applySaved ? clamp(savedRate ?? 1) : 1;
     if (ui) {
       delete ui.memory.dataset.feedback;
       ui.editTrack = next;
@@ -255,7 +338,7 @@ import { showReleaseNotice } from './tempo-updates.js';
     announce(
       savedRate === null
         ? 'New track. Normal speed.'
-        : `${randomSaved ? 'Random tempo selected' : 'Remembered tempo restored'}: ${formatRate(rate)}.`,
+        : `Playback speed: ${formatRate(rate)}.`,
     );
     render();
     return true;
@@ -305,6 +388,24 @@ import { showReleaseNotice } from './tempo-updates.js';
     if (!ui) {
       return;
     }
+    if (ui.settings.hasAttribute('data-choosing-style')) {
+      try {
+        localStorage.setItem(
+          STYLE_STORAGE,
+          ui.root.querySelector('#control-style').value,
+        );
+      } catch {
+        announce(
+          'Control style could not be saved. Allow site storage to remember your choice.',
+        );
+      }
+      ui.settings.removeAttribute('data-choosing-style');
+      ui.root.querySelector('.control-setup-intro').hidden = true;
+      ui.root.querySelector('#settings-title').textContent = 'Tempo settings';
+      const close = ui.root.querySelector('.close-settings');
+      close.textContent = 'Close';
+      close.setAttribute('aria-label', 'Close tempo settings');
+    }
     ui.settings.hidden = true;
     ui.settings.hidePopover?.();
     ui.memory.setAttribute('aria-expanded', 'false');
@@ -331,7 +432,7 @@ import { showReleaseNotice } from './tempo-updates.js';
     ui.settings.hidden = false;
     ui.memory.setAttribute('aria-expanded', 'true');
     ui.settingsButton.setAttribute('aria-expanded', 'true');
-    ui.randomToggle.checked = randomSaved;
+    ui.savedToggle.checked = applySaved;
     ui.pitchToggle.checked = preserveKey;
     ui.settingsStatus.textContent = '';
     ui.savedFilter.value = '';
@@ -341,7 +442,7 @@ import { showReleaseNotice } from './tempo-updates.js';
     if (ui.settings.showPopover && !ui.settings.matches(':popover-open')) {
       ui.settings.showPopover();
     }
-    ui.randomToggle.focus();
+    ui.savedToggle.focus();
   }
 
   function populateSavedTracks() {
@@ -410,7 +511,11 @@ import { showReleaseNotice } from './tempo-updates.js';
   }
 
   function applyNative(audio) {
-    const wasmActive = wasmAudio.sync(audio, preservesKey() && useWasm, rate);
+    const wasmActive = wasmAudio.sync(
+      audio,
+      (preservesKey() && useWasm) || (timeline.keyShift() ?? keyShift) !== 0,
+      rate,
+    );
     for (const name of pitchNames) {
       setNative(audio, name, preservesKey() && !wasmActive);
     }
@@ -430,6 +535,7 @@ import { showReleaseNotice } from './tempo-updates.js';
   }
 
   function setRate(value) {
+    crossfade?.cancel();
     if (syncTrack()) {
       updateAll();
       return;
@@ -498,6 +604,7 @@ import { showReleaseNotice } from './tempo-updates.js';
     proto.play = function (...args) {
       if (isAudio(this)) {
         bufferedAudio.select(this);
+        crossfade?.select(this);
         apply(this);
         return bufferedAudio.play(this, () => Reflect.apply(play, this, args));
       }
@@ -515,6 +622,7 @@ import { showReleaseNotice } from './tempo-updates.js';
           if (isAudio(e.target)) {
             if (e.type === 'play' && e.isTrusted)
               bufferedAudio.select(e.target);
+            if (e.type === 'play') crossfade?.select(e.target);
             apply(e.target);
           }
         },
@@ -549,8 +657,8 @@ import { showReleaseNotice } from './tempo-updates.js';
     host.style.cssText = `
       display: flex;
       align-items: center;
-      flex: 0 0 280px;
-      min-width: 280px;
+      flex: 0 0 348px;
+      min-width: 348px;
       margin-inline: 4px;
     `;
     const root = host.attachShadow({ mode: 'open' });
@@ -568,6 +676,9 @@ import { showReleaseNotice } from './tempo-updates.js';
       root,
       rateNumber: get('#rate-number'),
       slider: get('#rate-slider'),
+      dial: get('#rate-dial'),
+      verticalToggle: get('#vertical-toggle'),
+      fader: get('#tempo-fader'),
       stepUp: get('.step-up'),
       stepDown: get('.step-down'),
       memory: get('.memory'),
@@ -578,7 +689,7 @@ import { showReleaseNotice } from './tempo-updates.js';
       editTrack: trackKey,
       editingNumber: false,
       settings: get('.settings'),
-      randomToggle: get('#random-saved'),
+      savedToggle: get('#apply-saved'),
       copyToggle: get('#copy-tempo-links'),
       pitchToggle: get('#preserve-key'),
       savedFilter: get('#saved-filter'),
@@ -588,8 +699,227 @@ import { showReleaseNotice } from './tempo-updates.js';
       wasmStatus: get('#wasm-status'),
       outputSlider: get('#output-level'),
       outputValue: get('#output-value'),
+      outputStatus: get('#output-status'),
       wasmToggle: get('#use-wasm'),
     };
+    syncControlStyle();
+    ui.fader.addEventListener('beforetoggle', (event) => {
+      if (event.newState !== 'open') return;
+      const rect = ui.verticalToggle.getBoundingClientRect();
+      const footerTop =
+        ui.host.closest('.playControls')?.getBoundingClientRect().top ??
+        rect.top;
+      ui.fader.style.left = `${Math.max(8, Math.min(innerWidth - 104, rect.x + rect.width / 2 - 48))}px`;
+      ui.fader.style.bottom = `${innerHeight - Math.min(rect.top, footerTop) + 8}px`;
+    });
+    ui.fader.addEventListener('toggle', (event) => {
+      const open = event.newState === 'open';
+      ui.verticalToggle.setAttribute('aria-expanded', String(open));
+      if (open) ui.slider.focus();
+    });
+    window.addEventListener('resize', () => {
+      if (ui.fader.matches(':popover-open')) ui.fader.hidePopover();
+    });
+    get('.fader-reset').addEventListener('click', () => setRate(1));
+    const starMotion = get('#star-motion');
+    starMotion.checked = appearance.motion() === 'on';
+    starMotion.addEventListener('change', () =>
+      appearance.setMotion(starMotion.checked ? 'on' : 'off'),
+    );
+    const starSpeed = get('#star-speed');
+    starSpeed.value = String(appearance.speed());
+    starSpeed.disabled = !starMotion.checked;
+    syncTempoRange(starSpeed);
+    get('#star-speed-value').value = `${appearance.speed()}×`;
+    starSpeed.addEventListener('input', () =>
+      appearance.setSpeed(Number(starSpeed.value)),
+    );
+    get('#control-style').addEventListener('change', (event) => {
+      try {
+        localStorage.setItem(STYLE_STORAGE, event.target.value);
+      } catch {
+        ui.settingsStatus.textContent = 'Control style could not be saved.';
+      }
+      syncControlStyle();
+    });
+    const shiftInput = get('#key-shift');
+    for (const id of ['#crossfade', '#crossfade-seconds'])
+      get(id).addEventListener('change', () => {
+        try {
+          crossfade.set(
+            get('#crossfade').checked,
+            Number(get('#crossfade-seconds').value),
+          );
+        } catch (error) {
+          ui.settingsStatus.textContent = `Crossfade could not be saved. ${error.message}`;
+          render();
+        }
+      });
+    get('#crossfade-seconds').addEventListener('input', () => {
+      get('#crossfade-value').value =
+        `${get('#crossfade-seconds').value} seconds`;
+    });
+    const refreshCrossfadeDebug = () => {
+      const report = JSON.stringify(
+        { version: VERSION, ...crossfade.diagnostics() },
+        null,
+        2,
+      );
+      get('#crossfade-debug-output').textContent = report;
+      return report;
+    };
+    get('.crossfade-debug').addEventListener('toggle', () => {
+      if (get('.crossfade-debug').open) refreshCrossfadeDebug();
+    });
+    get('#crossfade-debug-refresh').addEventListener(
+      'click',
+      refreshCrossfadeDebug,
+    );
+    get('#crossfade-debug-copy').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(refreshCrossfadeDebug());
+        get('#crossfade-debug-feedback').textContent =
+          'Diagnostics copied. No track links or account details included.';
+      } catch {
+        get('#crossfade-debug-feedback').textContent =
+          'Could not copy. Select the diagnostics above and copy them manually.';
+      }
+    });
+    get('#show-key').addEventListener('change', (event) => {
+      try {
+        localStorage.setItem(SHOW_KEY_STORAGE, String(event.target.checked));
+      } catch {
+        ui.settingsStatus.textContent = 'Key visibility could not be saved.';
+      }
+      syncControlStyle();
+    });
+    shiftInput.value = String(keyShift);
+    for (const input of [shiftInput, get('#quick-key-shift')])
+      input.addEventListener('change', () => {
+        const next = Number(input.value);
+        if (
+          input.value === '' ||
+          !Number.isFinite(next) ||
+          Math.abs(next) > 12
+        ) {
+          input.value = String(timeline.keyShift() ?? keyShift);
+          return;
+        }
+        try {
+          localStorage.setItem(KEY_SHIFT_STORAGE, String(next));
+        } catch {
+          input.value = String(timeline.keyShift() ?? keyShift);
+          ui.settingsStatus.textContent = 'Key shift could not be saved.';
+          ui.status.textContent = 'Key shift could not be saved.';
+          return;
+        }
+        keyShift = next;
+        crossfade?.cancel();
+        timeline.setKeyShift(next);
+        updateAll();
+      });
+    ui.syncFields = enhanceTempoFields(ui.root);
+    get('#tempo-increment').addEventListener('change', (event) => {
+      const increment = Number(event.target.value);
+      if (!validTempoIncrement(increment)) {
+        ui.settingsStatus.textContent = 'Choose a tempo increment from 0.001 to 1.';
+      } else {
+        try {
+          localStorage.setItem(tempoIncrementKey, String(increment));
+          ui.settingsStatus.textContent = '';
+        } catch {
+          ui.settingsStatus.textContent = 'Tempo increment could not be saved.';
+        }
+      }
+      event.target.value = String(readTempoIncrement());
+      render();
+    });
+    const syncPitchControls = () => {
+      const settings = readPitchSettings();
+      for (const name of ['min', 'max', 'step'])
+        get('#pitch-' + name).value = String(settings[name]);
+      for (const input of [shiftInput, get('#quick-key-shift')]) {
+        input.min = String(settings.min);
+        input.max = String(settings.max);
+        input.step = String(settings.step);
+      }
+      ui.syncFields();
+    };
+    for (const name of ['min', 'max', 'step'])
+      get('#pitch-' + name).addEventListener('change', () => {
+        const settings = Object.fromEntries(
+          ['min', 'max', 'step'].map((name) => [
+            name,
+            Number(get('#pitch-' + name).value),
+          ]),
+        );
+        if (!validPitchSettings(settings)) {
+          ui.settingsStatus.textContent =
+            'Choose a pitch range inside −12 to +12 and a step between 0.001 and 12.';
+          syncPitchControls();
+          return;
+        }
+        try {
+          localStorage.setItem(pitchSettingsKey, JSON.stringify(settings));
+        } catch {
+          ui.settingsStatus.textContent = 'Pitch controls could not be saved.';
+        }
+        syncPitchControls();
+        render();
+      });
+    ui.syncPitchControls = syncPitchControls;
+    syncPitchControls();
+    let dialDrag;
+    ui.dial.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      ui.dial.focus();
+      ui.dial.setPointerCapture(event.pointerId);
+      dialDrag = { y: event.clientY, rate, track: trackKey };
+    });
+    ui.dial.addEventListener('pointermove', (event) => {
+      if (!dialDrag || dialDrag.track !== currentTrackKey()) return;
+      const distance = dialDrag.y - event.clientY;
+      dialDrag.y = event.clientY;
+      dialDrag.rate = Math.max(
+        MIN,
+        Math.min(
+          MAX,
+          dialDrag.rate * 2 ** (distance / (event.shiftKey ? 800 : 160)),
+        ),
+      );
+      setRate(dialDrag.rate);
+    });
+    for (const name of ['pointerup', 'pointercancel', 'lostpointercapture'])
+      ui.dial.addEventListener(name, () => {
+        dialDrag = null;
+      });
+    const stepTempo = (event) => {
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      const limit = event.currentTarget === ui.slider ? Number(ui.slider.max) : MAX;
+      const current = Math.min(rate, limit);
+      const changes = {
+        ArrowUp: readTempoIncrement(),
+        ArrowRight: readTempoIncrement(),
+        ArrowDown: -readTempoIncrement(),
+        ArrowLeft: -readTempoIncrement(),
+        PageUp: 0.25,
+        PageDown: -0.25,
+      };
+      if (event.key === 'Home' || event.key === 'End' || event.key in changes) {
+        event.preventDefault();
+        setRate(Math.min(limit,
+          event.key === 'Home'
+            ? MIN
+            : event.key === 'End'
+              ? limit
+              : current + changes[event.key] * (event.shiftKey ? 0.2 : 1),
+        ));
+      }
+    };
+    ui.dial.addEventListener('keydown', stepTempo);
+    ui.slider.addEventListener('keydown', stepTempo);
+    ui.dial.addEventListener('dblclick', () => setRate(1));
     for (const input of root.querySelectorAll('[name="appearance"]')) {
       input.checked = input.value === appearance.mode();
       input.addEventListener('change', () => {
@@ -609,20 +939,29 @@ import { showReleaseNotice } from './tempo-updates.js';
       edit: (track) => timeline.open(track),
       changed: (track, type) => {
         if (type === 'timeline') timeline.refreshSaved(track);
-        if (track === trackKey) savedRate = readSavedRate(trackKey);
-        render();
+        if (track === trackKey) {
+          savedRate = readSavedRate(trackKey);
+          if (type === 'speed' && applySaved) rate = clamp(savedRate ?? 1);
+        }
+        updateAll();
       },
       imported: () => {
-        randomSaved = readRandomSetting();
+        ui.syncPitchControls?.();
+        applySaved = readSavedSetting();
+        keyShift = readKeyShift();
+        shiftInput.value = String(keyShift);
+        syncControlStyle();
         preserveKey = readPitchSetting();
         useWasm = readWasmSetting();
         savedRate = readSavedRate(trackKey);
-        ui.randomToggle.checked = randomSaved;
+        ui.savedToggle.checked = applySaved;
         ui.pitchToggle.checked = preserveKey;
         ui.wasmToggle.checked = useWasm;
         ui.copyToggle.checked = copyLinksEnabled();
         outputLevel.reload();
+        crossfade.reload();
         timeline.refreshSaved(trackKey);
+        rate = applySaved ? clamp(savedRate ?? 1) : 1;
         updateAll();
       },
     });
@@ -637,16 +976,19 @@ import { showReleaseNotice } from './tempo-updates.js';
         ui.settingsStatus.textContent = 'Audio setting could not be saved.';
       }
     });
-    ui.outputSlider.value = String(outputLevel.value());
-    ui.outputValue.textContent = `${outputLevel.value()} dB`;
-    syncTempoRange(ui.outputSlider);
-    ui.outputSlider.addEventListener('input', () => {
+    outputLevel.syncUI();
+    const setOutput = (event) => {
       try {
-        outputLevel.set(ui.outputSlider.value);
-      } catch {
-        ui.settingsStatus.textContent = 'Output level could not be saved.';
+        outputLevel.set(event.target.value);
+        ui.settingsStatus.textContent = '';
+        render();
+      } catch (error) {
+        ui.settingsStatus.textContent = error.message;
+        outputLevel.syncUI();
       }
-    });
+    };
+    ui.outputSlider.addEventListener('input', setOutput);
+    ui.outputValue.addEventListener('change', setOutput);
     root.addEventListener('input', (event) => {
       if (event.target.matches("input[type='range']"))
         syncTempoRange(event.target);
@@ -709,14 +1051,19 @@ import { showReleaseNotice } from './tempo-updates.js';
     });
     get('.close-settings').addEventListener('click', () => closeSettings(true));
     ui.savedFilter.addEventListener('input', populateSavedTracks);
-    ui.randomToggle.addEventListener('change', () => {
+    ui.savedToggle.addEventListener('change', () => {
       try {
-        localStorage.setItem(RANDOM_STORAGE, String(ui.randomToggle.checked));
-        randomSaved = ui.randomToggle.checked;
-        ui.settingsStatus.textContent =
-          'Preference saved. Applies to the next track.';
+        localStorage.setItem(SAVED_STORAGE, String(ui.savedToggle.checked));
+        applySaved = ui.savedToggle.checked;
+        timeline.changeTrack('');
+        timeline.changeTrack(trackKey);
+        rate = applySaved ? clamp(savedRate ?? 1) : 1;
+        updateAll();
+        ui.settingsStatus.textContent = applySaved
+          ? 'Saved tempos enabled.'
+          : 'Saved tempos off.';
       } catch {
-        ui.randomToggle.checked = randomSaved;
+        ui.savedToggle.checked = applySaved;
         ui.settingsStatus.textContent =
           'Could not save this preference. Allow site storage and retry.';
       }
@@ -748,7 +1095,7 @@ import { showReleaseNotice } from './tempo-updates.js';
         button.setPointerCapture(event.pointerId);
         const startingTrack = currentTrackKey();
         pressedTrack = startingTrack;
-        const step = event.shiftKey ? 0.01 : 0.025;
+        const step = event.shiftKey ? 0.01 : readTempoIncrement();
         const repeat = () => {
           if (
             currentTrackKey() !== startingTrack ||
@@ -778,7 +1125,7 @@ import { showReleaseNotice } from './tempo-updates.js';
           repeated = false;
           return;
         }
-        setRate(rate + direction * (event.shiftKey ? 0.01 : 0.025));
+        setRate(rate + direction * (event.shiftKey ? 0.01 : readTempoIncrement()));
       });
     }
     ui.slider.addEventListener('dblclick', () => setRate(1));
@@ -790,28 +1137,8 @@ import { showReleaseNotice } from './tempo-updates.js';
       if (ui.root.activeElement === ui.rateNumber) {
         ui.rateNumber.blur();
       }
-      if (rate > SLIDER_MAX) {
-        setRate(SLIDER_MAX);
-      }
-    });
-    ui.slider.addEventListener('keydown', (event) => {
-      if (
-        rate > SLIDER_MAX &&
-        !event.altKey &&
-        !event.ctrlKey &&
-        !event.metaKey &&
-        [
-          'ArrowLeft',
-          'ArrowRight',
-          'ArrowUp',
-          'ArrowDown',
-          'Home',
-          'End',
-          'PageUp',
-          'PageDown',
-        ].includes(event.key)
-      ) {
-        setRate(SLIDER_MAX);
+      if (rate > Number(ui.slider.max)) {
+        setRate(Number(ui.slider.max));
       }
     });
     for (const type of [
@@ -843,6 +1170,12 @@ import { showReleaseNotice } from './tempo-updates.js';
       render();
     };
     ui.rateNumber.addEventListener('change', commitNumber);
+    ui.rateNumber.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+        commitNumber();
+        stepTempo(event);
+      }
+    });
     ui.rateNumber.addEventListener('blur', () => {
       ui.editingNumber = false;
       ui.rateNumber.value = String(rate);
@@ -851,6 +1184,13 @@ import { showReleaseNotice } from './tempo-updates.js';
       trackKey ? rememberTrack(event.shiftKey) : openSettings(),
     );
     root.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && ui.fader.matches(':popover-open')) {
+        event.preventDefault();
+        event.stopPropagation();
+        ui.fader.hidePopover();
+        ui.verticalToggle.focus();
+        return;
+      }
       if (event.key === 'Escape' && !ui.settings.hidden) {
         event.preventDefault();
         event.stopPropagation();
@@ -945,13 +1285,13 @@ import { showReleaseNotice } from './tempo-updates.js';
         }
       }
 
-      @media (max-width: 850px) {
+      @media (max-width: 960px) {
         .playControls__elements.soundcloud-tempo-footer > .playControls__timeline {
           min-width: 54px;
         }
       }
 
-      @media (max-width: 700px) {
+      @media (max-width: 960px) {
         .playControls:has(.soundcloud-tempo-footer) {
           height: auto;
         }
@@ -980,8 +1320,8 @@ import { showReleaseNotice } from './tempo-updates.js';
 
         .playControls__elements.soundcloud-tempo-footer > #soundcloud-tempo-control {
           order: 10;
-          flex: 1 1 208px !important;
-          min-width: 196px !important;
+          flex: 1 1 292px !important;
+          min-width: 292px !important;
           margin: 0 4px 0 0;
         }
 
@@ -1369,6 +1709,29 @@ import { showReleaseNotice } from './tempo-updates.js';
       syncTheme();
       showReleaseNotice(ui, VERSION, WEBSITE);
     }
+    if (!controlSetupShown) {
+      controlSetupShown = true;
+      try {
+        if (localStorage.getItem(STYLE_STORAGE)) return;
+      } catch {
+        return;
+      }
+      if (
+        new URLSearchParams(location.search).has('sct') ||
+        location.hash.startsWith('#sct=')
+      )
+        return;
+      ui.settings.setAttribute('data-choosing-style', '');
+      ui.root.querySelector('.control-setup-intro').hidden = false;
+      ui.root.querySelector('#settings-title').textContent =
+        'Choose your tempo control';
+      ui.root.querySelector('.appearance-settings').open = true;
+      const close = ui.root.querySelector('.close-settings');
+      close.textContent = 'Use this style';
+      close.setAttribute('aria-label', 'Use this style');
+      openSettings(ui.settingsButton);
+      ui.root.querySelector('#control-style').nextElementSibling?.focus();
+    }
   }
 
   function render() {
@@ -1376,14 +1739,39 @@ import { showReleaseNotice } from './tempo-updates.js';
       return;
     }
     ui.wasmStatus.textContent = bufferedAudio?.label() || wasmAudio.label();
+    const increment = readTempoIncrement();
+    const incrementInput = ui.root.querySelector('#tempo-increment');
+    if (ui.root.activeElement !== incrementInput) incrementInput.value = String(increment);
+    ui.stepUp.setAttribute('aria-label', `Increase speed by ${increment}×; Shift for 0.01×`);
+    ui.stepDown.setAttribute('aria-label', `Decrease speed by ${increment}×; Shift for 0.01×`);
+    ui.root.querySelector('#crossfade').checked = crossfade?.enabled() ?? false;
+    ui.root.querySelector('#crossfade-seconds').value = String(
+      crossfade?.seconds() ?? 5,
+    );
+    ui.root.querySelector('#crossfade-seconds').disabled =
+      !crossfade?.enabled();
+    syncTempoRange(ui.root.querySelector('#crossfade-seconds'));
+    ui.root.querySelector('#crossfade-value').value =
+      `${crossfade?.seconds() ?? 5} seconds`;
+    ui.root.querySelector('#crossfade-status').textContent =
+      crossfade?.label() ?? '';
+    ui.outputStatus.textContent =
+      outputLevel.value() > 0 &&
+      ![...references].some((ref) => {
+        const audio = ref.deref();
+        return audio && wasmAudio.hasGraph(audio);
+      })
+        ? 'Boost needs the player’s audio connection. Start playback; reload SoundCloud if it stays unavailable.'
+        : '';
     const text = formatRate(rate);
-    const pitch = 12 * Math.log2(rate);
+    const shift = timeline.keyShift() ?? keyShift;
+    const pitch = 12 * Math.log2(rate) + shift;
     const pitchText = `${pitch > 0 ? '+' : ''}${pitch.toFixed(2)} st`;
     const description = preservesKey()
-      ? `${text} · Preserve key`
+      ? `${text} · Preserve key${shift ? ` · key shift ${shift > 0 ? '+' : ''}${shift} st` : ''}`
       : `${text} · natural pitch ${pitchText}`;
     const sliderRate = clamp(
-      Math.round(Math.min(rate, SLIDER_MAX) / 0.025) * 0.025,
+      Math.round(Math.min(rate, Number(ui.slider.max)) / 0.025) * 0.025,
     );
     ui.stepUp.disabled = rate >= MAX;
     ui.stepDown.disabled = rate <= MIN;
@@ -1391,8 +1779,23 @@ import { showReleaseNotice } from './tempo-updates.js';
       ui.slider.value = String(sliderRate);
     }
     syncTempoRange(ui.slider);
+    ui.dial.setAttribute('aria-valuenow', String(rate));
+    const shiftField = ui.root.querySelector('#key-shift');
+    if (ui.root.activeElement !== shiftField)
+      shiftField.value = String(timeline.keyShift() ?? keyShift);
+    const quickShift = ui.root.querySelector('#quick-key-shift');
+    if (ui.root.activeElement !== quickShift)
+      quickShift.value = String(Math.round(shift * 1000) / 1000);
+    ui.syncFields?.();
+    ui.dial.setAttribute('aria-valuetext', description);
+    ui.dial.style.setProperty('--dial-angle', `${Math.log2(rate) * 67.5}deg`);
+    ui.dial.style.setProperty(
+      '--dial-unfilled',
+      String(50 - Math.log2(rate) * 25),
+    );
+    ui.root.querySelector('.fader-value').textContent = formatRate(rate);
     const sliderDescription =
-      rate > SLIDER_MAX
+      rate > Number(ui.slider.max)
         ? `Slider limit ${formatRate(SLIDER_MAX)}; current speed ${description}. Use the number field for speeds above 2×`
         : `${description} · slider steps 0.025×`;
     ui.slider.setAttribute('aria-valuetext', sliderDescription);
@@ -1441,6 +1844,13 @@ import { showReleaseNotice } from './tempo-updates.js';
     });
   }
   timeline = createTempoEditor({
+    pitchControlsChanged: () => ui?.syncPitchControls?.(),
+    get applySaved() {
+      return applySaved;
+    },
+    get keyShift() {
+      return timeline.keyShift() ?? keyShift;
+    },
     get copyLinks() {
       return copyLinksEnabled();
     },
@@ -1480,6 +1890,13 @@ import { showReleaseNotice } from './tempo-updates.js';
       if (!ui) return;
       for (const input of ui.root.querySelectorAll('[name="appearance"]'))
         input.checked = input.value === appearance.mode();
+      const moving = appearance.motion() === 'on';
+      ui.root.querySelector('#star-motion').checked = moving;
+      ui.root.querySelector('#star-speed').value = String(appearance.speed());
+      ui.root.querySelector('#star-speed').disabled = !moving;
+      syncTempoRange(ui.root.querySelector('#star-speed'));
+      ui.root.querySelector('#star-speed-value').value =
+        `${appearance.speed()}×`;
       ui.settingsStatus.textContent = '';
       syncTheme();
     },
@@ -1514,12 +1931,16 @@ import { showReleaseNotice } from './tempo-updates.js';
     outputLevel,
     createStretchNode,
     preservesKey,
+    readKeyShift: () => timeline.keyShift() ?? keyShift,
     readUseWasm: () => useWasm,
     references,
     updateAll,
     apply,
     discover,
-    onGraphReady: (audio) => bufferedAudio?.graphReady(audio),
+    onGraphReady: (audio) => {
+      bufferedAudio?.graphReady(audio);
+      if (!audio.paused) crossfade?.select(audio);
+    },
   });
   bufferedAudio = createBufferedPlayback({
     modules: audioModules,
@@ -1549,6 +1970,82 @@ import { showReleaseNotice } from './tempo-updates.js';
       announce(message);
     },
   });
+  crossfade = createCrossfade({
+    modules: audioModules,
+    graph: wasmAudio,
+    sourceFor: (audio) => bufferedAudio.sourceFor(audio),
+    resolveSource: (audio, options) =>
+      bufferedAudio.resolveSource(audio, options),
+    sourceStats: () => bufferedAudio.sourceStats(),
+    preloadNext: (audio, options) => bufferedAudio.preloadNext(audio, options),
+    readNextSettings: (url) => {
+      const key = parseTrackKey(url);
+      if (!key) throw new Error('The next track identity is unavailable.');
+      return {
+        rate: applySaved ? (readSavedRate(key) ?? 1) : 1,
+        preserve: preserveKey,
+        shift: keyShift,
+        variable: Boolean(tempoStore.timeline(key)?.enabled),
+      };
+    },
+    readNextRate: (url) => {
+      const key = parseTrackKey(url);
+      if (!key) return 4;
+      const savedTimeline = tempoStore.timeline(key);
+      if (savedTimeline?.enabled)
+        return Math.max(
+          ...savedTimeline.data.points.map((point) => Math.max(0.25, point.r)),
+        );
+      return applySaved ? (readSavedRate(key) ?? 1) : 1;
+    },
+    readTrack: () => currentTrackKey(),
+    readSettings: (audio) => ({
+      rate,
+      preserve: preservesKey(),
+      shift: timeline.keyShift() ?? keyShift,
+      variable:
+        timeline.playbackSchedule(audio)?.isConstantFrom(audio.currentTime) ===
+        false,
+    }),
+    nextButton: () => {
+      const button = document.querySelector('.playControls__next');
+      const repeatOne = document.querySelector('.playControls__repeat.m-one');
+      return button &&
+        !button.disabled &&
+        button.getAttribute('aria-disabled') !== 'true' &&
+        !repeatOne
+        ? button
+        : null;
+    },
+    onState: render,
+  });
+  crossfade.reload();
+  document.addEventListener(
+    'click',
+    (event) => {
+      if (
+        event.isTrusted &&
+        event.target instanceof Element &&
+        event.target.closest(
+          '.playControls__play,.playControls__next,.playControls__prev,.playControls__repeat,.playbackTimeline',
+        )
+      )
+        crossfade.cancel();
+    },
+    true,
+  );
+  document.addEventListener(
+    'keydown',
+    (event) => {
+      if (
+        event.isTrusted &&
+        [' ', 'ArrowLeft', 'ArrowRight'].includes(event.key)
+      )
+        crossfade.cancel();
+    },
+    true,
+  );
+  window.addEventListener('pagehide', () => crossfade.dispose());
   installGuards();
   if (navigator.clipboard?.writeText) {
     const writeText = navigator.clipboard.writeText.bind(navigator.clipboard);
@@ -1557,7 +2054,6 @@ import { showReleaseNotice } from './tempo-updates.js';
         writeText(timeline.shareLink(text));
     } catch {}
   }
-  let contextLink = null;
   function restoreContextLink() {
     if (!contextLink) return;
     const { anchor, original, shared } = contextLink;
@@ -1648,6 +2144,14 @@ import { showReleaseNotice } from './tempo-updates.js';
   window.addEventListener('storage', (event) => {
     if (
       event.key === null ||
+      [
+        'soundcloud.tempo.crossfade',
+        'soundcloud.tempo.crossfadeSeconds',
+      ].includes(event.key)
+    )
+      crossfade.reload();
+    if (
+      event.key === null ||
       event.key?.startsWith(TRACK_STORAGE) ||
       event.key?.startsWith('soundcloud.tempo.timeline.')
     )
@@ -1667,16 +2171,36 @@ import { showReleaseNotice } from './tempo-updates.js';
     if (event.key === null || event.key?.startsWith(TRACK_STORAGE)) {
       schedulePageArtwork();
     }
-    if (event.key === null || event.key === RANDOM_STORAGE) {
-      randomSaved = readRandomSetting();
+    if (event.key === null || event.key === SAVED_STORAGE) {
+      applySaved = readSavedSetting();
       if (ui) {
-        ui.randomToggle.checked = randomSaved;
+        ui.savedToggle.checked = applySaved;
       }
+      timeline.changeTrack('');
+      timeline.changeTrack(trackKey);
+      rate = applySaved ? clamp(savedRate ?? 1) : 1;
+      updateAll();
+    }
+    if (event.key === null || event.key === pitchSettingsKey)
+      ui?.syncPitchControls?.();
+    if (event.key === null || event.key === tempoIncrementKey) render();
+    if (
+      event.key === null ||
+      event.key === STYLE_STORAGE ||
+      event.key === SHOW_KEY_STORAGE
+    )
+      syncControlStyle();
+    if (event.key === null || event.key === KEY_SHIFT_STORAGE) {
+      keyShift = readKeyShift();
+      timeline.setKeyShift(keyShift);
+      if (ui) ui.root.querySelector('#key-shift').value = String(keyShift);
+      updateAll();
     }
     if (event.key === null || event.key === storageKey(trackKey)) {
       storageFailure = '';
       savedRate = trackKey ? readSavedRate(trackKey) : null;
-      render();
+      if (applySaved) rate = clamp(savedRate ?? 1);
+      updateAll();
     }
   });
   window.addEventListener('resize', syncTheme);

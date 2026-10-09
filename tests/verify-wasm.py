@@ -63,7 +63,7 @@ def main():
             page.locator('#rate-number').fill('0.5')
             page.locator('#rate-number').press('Enter')
             page.locator('.settings-button').click()
-            page.locator('.advanced-audio summary').click()
+            page.locator('.advanced-audio > summary').click()
             page.locator('#preserve-key').check()
             page.wait_for_function("document.querySelector('#soundcloud-tempo-control')?.shadowRoot?.querySelector('#wasm-status')?.textContent.includes('WASM active')", timeout=15000)
             page.wait_for_timeout(1200)
@@ -87,6 +87,26 @@ def main():
             page.wait_for_timeout(900)
             natural = page.evaluate('measure()')
             assert abs(natural['frequency']-220)<5 and not natural['preservesPitch'], natural
+            page.locator('#key-shift').fill('12')
+            page.locator('#key-shift').press('Tab')
+            page.wait_for_timeout(1200)
+            shifted_natural = page.evaluate('measure()')
+            assert abs(shifted_natural['frequency']-440)<6, shifted_natural
+            page.locator('#preserve-key').check()
+            page.wait_for_timeout(1200)
+            shifted_preserved = page.evaluate('measure()')
+            assert abs(shifted_preserved['frequency']-880)<8, shifted_preserved
+            page.locator('#rate-number').fill('0.25')
+            page.locator('#rate-number').press('Enter')
+            page.locator('#key-shift').fill('-12')
+            page.locator('#key-shift').press('Tab')
+            page.wait_for_timeout(1200)
+            shifted_floor = page.evaluate('measure()')
+            assert abs(shifted_floor['frequency']-220)<6, shifted_floor
+            page.locator('#key-shift').fill('0')
+            page.locator('#key-shift').press('Tab')
+            page.locator('#rate-number').fill('0.5')
+            page.locator('#rate-number').press('Enter')
             page.locator('#preserve-key').check()
             transitions = []
             for index, rate in enumerate([.25, .5, .75, 1, 1.5, 2, 4]):

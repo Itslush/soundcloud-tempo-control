@@ -647,7 +647,8 @@ test('source association waits for proof, times out, and removes aborted listene
   const f = fixture();
   f.state.source = { status: 'unbound', sourceId: 1 };
   const controller = new AbortController();
-  const resolving = f.owner.resolveSource(f.audio, {
+  assert.equal(f.api.resolveSource, f.owner.resolveSource);
+  const resolving = f.api.resolveSource(f.audio, {
     signal: controller.signal,
   });
   assert.equal(f.tasks.size, 1);
@@ -680,6 +681,16 @@ test('track changes invalidate old source proof and release without restoring ol
   f.api.changeTrack('/artist/track', '/artist/two');
   assert.deepEqual(f.calls.invalidations, [f.audio]);
   assert.equal(f.calls.releases.at(-1).restore, false);
+  await f.api.dispose();
+});
+
+test('a temporarily empty track badge does not invalidate the playing stream', async () => {
+  const f = fixture();
+  f.api.sync(f.audio);
+  f.api.changeTrack('/artist/track', '');
+  f.api.changeTrack('', '/artist/track');
+  assert.deepEqual(f.calls.invalidations, []);
+  assert.equal(f.api.sourceFor(f.audio).status, 'bound');
   await f.api.dispose();
 });
 

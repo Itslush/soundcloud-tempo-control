@@ -59,7 +59,7 @@ def main():
             speed = page.get_by_role('checkbox', name=f'Use saved speed for {TRACK}', exact=True)
             speed.uncheck()
             assert page.evaluate('(key) => JSON.parse(localStorage.getItem(key)).enabled', FIXED) is False
-            expect(page.locator('#rate-number')).to_have_value('0.75')
+            expect(page.locator('#rate-number')).to_have_value('1')
             page.locator('.library-backup summary').click()
             with page.expect_download() as download_info:
                 page.locator('.backup-export').click()
@@ -89,7 +89,7 @@ def main():
             assert page.evaluate('localStorage.getItem("soundcloud.tempo.outputDb")') == '-9'
             expect(page.locator('#output-level')).to_have_value('-9')
             imported = page.evaluate('JSON.stringify({...localStorage})')
-            for invalid in ['{invalid', {**exported, 'preferences': {'outputDb': 12}}, {**exported, 'tracks': [{ 'track': 'https://evil.test/a/b', 'speed': {'rate': 1, 'enabled': True}}]}]:
+            for invalid in ['{invalid', {**exported, 'preferences': {'outputDb': 10000}}, {**exported, 'tracks': [{ 'track': 'https://evil.test/a/b', 'speed': {'rate': 1, 'enabled': True}}]}]:
                 upload(invalid)
                 expect(page.locator('.backup-preview')).to_be_hidden()
                 expect(page.locator('.settings-status')).not_to_be_empty()

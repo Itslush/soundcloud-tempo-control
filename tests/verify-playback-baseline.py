@@ -349,7 +349,7 @@ def run_condition(runtime, condition, initialization, report, checkpoint=None, t
         result['phase'] = 'configure'
         if condition['userscript']:
             page.locator('.settings-button').click()
-            page.locator('.advanced-audio summary').click()
+            page.locator('.advanced-audio > summary').click()
             page.locator('#output-level').fill('0')
             page.locator('#preserve-key').set_checked(condition['preserve'])
             page.locator('#use-wasm').check()

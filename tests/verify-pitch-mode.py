@@ -23,7 +23,7 @@ def main():
             page.goto(f'http://127.0.0.1:{server.server_port}/tests/fixtures/inline-fixture.html')
             page.evaluate('() => {window.a=new Audio();a.muted=true;a.play().catch(()=>{});a.pause();document.body.append(a);}')
             page.locator('.settings-button').click()
-            page.locator('.advanced-audio summary').click()
+            page.locator('.advanced-audio > summary').click()
             toggle=page.locator('#preserve-key')
             expect(toggle).not_to_be_checked()
             toggle.check()
@@ -35,7 +35,7 @@ def main():
             assert page.evaluate('a.playbackRate')==.75 and page.evaluate('a.preservesPitch')
             expect(page.locator('#rate-number')).to_have_attribute('title', 'Exact tempo · double-click to reset')
             page.reload()
-            page.locator('.settings-button').click();page.locator('.advanced-audio summary').click()
+            page.locator('.settings-button').click();page.locator('.advanced-audio > summary').click()
             expect(toggle).to_be_checked()
             page.evaluate('() => {window.a=new Audio();a.muted=true;a.play().catch(()=>{});a.pause();document.body.append(a);}')
             toggle.uncheck(); assert page.evaluate('a.preservesPitch') is False

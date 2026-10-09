@@ -33,7 +33,7 @@ with sync_playwright() as runtime:
             native.route('https://soundcloud.com/**', lambda route: route.fulfill(path=str(ROOT / 'tests/fixtures/inline-fixture.html')))
             native.goto('https://soundcloud.com/test-artist/first-track')
             expect(native.locator('#rate-slider')).to_be_visible()
-            check_sizes(native, native.locator('.ticks'), native.locator('#rate-slider'), 12, [1440, 850, 600], intervals=79)
+            check_sizes(native, native.locator('.ticks'), native.locator('#rate-slider'), 12, [1440, 850, 600], intervals=70)
             if scale == 2:
                 native.set_viewport_size({'width': 1440, 'height': 1000})
                 native.locator('.slider-wrap').screenshot(path=str(ROOT / 'test-results/slider-ticks-native.png'))
@@ -47,6 +47,6 @@ with sync_playwright() as runtime:
             assert site.locator('audio').evaluate('audio => audio.paused && !audio.currentSrc')
             assert not errors, errors
             context.close()
-        print('Both rulers: equally spaced centers, thumb-travel endpoints, 1x alignment and 0.025x keys passed at 3 widths, 4 CSS scales and 3 device scales. The userscript marks all 80 slider stops. No audio loaded.')
+        print('Both rulers: equally spaced centers, thumb-travel endpoints, 1x alignment and 0.025x keys passed at 3 widths, 4 CSS scales and 3 device scales. The userscript marks all 71 slider stops. No audio loaded.')
     finally:
         browser.close()

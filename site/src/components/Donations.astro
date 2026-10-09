@@ -1,0 +1,205 @@
+---
+const wallets = [
+  {
+    coin: 'BTC',
+    name: 'Bitcoin',
+    network: 'Bitcoin',
+    address: 'bc1qlxmq3afg9vl9n6nkjmn74ngumt3kv962hdapyc',
+  },
+  {
+    coin: 'LTC',
+    name: 'Litecoin',
+    network: 'Litecoin',
+    address: 'LP3n9wQFgBRYceNrvBkA4rH6E3nN68gSW7',
+  },
+  {
+    coin: 'USDT',
+    name: 'Tether',
+    network: 'Ethereum mainnet · ERC-20',
+    address: '0x24702696C68E1F14bBeBbB7359500aF732CBAe11',
+  },
+  {
+    coin: 'ETH',
+    name: 'Ether',
+    network: 'Ethereum mainnet',
+    address: '0x24702696C68E1F14bBeBbB7359500aF732CBAe11',
+  },
+  {
+    coin: 'SOL',
+    name: 'Solana',
+    network: 'Solana',
+    address: '8pC6F4bWDyj333nCFcQti2CpC1jkSZJ89iJDMJ3MrkYk',
+  },
+];
+---
+
+<section class="donations shell" aria-label="Donations">
+  <details>
+    <summary
+      >Donate <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"
+        ><path
+          d="m4 6 4 4 4-4"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"></path></svg
+      ></summary
+    >
+    <p>Tempo Control is free. Donations are optional.</p>
+    <p class="network-note">
+      Use the network shown for each address. Sending on another network can
+      lose the funds.
+    </p>
+    <ul>
+      {
+        wallets.map(({ coin, name, network, address }) => (
+          <li data-coin={coin}>
+            <div class="wallet-label">
+              <>
+                <strong>
+                  {coin} <span>{name}</span>
+                </strong>
+                <span class="wallet-network">{network}</span>
+              </>
+            </div>
+            <code>{address}</code>
+            <button
+              class="button"
+              type="button"
+              aria-label={`Copy ${coin} address`}
+              hidden
+            >
+              Copy address
+            </button>
+            <p class="copy-status" role="status" aria-live="polite" />
+          </li>
+        ))
+      }
+    </ul>
+  </details>
+</section>
+
+<script>
+  for (const row of document.querySelectorAll('.donations li')) {
+    const button = row.querySelector('button');
+    const address = row.querySelector('code')?.textContent;
+    const status = row.querySelector('.copy-status');
+    if (!button || !address || !status) continue;
+    button.hidden = false;
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      status.textContent = 'Copying…';
+      try {
+        await navigator.clipboard.writeText(address);
+        status.textContent = `${row.getAttribute('data-coin')} address copied.`;
+      } catch {
+        status.textContent =
+          "Couldn't copy. Select the address and copy it manually.";
+      } finally {
+        button.disabled = false;
+      }
+    });
+  }
+</script>
+
+<style>
+  .donations {
+    margin-top: 48px;
+    background: var(--ground);
+  }
+  summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: fit-content;
+    min-height: 44px;
+    cursor: pointer;
+    list-style: none;
+    font-weight: 600;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  details[open] summary svg {
+    transform: rotate(180deg);
+  }
+  p {
+    margin: 12px 0;
+  }
+  .network-note,
+  .wallet-network,
+  .wallet-label strong span,
+  .copy-status {
+    color: var(--muted);
+  }
+  .network-note {
+    max-width: 65ch;
+  }
+  ul {
+    padding: 0;
+    margin: 24px 0 0;
+    list-style: none;
+  }
+  li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px 16px;
+    padding-block: 20px;
+    border-top: 1px solid var(--line);
+  }
+  .wallet-label {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 24px;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .wallet-label strong span {
+    margin-left: 8px;
+    font-weight: 400;
+  }
+  .wallet-network {
+    font-size: 14px;
+  }
+  code {
+    align-self: center;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+    user-select: all;
+  }
+  .button {
+    align-self: center;
+    font-size: 14px;
+  }
+  .copy-status {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-size: 14px;
+  }
+  .copy-status:empty {
+    display: none;
+  }
+  @media (min-width: 900px) {
+    li {
+      grid-template-columns: 240px minmax(0, 1fr) auto;
+      gap: 8px 24px;
+    }
+    .wallet-label {
+      grid-column: auto;
+      display: grid;
+      gap: 2px;
+    }
+    .copy-status {
+      grid-column: 2 / -1;
+    }
+  }
+  @media (max-width: 420px) {
+    li {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .button {
+      justify-self: start;
+    }
+  }
+</style>

@@ -12,7 +12,7 @@ from urllib.parse import quote, urlparse
 
 from playwright.sync_api import sync_playwright, expect, TimeoutError
 
-from userscript_fixture import ROOT, userscript_bytes, userscript_source, browser_options
+from userscript_fixture import choose_option, ROOT, userscript_bytes, userscript_source, browser_options
 
 DESTINATION = ROOT / 'site/public/screenshots'
 STAGING = ROOT / 'test-results' / ('showcase-' + datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ'))
@@ -264,7 +264,7 @@ def capture_recipient(browser, evidence, injection):
         assert incoming.locator('.editor-track').evaluate('element=>element.href') == TRACK
         expect(incoming.locator('.editor-point-picker option')).to_have_count(3)
         assert stored_timeline(incoming) is None
-        incoming.locator('.speed-range').select_option('fine')
+        choose_option(incoming.locator('.speed-range'), 'fine')
         incoming.locator('.tempo-editor header strong').click()
         record_image(incoming, 'shared-preview.png', evidence, selector='.tempo-editor', state='Actual Drown music timeline link opened in a fresh receiving context after selecting and pausing its track; Apply once and Save timeline are available, neither used yet.')
         for width, name in [(1440, 'share-actions.png'), (390, 'share-actions-mobile.png')]:
@@ -361,12 +361,12 @@ def main():
                 for name, value in [('time', time), ('rate', rate), ('duration', fade)]:
                     page.locator('.point-' + name).fill(str(value))
                     page.locator('.point-' + name).press('Tab')
-                page.locator('.point-curve').select_option('smooth')
+                choose_option(page.locator('.point-curve'), 'smooth')
             page.locator('.editor-save').click()
             expect(page.locator('.editor-status')).to_have_text('Timeline saved.')
             expect(page.locator('.editor-enabled')).to_be_checked()
             expect(page.locator('.playback-state')).to_have_text('Saved timeline · Natural')
-            page.locator('.speed-range').select_option('fine')
+            choose_option(page.locator('.speed-range'), 'fine')
             page.locator('.tempo-editor header strong').click()
             record_image(page, 'soundcloud-timeline.png', evidence, selector='.tempo-editor', state='Three-point natural-pitch timeline saved and enabled, smooth fades, selected 0.90× point.')
             record_image(page, 'timeline-curve.png', evidence, selector='.editor-graph', state='Complete saved 1× → 0.75× → 0.90× curve, close speed range.')

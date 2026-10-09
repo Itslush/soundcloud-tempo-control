@@ -38,7 +38,7 @@ export const tempoRangeStyle = `
     width: 12px;
     height: 12px;
     margin-top: -5px;
-    border: 1px solid var(--tempo-accent);
+    border: 1px solid color-mix(in srgb, var(--tempo-accent) 85%, var(--tempo-fg));
     border-radius: 50%;
     background: var(--tempo-surface);
     opacity: var(--range-thumb-opacity);
@@ -53,7 +53,7 @@ export const tempoRangeStyle = `
     box-sizing: border-box;
     width: 12px;
     height: 12px;
-    border: 1px solid var(--tempo-accent);
+    border: 1px solid color-mix(in srgb, var(--tempo-accent) 85%, var(--tempo-fg));
     border-radius: 50%;
     background: var(--tempo-surface);
     opacity: var(--range-thumb-opacity);

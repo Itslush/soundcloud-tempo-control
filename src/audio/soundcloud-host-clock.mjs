@@ -73,6 +73,12 @@ function stale() {
   return error;
 }
 
+function queuePending(message) {
+  return Object.assign(new Error(message), {
+    code: 'SOUNDCLOUD_QUEUE_PENDING',
+  });
+}
+
 function data(value, key) {
   const descriptor = object(value) && own(value, key);
   if (!descriptor || !('value' in descriptor))
@@ -196,6 +202,7 @@ export function createSoundCloudHostClock({
   crypto = window?.crypto,
   mediaPrototype = window?.HTMLMediaElement?.prototype,
   createClock = createHostClock,
+  timers = globalThis,
 } = {}) {
   const readers = new Map();
   for (const key of ['src', 'currentSrc', 'srcObject']) {
@@ -203,7 +210,9 @@ export function createSoundCloudHostClock({
     if (typeof descriptor?.get === 'function') readers.set(key, descriptor.get);
   }
   const bindings = new Map();
+  const preloads = new Set();
   let preparation, context, clock, installedMethods;
+  let preloadRuntime;
   let disposed = false;
   let disposal;
   let pending = 0;
@@ -580,12 +589,365 @@ export function createSoundCloudHostClock({
     }
   }
 
+  async function preloadNext(audio, { signal } = {}) {
+    if (disposed || signal?.aborted) throw stale();
+    nativeSource(audio);
+    const queueRuntime = queueOf();
+    if (!preloadRuntime || preloadRuntime.queue !== queueRuntime) {
+      const captured = capture(queueRuntime, crypto);
+      const module = data(captured.cache, '20').value;
+      if (data(module, 'l').value !== true)
+        throw unsupported('the play queue has not loaded');
+      preloadRuntime = {
+        ...captured,
+        queue: queueRuntime,
+        module,
+        manager: data(module, 'exports').value,
+      };
+    }
+    const value = preloadRuntime;
+    const manager = value.manager;
+    const methods = [
+      ...QUEUE_METHODS,
+      ['getQueue', 'function(){return P}'],
+      ['getQueueState', 'function(){return{currentIndex:I,repeatMode:j}}'],
+    ].map(([key, expected]) => {
+      const descriptor = data(manager, key);
+      if (
+        typeof descriptor.value !== 'function' ||
+        source(descriptor.value) !== expected
+      )
+        throw unsupported(`the ${key} accessor changed`);
+      return { key, descriptor };
+    });
+    const call = (target, key, ...args) => {
+      const method = inherited(target, key).value;
+      if (typeof method !== 'function')
+        throw unsupported(`missing ${key} method`);
+      return Reflect.apply(method, target, args);
+    };
+    function check() {
+      if (
+        queueOf() !== value.queue ||
+        !sameDescriptor(own(value.queue, 'push'), value.push) ||
+        data(value.cache, '20').value !== value.module ||
+        data(value.module, 'exports').value !== manager
+      )
+        throw stale();
+      for (const { key, descriptor } of methods)
+        if (!sameDescriptor(own(manager, key), descriptor)) throw stale();
+    }
+    // Preloading does not patch SDK clocks, so it does not depend on their build fingerprints.
+    function mediaOf(sound) {
+      const wrapper = data(sound, 'player').value;
+      if (!wrapper) return null;
+      let player = data(wrapper, 'player').value;
+      const visited = new Set();
+      while (object(player) && visited.size < 8 && !visited.has(player)) {
+        visited.add(player);
+        const media = own(player, '_mediaElementAndState');
+        if (media) {
+          if (!('value' in media))
+            throw unsupported('unexpected media state accessor');
+          if (!media.value || data(media.value, 'state').value !== 'USABLE')
+            return null;
+          const element = data(media.value, 'element').value;
+          nativeSource(element);
+          return element;
+        }
+        player = data(player, '_player').value;
+      }
+      return null;
+    }
+    check();
+    const selected = call(manager, 'getCurrentQueueItem');
+    const selectedSound = data(selected, 'sound').value;
+    if (
+      call(manager, 'getCurrentSound') !== selectedSound ||
+      mediaOf(selectedSound) !== audio
+    )
+      throw stale();
+    function next() {
+      check();
+      if (call(manager, 'getState', 'globalPlayLock')) return null;
+      const state = call(manager, 'getQueueState');
+      if (state.repeatMode === 'one' || !Number.isInteger(state.currentIndex))
+        return null;
+      const queue = call(manager, 'getQueue');
+      if (
+        call(queue, 'at', state.currentIndex) !== selected ||
+        call(manager, 'getCurrentQueueItem') !== selected
+      )
+        return null;
+      // Never guess an autoplay recommendation or change the user's repeat mode.
+      return call(queue, 'at', state.currentIndex + 1);
+    }
+    if (call(manager, 'getState', 'globalPlayLock'))
+      throw new Error('Crossfade waits until the ad break ends.');
+    if (call(manager, 'getQueueState').repeatMode === 'one')
+      throw new Error('Turn off repeat-one to crossfade to another track.');
+    let item = next();
+    if (!item && call(manager, 'getState', 'hasNext')) {
+      const pull = data(manager, 'pullNext');
+      if (
+        source(pull.value) !==
+        'function(e){s&&!s.stream.isEnded()&&(O=Math.max(O,e))>0&&s.stream.resume()}'
+      )
+        throw unsupported('the queue loading method changed');
+      const queue = call(manager, 'getQueue');
+      for (const target of [queue, manager])
+        for (const key of ['on', 'off'])
+          if (typeof inherited(target, key).value !== 'function')
+            throw unsupported('queue notifications are unavailable');
+      item = await new Promise((resolve, reject) => {
+        let deadline;
+        let settled = false;
+        const finish = (error, found) => {
+          if (settled) return;
+          settled = true;
+          timers.clearTimeout(deadline);
+          preloads.delete(abort);
+          signal?.removeEventListener('abort', abort);
+          call(queue, 'off', 'add reset update', receive);
+          call(
+            manager,
+            'off',
+            'change:currentSound change:repeatMode change:globalPlayLock',
+            receive,
+          );
+          error ? reject(error) : resolve(found);
+        };
+        const abort = () => finish(stale());
+        const receive = () => {
+          try {
+            if (
+              disposed ||
+              signal?.aborted ||
+              call(manager, 'getCurrentQueueItem') !== selected ||
+              call(manager, 'getState', 'globalPlayLock') ||
+              call(manager, 'getQueueState').repeatMode === 'one'
+            )
+              return abort();
+            const found = next();
+            if (found) finish(null, found);
+          } catch (error) {
+            finish(error);
+          }
+        };
+        try {
+          call(queue, 'on', 'add reset update', receive);
+          call(
+            manager,
+            'on',
+            'change:currentSound change:repeatMode change:globalPlayLock',
+            receive,
+          );
+          preloads.add(abort);
+          signal?.addEventListener('abort', abort, { once: true });
+          deadline = timers.setTimeout(
+            () =>
+              finish(
+                queuePending('The next queue entry did not load in time.'),
+              ),
+            10000,
+          );
+          Reflect.apply(pull.value, manager, [1]);
+          receive();
+        } catch (error) {
+          finish(error);
+        }
+      });
+    }
+    if (!item)
+      throw queuePending(
+        'No next track is queued. Add another track to Next up.',
+      );
+    const sound = item && data(item, 'sound').value;
+    if (!sound || sound === selectedSound || !call(sound, 'isPlayable'))
+      throw queuePending(
+        'The next queued track is not playable. Choose another track in Next up.',
+      );
+    if (signal?.aborted || disposed || next() !== item) throw stale();
+    let held = false,
+      requested = false,
+      released = false;
+    let bufferLimit;
+    function restoreBufferLimit() {
+      if (!bufferLimit) return;
+      const { config, descriptor, player, update, value } = bufferLimit;
+      bufferLimit = null;
+      if (
+        sameDescriptor(own(config, 'pausedMaxBufferLength'), {
+          ...descriptor,
+          value,
+        })
+      ) {
+        Object.defineProperty(config, 'pausedMaxBufferLength', descriptor);
+        Reflect.apply(update, player, []);
+      }
+    }
+    function reserveBuffer(seconds) {
+      const wrapper = data(sound, 'player').value;
+      let player = wrapper && data(wrapper, 'player').value;
+      for (let depth = 0; object(player) && depth < 8; depth++) {
+        const config = own(player, '_config')?.value;
+        const descriptor = config && own(config, 'pausedMaxBufferLength');
+        if (descriptor) {
+          if (
+            !('value' in descriptor) ||
+            !descriptor.writable ||
+            !Number.isFinite(descriptor.value) ||
+            descriptor.value < 0
+          )
+            throw unsupported('the paused buffer limit cannot be adjusted');
+          const update = inherited(player, '_updateMaxBufferLength').value;
+          if (
+            source(update) !==
+            'function(){var e=this._getPlayer(),t=e&&e.getBufferController();t&&(this.isPlaying()?t.setMaxBufferLength(this._config.playingMaxBufferLength):t.setMaxBufferLength(this._preloadingEnabled?this._config.pausedMaxBufferLength:0))}'
+          )
+            throw unsupported('the buffer limit update method changed');
+          if (bufferLimit && bufferLimit.player !== player)
+            restoreBufferLimit();
+          if (
+            bufferLimit &&
+            !sameDescriptor(descriptor, {
+              ...bufferLimit.descriptor,
+              value: bufferLimit.value,
+            })
+          )
+            throw unsupported(
+              'the paused buffer limit changed during preloading',
+            );
+          const value = Math.max(descriptor.value, seconds * 1000);
+          if (value !== descriptor.value) {
+            if (!bufferLimit)
+              bufferLimit = { config, descriptor, player, update, value };
+            bufferLimit.value = value;
+            Object.defineProperty(config, 'pausedMaxBufferLength', {
+              ...descriptor,
+              value,
+            });
+            Reflect.apply(update, player, []);
+          }
+          return;
+        }
+        player = own(player, '_player')?.value;
+      }
+    }
+    function release() {
+      if (released) return;
+      released = true;
+      preloads.delete(release);
+      signal?.removeEventListener('abort', release);
+      try {
+        restoreBufferLimit();
+      } finally {
+        try {
+          if (requested) call(sound, 'unrequestPreloading');
+        } finally {
+          if (held) call(sound, 'release');
+        }
+      }
+    }
+    function bufferedSeconds() {
+      if (released || disposed || next() !== item) return 0;
+      const player = data(sound, 'player').value;
+      if (!player) return 0;
+      const range = call(player, 'getCurrentBufferedTimeRange');
+      // SoundCloud's player clock and buffer ranges are in milliseconds.
+      return range &&
+        Number.isFinite(range.start) &&
+        range.start >= 0 &&
+        range.start <= 50 &&
+        Number.isFinite(range.end)
+        ? Math.max(0, range.end / 1000)
+        : 0;
+    }
+    try {
+      // Own one preloading reference, without changing the queue item's own reference.
+      call(sound, 'hold');
+      held = true;
+      requested = true;
+      call(sound, 'requestPreloading');
+      preloads.add(release);
+      signal?.addEventListener('abort', release, { once: true });
+      return Object.freeze({
+        trackUrl: own(own(sound, 'attributes')?.value || {}, 'permalink_url')
+          ?.value,
+        bufferedSeconds,
+        streamUrl() {
+          if (released || disposed || next() !== item) throw stale();
+          const wrapper = data(sound, 'player').value;
+          let player = wrapper && data(wrapper, 'player').value;
+          for (let depth = 0; object(player) && depth < 8; depth++) {
+            const manager = own(player, '_controllerManager')?.value;
+            const entry =
+              manager && own(manager, '_controlledPlayerWithRendition')?.value;
+            const controller = entry && data(entry, 'controlledPlayer').value;
+            if (controller) {
+              const getUrl = inherited(controller, 'getUrl').value;
+              const getPlayer = inherited(controller, 'getPlayer').value;
+              if (
+                source(getUrl) !== 'function(){return this._currentUrl}' ||
+                source(getPlayer) !== 'function(){return this._player}' ||
+                call(controller, 'getPlayer') !== data(player, '_player').value
+              )
+                throw unsupported('the next HLS stream controller changed');
+              // Read only the controller owned by this exact queue item, never a global request.
+              return call(controller, 'getUrl');
+            }
+            player = own(player, '_player')?.value;
+          }
+          throw unsupported('the next HLS stream is not ready');
+        },
+        matches: () => !released && !disposed && next() === item,
+        ready(seconds) {
+          if (
+            !Number.isFinite(seconds) ||
+            seconds <= 0 ||
+            seconds > 44 ||
+            released ||
+            disposed ||
+            next() !== item
+          )
+            return false;
+          reserveBuffer(seconds);
+          return bufferedSeconds() >= seconds;
+        },
+        isCurrent(target) {
+          if (
+            released ||
+            disposed ||
+            call(manager, 'getState', 'globalPlayLock')
+          )
+            return false;
+          check();
+          return (
+            call(manager, 'getCurrentQueueItem') === item &&
+            call(manager, 'getCurrentSound') === sound &&
+            mediaOf(sound) === target
+          );
+        },
+        dispose: release,
+      });
+    } catch (error) {
+      release();
+      throw error;
+    }
+  }
+
   function dispose() {
     if (disposal) return disposal;
     disposed = true;
     preparation = undefined;
+    preloadRuntime = undefined;
     disposal = Promise.resolve()
-      .then(() => clock?.dispose())
+      .then(() =>
+        Promise.all(
+          [...preloads].map((release) => Promise.resolve().then(release)),
+        ),
+      )
+      .finally(() => clock?.dispose())
       .finally(() => {
         bindings.clear();
         clock = undefined;
@@ -595,5 +957,5 @@ export function createSoundCloudHostClock({
     return disposal;
   }
 
-  return Object.freeze({ prepare, dispose });
+  return Object.freeze({ prepare, preloadNext, dispose });
 }

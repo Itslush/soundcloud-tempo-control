@@ -4,6 +4,7 @@ import '../styles/site.css';
 import '../styles/preview.css';
 import Logo from '../components/Logo.astro';
 import SpaceAccent from '../components/SpaceAccent.astro';
+import Donations from '../components/Donations.astro';
 import { release, route } from '../lib/release';
 interface Props {
   title?: string;
@@ -27,7 +28,13 @@ const links = [
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <meta name="theme-color" content="#111111" />
-    <title>{title ? `${title} · SoundCloud Tempo Control` : 'SoundCloud Tempo Control'}</title>
+    <title>
+      {
+        title
+          ? `${title} · SoundCloud Tempo Control`
+          : 'SoundCloud Tempo Control'
+      }
+    </title>
     <link rel="icon" type="image/svg+xml" href={route('favicon.svg')} />
     {
       release.siteUrl && (
@@ -63,8 +70,22 @@ const links = [
       </div>
     </header>
     <main id="main"><slot /></main>
+    <Donations />
     <footer class="site-footer shell">
       <p>Unofficial. Not affiliated with SoundCloud.</p>
+      <details class="star-settings">
+        <summary>Star motion</summary><label
+          ><input id="site-stars" type="checkbox" checked />Move stars</label
+        ><label
+          >Speed <input
+            id="site-star-speed"
+            type="range"
+            min="0.5"
+            max="4"
+            step="0.25"
+            value="2"
+          /><output id="site-star-speed-value">2×</output></label>
+      </details>
       <nav aria-label="Footer navigation">
         <a href={route('privacy/')}>Privacy</a>{
           release.repositoryUrl && (
@@ -72,9 +93,7 @@ const links = [
               Source
             </a>
           )
-        }<a href={route('guide/')}>Help</a>{
-          release.paypalUrl && <a href={route('support/')}>Donate</a>
-        }
+        }<a href={route('guide/')}>Help</a>
       </nav>
     </footer>
   </body>

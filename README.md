@@ -4,16 +4,16 @@ Adjust playback speed, save a tempo for each track, and draw speed changes over 
 
 [Install Tempo Control](https://itslush.github.io/soundcloud-tempo-control/#install) · [Visit the website](https://itslush.github.io/soundcloud-tempo-control/) · [Help](https://itslush.github.io/soundcloud-tempo-control/guide/)
 
-## Make a track your own
+## Controls
 
 - Slow down or speed up playback with the slider or an exact value.
 - Let pitch change with speed, or switch on **Preserve key**.
 - Remember your preferred tempo for individual tracks.
 - Build a timeline with gradual fades and instant speed changes.
 - Share a tempo or timeline with a link.
-- Keep your saved tracks organized and export a backup when switching browsers.
+- Back up saved speeds and timelines, or move them to another browser.
 
-## Get started
+## Install
 
 1. Follow the [installation guide](https://itslush.github.io/soundcloud-tempo-control/#install) to set up a userscript manager and install Tempo Control.
 2. Open SoundCloud and play a track.

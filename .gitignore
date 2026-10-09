@@ -5,6 +5,7 @@ site/public/downloads/
 site/.astro/
 .astro/
 test-results/
+.impeccable/
 __pycache__/
 *.pyc
 .DS_Store

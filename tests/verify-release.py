@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 
 from playwright.sync_api import expect, sync_playwright
-from userscript_fixture import userscript_source, browser_options
+from userscript_fixture import choose_option, userscript_source, browser_options
 
 ROOT = Path(__file__).resolve().parent.parent
 TRACK = '/test-artist/first-track'
@@ -59,7 +59,7 @@ def main():
         expect(page.locator('.editor-link')).to_be_visible()
         expect(page.locator('.editor-copy')).to_be_hidden()
         speed(page, .75)
-        page.locator('.editor-pitch').select_option('preserve')
+        choose_option(page.locator('.editor-pitch'), 'preserve')
         page.locator('.editor-apply-once').click()
         playback(page, .75, True)
         expect(page.locator('.editor-apply-once')).to_have_text('Stop timeline')
@@ -108,7 +108,7 @@ def main():
         audio(page)
         open_editor(page)
         speed(page, .5)
-        page.locator('.editor-pitch').select_option('preserve')
+        choose_option(page.locator('.editor-pitch'), 'preserve')
         page.locator('.editor-link').click()
         shared = decode(page.evaluate('copied'))
         assert shared['points'][0]['r'] == .5 and shared['pitch'] == 'preserve'
@@ -117,7 +117,7 @@ def main():
         page.locator('.editor-copy').click()
         assert decode(page.evaluate('copied'))['points'][0]['r'] == .5
         speed(page, .8)
-        page.locator('.editor-pitch').select_option('natural')
+        choose_option(page.locator('.editor-pitch'), 'natural')
         page.locator('.editor-copy').click()
         copied = page.evaluate('copied')
         shared = decode(copied)
@@ -128,7 +128,7 @@ def main():
         page.locator('.editor-import').click()
         expect(page.locator('.editor-pitch')).to_have_value('natural')
         expect(page.locator('.editor-import')).to_be_hidden()
-        page.locator('.editor-pitch').select_option('preserve')
+        choose_option(page.locator('.editor-pitch'), 'preserve')
         page.evaluate('()=>{navigator.clipboard.writeText=async()=>{throw new Error("Clipboard denied")}}')
         page.locator('.editor-link').click()
         expect(page.locator('.share-output')).to_be_focused()

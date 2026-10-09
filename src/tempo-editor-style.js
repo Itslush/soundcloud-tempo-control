@@ -54,6 +54,9 @@ export const editorStyle = `
         .tempo-editor .editor-pitch {
           width: auto;
         }
+        .tempo-editor .editor-key-shift {
+          width: 64px;
+        }
         .editor-sharing .editor-actions {
           border: 0;
           margin: 8px 0;
@@ -172,6 +175,8 @@ export const editorStyle = `
           gap: 4px;
         }
         .tempo-editor .editor-fields input,
+        .tempo-editor .speed-min,
+        .tempo-editor .speed-max,
         .tempo-editor select,
         .tempo-editor textarea {
           width: 100%;
@@ -212,9 +217,17 @@ export const editorStyle = `
           gap: 6px;
           white-space: nowrap;
         }
+        .speed-bounds {
+          display: flex;
+          gap: 8px;
+        }
         .editor-toolbar output {
           margin-right: auto;
           font-variant-numeric: tabular-nums;
+        }
+        .tempo-editor .speed-min,
+        .tempo-editor .speed-max {
+          width: 60px;
         }
         .timeline-navigation[hidden] {
           display: none;

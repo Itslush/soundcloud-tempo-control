@@ -324,7 +324,7 @@ test('the scoped stylesheet covers observed interactive theme tokens without alt
   f.appearance.dispose();
 });
 
-test('styles preserve host geometry and use static, varied, non-glowing stars', () => {
+test('stars drift without changing host geometry, pause when hidden and respect reduced motion', () => {
   const f = fixture({ saved: 'charcoal' });
   const css = f.styles[0].textContent;
   assert.match(css, /@media \(forced-colors: none\)/);
@@ -332,7 +332,7 @@ test('styles preserve host geometry and use static, varied, non-glowing stars', 
   assert.match(css, /--tempo-page-ground: #000/);
   assert.doesNotMatch(
     css,
-    /(?:filter|animation|transition|position|display|width|height|padding|margin|font-family)\s*:/,
+    /(?<![\w-])(?:filter|transition|position|display|width|height|padding|margin|font-family)\s*:/,
   );
   assert.doesNotMatch(css, /(?:^|[\s,])\*\s*[{,:]/);
   const svg = decodeURIComponent(css.match(/data:image\/svg\+xml,([^\"]+)/)[1]);
@@ -342,6 +342,45 @@ test('styles preserve host geometry and use static, varied, non-glowing stars', 
   assert.doesNotMatch(svg, /filter|blur|animate|script|image|foreignObject/);
   assert.equal((css.match(/url\(/g) || []).length, 1);
   assert.ok(css.length < 20000);
+  assert.match(
+    css,
+    /animation: tempo-star-drift 7.5s linear infinite alternate/,
+  );
+  assert.match(css, /prefers-reduced-motion: reduce/);
+  f.document.hidden = true;
+  f.documentListeners.get('visibilitychange')();
+  assert.match(f.styles[0].textContent, /animation-play-state:\s*paused/);
+  f.document.hidden = false;
+  f.documentListeners.get('visibilitychange')();
+  assert.equal(f.styles[0].textContent, css);
+  f.appearance.dispose();
+});
+
+test('explicit star motion persists, synchronizes and restores the system default', () => {
+  const f = fixture({ saved: 'oled' });
+  const initial = f.styles[0].textContent;
+  assert.equal(f.appearance.motion(), 'on');
+  f.appearance.setMotion('on');
+  assert.equal(f.values.get('soundcloud.tempo.starMotion'), 'on');
+  assert.match(f.styles[0].textContent, /animation: tempo-star-drift/);
+  f.sync({ key: 'soundcloud.tempo.starMotion', newValue: 'off' });
+  assert.equal(f.appearance.motion(), 'off');
+  assert.match(f.styles[0].textContent, /animation: none/);
+  f.appearance.setMode('native');
+  assert.equal(f.styles.length, 0);
+  f.appearance.setMode('oled');
+  assert.match(f.styles[0].textContent, /animation: none/);
+  f.appearance.setMotion('system');
+  assert.equal(f.styles[0].textContent, initial);
+  assert.throws(() => f.appearance.setMotion('fast'), /Invalid star motion/);
+  f.appearance.setSpeed(4);
+  assert.equal(f.appearance.speed(), 4);
+  assert.equal(f.values.get('soundcloud.tempo.starSpeed'), '4');
+  assert.match(f.styles[0].textContent, /tempo-star-drift 3.75s/);
+  f.sync({ key: 'soundcloud.tempo.starSpeed', newValue: '0.5' });
+  assert.match(f.styles[0].textContent, /tempo-star-drift 30s/);
+  for (const value of [0, 5, NaN, Infinity])
+    assert.throws(() => f.appearance.setSpeed(value), /Star speed/);
   f.appearance.dispose();
 });
 

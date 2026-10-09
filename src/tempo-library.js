@@ -1,9 +1,25 @@
+import { validOutputDb } from './audio/output-level.mjs';
+import { defaultTempoIncrement, validTempoIncrement } from './tempo-increment.js';
+
+import {
+  defaultPitchSettings,
+  validPitchSettings,
+} from './tempo-pitch-settings.js';
+
 export function createTempoStore(api) {
   const speedPrefix = 'soundcloud.tempo.track.';
   const timelinePrefix = 'soundcloud.tempo.timeline.';
   const limit = 2 * 1024 * 1024;
   const preferences = {
     randomSaved: false,
+    applySaved: true,
+    controlStyle: 'slider',
+    tempoIncrement: defaultTempoIncrement,
+    showKey: true,
+    crossfade: false,
+    crossfadeSeconds: 5,
+    keyShift: 0,
+    pitchControls: defaultPitchSettings,
     copyLinks: false,
     preserveKey: false,
     useWasm: true,
@@ -33,7 +49,7 @@ export function createTempoStore(api) {
       typeof entry.enabled !== 'boolean'
     )
       throw new Error('Saved speeds must be between 0.025 and 4×.');
-    return { rate: round(entry.rate), enabled: entry.enabled };
+    return { rate: round(Math.max(0.25, entry.rate)), enabled: entry.enabled };
   }
 
   function validateTimeline(value, track) {
@@ -125,8 +141,16 @@ export function createTempoStore(api) {
   }
 
   function validPreference(name, value) {
+    if (name === 'crossfadeSeconds')
+      return Number.isInteger(value) && value >= 1 && value <= 10;
+    if (name === 'controlStyle')
+      return ['slider', 'dial', 'vertical'].includes(value);
+    if (name === 'pitchControls') return validPitchSettings(value);
+    if (name === 'tempoIncrement') return validTempoIncrement(value);
+    if (name === 'keyShift')
+      return Number.isFinite(value) && Math.abs(value) <= 12;
     return name === 'outputDb'
-      ? Number.isInteger(value) && value >= -24 && value <= 0
+      ? validOutputDb(value)
       : Object.hasOwn(preferences, name) && typeof value === 'boolean';
   }
 
@@ -169,7 +193,9 @@ export function createTempoStore(api) {
       if (entry.speed !== undefined) item.speed = validateSpeed(entry.speed);
       if (entry.timeline !== undefined) {
         item.timeline = validateTimeline(entry.timeline, entry.track);
-        pointCount += item.timeline.data.points.length;
+        pointCount +=
+          item.timeline.data.points.length +
+          (item.timeline.data.pitchPoints?.length ?? 0);
       }
       if (pointCount > 20000)
         throw new Error('Use a backup with at most 20,000 timeline points.');

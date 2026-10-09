@@ -25,7 +25,7 @@ with sync_playwright() as p:
     page = context.new_page()
     page.goto('https://soundcloud.com/test-artist/first-track')
     page.locator('.settings-button').click()
-    page.locator('.advanced-audio summary').click()
+    page.locator('.advanced-audio > summary').click()
     expect(page.locator('#output-level')).to_have_value('-6')
     result = page.evaluate('''() => {
       window.audio = new Audio(); audio.volume = 0.8; audio.playbackRate = 1;
@@ -73,19 +73,80 @@ with sync_playwright() as p:
     assert page.evaluate('originalVolume.get.call(audio)') == .4
     assert page.evaluate('''() => { const video = document.createElement('video'); video.volume = .8; return originalVolume.get.call(video); }''') == .8
     page.locator('#output-level').fill('-9')
+    for db in ['6', '24.5', '48']:
+        page.locator('#output-value').fill(db)
+        page.locator('#output-value').press('Tab')
+        expect(page.locator('#output-level')).to_have_value(db)
+        assert page.evaluate('originalVolume.get.call(audio)') == .4
+        assert page.evaluate('audio.volume') == .4
+        assert page.evaluate('localStorage.getItem("soundcloud.tempo.outputDb")') == db
     page.reload()
     page.locator('.settings-button').click()
-    page.locator('.advanced-audio summary').click()
+    page.locator('.advanced-audio > summary').click()
+    expect(page.locator('#output-value')).to_have_value('48')
+    page.locator('#output-value').fill('10000')
+    page.locator('#output-value').press('Tab')
+    expect(page.locator('#output-value')).to_have_value('48')
+    expect(page.locator('.settings-status')).to_contain_text('Enter a dB')
+    page.locator('#output-value').fill('6')
+    page.locator('#output-value').press('Tab')
+    for width in [1440, 390]:
+        page.set_viewport_size({'width':width, 'height':900})
+        page.locator('.advanced-audio').screenshot(path=str(ROOT/f'test-results/output-boost-{width}.png'))
+        box = page.locator('#output-value').bounding_box()
+        assert box['x'] >= 0 and box['x'] + box['width'] <= width
+    # Real media -> native graph -> analyser; the destination remains silent.
+    measured = page.evaluate('''async () => {
+      const samples = 48000 * 5;
+      const bytes = new ArrayBuffer(44 + samples * 2), view = new DataView(bytes);
+      const text = (at, value) => [...value].forEach((c, i) => view.setUint8(at+i, c.charCodeAt(0)));
+      text(0, 'RIFF'); view.setUint32(4, bytes.byteLength-8, true); text(8, 'WAVEfmt ');
+      view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+      view.setUint32(24, 48000, true); view.setUint32(28, 96000, true);
+      view.setUint16(32, 2, true); view.setUint16(34, 16, true); text(36, 'data');
+      view.setUint32(40, samples * 2, true);
+      for (let i=0; i<samples; i++) view.setInt16(44+i*2, Math.sin(i*2*Math.PI*1000/48000)*3276, true);
+      const url = URL.createObjectURL(new Blob([bytes], {type:'audio/wav'}));
+      const media = new Audio(url); media.loop = true; media.volume = .4;
+      const ctx = new AudioContext(), analyser = ctx.createAnalyser(), silent = ctx.createGain();
+      silent.gain.value = 0;
+      ctx.createMediaElementSource(media).connect(analyser);
+      analyser.connect(silent).connect(ctx.destination);
+      await ctx.resume(); await media.play();
+      await new Promise(resolve=>setTimeout(resolve, 750));
+      const values = [], field = document.querySelector('#soundcloud-tempo-control').shadowRoot.querySelector('#output-value');
+      for (const db of [0, 6, 24.5, -6]) {
+        field.value = String(db); field.dispatchEvent(new Event('change', {bubbles:true}));
+        await new Promise(resolve=>setTimeout(resolve, 250));
+        const pcm = new Float32Array(analyser.fftSize); analyser.getFloatTimeDomainData(pcm);
+        values.push({db, peak:Math.max(...pcm.map(Math.abs)), volume:media.volume});
+      }
+      media.muted = true; await new Promise(resolve=>setTimeout(resolve, 150));
+      const pcm = new Float32Array(analyser.fftSize); analyser.getFloatTimeDomainData(pcm);
+      const muted = Math.max(...pcm.map(Math.abs));
+      media.pause(); await ctx.close(); URL.revokeObjectURL(url);
+      return {values, muted};
+    }''')
+    for value in measured['values']:
+        assert abs(value['peak'] - .04 * 10 ** (value['db']/20)) < .003, measured
+        assert value['volume'] == .4, measured
+    assert measured['muted'] < .00001, measured
+    print('Measured muted-destination native gain:', measured)
+    page.set_viewport_size({'width':1440, 'height':900})
+    page.locator('#output-level').fill('-9')
+    page.reload()
+    page.locator('.settings-button').click()
+    page.locator('.advanced-audio > summary').click()
     expect(page.locator('#output-level')).to_have_value('-9')
     expect(page.locator('#use-wasm')).to_be_checked()
     page.locator('#use-wasm').uncheck()
     page.reload()
     page.locator('.settings-button').click()
-    page.locator('.advanced-audio summary').click()
+    page.locator('.advanced-audio > summary').click()
     expect(page.locator('#use-wasm')).not_to_be_checked()
     page.evaluate("localStorage.setItem('soundcloud.tempo.useWasm', 'true'); dispatchEvent(new StorageEvent('storage', {key: 'soundcloud.tempo.useWasm', newValue: 'true'}))")
     expect(page.locator('#use-wasm')).to_be_checked()
-    tempo_tick_geometry(page.locator('.ticks'), page.locator('#rate-slider'), 12, intervals=79)
+    tempo_tick_geometry(page.locator('.ticks'), page.locator('#rate-slider'), 12, intervals=70)
     alignment = page.evaluate('''() => {
       const progress = document.querySelector('.playbackTimeline__progressBar');
       const host = document.querySelector('#soundcloud-tempo-control');

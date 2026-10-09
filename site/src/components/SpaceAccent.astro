@@ -1,4 +1,5 @@
 ---
+import { tempoRangeStyle } from '../../../src/tempo-range.js';
 const stars = [
   [38, 72, 'diamond', 0.7, 0.35, 0],
   [184, 126, 'ray', 1.15, 0.48, 12],
@@ -25,6 +26,7 @@ const stars = [
 ] as const;
 ---
 
+<style is:global set:html={tempoRangeStyle}></style>
 <svg class="space-accent" aria-hidden="true" focusable="false">
   <defs>
     <path id="space-ray" d="M0-4 .7-1 3.5 0 .7.8 0 4.5-.7.8-3.5 0-.7-1Z"></path>
@@ -53,3 +55,62 @@ const stars = [
   </defs>
   <rect width="100%" height="100%" fill="url(#space-field)"></rect>
 </svg>
+
+<script>
+  import { syncRange } from '../scripts/range';
+  const field = document.querySelector('.space-accent');
+  if (field) {
+    let visible = false;
+    const toggle = document.querySelector<HTMLInputElement>('#site-stars')!;
+    const speed = document.querySelector<HTMLInputElement>('#site-star-speed')!;
+    const label = document.querySelector<HTMLOutputElement>(
+      '#site-star-speed-value',
+    )!;
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+    let explicit = false;
+    toggle.checked = !reduced.matches;
+    try {
+      const motion = localStorage.getItem('tempo.site.starMotion');
+      explicit = motion === 'true' || motion === 'false';
+      if (explicit) toggle.checked = motion === 'true';
+      const stored = Number(localStorage.getItem('tempo.site.starSpeed'));
+      if (stored >= 0.5 && stored <= 4) speed.value = String(stored);
+    } catch {}
+    const sync = () => {
+      field.toggleAttribute('data-explicit-motion', explicit && toggle.checked);
+      field.toggleAttribute(
+        'data-visible',
+        visible && !document.hidden && toggle.checked,
+      );
+      speed.disabled = !toggle.checked;
+      document.documentElement.style.setProperty(
+        '--star-duration',
+        String(15 / Number(speed.value)) + 's',
+      );
+      label.value = speed.value + '×';
+      syncRange(speed);
+    };
+    const save = () => {
+      sync();
+      try {
+        localStorage.setItem('tempo.site.starMotion', String(toggle.checked));
+        localStorage.setItem('tempo.site.starSpeed', speed.value);
+      } catch {}
+    };
+    toggle.addEventListener('change', () => {
+      explicit = true;
+      save();
+    });
+    speed.addEventListener('input', save);
+    reduced.addEventListener('change', () => {
+      if (!explicit) toggle.checked = !reduced.matches;
+      sync();
+    });
+    sync();
+    new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      sync();
+    }).observe(field);
+    document.addEventListener('visibilitychange', sync);
+  }
+</script>

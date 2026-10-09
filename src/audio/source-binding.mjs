@@ -598,15 +598,16 @@ class SourceBinding {
     }
     const source = this.urls.get(src);
     const base = { generation: state.generation, sourceId: source?.id ?? null };
-    if (
-      this.disposed ||
-      !source ||
-      source.closed ||
-      source.id === state.blockedSource ||
-      !source.proof ||
-      source.proof.serial <= state.minimumSerial
-    )
-      return Object.freeze({ ...base, status: 'unbound' });
+    const reason = !source
+      ? 'source-not-observed'
+      : source.closed
+        ? 'unsupported-source'
+        : source.id === state.blockedSource
+          ? 'source-invalidated'
+          : !source.proof || source.proof.serial <= state.minimumSerial
+            ? 'waiting-for-payload-proof'
+            : null;
+    if (reason) return Object.freeze({ ...base, status: 'unbound', reason });
     const matches = [];
     for (const [url, version] of source.proof.matches)
       if (this.playlistVersions.get(url) !== version)
@@ -626,6 +627,7 @@ class SourceBinding {
       return Object.freeze({
         ...base,
         status: matches.length ? 'ambiguous' : 'unbound',
+        reason: matches.length ? 'multiple-playlists' : 'no-matching-playlist',
       });
     return Object.freeze({
       ...base,
@@ -688,6 +690,19 @@ class SourceBinding {
     };
     const streams = new WeakMap();
     const readers = new WeakMap();
+    const responses = new WeakMap();
+    const observeResponse = (url, value) => {
+      if (typeof value === 'string') return owner.playlist(url, value);
+      if (!(value instanceof ArrayBuffer) && !ArrayBuffer.isView(value)) return;
+      const parser = owner.response(url);
+      if (!parser) return;
+      try {
+        parser.write(value);
+        parser.close();
+      } finally {
+        parser.abort();
+      }
+    };
     const method = (target, key, handler) =>
       owner.patch(target, key, (descriptor) => ({
         ...descriptor,
@@ -704,13 +719,26 @@ class SourceBinding {
             if (
               this.readyState === 4 &&
               this.status >= 200 &&
-              this.status < 300 &&
-              typeof value === 'string'
+              this.status < 300
             )
-              safe(() => owner.playlist(this.responseURL, value));
+              safe(() => {
+                if (responses.get(this) === value) return;
+                responses.set(this, value);
+                observeResponse(this.responseURL, value);
+              });
             return value;
           },
         }));
+      for (const key of ['text', 'arrayBuffer'])
+        method(realm.Response.prototype, key, function (original, args) {
+          const promise = Reflect.apply(original, this, args);
+          if (!mediaUrl(this.url, undefined, owner.limits.urlCharacters))
+            return promise;
+          return promise.then((value) => {
+            if (this.ok) safe(() => observeResponse(this.url, value));
+            return value;
+          });
+        });
       this.patch(realm.Response.prototype, 'body', (descriptor) => ({
         ...descriptor,
         get() {
@@ -802,18 +830,12 @@ class SourceBinding {
           return value;
         },
       );
-      method(
-        realm.HTMLMediaElement.prototype,
-        'load',
-        function (original, args) {
-          if (owner.media.has(this)) safe(() => owner.invalidate(this));
-          return Reflect.apply(original, this, args);
-        },
-      );
       this.patch(realm.HTMLMediaElement.prototype, 'src', (descriptor) => ({
         ...descriptor,
         set(value) {
-          if (owner.media.has(this)) safe(() => owner.invalidate(this));
+          // Reloading the same MediaSource does not change its verified payload.
+          if (owner.media.has(this) && descriptor.get.call(this) !== value)
+            safe(() => owner.invalidate(this));
           return Reflect.apply(descriptor.set, this, [value]);
         },
       }));

@@ -21,8 +21,6 @@ def main():
             page = context.new_page()
             errors = []
             page.on('pageerror', lambda error: errors.append(str(error)))
-            page.add_init_script('''window.randomDraws=0; window.randomWord=0;
-                Crypto.prototype.getRandomValues=function(a){randomDraws++;a[0]=randomWord;return a;};''')
             page.add_init_script(script=userscript_source())
             url = f'http://127.0.0.1:{server.server_port}/tests/fixtures/inline-fixture.html'
             page.goto(url)
@@ -30,12 +28,12 @@ def main():
             slider = page.locator('#rate-slider')
             memory = page.locator('.memory')
             menu = page.locator('#tempo-settings')
-            toggle = page.locator('#random-saved')
+            toggle = page.locator('#apply-saved')
             up = page.locator('.step-up')
             up.click()
             expect(page.locator('.status')).to_have_text('Playback speed 1.025×.')
             slider.press('Home')
-            expect(page.locator('.status')).to_have_text('Playback speed 0.025×.')
+            expect(page.locator('.status')).to_have_text('Playback speed 0.25×.')
             slider.dblclick()
             expect(page.locator('.status')).to_have_text('Playback speed 1.00×.')
 
@@ -46,9 +44,6 @@ def main():
             def track(path):
                 page.locator(TRACK).evaluate('(el, path) => el.setAttribute("href", path)', path)
 
-            def draws():
-                return page.evaluate('randomDraws')
-
             expect(menu).to_be_hidden()
             gear = page.locator('.settings-button')
             gear.click()
@@ -57,7 +52,7 @@ def main():
             expect(gear).to_be_focused()
             memory.click(button='right')
             expect(menu).to_be_visible()
-            expect(toggle).not_to_be_checked()
+            expect(toggle).to_be_checked()
             expect(toggle).to_be_focused()
             toggle.press('Escape')
             expect(menu).to_be_hidden()
@@ -74,37 +69,29 @@ def main():
             memory.click(button='right')
             toggle.check()
             expect(number).to_have_value('0.85')
-            assert draws() == 0
             toggle.press('Escape')
             track('/other/unsaved'); expect(number).to_have_value('1')
-            assert draws() == 0
             track('/test-artist/first-track'); expect(number).to_have_value('0.85')
-            assert draws() == 1
             page.wait_for_timeout(1700)
             track(''); track('/test-artist/first-track')
             page.wait_for_timeout(100)
-            assert draws() == 1
             track('/other/unsaved'); expect(number).to_have_value('1')
-            page.evaluate('randomWord=4294967295')
-            track('/test-artist/first-track'); expect(number).to_have_value('1')
-            assert draws() == 2
+            track('/test-artist/first-track'); expect(number).to_have_value('0.85')
             assert page.evaluate('localStorage.getItem("soundcloud.tempo.track.%2Ftest-artist%2Ffirst-track")') == '0.85'
             rate(.93)
             page.wait_for_timeout(1700)
             expect(number).to_have_value('0.93')
-            assert draws() == 2
             memory.click(button='right')
             toggle.uncheck()
-            expect(number).to_have_value('0.93')
+            expect(number).to_have_value('1')
             toggle.press('Escape')
             track('/other/unsaved'); expect(number).to_have_value('1')
-            track('/test-artist/first-track'); expect(number).to_have_value('0.85')
-            assert draws() == 2
+            track('/test-artist/first-track'); expect(number).to_have_value('1')
 
             memory.click(button='right')
             saved = page.locator('.saved-row input[type=number]')
             saved.fill('0.72'); saved.press('Enter')
-            expect(number).to_have_value('0.85')
+            expect(number).to_have_value('1')
             expect(page.locator('.settings-status')).to_contain_text('updated')
             page.locator('#saved-filter').fill('nomatch')
             expect(page.locator('.saved-row')).to_have_count(0)
@@ -116,7 +103,7 @@ def main():
             memory.click(button='right')
             expect(toggle).to_be_checked()
             page.locator('.saved-row button').click()
-            expect(number).to_have_value('0.72')
+            expect(number).to_have_value('1')
             expect(page.locator('.saved-row')).to_have_count(0)
             expect(page.locator('#saved-filter')).to_be_focused()
             toggle.uncheck()
@@ -127,11 +114,13 @@ def main():
             page.evaluate('() => {Storage.prototype.setItem=originalSet;}')
             second = context.new_page()
             second.goto(url)
-            second.evaluate('localStorage.setItem("soundcloud.tempo.randomSaved", "true")')
+            second.evaluate('localStorage.setItem("soundcloud.tempo.applySaved", "true")')
             expect(toggle).to_be_checked()
-            expect(number).to_have_value('0.72')
-            second.evaluate('localStorage.removeItem("soundcloud.tempo.randomSaved")')
+            expect(number).to_have_value('1')
+            second.evaluate('localStorage.setItem("soundcloud.tempo.applySaved", "false")')
             expect(toggle).not_to_be_checked()
+            expect(number).to_have_value('1')
+            toggle.check()
             second.close()
             toggle.press('Escape')
 
@@ -238,7 +227,7 @@ def main():
                 toggle.press('Escape')
             page.screenshot(path=str(ROOT/'test-results/page-artwork.png'))
             assert not errors, errors
-            print(json.dumps({'settings_random_branches_saved_management_repeat_fine_drag': 'passed', 'silent': True, 'errors': errors}))
+            print(json.dumps({'settings_saved_restore_management_repeat_fine_drag': 'passed', 'silent': True, 'errors': errors}))
             browser.close()
     finally:
         server.shutdown()

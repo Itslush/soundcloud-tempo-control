@@ -5,6 +5,12 @@ export function createTempoAppearance({ onChange, onError } = {}) {
   )
     throw new TypeError('Invalid appearance change handler');
   const key = 'soundcloud.tempo.appearance';
+  const motionKey = 'soundcloud.tempo.starMotion';
+  const speedKey = 'soundcloud.tempo.starSpeed';
+  const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+  let speed = 2;
+  const motionModes = new Set(['system', 'on', 'off']);
+  let motion = 'system';
   const attribute = 'data-tempo-appearance';
   const modes = new Set(['native', 'charcoal', 'oled']);
   const primary = { document };
@@ -17,6 +23,10 @@ export function createTempoAppearance({ onChange, onError } = {}) {
     storage = window.localStorage;
     const saved = storage.getItem(key);
     if (modes.has(saved)) selected = saved;
+    const savedMotion = storage.getItem(motionKey);
+    if (motionModes.has(savedMotion)) motion = savedMotion;
+    const savedSpeed = Number(storage.getItem(speedKey));
+    if (savedSpeed >= 0.5 && savedSpeed <= 4) speed = savedSpeed;
   } catch {}
 
   function stylesheet() {
@@ -193,6 +203,15 @@ export function createTempoAppearance({ onChange, onError } = {}) {
           background-image: url("data:image/svg+xml,${encodeURIComponent(stars)}");
           background-size: 960px 840px;
           background-repeat: repeat;
+          animation: tempo-star-drift 7.5s linear infinite alternate;
+          animation-play-state: var(--tempo-star-motion, running);
+        }
+        @keyframes tempo-star-drift {
+          from { background-position: 0 0; }
+          to { background-position: 96px 72px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          ${scope} body { animation: none; }
         }
         ${scope} .l-container {
           background-color: transparent;
@@ -247,6 +266,9 @@ export function createTempoAppearance({ onChange, onError } = {}) {
       entry.style = undefined;
       entry.root = undefined;
       entry.applied = undefined;
+      if (entry.motion)
+        entry.document.removeEventListener('visibilitychange', entry.motion);
+      entry.motion = undefined;
     }
   }
 
@@ -294,6 +316,16 @@ export function createTempoAppearance({ onChange, onError } = {}) {
       entry.style = element;
       entry.root = target;
       entry.previousAttribute = previous;
+      entry.motion = () => {
+        element.textContent =
+          css +
+          `\nhtml[${attribute}] body { animation: ${moving() ? `tempo-star-drift ${15 / speed}s linear infinite alternate` : 'none'}; }` +
+          (doc.hidden
+            ? `\nhtml[${attribute}] body { animation-play-state: paused; }`
+            : '');
+      };
+      doc.addEventListener('visibilitychange', entry.motion);
+      entry.motion();
     } else entry.root.setAttribute(attribute, next);
     entry.applied = next;
   }
@@ -365,6 +397,22 @@ export function createTempoAppearance({ onChange, onError } = {}) {
 
   function sync(event) {
     if (!storage || event.storageArea !== storage) return;
+    if (event.key === speedKey || event.key === null) {
+      const value = event.key === null ? 2 : Number(event.newValue);
+      speed = value >= 0.5 && value <= 4 ? value : 2;
+      refreshMotion();
+    }
+    if (event.key === motionKey || event.key === null) {
+      const next =
+        motionModes.has(event.newValue) && event.key !== null
+          ? event.newValue
+          : 'system';
+      if (motion !== next) {
+        motion = next;
+        for (const entry of documents.values()) entry.motion?.();
+        onChange?.(selected);
+      }
+    }
     if (event.key !== key && event.key !== null) return;
     const next = event.key === null ? 'native' : event.newValue;
     change(modes.has(next) ? next : 'native', false);
@@ -374,11 +422,49 @@ export function createTempoAppearance({ onChange, onError } = {}) {
     if (!disposed) render(selected);
   }
 
+  function moving() {
+    return motion === 'on' || (motion === 'system' && !reducedMotion?.matches);
+  }
+
+  function refreshMotion() {
+    for (const entry of documents.values()) entry.motion?.();
+    onChange?.(selected);
+  }
+
   if (document.documentElement) render(selected);
   else document.addEventListener('DOMContentLoaded', ready, { once: true });
   window.addEventListener('storage', sync);
+  reducedMotion?.addEventListener('change', refreshMotion);
   return Object.freeze({
     mode: () => selected,
+    motion: () => (moving() ? 'on' : 'off'),
+    speed: () => speed,
+    setSpeed(next) {
+      if (!Number.isFinite(next) || next < 0.5 || next > 4)
+        throw new TypeError('Star speed must be between 0.5 and 4');
+      speed = next;
+      refreshMotion();
+      try {
+        if (!storage) throw new Error('Appearance storage is unavailable');
+        storage.setItem(speedKey, String(next));
+      } catch (error) {
+        onError?.(error);
+      }
+    },
+    setMotion(next) {
+      if (!motionModes.has(next)) throw new TypeError('Invalid star motion');
+      if (motion === next) return false;
+      motion = next;
+      for (const entry of documents.values()) entry.motion?.();
+      onChange?.(selected);
+      try {
+        if (!storage) throw new Error('Appearance storage is unavailable');
+        storage.setItem(motionKey, next);
+      } catch (error) {
+        onError?.(error);
+      }
+      return true;
+    },
     attachDocument,
     setMode(next) {
       if (!modes.has(next)) throw new TypeError('Invalid appearance mode');
@@ -388,6 +474,7 @@ export function createTempoAppearance({ onChange, onError } = {}) {
       if (disposed) return;
       disposed = true;
       window.removeEventListener('storage', sync);
+      reducedMotion?.removeEventListener('change', refreshMotion);
       document.removeEventListener('DOMContentLoaded', ready);
       selected = 'native';
       const failures = [];

@@ -358,7 +358,7 @@ export function createBufferedPlayback({
   }
 
   function changeTrack(previous, next) {
-    if (!previous || previous === next) return;
+    if (!previous || !next || previous === next) return;
     const audio = selected?.deref();
     if (audio) {
       const before = sources.get(audio);
@@ -413,6 +413,10 @@ export function createBufferedPlayback({
   }
 
   return Object.freeze({
+    sourceFor: (audio) => binding.resolve(audio),
+    sourceStats: () => binding.stats(),
+    resolveSource,
+    preloadNext: (audio, options) => hostClock.preloadNext(audio, options),
     sync,
     play,
     pause,

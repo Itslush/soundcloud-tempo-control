@@ -57,6 +57,7 @@ export class AudioPreview {
   private latency = 0;
   private rate = 1;
   private preserve = false;
+  private keyShift = 0;
   private failed = false;
   private loadId = 0;
   private resolveRequest?: AbortController;
@@ -79,10 +80,10 @@ export class AudioPreview {
     for (const name of ['pause', 'seeking', 'emptied', 'ended'])
       this.audio.addEventListener(name, () => this.reset());
     this.audio.addEventListener('playing', () =>
-      this.apply(this.rate, this.preserve),
+      this.apply(this.rate, this.preserve, this.keyShift),
     );
     this.audio.addEventListener('seeked', () =>
-      this.apply(this.rate, this.preserve),
+      this.apply(this.rate, this.preserve, this.keyShift),
     );
     this.audio.addEventListener('error', () => {
       if (this.audio.error)
@@ -116,7 +117,9 @@ export class AudioPreview {
     this.applied = NaN;
     if (this.dry)
       this.dry.gain.value =
-        this.preserve && this.node && !this.failed ? 0 : 0.5;
+        (this.preserve || this.keyShift !== 0) && this.node && !this.failed
+          ? 0
+          : 0.5;
     if (this.input) {
       this.input.gain.cancelScheduledValues(this.context!.currentTime);
       this.input.gain.value = 0;
@@ -141,7 +144,11 @@ export class AudioPreview {
     this.failed = true;
     this.reset();
     if (this.node) this.release(this.node);
-    if (this.preserve) this.onStatus('Using browser key preservation.');
+    if (this.keyShift)
+      this.onStatus(
+        'Key shifting is unavailable. Playing without the key change.',
+      );
+    else if (this.preserve) this.onStatus('Using browser key preservation.');
   }
 
   private async graph() {
@@ -211,20 +218,25 @@ export class AudioPreview {
       if (
         !this.disposed &&
         !this.failed &&
-        this.preserve &&
+        (this.preserve || this.keyShift !== 0) &&
         !this.audio.paused &&
         !this.audio.seeking
       )
-        this.apply(this.rate, this.preserve);
+        this.apply(this.rate, this.preserve, this.keyShift);
     }
   }
 
-  apply(rate: number, preserve: boolean) {
-    const changedMode = this.preserve !== preserve;
+  apply(rate: number, preserve: boolean, keyShift = this.keyShift) {
+    keyShift =
+      Number.isFinite(keyShift) && Math.abs(keyShift) <= 12 ? keyShift : 0;
+    rate = Number.isFinite(rate) ? Math.max(0.25, Math.min(4, rate)) : 1;
+    const changedMode =
+      this.preserve !== preserve || this.keyShift !== keyShift;
     this.rate = rate;
     this.preserve = preserve;
+    this.keyShift = keyShift;
     this.audio.playbackRate = rate;
-    if (!preserve) {
+    if (!preserve && !keyShift) {
       if (this.connected || changedMode) this.reset();
       this.audio.preservesPitch = false;
       return;
@@ -236,18 +248,22 @@ export class AudioPreview {
       void this.prepare();
       return;
     }
-    if (this.loading || this.pending || this.applied === rate) return;
+    const semitones = keyShift - (preserve ? 12 * Math.log2(rate) : 0);
+    if (this.loading || this.pending || this.applied === semitones) return;
     this.pending = true;
     const epoch = this.epoch;
-    deadline(
-      this.node.schedule({ active: true, semitones: -12 * Math.log2(rate) }),
-    )
+    deadline(this.node.schedule({ active: true, semitones }))
       .then(() => {
         if (epoch !== this.epoch) return;
         this.pending = false;
-        if (this.rate !== rate) return this.apply(this.rate, this.preserve);
+        if (
+          this.rate !== rate ||
+          this.keyShift !== keyShift ||
+          this.preserve !== preserve
+        )
+          return this.apply(this.rate, this.preserve, this.keyShift);
         const starting = !Number.isFinite(this.applied);
-        this.applied = rate;
+        this.applied = semitones;
         this.audio.preservesPitch = false;
         this.dry!.gain.value = 0;
         if (starting) {
@@ -276,7 +292,7 @@ export class AudioPreview {
   async play() {
     await this.unlock();
     await this.audio.play();
-    this.apply(this.rate, this.preserve);
+    this.apply(this.rate, this.preserve, this.keyShift);
   }
 
   private clear() {

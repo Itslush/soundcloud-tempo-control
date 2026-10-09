@@ -266,7 +266,7 @@ def main():
                             }});
                         }''')
                         page.locator('.settings-button').click()
-                        page.locator('.advanced-audio summary').click()
+                        page.locator('.advanced-audio > summary').click()
                         page.locator('#preserve-key').check()
                         page.locator('.close-settings').click()
                         page.evaluate(SETUP, sample_rate)

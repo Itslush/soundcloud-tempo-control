@@ -1,4 +1,5 @@
 import { syncTempoRange } from './tempo-range.js';
+import { validOutputDb } from './audio/output-level.mjs';
 
 export function createOutputLevel({ references, readUI }) {
   const key = 'soundcloud.tempo.outputDb';
@@ -19,14 +20,15 @@ export function createOutputLevel({ references, readUI }) {
     try {
       const raw = localStorage.getItem(key);
       const value = raw === null ? -6 : Number(raw);
-      return Number.isFinite(value) ? Math.max(-24, Math.min(0, value)) : -6;
+      return validOutputDb(value) ? value : -6;
     } catch {
       return -6;
     }
   }
 
   function gain() {
-    return 10 ** (db / 20);
+    // Positive gain is applied in the existing Web Audio graph, not media.volume.
+    return 10 ** (Math.min(0, db) / 20);
   }
 
   function attach(audio) {
@@ -130,10 +132,16 @@ export function createOutputLevel({ references, readUI }) {
       volume?.set?.call(audio, levels.get(audio) * gain());
       notify(audio);
     }
+    syncUI();
+  }
+
+  function syncUI() {
     const ui = readUI();
     if (ui?.outputSlider) {
+      ui.outputSlider.max = String(Math.max(12, Number(ui.outputSlider.max), db));
       ui.outputSlider.value = String(db);
-      ui.outputValue.textContent = `${db} dB`;
+      ui.outputSlider.setAttribute?.('aria-valuetext', `${db} dB`);
+      ui.outputValue.value = String(db);
       syncTempoRange(ui.outputSlider);
     }
   }
@@ -180,6 +188,7 @@ export function createOutputLevel({ references, readUI }) {
     attach,
     readLevel,
     subscribeLevel,
+    syncUI,
     value: () => db,
     reload() {
       db = read();
@@ -187,9 +196,12 @@ export function createOutputLevel({ references, readUI }) {
     },
     set(value) {
       const next = Number(value);
-      if (!Number.isFinite(next)) return;
+      if (String(value).trim() === '' || !validOutputDb(next))
+        throw new RangeError(
+          'Enter a dB value of -24 or higher that Web Audio can represent.',
+        );
       const previous = db;
-      db = Math.max(-24, Math.min(0, Math.round(next)));
+      db = next;
       try {
         localStorage.setItem(key, String(db));
       } catch {

@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
 
-from userscript_fixture import userscript_source, browser_options
+from userscript_fixture import soundcloud_share_url, userscript_source, browser_options
 
 ROOT = Path(__file__).resolve().parent.parent
 URL = 'https://soundcloud.com/test-artist/first-track'
@@ -26,7 +26,7 @@ def main():
         page.locator('#copy-tempo-links').check()
         page.evaluate('(url)=>navigator.clipboard.writeText(url)', URL+'?si=example')
         link = page.evaluate('copied')
-        assert '?si=example#sct=SCT1.' in link
+        assert '/share/#sct=SCT1.' in link
         payload = link.split('SCT1.')[1]
         data = json.loads(base64.urlsafe_b64decode(payload+'='*(-len(payload)%4)))
         assert data['pitch']=='natural' and data['points'][0]['r']==.9
@@ -38,14 +38,17 @@ def main():
             const data=new DataTransfer();const event=new ClipboardEvent('copy',{clipboardData:data,bubbles:true,cancelable:true});
             input.dispatchEvent(event);input.remove();return data.getData('text/plain');
         }''', URL)
-        assert '#sct=SCT1.' in event_link
+        assert '/share/#sct=SCT1.' in event_link
         context_link = page.evaluate('''()=>{
             const anchor=document.querySelector('.playbackSoundBadge__titleLink');
             window.originalHref=anchor.getAttribute('href');
             anchor.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true,composed:true}));
             return anchor.href;
         }''')
-        assert '#sct=SCT1.' in context_link
+        assert '/share/#sct=SCT1.' in context_link
+        page.wait_for_timeout(100)
+        expect(page.locator('#rate-number')).to_have_value('0.9')
+        expect(page.locator('.open-editor')).to_be_enabled()
         page.evaluate("document.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}))")
         assert page.evaluate("document.querySelector('.playbackSoundBadge__titleLink').getAttribute('href')===originalHref")
         page.evaluate('''()=>{
@@ -55,7 +58,7 @@ def main():
             document.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));
         }''')
         assert page.evaluate("document.querySelector('.playbackSoundBadge__titleLink').getAttribute('href')") == '/another/new-track'
-        page.goto(link)
+        page.goto(soundcloud_share_url(link))
         page.reload()
         expect(page.locator('.tempo-editor')).to_be_visible()
         page.evaluate('''()=>{window.audio=new Audio();audio.muted=true;Object.defineProperty(audio,'duration',{value:201});document.body.append(audio);}''')

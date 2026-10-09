@@ -69,6 +69,7 @@ function fixture({
   diagnostic,
   captureFailure,
   realClock = false,
+  timers,
 } = {}) {
   const counts = {
     captures: 0,
@@ -262,6 +263,7 @@ function fixture({
     window,
     crypto,
     mediaPrototype: Media.prototype,
+    timers,
     ...(realClock ? {} : { createClock }),
   });
   const parameters = {
@@ -308,6 +310,293 @@ function fixture({
     },
   };
 }
+
+function preloadFixture() {
+  const timeouts = new Map();
+  const f = fixture({
+    timers: {
+      setTimeout(fn) {
+        timeouts.set(fn, fn);
+        return fn;
+      },
+      clearTimeout(fn) {
+        timeouts.delete(fn);
+      },
+    },
+  });
+  const state = {
+    range: null,
+    locked: false,
+    hasNext: false,
+    held: 0,
+    requests: 1,
+    pulls: 0,
+  };
+  const notifications = new Map();
+  const events = {
+    on(name, callback) {
+      if (!notifications.has(this)) notifications.set(this, new Set());
+      notifications.get(this).add(callback);
+    },
+    off(name, callback) {
+      notifications.get(this)?.delete(callback);
+    },
+    emit() {
+      for (const callback of [...(notifications.get(this) || [])]) callback();
+    },
+  };
+  const nextAudio = new f.Media();
+  const sound = {
+    player: {
+      player: f.leafFor(nextAudio),
+      getCurrentBufferedTimeRange: () => state.range,
+    },
+    isPlayable: () => true,
+    hold() {
+      state.held++;
+    },
+    release() {
+      state.held--;
+    },
+    requestPreloading() {
+      state.requests++;
+    },
+    unrequestPreloading() {
+      state.requests--;
+    },
+  };
+  Object.assign(sound.player.player, {
+    _config: { pausedMaxBufferLength: 2000, playingMaxBufferLength: 90000 },
+    _preloadingEnabled: true,
+    isPlaying: () => false,
+    _getPlayer: () => ({
+      getBufferController: () => ({
+        setMaxBufferLength(value) {
+          state.bufferLimit = value;
+        },
+      }),
+    }),
+    _updateMaxBufferLength: Function(
+      'return function(){var e=this._getPlayer(),t=e&&e.getBufferController();t&&(this.isPlaying()?t.setMaxBufferLength(this._config.playingMaxBufferLength):t.setMaxBufferLength(this._preloadingEnabled?this._config.pausedMaxBufferLength:0))}',
+    )(),
+  });
+  const next = { sound };
+  const items = [f.currentItem, next];
+  const queue = { at: (index) => items[index], ...events };
+  const cursor = Function(`let I=0,j='none'; return {
+    read: function(){return{currentIndex:I,repeatMode:j}},
+    index(value) { I=value; }, repeat(value) { j=value; }
+  };`)();
+  Object.assign(f.exportsById[20], {
+    ...events,
+    getQueue: Function('P', 'return function(){return P}')(queue),
+    getQueueState: cursor.read,
+    getState: (key) => (key === 'hasNext' ? state.hasNext : state.locked),
+    pullNext: Function(
+      's',
+      'let O=0; return function(e){s&&!s.stream.isEnded()&&(O=Math.max(O,e))>0&&s.stream.resume()}',
+    )({
+      stream: {
+        isEnded: () => false,
+        resume() {
+          state.pulls++;
+          state.onPull?.();
+        },
+      },
+    }),
+  });
+  return {
+    ...f,
+    f,
+    state,
+    next,
+    nextAudio,
+    items,
+    cursor,
+    timeouts,
+    notifications,
+    emitQueue: () => queue.emit(),
+  };
+}
+
+test('a lazy queue is populated without playing or advancing either track', async () => {
+  const p = preloadFixture();
+  p.items.pop();
+  p.state.hasNext = true;
+  const pending = p.adapter.preloadNext(p.audio);
+  assert.equal(p.state.pulls, 1);
+  assert.equal(p.state.requests, 1);
+  const selected = p.currentItem;
+  p.items.push(p.next);
+  p.emitQueue();
+  const preload = await pending;
+  assert.equal(p.currentItem, selected);
+  assert.equal(p.state.requests, 2);
+  assert.equal(p.timeouts.size, 0);
+  assert.ok(
+    [...p.notifications.values()].every((listeners) => listeners.size === 0),
+  );
+  preload.dispose();
+  await p.adapter.dispose();
+});
+
+test('waiting for a lazy queue cleans up on timeout, abort, track change and disposal', async () => {
+  for (const action of ['timeout', 'abort', 'change', 'dispose']) {
+    const p = preloadFixture();
+    p.items.pop();
+    p.state.hasNext = true;
+    const controller = new AbortController();
+    const pending = p.adapter.preloadNext(p.audio, {
+      signal: controller.signal,
+    });
+    const rejected = assert.rejects(pending);
+    if (action === 'timeout') [...p.timeouts.values()][0]();
+    if (action === 'abort') controller.abort();
+    if (action === 'change') {
+      p.f.currentItem = p.next;
+      p.exportsById[20].emit();
+    }
+    if (action === 'dispose') await p.adapter.dispose();
+    await rejected;
+    p.items.push(p.next);
+    p.emitQueue();
+    assert.equal(p.state.requests, 1);
+    assert.equal(p.state.held, 0);
+    assert.equal(p.timeouts.size, 0);
+    assert.ok(
+      [...p.notifications.values()].every((listeners) => listeners.size === 0),
+    );
+    await p.adapter.dispose();
+  }
+});
+
+test('next-track preloading holds one native cache reference and waits for buffered milliseconds', async () => {
+  const p = preloadFixture();
+  const controller = new AbortController();
+  const preload = await p.adapter.preloadNext(p.audio, {
+    signal: controller.signal,
+  });
+  assert.equal(p.state.requests, 2);
+  assert.equal(p.state.held, 1);
+  assert.equal(
+    p.counts.binds,
+    0,
+    'preloading does not take over the player clock',
+  );
+  assert.equal(preload.ready(6), false);
+  assert.equal(p.state.bufferLimit, 6000);
+  assert.equal(p.next.sound.player.player._config.pausedMaxBufferLength, 6000);
+  p.state.range = { start: 0, end: 5000 };
+  assert.equal(preload.ready(6), false);
+  p.state.range.end = 24000;
+  assert.equal(preload.ready(24), true);
+  assert.equal(p.state.bufferLimit, 24000);
+  p.state.range.start = 1000;
+  assert.equal(
+    preload.ready(6),
+    false,
+    'cached middle is not a cached opening',
+  );
+  p.state.range.start = 0;
+  assert.equal(preload.isCurrent(p.audio), false);
+  p.f.currentItem = p.next;
+  p.cursor.index(1);
+  assert.equal(preload.matches(), false);
+  assert.equal(preload.isCurrent(p.nextAudio), true);
+  controller.abort();
+  preload.dispose();
+  assert.equal(
+    p.state.requests,
+    1,
+    'SoundCloud retains its own cache reference',
+  );
+  assert.equal(p.state.held, 0);
+  assert.equal(p.state.bufferLimit, 2000);
+  assert.equal(preload.ready(6), false);
+  await p.adapter.dispose();
+});
+
+test('preload buffer limits stay bounded and never overwrite a foreign adjustment on cleanup', async () => {
+  const p = preloadFixture();
+  const preload = await p.adapter.preloadNext(p.audio);
+  assert.equal(preload.ready(45), false);
+  assert.equal(p.state.bufferLimit, undefined);
+  preload.ready(11);
+  assert.equal(p.state.bufferLimit, 11000);
+  p.next.sound.player.player._config.pausedMaxBufferLength = 15000;
+  assert.throws(() => preload.ready(20), /changed during preloading/);
+  preload.dispose();
+  assert.equal(p.next.sound.player.player._config.pausedMaxBufferLength, 15000);
+  assert.equal(p.state.requests, 1);
+  assert.equal(p.state.held, 0);
+  await p.adapter.dispose();
+});
+
+test('incoming stream URLs come only from the held queue item’s matching HLS controller', async () => {
+  const p = preloadFixture();
+  const player = p.next.sound.player.player;
+  const controller = {
+    _player: {},
+    _currentUrl: 'https://a.sndcdn.com/next.m3u8',
+    getPlayer: Function('return function(){return this._player}')(),
+    getUrl: Function('return function(){return this._currentUrl}')(),
+  };
+  player._player = controller._player;
+  player._controllerManager = {
+    _controlledPlayerWithRendition: { controlledPlayer: controller },
+  };
+  const preload = await p.adapter.preloadNext(p.audio);
+  assert.equal(preload.streamUrl(), controller._currentUrl);
+  controller._player = {};
+  assert.throws(() => preload.streamUrl(), /controller changed/);
+  controller._player = player._player;
+  controller.getUrl = () => 'https://unexpected.invalid';
+  assert.throws(() => preload.streamUrl(), /controller changed/);
+  preload.dispose();
+  assert.throws(() => preload.streamUrl(), /playing track changed/);
+  await p.adapter.dispose();
+});
+
+test('preloading rejects unknown next tracks, repeat-one, ad locks and cancelled requests', async () => {
+  for (const mode of ['empty', 'repeat', 'ad', 'abort']) {
+    const p = preloadFixture();
+    const controller = new AbortController();
+    if (mode === 'empty') p.items.pop();
+    if (mode === 'repeat') p.cursor.repeat('one');
+    if (mode === 'ad') p.state.locked = true;
+    if (mode === 'abort') controller.abort();
+    await assert.rejects(
+      p.adapter.preloadNext(p.audio, { signal: controller.signal }),
+    );
+    assert.equal(p.state.requests, 1, mode);
+    assert.equal(p.state.held, 0, mode);
+    await p.adapter.dispose();
+  }
+});
+
+test('queue edits invalidate the cached next item and disposal releases its reference', async () => {
+  const p = preloadFixture();
+  const preload = await p.adapter.preloadNext(p.audio);
+  p.state.range = { start: 0, end: 30000 };
+  assert.equal(preload.ready(24), true);
+  p.items[1] = { sound: {} };
+  assert.equal(preload.matches(), false);
+  assert.equal(preload.ready(24), false);
+  await p.adapter.dispose();
+  assert.equal(p.state.requests, 1);
+  assert.equal(p.state.held, 0);
+});
+
+test('queue preloading is independent of version-pinned SDK clock patches', async () => {
+  const p = preloadFixture();
+  for (const id of ['100', '572', '1280']) delete p.runtime.c[id];
+  const preload = await p.adapter.preloadNext(p.audio);
+  assert.equal(p.state.requests, 2);
+  assert.equal(p.counts.digests, 0);
+  assert.equal(p.counts.clocks, 0);
+  preload.dispose();
+  await p.adapter.dispose();
+});
 
 function assertClean(f) {
   assert.equal(f.counts.hostFactories, 0);

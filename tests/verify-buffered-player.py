@@ -119,7 +119,7 @@ def saved_reloads(page, report):
         if page.locator('.settings-button').get_attribute('aria-expanded') != 'true':
             page.locator('.settings-button').click()
         if not page.locator('.advanced-audio').evaluate('element=>element.open'):
-            page.locator('.advanced-audio summary').click()
+            page.locator('.advanced-audio > summary').click()
         page.locator('#preserve-key').set_checked(mode == 'preserve')
         page.locator('#use-wasm').check()
         result['saved'] = saved_settings(page)
@@ -409,7 +409,7 @@ def main():
                 report['nativeBaseline'] = page.evaluate('id=>bufferedPlayerProbe.select(id)', active[0]['id'])
                 check(report['nativeBaseline']['selected']['sinkGain'] == 0, 'Native graph was not routed through the diagnostic mute')
                 page.locator('.settings-button').click()
-                page.locator('.advanced-audio summary').click()
+                page.locator('.advanced-audio > summary').click()
                 page.locator('#preserve-key').uncheck()
                 page.locator('#use-wasm').check()
                 if options.native_reload_control:

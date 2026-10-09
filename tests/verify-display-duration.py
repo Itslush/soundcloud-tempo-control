@@ -16,7 +16,7 @@ NESTED = '<div class="playbackTimeline__duration sc-text-primary sc-text-h5"><sp
 
 
 def shared(link, duration):
-    prefix = embedded.CANONICAL + '#sct=SCT1.'
+    prefix = 'https://itslush.github.io/soundcloud-tempo-control/share/#sct=SCT1.'
     assert link.startswith(prefix), link
     encoded = link[len(prefix):]
     value = json.loads(base64.urlsafe_b64decode(encoded + '=' * (-len(encoded) % 4)))

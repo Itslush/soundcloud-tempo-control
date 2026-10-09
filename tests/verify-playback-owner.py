@@ -12,7 +12,7 @@ from playwright.sync_api import sync_playwright
 from userscript_fixture import ROOT, browser_options
 from worklet_fixture import build_worklet
 
-MODULES = ['playback-owner', 'buffered-transport', 'transport-lifecycle', 'media-facade', 'playback-gate', 'pcm-window', 'natural-output', 'rate-clock', 'preserve-output', 'preserve-worklet']
+MODULES = ['playback-owner', 'buffered-transport', 'transport-lifecycle', 'media-facade', 'playback-gate', 'output-level', 'pcm-window', 'natural-output', 'rate-clock', 'preserve-output', 'preserve-worklet']
 FILES = {f'/{name}.mjs': ROOT / f'src/audio/{name}.mjs' for name in MODULES}
 FILES.update({
     '/worklet.js': build_worklet(),

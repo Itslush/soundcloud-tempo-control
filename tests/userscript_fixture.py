@@ -81,7 +81,7 @@ def userscript_bytes(path=None):
     return data
 
 
-def userscript_source(path=None):
+def userscript_source(path=None, first_run=False):
     script = userscript_bytes(path).decode('utf-8')
     if '// @require' in script:
         metadata = json.loads((ROOT/'vendor/signalsmith/signalsmith.json').read_text(encoding='utf-8'))
@@ -91,7 +91,49 @@ def userscript_source(path=None):
         if metadata['url'] not in script:
             raise ValueError('Userscript dependency does not match the test lock')
         script = library.decode('utf-8')+'\n;\n'+script
+    existing_user = '' if first_run else '''try {
+      if (!localStorage.getItem('soundcloud.tempo.controlStyle')) localStorage.setItem('soundcloud.tempo.controlStyle', 'slider');
+    } catch {}\n'''
     return '''if (window.top === window && (
       (location.protocol === 'https:' && ['soundcloud.com','m.soundcloud.com'].includes(location.hostname)) ||
       (location.protocol === 'http:' && ['127.0.0.1','localhost'].includes(location.hostname))
-    )) {\n''' + script + '\n}'
+    )) {\n''' + existing_user + script + '\n}'
+
+
+def choose_option(control, value):
+    """Exercise the authored control, including numeric replacements of old selects."""
+    if control.evaluate("el=>el.tagName") == 'INPUT':
+        control.fill(str(value))
+        control.press('Tab')
+        return
+    label = control.evaluate("(el,value)=>[...el.options].find(o=>o.value===value).textContent", str(value))
+    wrapper = control.locator('..')
+    wrapper.locator('.tempo-choice-trigger').click()
+    wrapper.get_by_role('option', name=label, exact=True).click()
+
+
+def soundcloud_share_url(link):
+    """The recipient destination behind the website's installation landing page."""
+    import base64
+    code = 'SCT1.' + link.split('SCT1.', 1)[1]
+    payload = code[5:]
+    data = json.loads(base64.urlsafe_b64decode(payload + '=' * (-len(payload) % 4)))
+    return 'https://soundcloud.com' + data['track'] + '?sct=' + code
+
+
+def serve_site():
+    """Serve the built site at its configured base path for isolated browser tests."""
+    from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+    from threading import Thread
+    from urllib.parse import urlsplit
+    base = urlsplit(json.loads((ROOT/'release.config.json').read_text())['siteUrl']).path
+    class Handler(SimpleHTTPRequestHandler):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, directory=str(ROOT/'dist/site'), **kwargs)
+        def translate_path(self, path):
+            return super().translate_path('/' + path.removeprefix(base).lstrip('/'))
+        def log_message(self, *args):
+            pass
+    server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
+    Thread(target=server.serve_forever, daemon=True).start()
+    return server, f'http://127.0.0.1:{server.server_port}' + base

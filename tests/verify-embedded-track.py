@@ -33,7 +33,7 @@ window.fixtureCopy=()=>navigator.clipboard.writeText(fixtureNext);
 
 
 def payload(link):
-    assert link.startswith(CANONICAL + '#sct=SCT1.'), link
+    assert link.startswith('https://itslush.github.io/soundcloud-tempo-control/share/#sct=SCT1.'), link
     encoded = link.split('SCT1.', 1)[1]
     result = json.loads(base64.urlsafe_b64decode(encoded + '=' * (-len(encoded) % 4)))
     assert result['track'] == TRACK and result['points'][0]['r'] == 0.85, result

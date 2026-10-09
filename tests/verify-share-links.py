@@ -4,7 +4,7 @@ from pathlib import Path
 
 from playwright.sync_api import sync_playwright, expect
 
-from userscript_fixture import userscript_source, browser_options
+from userscript_fixture import soundcloud_share_url, userscript_source, browser_options
 
 ROOT = Path(__file__).resolve().parent.parent
 TRACK = '/test-artist/first-track'
@@ -26,23 +26,28 @@ def main():
         page.locator('.settings-button').click()
         page.locator('.open-editor').click()
         expect(page.locator('.point-rate')).to_have_value('0.9')
+        page.locator('.editor-key-shift').fill('-3')
+        page.locator('.editor-key-shift').press('Tab')
         page.locator('.tempo-editor summary').click()
         page.locator('.editor-link').click()
         link = page.evaluate('copied')
-        assert link.startswith('https://soundcloud.com'+TRACK+'#sct=SCT1.'), link
+        assert link.startswith('https://itslush.github.io/soundcloud-tempo-control/share/#sct=SCT1.'), link
         payload = link.split('SCT1.')[1]
         data = json.loads(base64.urlsafe_b64decode(payload+'='*(-len(payload)%4)))
         assert data['points'][0]['r'] == .9
-        page.goto(link)
+        assert data['keyShift'] == -3
+        page.goto(soundcloud_share_url(link))
         page.reload()
         expect(page.locator('.tempo-editor')).to_be_visible()
         expect(page.locator('.point-rate')).to_have_value('0.9')
+        expect(page.locator('.editor-key-shift')).to_have_value('-3')
         assert page.evaluate('(key)=>localStorage.getItem(key)', KEY) is None
         expect(page.locator('#rate-number')).to_have_value('1')
         page.locator('.editor-save').click()
         assert page.evaluate('(key)=>JSON.parse(localStorage.getItem(key)).data.points[0].r', KEY) == .9
+        assert page.evaluate('(key)=>JSON.parse(localStorage.getItem(key)).data.keyShift', KEY) == -3
         page.locator('.tempo-editor summary').click()
-        page.locator('.editor-code').fill(link.replace(TRACK, '/wrong/song', 1))
+        page.locator('.editor-code').fill(soundcloud_share_url(link).replace(TRACK, '/wrong/song', 1))
         page.locator('.editor-preview').click()
         expect(page.locator('.editor-status')).to_contain_text('different tracks')
         expect(page.locator('.editor-import')).to_be_disabled()

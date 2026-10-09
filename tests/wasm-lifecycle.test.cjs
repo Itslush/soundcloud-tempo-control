@@ -68,7 +68,13 @@ function fixture() {
   const warnings = [];
   let timerId = 0;
   let api;
-  const state = { enabled: true, speed: 0.5, creation: null };
+  const state = {
+    enabled: true,
+    speed: 0.5,
+    creation: null,
+    keyShift: 0,
+    preserve: true,
+  };
   const refresh = () => api.sync(audio, state.enabled, state.speed);
   const globals = {
     window: { AudioContext: Context, AudioNode: Node },
@@ -84,13 +90,20 @@ function fixture() {
     },
     clearTimeout: (id) => timers.delete(id),
     console: { warn: (...args) => warnings.push(args) },
-    preservesKey: () => true,
+    preservesKey: () => state.preserve,
+    readKeyShift: () => state.keyShift,
     useWasm: true,
     bufferedAudio: null,
     references: new Set([new WeakRef(audio)]),
     discover() {},
     apply: refresh,
     updateAll: refresh,
+    outputLevel: {
+      subscribeLevel(audio, callback) {
+        callback({ outputDb: -6 });
+        return () => {};
+      },
+    },
     createStretchNode: async () => {
       const node = new Node(context);
       node.port = {
@@ -123,9 +136,8 @@ function fixture() {
     globals,
   );
   const mediaSource = context.createMediaElementSource(audio);
-  const input = [...mediaSource.connections].find(
-    (node) => node.gain.value === 0,
-  );
+  const boost = [...mediaSource.connections][0];
+  const input = [...boost.connections].find((node) => node.gain.value === 0);
   return {
     api,
     audio,
@@ -136,9 +148,32 @@ function fixture() {
     warnings,
     refresh,
     mediaSource,
+    boost,
     input,
   };
 }
+
+test('key shifting composes with pitch preservation and updates at the same speed', async () => {
+  const value = fixture();
+  value.refresh();
+  await settle();
+  assert.equal(value.nodes[0].schedules.at(-1).semitones, 12);
+  value.state.keyShift = -3;
+  value.refresh();
+  await settle();
+  assert.equal(value.nodes[0].schedules.at(-1).semitones, 9);
+  value.state.preserve = false;
+  value.refresh();
+  await settle();
+  assert.equal(value.nodes[0].schedules.at(-1).semitones, -3);
+  for (const semitones of [-1.25, -0.5, 0.125, 2.5]) {
+    value.state.keyShift = semitones;
+    value.refresh();
+    await settle();
+    assert.equal(value.nodes[0].schedules.at(-1).semitones, semitones);
+    assert.equal(value.nodes.length, 1);
+  }
+});
 
 test('pause, seek and mode changes reuse one node with full default-equivalent resets', async () => {
   const value = fixture();
@@ -171,7 +206,7 @@ test('pause, seek and mode changes reuse one node with full default-equivalent r
     assert.equal(node.schedules.at(-1).active, false);
     assert.equal(value.input.gain.value, 0);
     assert.equal(value.input.connections.size, 0);
-    assert.equal(value.mediaSource.connections.has(value.input), true);
+    assert.equal(value.boost.connections.has(value.input), true);
     value.audio.paused = false;
     value.state.speed = 0.75;
     value.refresh();

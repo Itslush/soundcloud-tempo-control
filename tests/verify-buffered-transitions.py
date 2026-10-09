@@ -52,7 +52,7 @@ def set_mode(page, mode):
     if page.locator('.settings-button').get_attribute('aria-expanded') != 'true':
         page.locator('.settings-button').click()
     if not page.locator('.advanced-audio').evaluate('element=>element.open'):
-        page.locator('.advanced-audio summary').click()
+        page.locator('.advanced-audio > summary').click()
     page.locator('#preserve-key').set_checked(mode == 'preserve')
     page.locator('#use-wasm').check()
     page.keyboard.press('Escape')

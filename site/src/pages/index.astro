@@ -25,7 +25,7 @@ import { installUrl, route, release } from '../lib/release';
   <section class="product-proof shell" aria-labelledby="proof-title">
     <article class="proof-row proof-player">
       <div class="proof-copy">
-        <h2 id="proof-title">Player controls</h2>
+        <h2 id="proof-title">Change speed in the player</h2>
         <p>Set a speed. Tap the bookmark to remember it for that track.</p>
       </div>
       <Capture
@@ -33,12 +33,12 @@ import { installUrl, route, release } from '../lib/release';
         full="soundcloud-player.png"
         title="Tempo controls in SoundCloud"
         variant="capture-player"
-        alt="Real player controls: 0.9× speed, adjustment arrows, tempo slider, filled saved bookmark and settings gear."
+        alt="SoundCloud player at 0.9× speed, with adjustment arrows, tempo slider, saved bookmark and settings."
       />
     </article>
     <article class="proof-row">
       <div class="proof-copy">
-        <h2>Tempo timelines</h2>
+        <h2>Set changes over time</h2>
         <p>
           Start at 1×, slow to 0.75×, then ease back to 0.90×. Set the fade
           duration for each change.
@@ -51,13 +51,13 @@ import { installUrl, route, release } from '../lib/release';
         title="Saved tempo timeline"
         focusAt={[0.6, 0.37]}
         variant="capture-timeline"
-        alt="The real editor's saved curve moves from 1× to 0.75× and back to 0.9×, joined by smooth fades."
+        alt="A saved tempo curve from 1× to 0.75× and back to 0.9×, joined by gradual fades."
       />
     </article>
     <article class="proof-row">
       <div class="proof-copy">
-        <h2>Saved speeds</h2>
-        <p>Save a different speed for each track.</p>
+        <h2>Keep a speed for each track</h2>
+        <p>Saved speeds apply when you return to a track. Change or remove them in settings.</p>
       </div>
       <Capture
         image="saved-tracks.png"
@@ -72,8 +72,8 @@ import { installUrl, route, release } from '../lib/release';
       <div class="proof-copy">
         <h2>Share a timeline</h2>
         <p>
-          A tempo link carries the points, fades and pitch mode. Your friend
-          previews it, then chooses Apply once or Save timeline.
+          Copy a link with your tempo and pitch changes. Whoever opens it can
+          preview the settings, apply them once or save the timeline.
         </p>
         <p class="proof-detail">
           Both listeners need Tempo Control. <a href={route('guide/#sharing')}

@@ -256,7 +256,7 @@ def main():
             report['nativeBaseline'] = page.evaluate('id=>bufferedPlayerProbe.select(id)', active[0]['id'])
             check(report['nativeBaseline']['selected']['sinkGain'] == 0, 'Native graph was not routed through the diagnostic mute')
             page.locator('.settings-button').click()
-            page.locator('.advanced-audio summary').click()
+            page.locator('.advanced-audio > summary').click()
             page.locator('#preserve-key').uncheck()
             page.locator('#use-wasm').check()
             BASE.select_tempo(page, RATE)

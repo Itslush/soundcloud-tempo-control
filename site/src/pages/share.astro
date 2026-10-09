@@ -1,0 +1,64 @@
+---
+import Page from '../layouts/Page.astro';
+import { installUrl, route, release } from '../lib/release';
+---
+
+<Page title="Shared track">
+  <article
+    class="reading shell"
+    id="shared-track"
+    data-website={release.siteUrl}
+  >
+    <h1>Shared track</h1>
+    <p id="share-summary" role="status">Reading the shared settings…</p>
+    <div id="share-actions" hidden>
+      <p>
+        This link includes tempo and pitch changes. To hear them, install
+        Tempo Control, open the track and choose Apply once.
+      </p>
+      <p>
+        <a href={installUrl}>Install Tempo Control</a> · <a
+          href={route('guide/')}>Installation help</a>
+      </p>
+      <p><a id="share-adjusted">Open with the shared settings</a></p>
+      <p><a id="share-original">Listen on SoundCloud without changes</a></p>
+    </div>
+  </article>
+</Page>
+<script>
+  import {
+    decodeTempoCode,
+    encodeTempoCode,
+  } from '../../../src/tempo-share.js';
+  import { validateProfile } from '../../../src/tempo-profile.js';
+  const root = document.querySelector<HTMLElement>('#shared-track')!;
+  const summary = document.querySelector<HTMLElement>('#share-summary')!;
+  const parseTrack = (path: string) =>
+    /^\/[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+$/.test(path) ? path : '';
+  try {
+    const code = location.hash.startsWith('#sct=')
+      ? location.hash.slice(5)
+      : '';
+    const data = decodeTempoCode(
+      code,
+      (value) => validateProfile(value, parseTrack),
+      parseTrack,
+      root.dataset.website,
+    );
+    const original = 'https://soundcloud.com' + data.track;
+    summary.textContent =
+      data.track.slice(1).replace('/', ' / ') +
+      ' · ' +
+      (data.points.length > 1 ? 'Tempo timeline' : data.points[0].r + '×') +
+      ' · ' +
+      (data.pitchPoints ? 'Pitch timeline' : (data.keyShift ?? 0) + ' st');
+    document.querySelector<HTMLAnchorElement>('#share-original')!.href =
+      original;
+    document.querySelector<HTMLAnchorElement>('#share-adjusted')!.href =
+      original + '?sct=' + encodeTempoCode(data);
+    document.querySelector<HTMLElement>('#share-actions')!.hidden = false;
+  } catch {
+    summary.textContent =
+      'The tempo settings in this link are missing or invalid. Ask for a new copy of the link.';
+  }
+</script>

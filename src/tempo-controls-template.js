@@ -1,5 +1,21 @@
 import { controlsStyle } from './tempo-controls-style.js';
 
+function dialTicks() {
+  return Array.from({ length: 17 }, (_, index) => {
+    const angle = ((index / 16) * 270 - 135) * Math.PI / 180;
+    const inner = index % 4 === 0 ? 12 : 14;
+    const point = (radius) => `${(16 + Math.sin(angle) * radius).toFixed(2)} ${(16 - Math.cos(angle) * radius).toFixed(2)}`;
+    return `M${point(inner)}L${point(16)}`;
+  }).join('');
+}
+
+function faderTicks() {
+  return Array.from({ length: 16 }, (_, index) => {
+    const y = (6 + index / 15 * 132).toFixed(2);
+    return `M25 ${y}h${index % 4 === 0 || index === 15 ? 6 : 3}`;
+  }).join('');
+}
+
 export function controlsTemplate({
   MIN,
   MAX,
@@ -42,7 +58,9 @@ export function controlsTemplate({
           </button>
         </div>
         <div class="slider-wrap"
-          ><input
+          ><button id="rate-dial" type="button" role="slider" aria-label="Playback speed dial" aria-valuemin="${MIN}" aria-valuemax="${MAX}" aria-valuenow="1" aria-describedby="dial-help" title="Drag up or down · Shift for fine adjustment · Double-click to reset" hidden><svg viewBox="0 0 32 32" aria-hidden="true"><path class="dial-track" d="M6.1 25.9a14 14 0 1 1 19.8 0"/><path class="dial-fill" pathLength="100" d="M6.1 25.9a14 14 0 1 1 19.8 0"/><path class="dial-ticks" d="${dialTicks()}"/><circle cx="16" cy="16" r="9"/><path class="dial-zero" d="M16 0v4"/></svg><span aria-hidden="true"></span></button>
+          <button id="vertical-toggle" type="button" popovertarget="tempo-fader" aria-label="Open vertical tempo slider" title="Tempo slider" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2v5m0 6v5M6 7h8v6H6Z" /></svg></button>
+          <div id="tempo-fader"><output class="fader-value" aria-hidden="true">1×</output><div class="fader-rail"><input
             id="rate-slider"
             type="range"
             min="${MIN}"
@@ -54,7 +72,17 @@ export function controlsTemplate({
             <path d="${sliderTicks()}" />
             <path class="normal-tick" d="M${Math.round((1 - MIN) / SLIDER_STEP)} 0v5" />
           </svg>
+          <span class="fader-normal" aria-hidden="true">1×</span>
+          <svg class="fader-ticks" viewBox="0 0 32 144" aria-hidden="true"><path d="${faderTicks()}"/></svg>
+          <span class="fader-level" style="--position:0.533333" aria-hidden="true">2×</span>
+          <span class="fader-level" style="--position:0.266667" aria-hidden="true">3×</span>
+          <span class="fader-limit fader-max" aria-hidden="true">4×</span>
+          <span class="fader-limit fader-min" aria-hidden="true">.25×</span>
+          </div>
+          <button class="fader-reset" type="button">Reset</button>
+          </div>
         </div>
+        <label class="quick-key">Pitch <input id="quick-key-shift" type="number" min="-12" max="12" step="0.5" value="0" aria-label="Key shift in semitones"><span class="key-unit" aria-hidden="true">st</span></label>
         <button
           class="memory"
           type="button"
@@ -86,7 +114,8 @@ export function controlsTemplate({
           </svg>
         </button>
         <span class="sr-only" id="number-help">${MIN} to ${MAX}×. Double-click to reset.</span>
-        <span class="sr-only" id="slider-help">Steps of 0.025×. Double-click to reset.</span>
+        <span class="sr-only" id="slider-help">Arrow keys use your default tempo increment. Double-click to reset.</span>
+        <span class="sr-only" id="dial-help">Drag up to speed up, down to slow down. Hold Shift for fine adjustment. Double-click to reset to 1×. Arrow keys use your default tempo increment.</span>
         <span
           class="sr-only status"
           role="status"
@@ -108,9 +137,10 @@ export function controlsTemplate({
             >Close</button
           ></div></header
         >
+        <p class="control-setup-intro" hidden>Choose a tempo control and whether to show semitone adjustment. You can change both later in Appearance.</p>
         <div class="quick-settings">
         <label class="random-label"
-          ><input id="random-saved" type="checkbox" />50/50: saved tempo or 1×</label
+          ><input id="apply-saved" type="checkbox" checked />Apply saved tempos</label
         >
         <label class="random-label"><input id="copy-tempo-links" type="checkbox" />Include tempo in copied links</label>
         </div>
@@ -126,14 +156,33 @@ export function controlsTemplate({
         <div class="settings-tools">
         <details class="appearance-settings">
           <summary>Appearance</summary>
+          <label class="random-label"><input id="show-key" type="checkbox" checked />Show semitone adjustment in player</label>
+          <label class="control-style-label">Tempo control <select id="control-style"><option value="slider">Slider</option><option value="dial">Dial</option><option value="vertical">Vertical slider</option></select></label>
+          <label class="increment-label">Default tempo increment <input id="tempo-increment" type="number" min="0.001" max="1" step="0.001" value="0.025" aria-label="Default tempo increment"> ×</label>
           <fieldset class="appearance-options" aria-label="SoundCloud theme">
             <label><input type="radio" name="appearance" value="native" checked>SoundCloud</label>
             <label><input type="radio" name="appearance" value="charcoal">Charcoal</label>
             <label><input type="radio" name="appearance" value="oled">OLED</label>
           </fieldset>
+          <label class="random-label"><input id="star-motion" type="checkbox" />Star motion</label>
+          <label class="output-label" for="star-speed">Star speed <output id="star-speed-value">2×</output></label>
+          <input id="star-speed" type="range" min="0.5" max="4" step="0.25" value="2" aria-label="Star motion speed" />
         </details>
         <details class="advanced-audio">
           <summary>Advanced audio</summary>
+          <label class="random-label"><input id="crossfade" type="checkbox" />Crossfade tracks</label>
+          <label class="output-label" for="crossfade-seconds">Overlap <output id="crossfade-value">5 seconds</output></label>
+          <input id="crossfade-seconds" type="range" min="1" max="10" step="1" value="5" aria-label="Crossfade duration in seconds" />
+          <p id="crossfade-status" role="status"></p>
+          <details class="crossfade-debug">
+            <summary>Crossfade diagnostics</summary>
+            <pre id="crossfade-debug-output" tabindex="0" aria-label="Crossfade diagnostics"></pre>
+            <button id="crossfade-debug-refresh" type="button">Refresh</button>
+            <button id="crossfade-debug-copy" type="button">Copy diagnostics</button>
+            <p id="crossfade-debug-feedback" role="status"></p>
+          </details>
+          <details class="pitch-customization"><summary>Semitone controls</summary><div class="pitch-bounds"><label>Minimum <input id="pitch-min" type="number" min="-12" max="12" step="0.5" value="-12"><span>st</span></label><label>Maximum <input id="pitch-max" type="number" min="-12" max="12" step="0.5" value="12"><span>st</span></label><label>Default increment <input id="pitch-step" type="number" min="0.001" max="12" step="0.1" value="0.5"><span>st</span></label></div></details>
+          <label class="key-shift-label">Semitone shift <input id="key-shift" type="number" min="-12" max="12" step="0.5" value="0" /> st</label>
           <label class="random-label"
             ><input id="preserve-key" type="checkbox" />Preserve key by default</label
           >
@@ -142,8 +191,10 @@ export function controlsTemplate({
           >
           <p id="wasm-status" role="status"></p>
           <label class="random-label"><input id="use-wasm" type="checkbox" />Use WASM for Preserve key</label>
-          <label class="output-label" for="output-level">Output level <output id="output-value">-6 dB</output></label>
-          <input id="output-level" type="range" min="-24" max="0" step="1" value="-6" />
+          <label class="output-label" for="output-value">Output level <span class="output-entry"><input id="output-value" type="number" min="-24" step="any" value="-6" aria-describedby="output-help" /> dB</span></label>
+          <input id="output-level" type="range" min="-24" max="12" step="0.1" value="-6" aria-label="Output level in dB" aria-describedby="output-help" />
+          <p id="output-help">Above 0 dB can clip and become very loud. Start low.</p>
+          <p id="output-status" role="status"></p>
         </details>
         <details class="shortcuts">
           <summary>Shortcuts</summary>

@@ -352,6 +352,15 @@ function fakeRealm() {
     }
   }
   class Response {
+    ok = true;
+    text() {
+      return this.failure
+        ? Promise.reject(this.failure)
+        : Promise.resolve(this.value);
+    }
+    arrayBuffer() {
+      return this.text();
+    }
     get body() {
       return this.stream;
     }
@@ -398,6 +407,68 @@ function fakeRealm() {
   };
 }
 
+test('fetch text/arrayBuffer and XHR binary reads bind the appended stream without duplicate parsing', async () => {
+  for (const transport of ['fetch', 'xhr']) {
+    const global = fakeRealm();
+    // Native arrayBuffer does not call the public text method internally.
+    global.Response.prototype.arrayBuffer = global.Response.prototype.text;
+    const binding = createSourceBinding({ global, digest });
+    assert.equal(binding.install(), true);
+    const response = new global.Response();
+    response.url = ROOT + 'a.m3u8';
+    response.value = playlist(['a.m4s']);
+    assert.equal(await response.text(), response.value);
+    const source = new global.MediaSource();
+    const media = new global.HTMLMediaElement();
+    media.src = global.URL.createObjectURL(source);
+    const buffer = source.addSourceBuffer(MIME);
+    const data = box('mdat', payload()).buffer;
+    if (transport === 'fetch') {
+      response.url = ROOT + 'a.m4s';
+      response.value = data;
+      assert.equal(await response.arrayBuffer(), data);
+    } else {
+      const xhr = Object.assign(new global.XMLHttpRequest(), {
+        readyState: 4,
+        status: 200,
+        responseURL: ROOT + 'a.m4s',
+        value: data,
+      });
+      assert.equal(xhr.response, data);
+      const bytes = binding.stats().pendingHashBytes;
+      assert.equal(xhr.response, data);
+      assert.equal(binding.stats().pendingHashBytes, bytes);
+    }
+    buffer.appendBuffer(data);
+    await binding.settle();
+    assert.equal(binding.resolve(media).status, 'bound', transport);
+    response.failure = new Error('Network failure');
+    await assert.rejects(
+      response.arrayBuffer(),
+      (error) => error === response.failure,
+    );
+    await binding.dispose();
+  }
+});
+
+test('unbound reasons distinguish missing, unsupported, invalidated and unmatched sources without URLs', async () => {
+  const { binding, media, source, buffer } = fixture();
+  assert.equal(
+    binding.resolve({ currentSrc: 'blob:unseen' }).reason,
+    'source-not-observed',
+  );
+  assert.equal(binding.resolve(media).reason, 'waiting-for-payload-proof');
+  binding.append(buffer, box('mdat', payload()));
+  await binding.settle();
+  assert.equal(binding.resolve(media).reason, 'no-matching-playlist');
+  binding.invalidate(media);
+  assert.equal(binding.resolve(media).reason, 'source-invalidated');
+  binding.sourceBuffer(source, {}, 'audio/mpeg');
+  assert.equal(binding.resolve(media).reason, 'unsupported-source');
+  assert.ok(!JSON.stringify(binding.resolve(media)).includes('blob:'));
+  await binding.dispose();
+});
+
 test('installed hooks preserve native results, reject failed appends, and restore only owned descriptors', async () => {
   const global = fakeRealm();
   const original = global.SourceBuffer.prototype.appendBuffer;
@@ -438,8 +509,12 @@ test('installed hooks preserve native results, reject failed appends, and restor
   buffer.appendBuffer(data);
   await binding.settle();
   assert.equal(binding.resolve(media).status, 'bound');
+  const verified = binding.resolve(media);
   media.load();
   assert.equal(media.loads, 1);
+  media.src = media.src;
+  assert.deepEqual(binding.resolve(media), verified);
+  media.src = 'blob:replacement';
   assert.equal(binding.resolve(media).status, 'unbound');
   const thirdParty = function () {};
   global.ReadableStreamDefaultReader.prototype.read = thirdParty;
@@ -498,7 +573,7 @@ test('passive source and load hooks ignore unselected media while selected repla
   assert.equal(replaced.status, 'unbound');
   assert.ok(replaced.generation > previous.generation);
   selected.load();
-  assert.ok(binding.resolve(selected).generation > replaced.generation);
+  assert.equal(binding.resolve(selected).generation, replaced.generation);
   assert.equal(binding.stats().media, 1);
   assert.equal(unselected.length, 30);
   binding.release(selected);

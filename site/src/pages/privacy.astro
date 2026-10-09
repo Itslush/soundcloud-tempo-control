@@ -21,14 +21,16 @@ import Page from '../layouts/Page.astro';
         fades and pitch mode. Anyone with the link can read those settings.
         Website share links keep them after the # in the URL, which browsers
         normally leave out of the page request. The page's scripts can still
-        read them. Opening the track passes the settings to SoundCloud in the
-        URL's query string.
+        read them. Pressing Play sends the track link to this site's backend to
+        find the audio; tempo and pitch settings stay in your browser. Opening
+        the track on SoundCloud with shared settings passes them in the URL's
+        query string.
       </p>
     </section><section>
       <h2>This website</h2><p>
-        This website has no analytics, ads or embedded payment services.
-        Fonts and screenshots load from the same website. The hosting provider
-        may keep access logs.
+        This website has no analytics, ads or embedded payment services. Fonts
+        and screenshots load from the same website. The hosting provider may
+        keep access logs.
       </p><p>
         The synth sample and audio files play locally. Chosen files are not
         uploaded. Loading a SoundCloud link sends that link to this site's
@@ -39,9 +41,9 @@ import Page from '../layouts/Page.astro';
       </p>
     </section><section>
       <h2>Donations</h2><p>
-        Copy address only writes the displayed address to your clipboard.
-        The site does not connect to a wallet or send a payment. If you donate,
-        the transaction is recorded on the public blockchain for that network.
+        Copy address only writes the displayed address to your clipboard. The
+        site does not connect to a wallet or send a payment. If you donate, the
+        transaction is recorded on the public blockchain for that network.
       </p>
     </section>
   </article>

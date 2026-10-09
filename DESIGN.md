@@ -20,6 +20,8 @@ Website tokens live in `site/src/styles/site.css`. Controls use a distinguishabl
 
 ## Website
 
+Shared links open the same website player with the received tempo, pitch mode, semitone shift and both automation lanes. Play starts the actual shared track without a plugin; never fetch or autoplay on arrival. Keep automation times and fades in their original seconds when stream metadata differs. A restricted excerpt cannot stand in for the full shared version. Keep SoundCloud installation optional below the player, and retain an unadjusted original link. Invalid links have no active player; shared playback never substitutes the homepage track or synth sample.
+
 The opening pairs a short introduction and installation action with an interactive timeline. Playback controls appear before the graph. Playback is explicitly started by the visitor at a low initial volume. The graph, time readout, seek control and tempo value reflect actual audio state.
 
 Fixed speed and Timeline are explicit modes. Keep the current playback rate separate from the selected point's target. Original comparison is temporary and preserves both the listening position and edits. Editing offers undo, redo and reset without adding controls to the SoundCloud header.

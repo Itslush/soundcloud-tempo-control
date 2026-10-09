@@ -93,6 +93,7 @@ document.querySelectorAll<HTMLElement>('[data-select]').forEach((root) => {
     }),
   );
   select.addEventListener('change', sync);
+  sync();
   document.addEventListener('pointerdown', (event) => {
     if (!root.contains(event.target as Node)) close();
   });

@@ -47,6 +47,7 @@ jobs:
           python tests/verify-demo.py
           python tests/verify-site.py
           python tests/verify-site-polish.py
+          python tests/verify-shared-player.py
           python tests/verify-site-presentation.py
           python tests/verify-star-motion.py
           python tests/verify-site-themes.py

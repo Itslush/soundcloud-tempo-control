@@ -3,6 +3,10 @@ import Icon from './Icon.astro';
 import Select from './Select.astro';
 import NumberField from './NumberField.astro';
 import { demoTrack } from '../lib/demo-track';
+interface Props {
+  shared?: boolean;
+}
+const { shared = false } = Astro.props;
 ---
 
 <figure
@@ -10,13 +14,14 @@ import { demoTrack } from '../lib/demo-track';
   data-mode="timeline"
   data-compare="adjusted"
   data-playback="idle"
+  data-context={shared ? 'shared' : 'demo'}
 >
   <div class="demo-surface">
     <header class="demo-heading">
-      <strong>Preview</strong>
+      <strong>{shared ? 'Listen' : 'Preview'}</strong>
     </header>
     <div class="preview-meta">
-      <span id="preview-title">{demoTrack.title}</span>
+      <span id="preview-title">{shared ? '' : demoTrack.title}</span>
     </div>
     <div class="preview-transport">
       <button type="button" id="preview-play">Play</button>
@@ -176,4 +181,7 @@ import { demoTrack } from '../lib/demo-track';
     </p></noscript
   >
 </figure>
-<script src="../scripts/demo.ts"></script>
+<script>
+  import { initDemo } from '../scripts/demo';
+  if (document.querySelector('.timeline-demo[data-context="demo"]')) initDemo();
+</script>

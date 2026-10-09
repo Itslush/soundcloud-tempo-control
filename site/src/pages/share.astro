@@ -1,26 +1,32 @@
 ---
 import Page from '../layouts/Page.astro';
 import { installUrl, route, release } from '../lib/release';
+import TimelineDemo from '../components/TimelineDemo.astro';
 ---
 
 <Page title="Shared track">
   <article
-    class="reading shell"
+    class="reading shell shared-page"
     id="shared-track"
     data-website={release.siteUrl}
   >
     <h1>Shared track</h1>
     <p id="share-summary" role="status">Reading the shared settings…</p>
+    <noscript
+      >Enable JavaScript to read this link and play its shared settings.</noscript
+    >
     <div id="share-actions" hidden>
-      <p>
-        This link includes tempo and pitch changes. To hear them, install
-        Tempo Control, open the track and choose Apply once.
-      </p>
-      <p>
-        <a href={installUrl}>Install Tempo Control</a> · <a
-          href={route('guide/')}>Installation help</a>
-      </p>
-      <p><a id="share-adjusted">Open with the shared settings</a></p>
+      <p>Play here with the shared tempo and pitch. No plugin needed.</p>
+      <TimelineDemo shared />
+      <details class="shared-install">
+        <summary>Use these settings on SoundCloud</summary>
+        <p>
+          <a href={installUrl}>Install Tempo Control</a> · <a
+            href={route('guide/')}>Installation help</a
+          >
+        </p>
+        <p><a id="share-adjusted">Open with the shared settings</a></p>
+      </details>
       <p><a id="share-original">Listen on SoundCloud without changes</a></p>
     </div>
   </article>
@@ -31,6 +37,7 @@ import { installUrl, route, release } from '../lib/release';
     encodeTempoCode,
   } from '../../../src/tempo-share.js';
   import { validateProfile } from '../../../src/tempo-profile.js';
+  import { initDemo } from '../scripts/demo';
   const root = document.querySelector<HTMLElement>('#shared-track')!;
   const summary = document.querySelector<HTMLElement>('#share-summary')!;
   const parseTrack = (path: string) =>
@@ -57,8 +64,26 @@ import { installUrl, route, release } from '../lib/release';
     document.querySelector<HTMLAnchorElement>('#share-adjusted')!.href =
       original + '?sct=' + encodeTempoCode(data);
     document.querySelector<HTMLElement>('#share-actions')!.hidden = false;
+    initDemo(data);
   } catch {
     summary.textContent =
       'The tempo settings in this link are missing or invalid. Ask for a new copy of the link.';
   }
+  window.addEventListener('hashchange', () => location.reload());
 </script>
+
+<style>
+  .shared-page {
+    max-width: 1100px;
+  }
+  .shared-install {
+    margin-top: 24px;
+  }
+  .shared-install summary {
+    cursor: pointer;
+    padding-block: 12px;
+  }
+  #share-summary {
+    overflow-wrap: anywhere;
+  }
+</style>

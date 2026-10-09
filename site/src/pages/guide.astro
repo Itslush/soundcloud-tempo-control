@@ -38,9 +38,10 @@ import { installUrl, route } from '../lib/release';
     <section id="sharing">
       <h2>Share tempo settings</h2><p>
         Open the tempo editor and choose Copy link. It includes the track, tempo
-        points, pitch points, fades and pitch mode. The link opens a page with
-        installation help and a button to play the shared settings on
-        SoundCloud.
+        points, pitch points, fades and pitch mode. The link opens a player with
+        those settings, so the recipient can listen without the plugin when the
+        full track is available. Installation is optional for listening on
+        SoundCloud itself.
       </p><p>
         For everyday sharing, enable “Include tempo in copied links” in
         settings. Then copying the current, loaded track’s full SoundCloud link
@@ -56,17 +57,19 @@ import { installUrl, route } from '../lib/release';
       <h2>Pitch modes</h2><p>
         Natural mode changes pitch with speed. Preserve key keeps the original
         key using Signalsmith when Tempo Control can process the player's audio.
-        Otherwise, it uses the browser's pitch correction. Playback speeds start at 0.25×.
+        Otherwise, it uses the browser's pitch correction. Playback speeds start
+        at 0.25×.
       </p><p>
         Key shift moves the song up or down by up to 12 semitones. Set it in the
-        Pitch control beside the tempo slider, Advanced audio or the tempo editor.
-        It needs access to the player's audio; with Preserve key,
-        the chosen shift stays independent of playback speed.
+        Pitch control beside the tempo slider, Advanced audio or the tempo
+        editor. It needs access to the player's audio; with Preserve key, the
+        chosen shift stays independent of playback speed.
       </p><p>
         The arrows move in half-semitone steps by default. Type a finer value,
-        or change the default increment and range under Advanced audio → Semitone controls.
-        Appearance lets you hide the player’s semitone control and set the default
-        tempo increment for arrows and keyboard adjustments.
+        or change the default increment and range under Advanced audio →
+        Semitone controls. Appearance lets you hide the player’s semitone
+        control and set the default tempo increment for arrows and keyboard
+        adjustments.
       </p><p>
         To change pitch during a song, open the tempo editor and choose Pitch.
         Add points, set their times and choose how they fade into each other.
@@ -94,8 +97,8 @@ import { installUrl, route } from '../lib/release';
       </p>
       <p>
         For audio problems, switch off WASM in settings to use the browser's
-        pitch correction. If a website preview fails to load, choose Retry, load an
-        audio file or use the synth sample.
+        pitch correction. If a website preview fails to load, choose Retry, load
+        an audio file or use the synth sample.
       </p>
     </section>
   </article>

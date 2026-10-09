@@ -1,5 +1,13 @@
 # Demo and screenshot checks
 
+## Shared player follow-up
+
+The share route now reuses the website player and canonical timeline editor. Validated incoming profiles select the actual track and retain both automation lanes, curves, fades, pitch mode and fractional shift. Loading metadata does not rescale shared point times. Installation is optional, playback requires a click, and excerpts/errors do not fall back to another track or synth. Existing saved profiles are not overwritten or used instead of the incoming profile.
+
+`verify-shared-player.py` exercises a plugin-free browser with a seekable 440 Hz audio fixture, captures processed output through a silent destination, and checks fixed Natural/Preserve pitch, tempo/pitch automation, original comparison, exact copied profile round trips despite differing media duration, storage preservation, malformed links, excerpts, retry states and 320/390/768/1440 px layouts. The suite is included in website CI. The homepage audio-polish, theme, presentation and general website checks passed, as did TypeScript, the production build and all 561 unit tests. One presentation attempt overlapped a rebuild and saw missing assets; the stable-build rerun passed.
+
+A separate clean Chrome check served the release assets under the website origin and used the real Oracle resolver and SoundCloud HLS stream for the track in the user's screenshot: full duration 163.976682 s, 0.9×, −5 st, nonzero rendered output and no page errors. This checks live delivery without a plugin, not listening quality on every browser. Desktop/mobile captures were inspected. The existing audio processor fallback still reports when key shifting is unavailable. No backend or userscript changes, new dependencies or update-log entry. Scoped Anti Slop review retained the established controls, colours, keyboard behavior, theme tokens and direct copy; no new promotional sections or claims.
+
 ## Website themes follow-up
 
 The website now offers Light, Charcoal and OLED under Appearance. The existing shared tokens carry the choice through page text, preview/editor controls and image dialogs. Charcoal stays the default; stored choices load before the page modules to avoid a dark flash. The plugin and its built v1.1.1 artifact are unchanged.

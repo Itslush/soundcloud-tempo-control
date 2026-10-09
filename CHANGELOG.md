@@ -2,10 +2,6 @@
 
 ## 1.1.0
 
-If you have a 5.x development build, install this version manually once and
-disable the old copy. Your saved settings stay in place. Installed 1.0.0 copies
-can update through the userscript manager.
-
 ### Playback and controls
 
 - Adjust speed from 0.25× to 4×. The horizontal slider stops at 2×; the number field, dial and vertical slider reach 4×.

@@ -2,6 +2,7 @@
 import Icon from './Icon.astro';
 import Select from './Select.astro';
 import NumberField from './NumberField.astro';
+import ApplePlaybackNotice from './ApplePlaybackNotice.astro';
 import { demoTrack } from '../lib/demo-track';
 interface Props {
   shared?: boolean;
@@ -23,6 +24,7 @@ const { shared = false } = Astro.props;
     <div class="preview-meta">
       <span id="preview-title">{shared ? '' : demoTrack.title}</span>
     </div>
+    <ApplePlaybackNotice />
     <div class="preview-transport">
       <button type="button" id="preview-play">Play</button>
       <output id="preview-readout" aria-label="Current playback"

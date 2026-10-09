@@ -1,0 +1,34 @@
+<p class="apple-playback-notice" data-apple-playback-notice role="note" hidden>
+</p>
+
+<script>
+  const ua = navigator.userAgent;
+  const mac = /Macintosh|Mac OS X/.test(ua);
+  const ios =
+    /iPhone|iPad|iPod/.test(ua) || (mac && navigator.maxTouchPoints > 1);
+  const safari =
+    /Version\/[^ ]+.*Safari\//.test(ua) &&
+    !/Chrome|Chromium|Edg|OPR|Firefox/.test(ua);
+  if (ios || (mac && safari)) {
+    const notice = document.querySelector<HTMLElement>(
+      '[data-apple-playback-notice]',
+    )!;
+    notice.textContent = ios
+      ? 'Audio playback isn’t supported on iPhone or iPad. Open this link on a computer in a browser other than Safari.'
+      : 'Audio playback isn’t supported in Safari. Open this link in another desktop browser.';
+    notice.hidden = false;
+  }
+</script>
+
+<style>
+  .apple-playback-notice {
+    margin: 12px 0 16px;
+    padding: 12px;
+    border: 1px solid var(--control);
+    border-radius: 3px;
+    background: var(--ground);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+</style>

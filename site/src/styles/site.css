@@ -13,7 +13,7 @@
   --node-outline: #ffd2bc;
   --star-cool: #c1ccdf;
   --star-warm: #ece2d1;
-  --header-height: 89px;
+  --header-height: 65px;
   --accent-hover: #ff8b52;
   --on-accent: #141414;
   --control-hover: #aaa;
@@ -142,7 +142,7 @@ button,
   border-bottom: 1px solid var(--line);
 }
 .site-header-inner {
-  min-height: 88px;
+  min-height: calc(var(--header-height) - 1px);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -152,17 +152,17 @@ button,
   min-height: 44px;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   text-decoration: none;
 }
 .brand-logo {
   flex-shrink: 0;
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
 }
 .brand strong {
   display: block;
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1.25;
   letter-spacing: -0.02em;
 }
@@ -171,6 +171,9 @@ button,
   color: var(--muted);
   font-size: 14px;
   margin-top: 2px;
+}
+.site-header nav {
+  gap: 24px;
 }
 nav {
   display: flex;
@@ -916,19 +919,19 @@ h3 {
     width: calc(100% - 36px);
   }
   :root {
-    --header-height: 111px;
+    --header-height: 97px;
   }
   .site-header-inner {
     flex-wrap: wrap;
-    padding-top: 12px;
-    gap: 4px;
+    padding-block: 4px;
+    gap: 0;
   }
   .brand-logo {
-    width: 42px;
-    height: 42px;
+    width: 32px;
+    height: 32px;
   }
   .brand strong {
-    font-size: 21px;
+    font-size: 20px;
   }
   .brand small {
     font-size: 13px;

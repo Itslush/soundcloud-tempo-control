@@ -20,6 +20,8 @@ Website tokens live in `site/src/styles/site.css`. Controls use a distinguishabl
 
 ## Website
 
+The compact header is 65 px tall on desktop and 97 px across two rows at narrow widths, keeping 44 px navigation targets. A notice above both website players appears only for detected iPhone/iPad browsers or Safari on Mac. It states that playback is unsupported there and suggests another desktop browser. Do not show it on non-Apple devices or Mac browsers other than Safari. The notice is informational, not a playback block, and uses the existing surface and text tokens.
+
 Shared links open the same website player with the received tempo, pitch mode, semitone shift and both automation lanes. Play starts the actual shared track without a plugin; never fetch or autoplay on arrival. Keep automation times and fades in their original seconds when stream metadata differs. A restricted excerpt cannot stand in for the full shared version. Keep SoundCloud installation optional below the player, and retain an unadjusted original link. Invalid links have no active player; shared playback never substitutes the homepage track or synth sample.
 
 The opening pairs a short introduction and installation action with an interactive timeline. Playback controls appear before the graph. Playback is explicitly started by the visitor at a low initial volume. The graph, time readout, seek control and tempo value reflect actual audio state.

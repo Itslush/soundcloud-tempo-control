@@ -1,5 +1,20 @@
 # Demo and screenshot checks
 
+## Compact header and Apple notice
+
+`verify-apple-notice.py` passed for nine emulated browser/device identities on both website players, including iPad's desktop identity. It checks no notice on Windows, Android, Mac Chrome or Mac Firefox; visible iPhone/iPad and Mac Safari notices; three-theme text contrast; no automatic audio requests; and 65/97 px headers with 44 px targets at six widths. Desktop and mobile captures were inspected. These are identity/layout checks in Chromium, not playback tests on physical Apple devices.
+
+TypeScript, build, website presentation/anchor checks and shared-player audio regressions passed. The layout detector returned no findings. The notice is isolated in one shared component, uses no dependency and changes neither playback nor saved settings. The userscript and backend are untouched. The existing full-CI star-motion expectation remains outside this change.
+
+Scoped Anti Slop delivery gate:
+- R-03 PASS: 320–1440 px browser checks found no overflow, with a compact two-row mobile header.
+- R-25/R-34 PASS: measured notice text contrast passes 4.5:1 in Light, Charcoal and OLED.
+- R-24/R-26/R-32 PASS: existing navigation destinations, keyboard controls and 44 px targets are preserved; presentation checks passed.
+- R-27/R-35 PASS: supported identities keep the notice hidden; unsupported identities show it before Play; shared-player invalid/error and audio checks still pass.
+- R-31/C-1 PASS: smaller branding and spacing leave more room for the player; the warning belongs immediately before playback, not in a site-wide banner.
+- R-02/R-17/R-18/R-36/R-38/C-5 PASS: short support-policy copy follows the user's report, without inventing an Apple playback test or universal browser guarantees.
+- Liveliness/C-2/C-3/C-4 PASS: existing ENERGY 1/RHYTHM 2/MOTION 2 direction, palette, typography and star motif remain; no decorative assets, controls or promotional sections were added.
+
 ## Shared player follow-up
 
 The share route now reuses the website player and canonical timeline editor. Validated incoming profiles select the actual track and retain both automation lanes, curves, fades, pitch mode and fractional shift. Loading metadata does not rescale shared point times. Installation is optional, playback requires a click, and excerpts/errors do not fall back to another track or synth. Existing saved profiles are not overwritten or used instead of the incoming profile.

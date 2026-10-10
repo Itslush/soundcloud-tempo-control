@@ -9,7 +9,7 @@ User=tempo
 Group=tempo
 WorkingDirectory=/opt/tempo-preview
 Environment=PORT=4324
-Environment=SHARE_ORIGIN=https://88.96.45.138
+Environment=SHARE_ORIGIN=https://tempo.88-96-45-138.sslip.io
 Environment=SHARE_ROOT=/var/lib/tempo-shares
 Environment=FFMPEG_PATH=/opt/tempo-ffmpeg/bin/ffmpeg
 Environment=UV_THREADPOOL_SIZE=1

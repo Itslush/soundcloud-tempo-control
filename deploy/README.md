@@ -1,7 +1,8 @@
 # Preview service
 
 The public site stays on GitHub Pages. Only `/soundcloud-tempo-control/api/`
-is served by the Oracle VM at `88.96.45.138`.
+is served by the Oracle VM at `88.96.45.138`, through the public hostname
+`tempo.88-96-45-138.sslip.io`. Discord share pages and media use the same host.
 
 Runtime files live in `/opt/tempo-preview`, owned by the `tempo` service account.
 Node listens on loopback port 4322; nginx terminates HTTPS and forwards requests.
@@ -21,13 +22,18 @@ after renewal. Keep port 80 open for validation. If the VM's public IP changes,
 replace the certificate, nginx server names, and `PUBLIC_API_BASE` in the Pages
 workflow before publishing.
 
+The hostname has a separate certificate issued with the same webroot. The renewal
+timer covers both certificates. Install `tempo-routes.conf` at
+`/etc/nginx/tempo-routes.conf` and both HTTPS server files under
+`/etc/nginx/conf.d/`. The IP server remains the default for clients without SNI.
+
 Useful checks on the VM:
 
 ```sh
 sudo systemctl status tempo-preview nginx tempo-cert-renew.timer
 sudo journalctl -u tempo-preview -n 50 --no-pager
 sudo /opt/tempo-certbot/bin/certbot renew --dry-run
-curl https://88.96.45.138/soundcloud-tempo-control/api/status
+curl https://tempo.88-96-45-138.sslip.io/soundcloud-tempo-control/api/status
 ```
 
 For an application update, copy `server/`, `scripts/config.cjs`, and

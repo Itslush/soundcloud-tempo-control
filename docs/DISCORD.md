@@ -4,7 +4,7 @@ On a shared-track page, open **Share in Discord** and choose **Create public Dis
 
 The renderer downloads publicly playable audio, applies the canonical tempo and pitch timeline through the pinned Signalsmith WASM library, then combines AAC audio and a still cover into an H.264 MP4. The finished URL serves Open Graph video metadata. Opening it in a browser returns to the original shared-track page.
 
-Discord decides whether to display a player. A valid MP4 and metadata response do not establish compatibility with every Discord client. User tests on 2026-10-10 displayed an embed but stayed at 0:00, including a second copy encoded at 30 fps with limited-range H.264. The server delivered the complete original file with HTTP 200 to requests identifying as Discordbot. This does not establish successful playback. The website controls include a notice about this failure; listeners can open the shared-track page to play in the browser. Do not describe Discord playback as fixed until a real client test succeeds.
+The public media hostname is `tempo.88-96-45-138.sslip.io`, a free DNS name pointing to the Oracle IP. On 2026-10-11, the captured Discord video source returned HTTP 403 with `Invalid resource` when its upstream URL used the raw IP. The same 5,298,758-byte MP4 played in the user's Discord DM after switching its URL to the hostname, without changing its encoding. This verifies that test track and client; Discord still decides whether to display a player for other links.
 
 ## Limits and retention
 
@@ -31,7 +31,7 @@ Required files in `/opt/tempo-preview`:
 
 Node 24 and FFmpeg with AAC and libx264 support are required. Set `SHARE_ORIGIN` to the public HTTPS backend origin, `SHARE_ROOT` to the state directory, and `FFMPEG_PATH` to its executable. The checked-in unit uses the existing Oracle paths. Build the website with `PUBLIC_API_BASE` pointing to the backend prefix.
 
-Back up the existing nginx configuration before installing `deploy/tempo-https.conf`. Run `nginx -t` before reloading. Its share routes proxy to port 4324; media is served directly by nginx with range requests and a 1 MiB/s per-request limit. Keep the existing preview routes on port 4322. Enable `tempo-shares.service` after installing the unit and reloading systemd. On SELinux hosts, configure the media path as `httpd_sys_content_t` and verify an external range request; do not disable SELinux.
+Back up the existing nginx configuration before installing `deploy/tempo-https.conf` and `deploy/tempo-hostname-https.conf` under `/etc/nginx/conf.d/`, and `deploy/tempo-routes.conf` at `/etc/nginx/tempo-routes.conf`. Both HTTPS hosts include those shared routes. Keep the IP host as the default server so clients without SNI still receive its IP certificate. Run `nginx -t` before reloading. Share routes proxy to port 4324; media is served directly by nginx with range requests and a 1 MiB/s per-request limit. Preview routes remain on port 4322. Enable `tempo-shares.service` after installing the unit and reloading systemd. On SELinux hosts, configure the media path as `httpd_sys_content_t` and verify an external range request; do not disable SELinux.
 
 The deployed FFmpeg build is BtbN `ffmpeg-n9.0-latest-linux64-gpl-9.0`, reporting `n9.0.2-25-g67b60c310b-20261010`. Archive SHA-256:
 

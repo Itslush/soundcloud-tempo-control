@@ -10,7 +10,7 @@ profile = {'v': 1, 'track': '/listener/shared-song', 'duration': 20,
            'pitch': 'preserve', 'keyShift': -5}
 code = 'SCT1.' + base64.urlsafe_b64encode(json.dumps(profile).encode()).decode().rstrip('=')
 job = 'a' * 32
-link = 'https://88.96.45.138/soundcloud-tempo-control/listen/' + job
+link = 'https://tempo.88-96-45-138.sslip.io/soundcloud-tempo-control/listen/' + job
 captures = ROOT / '.impeccable/review'
 captures.mkdir(parents=True, exist_ok=True)
 server, base = serve_site()
@@ -37,7 +37,6 @@ try:
         summary.focus()
         page.keyboard.press('Enter')
         expect(page.locator('.discord-create')).to_be_visible()
-        expect(page.locator('.discord-notice')).to_contain_text('get stuck at 0:00')
         expect(page.locator('.discord-result')).to_be_hidden()
         page.locator('.discord-create').click()
         expect(page.locator('.discord-link')).to_have_attribute('href', link)

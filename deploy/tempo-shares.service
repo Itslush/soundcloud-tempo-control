@@ -1,0 +1,35 @@
+[Unit]
+Description=Tempo Control Discord renders
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tempo
+Group=tempo
+WorkingDirectory=/opt/tempo-preview
+Environment=PORT=4324
+Environment=SHARE_ORIGIN=https://88.96.45.138
+Environment=SHARE_ROOT=/var/lib/tempo-shares
+Environment=FFMPEG_PATH=/opt/tempo-ffmpeg/bin/ffmpeg
+Environment=UV_THREADPOOL_SIZE=1
+ExecStart=/opt/node-v24.20.0-linux-x64/bin/node --max-old-space-size=64 /opt/tempo-preview/server/shares/app.mjs
+StateDirectory=tempo-shares
+StateDirectoryMode=0755
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+MemoryMax=220M
+MemorySwapMax=64M
+CPUQuota=75%
+TasksMax=32
+LimitFSIZE=750M
+KillMode=control-group
+TimeoutStopSec=10
+UMask=0022
+
+[Install]
+WantedBy=multi-user.target

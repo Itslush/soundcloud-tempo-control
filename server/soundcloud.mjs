@@ -95,6 +95,10 @@ function trackData(track, url) {
     stream: streamUrl(track.url),
     format: track.protocol.startsWith('m3u8') ? 'hls' : 'audio',
     preview: String(track.format_id).includes('preview'),
+    ...(typeof track.thumbnail === 'string' &&
+    /^https:\/\/[^/]+\.sndcdn\.com\//.test(track.thumbnail)
+      ? { artwork: streamUrl(track.thumbnail) }
+      : {}),
   };
 }
 

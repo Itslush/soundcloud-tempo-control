@@ -12,7 +12,7 @@ const python = fileURLToPath(
   ),
 );
 const fields =
-  '%(.{id,title,uploader,webpage_url,duration,url,protocol,format_id,availability,has_drm,is_live,extractor_key,_type})j';
+  '%(.{id,title,uploader,thumbnail,webpage_url,duration,url,protocol,format_id,availability,has_drm,is_live,extractor_key,_type})j';
 
 function failure(message) {
   if (/No module named|ENOENT/i.test(message))

@@ -1,5 +1,7 @@
 # SoundCloud preview backend
 
+For opt-in server-rendered Discord links, see [Discord sharing](DISCORD.md). That separate service needs FFmpeg and stores expiring public audio copies; the resolver described below does neither.
+
 The Node server serves `dist/site/` and uses yt-dlp to resolve publicly playable SoundCloud tracks. No SoundCloud app registration, API credentials or Artist Pro subscription is needed for this loader. It is an unofficial integration, separate from the userscript.
 
 ## Setup

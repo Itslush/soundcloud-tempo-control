@@ -18,6 +18,29 @@ import TimelineDemo from '../components/TimelineDemo.astro';
     <div id="share-actions" hidden>
       <p>Play here with the shared tempo and pitch. No plugin needed.</p>
       <TimelineDemo shared />
+      <details id="discord-sharing" class="shared-install">
+        <summary>Share in Discord</summary>
+        <p class="discord-notice">
+          Discord's player can currently get stuck at 0:00. If that happens,
+          open the shared-track page to listen.
+        </p>
+        <p>
+          Create a playable copy with this link's tempo and pitch settings. The
+          audio will be public for seven days. Only create a link if you have
+          permission to share the audio. Tracks can be up to 15 minutes, or 30
+          minutes after adjustment.
+        </p>
+        <button class="button discord-create" type="button"
+          >Create public Discord link</button
+        >
+        <p class="discord-status" role="status" aria-live="polite"></p>
+        <div class="discord-result" hidden>
+          <a class="discord-link"></a>
+          <button class="button discord-copy" type="button"
+            >Copy Discord link</button
+          >
+        </div>
+      </details>
       <details class="shared-install">
         <summary>Use these settings on SoundCloud</summary>
         <p>
@@ -38,6 +61,7 @@ import TimelineDemo from '../components/TimelineDemo.astro';
   } from '../../../src/tempo-share.js';
   import { validateProfile } from '../../../src/tempo-profile.js';
   import { initDemo } from '../scripts/demo';
+  import { initDiscordShare } from '../scripts/discord-share';
   const root = document.querySelector<HTMLElement>('#shared-track')!;
   const summary = document.querySelector<HTMLElement>('#share-summary')!;
   const parseTrack = (path: string) =>
@@ -65,6 +89,7 @@ import TimelineDemo from '../components/TimelineDemo.astro';
       original + '?sct=' + encodeTempoCode(data);
     document.querySelector<HTMLElement>('#share-actions')!.hidden = false;
     initDemo(data);
+    initDiscordShare(encodeTempoCode(data));
   } catch {
     summary.textContent =
       'The tempo settings in this link are missing or invalid. Ask for a new copy of the link.';
@@ -85,5 +110,15 @@ import TimelineDemo from '../components/TimelineDemo.astro';
   }
   #share-summary {
     overflow-wrap: anywhere;
+  }
+  .discord-result {
+    display: flex;
+    align-items: start;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .discord-link {
+    overflow-wrap: anywhere;
+    max-width: 100%;
   }
 </style>

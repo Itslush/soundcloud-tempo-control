@@ -16,6 +16,20 @@ import Page from '../layouts/Page.astro';
         SoundCloud's own privacy practices still apply.
       </p>
     </section><section>
+      <h2>Discord links</h2><p>
+        Creating a Discord link sends the track and its shared settings to our
+        server. It downloads the public audio and artwork, applies those
+        settings, and creates a playable link that expires after seven days.
+        Expired files are removed during hourly cleanup or the next render.
+        Anyone with the resulting link can access the copy and settings. Do not
+        publish audio without permission. Discord may cache the preview or media
+        under its own policies.
+      </p><p>
+        Rendering happens only when you press Create public Discord link.
+        Temporary working audio is deleted after rendering. IP addresses are
+        held in server memory for up to an hour to limit render requests.
+      </p>
+    </section><section>
       <h2>Shared links</h2><p>
         A shared link includes the track, duration, tempo and pitch points,
         fades and pitch mode. Anyone with the link can read those settings.
@@ -36,8 +50,9 @@ import Page from '../layouts/Page.astro';
         uploaded. Loading a SoundCloud link sends that link to this site's
         backend and SoundCloud. The backend temporarily caches track details and
         stream links for one minute. Audio streams directly from SoundCloud to
-        your browser. It is not stored by this site. Copy link writes to the
-        clipboard when pressed.
+        your browser. Ordinary preview audio is not stored by this site; Discord
+        copies follow the policy above. Copy link writes to the clipboard when
+        pressed.
       </p>
     </section><section>
       <h2>Donations</h2><p>

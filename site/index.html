@@ -1,0 +1,8 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SoundCloud Track Control has moved</title><p>SoundCloud Track Control has moved. <a id="destination" href="https://itslush.github.io/soundcloud-track-control/">Open the new website</a>.</p><script>
+const site = "https://itslush.github.io/soundcloud-track-control/";
+const prefix = '/soundcloud-tempo-control/';
+const suffix = location.pathname.startsWith(prefix) ? location.pathname.slice(prefix.length) : '';
+const destination = site + suffix + location.search + location.hash;
+document.getElementById('destination').href = destination;
+location.replace(destination);
+</script></html>

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          SoundCloud Track Control (Natural Pitch)
 // @namespace     soundcloud-tempo-control
-// @version       1.2.3
+// @version       1.2.4
 // @description   Playback speed, optional key preservation, saved tempos and shareable timelines.
 // @license       MIT
 // @match         https://soundcloud.com/*
@@ -877,8 +877,8 @@ this.roundkey[i+k]=this.roundkey[j+k];this.roundkey[j+k]=temp}}for(let index=4;i
 0,false)^this.roundkey[0];let s1=this.inView.getUint32(4,false)^this.roundkey[1];let s2=this.inView.
 getUint32(8,false)^this.roundkey[2];let s3=this.inView.getUint32(12,false)^this.roundkey[3];const temp0=this.
 inView.getUint32(0,false);const temp1=this.inView.getUint32(4,false);const temp2=this.inView.getUint32(
-8,false);const temp3=this.inView.getUint32(12,false);let t0,t1,t2,t3;for(let round2=1;round2<10;round2++){
-const offset=round2*4;t0=Td0[s0>>>24]^Td1[s3>>>16&255]^Td2[s2>>>8&255]^Td3[s1&255]^this.roundkey[offset];
+8,false);const temp3=this.inView.getUint32(12,false);let t0,t1,t2,t3;for(let round3=1;round3<10;round3++){
+const offset=round3*4;t0=Td0[s0>>>24]^Td1[s3>>>16&255]^Td2[s2>>>8&255]^Td3[s1&255]^this.roundkey[offset];
 t1=Td0[s1>>>24]^Td1[s0>>>16&255]^Td2[s3>>>8&255]^Td3[s2&255]^this.roundkey[offset+1];t2=Td0[s2>>>24]^
 Td1[s1>>>16&255]^Td2[s0>>>8&255]^Td3[s3&255]^this.roundkey[offset+2];t3=Td0[s3>>>24]^Td1[s2>>>16&255]^
 Td2[s1>>>8&255]^Td3[s0&255]^this.roundkey[offset+3];s0=t0;s1=t1;s2=t2;s3=t3}const f0=Td4[s0>>>24&255]&
@@ -4326,1177 +4326,7 @@ value.min>=-12&&value.max<=12&&value.min<value.max&&value.step>=.001&&value.step
 try{const value=JSON.parse(localStorage.getItem(pitchSettingsKey));if(validPitchSettings(value)){const{
 min,max,step}=value;return{min,max,step}}}catch{}return{...defaultPitchSettings}}var tempoIncrementKey="soundcloud.tempo.tempoIncrement";var defaultTempoIncrement=.025;function validTempoIncrement(value){
 return Number.isFinite(value)&&value>=.001&&value<=1}function readTempoIncrement(){try{const value=Number(
-localStorage.getItem(tempoIncrementKey));if(validTempoIncrement(value))return value}catch{}return defaultTempoIncrement}function enhanceTempoFields(root){const syncs=[];for(const input of root.querySelectorAll('input[typ\
-e="number"]:not(#rate-number)')){let nudge2=function(direction){if(input.disabled||input.readOnly)return;
-const value=input.valueAsNumber;if(!Number.isFinite(value))return;const min=input.min===""?-Infinity:
-Number(input.min);const max=input.max===""?Infinity:Number(input.max);input.value=String(Math.max(min,
-Math.min(max,Math.round((value+direction*(Number(input.step)||1))*1e6)/1e6)));input.dispatchEvent(new Event(
-"input",{bubbles:true}));input.dispatchEvent(new Event("change",{bubbles:true}));sync2()},sync2=function(){
-buttons.forEach((button,index)=>{button.disabled=input.disabled||input.readOnly||(index?input.min!==
-""&&input.valueAsNumber<=Number(input.min):input.max!==""&&input.valueAsNumber>=Number(input.max))})};
-var nudge=nudge2,sync3=sync2;const wrap=document.createElement("span");wrap.className="tempo-number";
-input.before(wrap);wrap.append(input);const arrows=document.createElement("span");arrows.className="\
-tempo-number-arrows";wrap.append(arrows);const label=input.getAttribute("aria-label")||[...input.labels?.[0]?.
-childNodes||[]].filter(node=>node.nodeType===3).map(node=>node.textContent.trim()).join(" ")||"value";
-const buttons=[1,-1].map(direction=>{const button=document.createElement("button");button.type="butt\
-on";button.setAttribute("aria-label",(direction>0?"Increase ":"Decrease ")+label);button.innerHTML='\
-<svg viewBox="0 0 10 8" aria-hidden="true"><path d="'+(direction>0?"m2 5 3-3 3 3":"m2 3 3 3 3-3")+'"\
-/></svg>';button.onclick=()=>nudge2(direction);arrows.append(button);return button});input.addEventListener(
-"keydown",event=>{if(event.key!=="ArrowUp"&&event.key!=="ArrowDown")return;event.preventDefault();nudge2(
-event.key==="ArrowUp"?1:-1)});input.addEventListener("change",sync2);syncs.push(sync2)}for(const select of root.
-querySelectorAll("select")){let close2=function(focus=false){list.hidden=true;trigger.setAttribute("\
-aria-expanded","false");if(focus)trigger.focus()},sync2=function(){caption.textContent=select.selectedOptions[0]?.
-textContent||"Choose";trigger.setAttribute("aria-label",name+": "+(select.selectedOptions[0]?.textContent||
-""));trigger.disabled=select.disabled},open2=function(){list.replaceChildren(...[...select.options].
-map(option=>{const button=document.createElement("button");button.type="button";button.setAttribute(
-"role","option");button.setAttribute("aria-selected",String(option.selected));button.tabIndex=-1;button.
-disabled=option.disabled;button.textContent=option.textContent;button.onclick=()=>{select.value=option.
-value;select.dispatchEvent(new Event("change",{bubbles:true}));sync2();close2(true)};return button}));
-list.hidden=false;trigger.setAttribute("aria-expanded","true");(list.children[select.selectedIndex]||
-list.firstElementChild)?.focus()};var close=close2,sync3=sync2,open=open2;const wrap=document.createElement(
-"span");wrap.className="tempo-choice";select.before(wrap);wrap.append(select);select.hidden=true;const trigger=document.
-createElement("button");trigger.type="button";trigger.className="tempo-choice-trigger";const caption=document.
-createElement("span");const chevron=document.createElementNS("http://www.w3.org/2000/svg","svg");chevron.
-setAttribute("viewBox","0 0 10 8");chevron.setAttribute("aria-hidden","true");chevron.innerHTML='<pa\
-th d="m2 3 3 3 3-3"/>';trigger.append(caption,chevron);trigger.setAttribute("aria-haspopup","listbox");
-trigger.setAttribute("aria-expanded","false");const name=select.getAttribute("aria-label")||[...select.
-labels?.[0]?.childNodes||[]].filter(node=>node.nodeType===3).map(node=>node.textContent.trim()).join(
-" ")||"Choose";const list=document.createElement("span");list.className="tempo-choice-list";list.setAttribute(
-"role","listbox");list.setAttribute("aria-label",name);list.hidden=true;wrap.append(trigger,list);trigger.
-onclick=()=>list.hidden?open2():close2();let search="",searchTime=0;wrap.addEventListener("keydown",
-event=>{if(event.key==="Escape"&&!list.hidden){event.preventDefault();event.stopPropagation();close2(
-true);return}if(event.key==="Tab"){close2();return}const options=[...list.children].filter(option=>!option.
-disabled);if(["ArrowDown","ArrowUp","Home","End"].includes(event.key)){event.preventDefault();if(list.
-hidden){open2();return}const active=wrap.getRootNode().activeElement;const index=options.indexOf(active);
-const next=event.key==="Home"?0:event.key==="End"?options.length-1:(index+(event.key==="ArrowDown"?1:
--1)+options.length)%options.length;options[next]?.focus()}else if(event.key.length===1&&event.key!==
-" "&&!event.ctrlKey&&!event.metaKey&&!event.altKey){const now=Date.now();search=(now-searchTime<700?
-search:"")+event.key.toLowerCase();searchTime=now;if(list.hidden)open2();[...list.children].find(option=>option.
-textContent.trim().toLowerCase().startsWith(search))?.focus()}});wrap.addEventListener("focusout",event=>{
-if(!wrap.contains(event.relatedTarget))close2()});root.addEventListener("pointerdown",event=>{if(!wrap.
-contains(event.target))close2()});select.addEventListener("change",sync2);syncs.push(sync2)}const sync=()=>syncs.
-forEach(update=>update());sync();return sync}var tempoFieldStyle=`
-.tempo-number { display:inline-flex; align-items:center; min-width:0; vertical-align:middle; }
-.tempo-number input { appearance:textfield; min-width:0; width:64px; }
-.tempo-number input::-webkit-inner-spin-button,.tempo-number input::-webkit-outer-spin-button { appe\
-arance:none; margin:0; }
-.tempo-number-arrows { display:grid; flex-shrink:0; }
-.tempo-number-arrows button { display:grid; place-items:center; min-height:16px; width:22px; padding\
-:0; border:0; background:transparent; color:inherit; }
-.tempo-number-arrows svg { width:10px; height:8px; fill:none; stroke:currentColor; stroke-width:1.4;\
- }
-.tempo-choice { position:relative; display:inline-block; min-width:0; }
-.tempo-choice-trigger { display:flex; align-items:center; justify-content:space-between; gap:12px; w\
-idth:100%; text-align:left; color:inherit; }
-.tempo-choice-trigger > svg { flex:none; width:10px; height:8px; fill:none; stroke:currentColor; str\
-oke-width:1.5; }
-.tempo-choice-trigger[aria-expanded="true"] > svg { transform:rotate(180deg); }
-.tempo-choice-list { position:absolute; z-index:5; left:0; top:100%; min-width:100%; max-width:240px\
-; max-height:220px; overflow:auto; padding:4px; border:1px solid var(--tempo-track); background:var(\
---tempo-surface); box-shadow:0 4px 12px #0004; }
-.tempo-choice-list button { display:block; width:100%; text-align:left; border:0; color:inherit; min\
--height:32px; }
-.tempo-choice-list [aria-selected="true"] { color:var(--tempo-fg); box-shadow:inset 2px 0 var(--temp\
-o-accent); }
-.tempo-number-arrows button:focus-visible,.tempo-choice button:focus-visible { outline:2px solid var\
-(--tempo-accent); outline-offset:1px; }
-.tempo-number-arrows button:disabled { opacity:.35; }
-`;function syncTempoRange(input){const minimum=Number(input.min)||0;const span=Number(input.max)-minimum;
-const value=span>0?(input.valueAsNumber-minimum)/span:0;const fill=`${Math.max(0,Math.min(1,value||0))*
-100}%`;if(input.style.getPropertyValue("--range-fill")!==fill)input.style.setProperty("--range-fill",
-fill)}var tempoRangeStyle=`
-  input[type='range'] {
-    --range-thumb-opacity: 1;
-    appearance: none;
-    -webkit-appearance: none;
-    display: block;
-    box-sizing: border-box;
-    width: 100%;
-    min-width: 0;
-    height: 32px;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    background: linear-gradient(to right,
-      var(--tempo-accent) var(--range-fill, 0%),
-      var(--tempo-track) var(--range-fill, 0%))
-      center / calc(100% - 12px) 2px no-repeat;
-    cursor: pointer;
-    touch-action: none;
-  }
-  input[type='range']::-webkit-slider-runnable-track {
-    height: 2px;
-    background: transparent;
-  }
-  input[type='range']::-webkit-slider-thumb {
-    appearance: none;
-    -webkit-appearance: none;
-    box-sizing: border-box;
-    width: 12px;
-    height: 12px;
-    margin-top: -5px;
-    border: 1px solid color-mix(in srgb, var(--tempo-accent) 85%, var(--tempo-fg));
-    border-radius: 50%;
-    background: var(--tempo-surface);
-    opacity: var(--range-thumb-opacity);
-    transition: opacity 120ms ease-out;
-  }
-  input[type='range']::-moz-range-track,
-  input[type='range']::-moz-range-progress {
-    height: 2px;
-    background: transparent;
-  }
-  input[type='range']::-moz-range-thumb {
-    box-sizing: border-box;
-    width: 12px;
-    height: 12px;
-    border: 1px solid color-mix(in srgb, var(--tempo-accent) 85%, var(--tempo-fg));
-    border-radius: 50%;
-    background: var(--tempo-surface);
-    opacity: var(--range-thumb-opacity);
-    transition: opacity 120ms ease-out;
-  }
-  input[type='range']:disabled {
-    opacity: .45;
-    cursor: default;
-  }
-  @media (hover: hover) and (pointer: fine) {
-    input[type='range']:not(:hover):not(:focus-visible):not(:active) {
-      --range-thumb-opacity: 0;
-    }
-  }
-  @media (any-pointer: coarse), (forced-colors: active) {
-    input[type='range'] {
-      --range-thumb-opacity: 1 !important;
-    }
-  }
-  @media (forced-colors: active) {
-    input[type='range'] {
-      forced-color-adjust: none;
-      --tempo-accent: Highlight;
-      --tempo-track: GrayText;
-      --tempo-surface: Canvas;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    input[type='range']::-webkit-slider-thumb { transition: none; }
-    input[type='range']::-moz-range-thumb { transition: none; }
-  }
-`;var controlsStyle=`
-        :host {
-          font: inherit;
-          color: inherit;
-          --tempo-fg: #222;
-          --tempo-accent: #ff5500;
-          --tempo-accent-surface: #242424;
-          --tempo-accent-hover: #282828;
-          --tempo-track: #888;
-        }
-
-        * {
-          box-sizing: border-box;
-        }
-
-        .controls {
-          display: grid;
-          grid-template-columns: 56px 20px minmax(0, 1fr) 132px 24px 24px;
-          align-items: center;
-          gap: 4px;
-          width: 100%;
-          height: 32px;
-          color: var(--tempo-fg);
-          font-size: 12px;
-        }
-
-        .controls.hide-key { grid-template-columns: 56px 20px minmax(0, 1fr) 24px 24px; }
-
-        button,
-        input,
-        select {
-          font: inherit;
-          color: inherit;
-        }
-
-        button {
-          cursor: pointer;
-        }
-
-        button:focus-visible,
-        input:focus-visible,
-        select:focus-visible {
-          outline: 2px solid var(--tempo-fg);
-          outline-offset: 2px;
-        }
-
-        .field {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 2px;
-          font-variant-numeric: tabular-nums;
-        }
-
-        .field #rate-number {
-          text-align: right;
-        }
-
-        .field #rate-number:hover {
-          background: transparent;
-        }
-
-        .unit {
-          flex: none;
-          line-height: 24px;
-        }
-
-        .slider-wrap {
-          position: relative;
-          min-width: 0;
-          height: 32px;
-        }
-        .slider-wrap[data-style='slider'] {
-          transform: translateY(var(--tempo-rail-offset, 0px));
-        }
-        .controls:has(.slider-wrap:not([data-style='slider'])) {
-          grid-template-columns: 56px 20px 36px 132px 24px 24px;
-        }
-        .controls.hide-key:has(.slider-wrap:not([data-style='slider'])) {
-          grid-template-columns: 56px 20px 36px 24px 24px;
-        }
-        .quick-key {
-          display: grid;
-          grid-template-columns: 28px 42px 12px 20px;
-          align-items: center;
-          gap: 4px;
-          margin-left: 16px;
-          font-size: 12px;
-          line-height: 24px;
-        }
-        .fader-value, .fader-reset, .fader-normal, .fader-limit, .fader-level, .fader-ticks { displa\
-y: none; }
-        #tempo-fader[popover] .fader-value {
-          display: block;
-          text-align: center;
-          font: inherit;
-          font-variant-numeric: tabular-nums;
-          line-height: 24px;
-          margin-bottom: 4px;
-        }
-        #tempo-fader[popover] .fader-reset {
-          display: block;
-          width: 100%;
-          height: 32px;
-          margin-top: 8px;
-          padding: 0;
-          border: 1px solid var(--tempo-track);
-          border-radius: 2px;
-          background: transparent;
-          font-size: 11px;
-        }
-        .fader-reset:hover { background: color-mix(in srgb, var(--tempo-fg) 8%, transparent); }
-        #tempo-fader[popover] .fader-rail { position: relative; margin: 8px 0; }
-        #tempo-fader[popover] .fader-normal {
-          display: block;
-          position: absolute;
-          top: calc(6px + (100% - 12px) * 0.8);
-          right: calc(50% + 16px);
-          transform: translateY(-50%);
-          font-size: 11px;
-          line-height: 12px;
-          pointer-events: none;
-        }
-        #tempo-fader[popover] .fader-normal::before {
-          content: '';
-          position: absolute;
-          left: calc(100% + 4px);
-          width: 6px;
-          top: 50%;
-          border-top: 1px solid var(--tempo-fg);
-        }
-        #tempo-fader[popover] .fader-limit {
-          display: block; position: absolute; right: calc(50% + 16px);
-          font-size: 11px; line-height: 12px; pointer-events: none;
-        }
-        .fader-max { top: 0; }
-        .fader-min { bottom: 0; }
-        #tempo-fader[popover] .fader-ticks {
-          display: block; position: absolute; top: 0; left: calc(50% - 16px);
-          width: 32px; height: 144px; pointer-events: none;
-          fill: none; stroke: var(--tempo-track); stroke-width: 1;
-        }
-        #tempo-fader[popover] .fader-level {
-          display: block; position: absolute; right: calc(50% + 16px);
-          top: calc(6px + (100% - 12px) * var(--position));
-          transform: translateY(-50%); font-size: 11px; line-height: 12px;
-          pointer-events: none;
-        }
-
-        .ticks {
-          position: absolute;
-          inset: 24px 6px auto;
-          width: calc(100% - 12px);
-          height: 5px;
-          overflow: visible;
-          pointer-events: none;
-        }
-
-        .ticks path {
-          fill: none;
-          stroke: var(--tempo-track);
-          stroke-width: 1px;
-          vector-effect: non-scaling-stroke;
-        }
-
-        .ticks .normal-tick {
-          stroke: var(--tempo-fg);
-        }
-
-        #rate-dial {
-          display: block;
-          position: relative;
-          width: 32px;
-          height: 32px;
-          margin: auto;
-          padding: 0;
-          border: 0;
-          border-radius: 3px;
-          background: transparent;
-          touch-action: none;
-          cursor: ns-resize;
-          user-select: none;
-        }
-        #rate-dial svg { position: absolute; inset: 0; width: 32px; height: 32px; overflow: visible;\
- }
-        #rate-dial svg path { fill: none; stroke-width: 1.5; stroke-linecap: round; }
-        .dial-track { stroke: var(--tempo-track); }
-        #rate-dial svg .dial-ticks { stroke: var(--tempo-track); stroke-width: 1; }
-        .dial-fill { stroke: var(--tempo-accent); stroke-dasharray: 100; stroke-dashoffset: var(--di\
-al-unfilled, 50); }
-        .dial-zero { stroke: var(--tempo-fg); }
-        #rate-dial circle { fill: color-mix(in srgb, var(--tempo-fg) 10%, var(--tempo-surface)); }
-        #rate-dial:hover circle, #rate-dial:active circle { fill: color-mix(in srgb, var(--tempo-fg)\
- 18%, var(--tempo-surface)); }
-        #rate-dial span {
-          position: absolute;
-          inset: 8px;
-          transform: rotate(var(--dial-angle, 0deg));
-        }
-        #rate-dial span::before {
-          content: '';
-          display: block;
-          width: 2px;
-          height: 6px;
-          margin: 0 auto;
-          background: var(--tempo-accent);
-        }
-        #rate-dial[hidden], #rate-slider[hidden], #vertical-toggle[hidden] { display: none; }
-        #vertical-toggle {
-          display: grid;
-          place-items: center;
-          width: 32px;
-          height: 32px;
-          margin: auto;
-          padding: 6px;
-          border: 0;
-          border-radius: 3px;
-          background: transparent;
-        }
-        #vertical-toggle:hover, #vertical-toggle[aria-expanded='true'] {
-          background: color-mix(in srgb, var(--tempo-fg) 8%, transparent);
-        }
-        #vertical-toggle svg {
-          width: 20px;
-          height: 20px;
-          fill: none;
-          stroke: currentColor;
-          stroke-width: 1.5;
-          stroke-linecap: round;
-          stroke-linejoin: round;
-        }
-        #tempo-fader[popover] {
-          position: fixed;
-          inset: auto;
-          margin: 0;
-          padding: 8px;
-          width: 96px;
-          border: 1px solid color-mix(in srgb, var(--tempo-fg) 35%, var(--tempo-surface));
-          border-radius: 4px;
-          background: var(--tempo-surface, #f2f2f2);
-          color: var(--tempo-fg);
-          font: inherit;
-        }
-        .slider-wrap[data-style='dial'] .ticks,
-        .slider-wrap[data-style='vertical'] .ticks { display: none; }
-        .slider-wrap[data-style='vertical'] #rate-slider {
-          width: 32px;
-          height: 144px;
-          --range-thumb-opacity: 1;
-          border: 0;
-          padding: 0;
-          margin: auto;
-          writing-mode: vertical-lr;
-          direction: rtl;
-          background: linear-gradient(to top, var(--tempo-accent) var(--range-fill, 0%), var(--tempo\
--track) var(--range-fill, 0%)) center / 2px calc(100% - 12px) no-repeat;
-        }
-        .slider-wrap[data-style='vertical'] #rate-slider::-webkit-slider-runnable-track { width: 2px\
-; height: 100%; }
-        .slider-wrap[data-style='vertical'] #rate-slider::-webkit-slider-thumb { margin-top: 0; marg\
-in-left: -5px; }
-        .slider-wrap[data-style='vertical'] #rate-slider::-moz-range-track { width: 2px; height: 100\
-%; }
-        .control-style-label, .key-shift-label { display: flex; align-items: center; gap: 12px; marg\
-in: 12px 0; flex-wrap: wrap; }
-        .key-shift-label input { width: 58px; }
-        .settings select { font: inherit; color: inherit; background: var(--tempo-surface); border: \
-1px solid var(--tempo-track); min-height: 32px; }
-
-        @media (forced-colors: active) {
-          .slider-wrap {
-            forced-color-adjust: none;
-            --tempo-accent: Highlight;
-            --tempo-track: GrayText;
-            --tempo-fg: CanvasText;
-          }
-        }
-
-        .settings {
-          display: flex;
-          flex-direction: column;
-          position: fixed;
-          inset: auto;
-          margin: 0;
-          z-index: 2147483647;
-          max-height: calc(100dvh - 80px);
-          overflow: auto;
-          padding: 12px;
-          border: 1px solid var(--tempo-track);
-          border-radius: 4px;
-          background: var(--tempo-surface, #f2f2f2);
-          color: var(--tempo-fg);
-          font-family: inherit;
-          font-size: 12px;
-          line-height: 1.5;
-        }
-
-        .settings > * {
-          flex-shrink: 0;
-        }
-
-        .settings header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 8px;
-        }
-
-        .settings-actions {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        .settings[data-choosing-style] .quick-settings,
-        .settings[data-choosing-style] #saved-filter,
-        .settings[data-choosing-style] .saved-count,
-        .settings[data-choosing-style] .saved-list,
-        .settings[data-choosing-style] .saved-more,
-        .settings[data-choosing-style] .open-editor,
-        .settings[data-choosing-style] .appearance-options,
-        .settings[data-choosing-style] .appearance-settings summary,
-        .settings[data-choosing-style] .settings-tools > details:not(.appearance-settings) {
-          display: none;
-        }
-        .settings[data-choosing-style] header {
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-        .settings[data-choosing-style] .settings-tools {
-          border: 0;
-          margin: 0;
-        }
-        .settings[data-choosing-style] .close-settings {
-          min-height: 44px;
-        }
-
-        .quick-settings {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 4px 20px;
-          margin-bottom: 8px;
-        }
-
-        .advanced-audio {
-          margin: 0;
-        }
-
-        .settings summary {
-          cursor: pointer;
-          padding: 5px 0;
-        }
-
-        .crossfade-debug pre {
-          white-space: pre-wrap;
-          overflow-wrap: anywhere;
-          max-height: 180px;
-          overflow: auto;
-          font-size: 11px;
-          line-height: 1.5;
-        }
-        .settings button {
-          min-height: 28px;
-          padding: 3px 6px;
-          border: 0;
-          border-radius: 3px;
-          background: transparent;
-        }
-
-        .settings button:hover {
-          background: color-mix(in srgb, var(--tempo-fg) 10%, transparent);
-        }
-
-        .random-label {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          cursor: pointer;
-        }
-
-        .settings input[type='checkbox'] {
-          accent-color: var(--tempo-accent);
-          margin: 0;
-        }
-
-        .settings p {
-          margin: 6px 0 12px;
-        }
-        .output-label {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-          margin-top: 12px;
-        }
-
-        .output-entry { display: flex; align-items: center; gap: 6px; }
-        #output-value { width: 84px; min-height: 32px; padding: 4px 8px; border: 1px solid var(--tem\
-po-track); border-radius: 2px; text-align: right; font-variant-numeric: tabular-nums; }
-
-        #output-level {
-          display: block;
-          width: 100%;
-          accent-color: var(--tempo-accent);
-        }
-
-        .settings input[type='search'] {
-          width: 100%;
-          padding: 6px;
-          border: 1px solid var(--tempo-track);
-          border-radius: 3px;
-          background: transparent;
-        }
-
-        .settings input::placeholder {
-          color: var(--tempo-fg);
-          opacity: 0.7;
-        }
-
-        .saved-row {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) 132px;
-          gap: 4px 12px;
-          align-items: center;
-          padding: 4px 2px;
-          border-bottom: 1px solid color-mix(in srgb, var(--tempo-fg) 16%, transparent);
-          min-width: 0;
-        }
-
-        .saved-list {
-          flex: 1 1 auto;
-          min-height: 80px;
-          max-height: 680px;
-          overflow: auto;
-          overscroll-behavior: contain;
-          scrollbar-gutter: stable;
-          scrollbar-width: thin;
-          scrollbar-color: var(--tempo-track) transparent;
-          padding-right: 6px;
-        }
-
-        .saved-list:empty {
-          min-height: 0;
-        }
-
-        .saved-row:last-child {
-          border-bottom: 0;
-        }
-
-        .settings .saved-count {
-          margin: 6px 0;
-        }
-
-        .saved-setting {
-          display: grid;
-          grid-column: 2;
-          grid-template-columns: 28px 64px 28px;
-          gap: 6px;
-          align-items: center;
-        }
-
-        .saved-switch {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 32px;
-          cursor: pointer;
-        }
-
-        .saved-setting button {
-          min-height: 32px;
-        }
-
-        .saved-row a {
-          grid-column: 1;
-          grid-row: 1;
-          overflow: hidden;
-          color: inherit;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          text-underline-offset: 3px;
-        }
-
-        .saved-row input[type='number'] {
-          width: 46px;
-          height: 32px;
-          border: 0;
-        }
-
-        .saved-value {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid var(--tempo-track);
-          border-radius: 3px;
-          font-variant-numeric: tabular-nums;
-        }
-
-        .saved-remove svg {
-          display: block;
-          width: 12px;
-          height: 12px;
-          margin: auto;
-          fill: none;
-          stroke: currentColor;
-          stroke-width: 1.5;
-          stroke-linecap: round;
-        }
-
-        .settings-tools {
-          margin-top: 8px;
-          border-top: 1px solid color-mix(in srgb, var(--tempo-fg) 16%, transparent);
-          padding-top: 4px;
-        }
-
-        .appearance-options {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 4px 16px;
-          margin: 0 0 4px;
-          padding: 0;
-          border: 0;
-        }
-
-        .appearance-options label {
-          display: flex;
-          align-items: center;
-          min-height: 32px;
-          gap: 6px;
-          cursor: pointer;
-        }
-
-        .appearance-options input {
-          margin: 0;
-          accent-color: var(--tempo-accent);
-        }
-
-        .library-backup {
-          margin: 0;
-        }
-
-        .backup-actions {
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
-          margin-block: 10px;
-        }
-
-        .backup-preview p {
-          margin-block: 8px;
-        }
-
-        .saved-more {
-          margin-top: 10px;
-        }
-
-        @media (max-width: 390px) {
-          .saved-row {
-            grid-template-columns: minmax(0, 1fr) 118px;
-            column-gap: 6px;
-          }
-
-          .saved-setting {
-            grid-template-columns: 24px 58px 28px;
-            gap: 4px;
-          }
-
-          .saved-row input[type='number'] {
-            width: 42px;
-          }
-        }
-
-        @media (pointer: coarse) {
-          .appearance-options label,
-          .saved-setting button,
-          .saved-switch,
-          .saved-row input[type='number'] {
-            min-height: 44px;
-          }
-        }
-
-        .settings-status:empty {
-          display: none;
-        }
-
-        input[type='number'] {
-          width: 46px;
-          min-width: 0;
-          height: 24px;
-          padding: 0;
-          border: 0;
-          border-radius: 2px;
-          background: transparent;
-          text-align: center;
-          font-variant-numeric: tabular-nums;
-          appearance: textfield;
-          -moz-appearance: textfield;
-          caret-color: var(--tempo-accent);
-        }
-
-        input[type='number']::-webkit-inner-spin-button,
-        input[type='number']::-webkit-outer-spin-button {
-          -webkit-appearance: none;
-          margin: 0;
-        }
-
-        input[type='number']:hover {
-          background: color-mix(in srgb, var(--tempo-fg) 8%, transparent);
-        }
-
-        .steppers {
-          display: grid;
-          grid-template-rows: repeat(2, 16px);
-        }
-
-        .step {
-          display: grid;
-          place-items: center;
-          width: 20px;
-          height: 16px;
-          padding: 0;
-          border: 0;
-          border-radius: 2px;
-          background: transparent;
-        }
-
-        .step:hover:not(:disabled) {
-          color: var(--tempo-accent);
-          background: color-mix(in srgb, var(--tempo-fg) 8%, transparent);
-        }
-
-        .step:disabled {
-          opacity: 0.35;
-          cursor: default;
-        }
-
-        .step svg {
-          width: 10px;
-          height: 8px;
-          fill: none;
-          stroke: currentColor;
-          stroke-width: 1.5;
-          stroke-linecap: round;
-          stroke-linejoin: round;
-        }
-
-        @media (max-width: 960px) {
-          .controls { gap: 3px; }
-          :host {
-            flex-basis: var(--tempo-compact-width, 292px) !important;
-            min-width: var(--tempo-compact-width, 292px) !important;
-          }
-        }
-
-        input::selection {
-          background: var(--tempo-accent);
-          color: #fff;
-        }
-
-        ${tempoRangeStyle}${tempoFieldStyle}
-.quick-key .tempo-number{display:contents}
-.quick-key .tempo-number input{grid-column:2;grid-row:1;width:42px;height:32px;padding:0;border:0;ba\
-ckground:transparent;text-align:center;color:inherit;font:inherit;font-variant-numeric:tabular-nums}\
-
-.quick-key .tempo-number-arrows{grid-column:4;grid-row:1}
-.quick-key .tempo-number-arrows button{width:20px}
-.quick-key .key-unit{grid-column:3;grid-row:1}
-#tempo-settings input[type='range']{--range-thumb-opacity:1}
-.settings .tempo-choice-trigger{min-height:36px;padding:6px 10px;border:1px solid var(--tempo-track)\
-;border-radius:3px;background:var(--tempo-surface)}
-.control-style-label .tempo-choice{min-width:164px}
-.quick-key{white-space:nowrap}
-
-
-        .memory,
-        .settings-button {
-          display: grid;
-          place-items: center;
-          width: 24px;
-          height: 24px;
-          padding: 4px;
-          border: 0;
-          border-radius: 3px;
-          background: transparent;
-        }
-
-        .memory:hover,
-        .settings-button:hover {
-          background: color-mix(in srgb, var(--tempo-fg) 8%, transparent);
-        }
-
-        .memory svg,
-        .settings-button svg {
-          width: 14px;
-          height: 14px;
-          fill: none;
-          stroke: currentColor;
-          stroke-width: 1.5;
-          stroke-linecap: round;
-          stroke-linejoin: round;
-        }
-
-        .memory[aria-pressed='true'] {
-          color: var(--tempo-accent);
-        }
-
-        .memory[data-state='saved'] .bookmark {
-          fill: currentColor;
-        }
-
-        .memory .update-dot,
-        .memory .warning,
-        .memory .check {
-          display: none;
-        }
-
-        .memory[data-state='modified'] .update-dot {
-          display: block;
-          fill: currentColor;
-          stroke: none;
-        }
-
-        .memory[data-state='error'] .warning {
-          display: block;
-        }
-
-        .memory[data-state='error'] .bookmark,
-        .memory[data-state='error'] .update-dot {
-          display: none;
-        }
-
-        .memory:disabled {
-          opacity: 0.4;
-          cursor: not-allowed;
-        }
-
-        .memory[data-feedback='saved'] .check {
-          display: block;
-        }
-
-        .memory[data-feedback='saved'] .bookmark,
-        .memory[data-feedback='saved'] .update-dot {
-          display: none;
-        }
-
-        .error {
-          font-weight: 700;
-        }
-
-        .sr-only {
-          position: absolute;
-          width: 1px;
-          height: 1px;
-          padding: 0;
-          margin: -1px;
-          overflow: hidden;
-          clip-path: inset(50%);
-          white-space: nowrap;
-          border: 0;
-        }
-
-        [hidden] {
-          display: none !important;
-        }
-
-.pitch-bounds{display:grid;gap:12px;margin:12px 0}
-.pitch-bounds label,.increment-label{display:grid;grid-template-columns:minmax(0,1fr) 90px 16px;gap:\
-8px;align-items:center}
-.increment-label{margin:12px 0}
-.pitch-bounds .tempo-number,.increment-label .tempo-number{border:1px solid var(--tempo-track);borde\
-r-radius:3px;min-height:36px}
-.pitch-bounds .tempo-number input,.increment-label .tempo-number input{width:64px;text-align:center}\
-
-`;function dialTicks(){return Array.from({length:17},(_,index)=>{const angle=(index/16*270-135)*Math.PI/
-180;const inner=index%4===0?12:14;const point=radius=>`${(16+Math.sin(angle)*radius).toFixed(2)} ${(16-
-Math.cos(angle)*radius).toFixed(2)}`;return`M${point(inner)}L${point(16)}`}).join("")}function faderTicks(){
-return Array.from({length:16},(_,index)=>{const y=(6+index/15*132).toFixed(2);return`M25 ${y}h${index%
-4===0||index===15?6:3}`}).join("")}function controlsTemplate({MIN,MAX,SLIDER_MAX,SLIDER_STEP,SLIDER_STEPS,
-sliderTicks}){return`
-      <style>${controlsStyle}</style>
-      <div class="controls" role="group" aria-label="Playback tempo">
-        <div class="field"
-          ><input
-            id="rate-number"
-            type="number"
-            min="${MIN}"
-            max="4"
-            step="0.001"
-            aria-label="Exact playback speed"
-            aria-describedby="number-help"
-          /><span class="unit" aria-hidden="true">\xD7</span
-          ><span class="error" hidden aria-label="Playback error">!</span></div
-        >
-        <div class="steppers">
-          <button
-            class="step step-up"
-            type="button"
-            aria-label="Increase speed by 0.025\xD7; Shift for 0.01\xD7"
-            title="Increase tempo"
-          >
-            <svg viewBox="0 0 10 8" aria-hidden="true"><path d="m2 5 3-3 3 3" /></svg>
-          </button>
-          <button
-            class="step step-down"
-            type="button"
-            aria-label="Decrease speed by 0.025\xD7; Shift for 0.01\xD7"
-            title="Decrease tempo"
-          >
-            <svg viewBox="0 0 10 8" aria-hidden="true"><path d="m2 3 3 3 3-3" /></svg>
-          </button>
-        </div>
-        <div class="slider-wrap"
-          ><button id="rate-dial" type="button" role="slider" aria-label="Playback speed dial" aria-\
-valuemin="${MIN}" aria-valuemax="${MAX}" aria-valuenow="1" aria-describedby="dial-help" title="Drag \
-up or down \xB7 Shift for fine adjustment \xB7 Double-click to reset" hidden><svg viewBox="0 0 32 32" aria\
--hidden="true"><path class="dial-track" d="M6.1 25.9a14 14 0 1 1 19.8 0"/><path class="dial-fill" pa\
-thLength="100" d="M6.1 25.9a14 14 0 1 1 19.8 0"/><path class="dial-ticks" d="${dialTicks()}"/><circl\
-e cx="16" cy="16" r="9"/><path class="dial-zero" d="M16 0v4"/></svg><span aria-hidden="true"></span>\
-</button>
-          <button id="vertical-toggle" type="button" popovertarget="tempo-fader" aria-label="Open ve\
-rtical tempo slider" title="Tempo slider" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path d\
-="M10 2v5m0 6v5M6 7h8v6H6Z" /></svg></button>
-          <div id="tempo-fader"><output class="fader-value" aria-hidden="true">1\xD7</output><div class\
-="fader-rail"><input
-            id="rate-slider"
-            type="range"
-            min="${MIN}"
-            max="${SLIDER_MAX}"
-            step="${SLIDER_STEP}"
-            aria-label="Playback speed"
-            aria-describedby="slider-help" />
-          <svg class="ticks" viewBox="0 0 ${SLIDER_STEPS} 5" preserveAspectRatio="none" aria-hidden=\
-"true">
-            <path d="${sliderTicks()}" />
-            <path class="normal-tick" d="M${Math.round((1-MIN)/SLIDER_STEP)} 0v5" />
-          </svg>
-          <span class="fader-normal" aria-hidden="true">1\xD7</span>
-          <svg class="fader-ticks" viewBox="0 0 32 144" aria-hidden="true"><path d="${faderTicks()}"\
-/></svg>
-          <span class="fader-level" style="--position:0.533333" aria-hidden="true">2\xD7</span>
-          <span class="fader-level" style="--position:0.266667" aria-hidden="true">3\xD7</span>
-          <span class="fader-limit fader-max" aria-hidden="true">4\xD7</span>
-          <span class="fader-limit fader-min" aria-hidden="true">.25\xD7</span>
-          </div>
-          <button class="fader-reset" type="button">Reset</button>
-          </div>
-        </div>
-        <label class="quick-key">Pitch <input id="quick-key-shift" type="number" min="-12" max="12" \
-step="0.5" value="0" aria-label="Key shift in semitones"><span class="key-unit" aria-hidden="true">s\
-t</span></label>
-        <button
-          class="memory"
-          type="button"
-          aria-label="Remember tempo for this track"
-          aria-pressed="false"
-          aria-haspopup="dialog"
-          aria-controls="tempo-settings"
-          aria-expanded="false"
-          ><svg viewBox="0 0 16 16" aria-hidden="true">
-            <path class="bookmark" d="M4 2h8v12l-4-3-4 3Z" />
-            <circle class="update-dot" cx="13" cy="3" r="2" />
-            <path class="check" d="m3 8 3 3 7-7" />
-            <path class="warning" d="M8 2 15 14H1Z M8 6v3 M8 11.5v.1" /></svg
-        ></button>
-        <button
-          class="settings-button"
-          type="button"
-          aria-label="Tempo settings"
-          title="Settings"
-          aria-haspopup="dialog"
-          aria-controls="tempo-settings"
-          aria-expanded="false"
-        >
-          <svg viewBox="0 0 16 16" aria-hidden="true">
-            <path
-              d="m6 1-.4 2-1.2.7-1.9-.6-2 3.4L2 8l-1.5 1.5 2 3.4 1.9-.6 1.2.7.4 2h4l.4-2 1.2-.7 1.9.\
-6 2-3.4L14 8l1.5-1.5-2-3.4-1.9.6-1.2-.7L10 1Z"
-            />
-            <circle cx="8" cy="8" r="2.3" />
-          </svg>
-        </button>
-        <span class="sr-only" id="number-help">${MIN} to ${MAX}\xD7. Double-click to reset.</span>
-        <span class="sr-only" id="slider-help">Arrow keys use your default tempo increment. Double-c\
-lick to reset.</span>
-        <span class="sr-only" id="dial-help">Drag up to speed up, down to slow down. Hold Shift for \
-fine adjustment. Double-click to reset to 1\xD7. Arrow keys use your default tempo increment.</span>
-        <span
-          class="sr-only status"
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-        ></span>
-      </div>
-      <section
-        id="tempo-settings"
-        class="settings"
-        role="dialog"
-        popover="manual"
-        aria-labelledby="settings-title"
-        hidden
-      >
-        <header
-          ><strong id="settings-title">Tempo settings</strong
-          ><div class="settings-actions"><button class="open-editor" type="button">Tempo editor</but\
-ton><button class="close-settings" type="button" aria-label="Close tempo settings"
-            >Close</button
-          ></div></header
-        >
-        <p class="control-setup-intro" hidden>Choose a tempo control and whether to show semitone ad\
-justment. You can change both later in Appearance.</p>
-        <div class="quick-settings">
-        <label class="random-label"
-          ><input id="apply-saved" type="checkbox" checked />Apply saved tempos</label
-        >
-        <label class="random-label"><input id="copy-tempo-links" type="checkbox" />Include tempo in \
-copied links</label>
-        </div>
-        <input
-          id="saved-filter"
-          type="search"
-          placeholder="Find a saved track\u2026"
-          aria-label="Find a saved track"
-        />
-        <p class="saved-count"></p>
-        <div class="saved-list" role="region" aria-label="Saved tracks"></div>
-        <button class="saved-more" type="button" hidden>Show 100 more</button>
-        <div class="settings-tools">
-        <details class="appearance-settings">
-          <summary>Appearance</summary>
-          <label class="random-label"><input id="show-key" type="checkbox" checked />Show semitone a\
-djustment in player</label>
-          <label class="control-style-label">Tempo control <select id="control-style"><option value=\
-"slider">Slider</option><option value="dial">Dial</option><option value="vertical">Vertical slider</\
-option></select></label>
-          <label class="increment-label">Default tempo increment <input id="tempo-increment" type="n\
-umber" min="0.001" max="1" step="0.001" value="0.025" aria-label="Default tempo increment"> \xD7</label\
->
-          <fieldset class="appearance-options" aria-label="SoundCloud theme">
-            <label><input type="radio" name="appearance" value="native" checked>SoundCloud</label>
-            <label><input type="radio" name="appearance" value="light">Light</label>
-            <label><input type="radio" name="appearance" value="charcoal">Charcoal</label>
-            <label><input type="radio" name="appearance" value="oled">OLED</label>
-          </fieldset>
-          <label class="random-label"><input id="star-motion" type="checkbox" />Star motion</label>
-          <label class="output-label" for="star-speed">Star speed <output id="star-speed-value">1.5\xD7\
-</output></label>
-          <input id="star-speed" type="range" min="0.5" max="4" step="0.25" value="1.5" aria-label="\
-Star motion speed" />
-        </details>
-        <details class="advanced-audio">
-          <summary>Advanced audio</summary>
-          <label class="random-label"><input id="crossfade" type="checkbox" />Crossfade tracks</labe\
-l>
-          <label class="output-label" for="crossfade-seconds">Overlap <output id="crossfade-value">5\
- seconds</output></label>
-          <input id="crossfade-seconds" type="range" min="1" max="10" step="1" value="5" aria-label=\
-"Crossfade duration in seconds" />
-          <p id="crossfade-status" role="status"></p>
-          <details class="crossfade-debug">
-            <summary>Crossfade diagnostics</summary>
-            <pre id="crossfade-debug-output" tabindex="0" aria-label="Crossfade diagnostics"></pre>
-            <button id="crossfade-debug-refresh" type="button">Refresh</button>
-            <button id="crossfade-debug-copy" type="button">Copy diagnostics</button>
-            <p id="crossfade-debug-feedback" role="status"></p>
-          </details>
-          <details class="pitch-customization"><summary>Semitone controls</summary><div class="pitch\
--bounds"><label>Minimum <input id="pitch-min" type="number" min="-12" max="12" step="0.5" value="-12\
-"><span>st</span></label><label>Maximum <input id="pitch-max" type="number" min="-12" max="12" step=\
-"0.5" value="12"><span>st</span></label><label>Default increment <input id="pitch-step" type="number\
-" min="0.001" max="12" step="0.1" value="0.5"><span>st</span></label></div></details>
-          <label class="key-shift-label">Semitone shift <input id="key-shift" type="number" min="-12\
-" max="12" step="0.5" value="0" /> st</label>
-          <label class="random-label"
-            ><input id="preserve-key" type="checkbox" />Preserve key by default</label
-          >
-          <p id="pitch-mode-help"
-            >Timelines can use their own pitch mode.</p
-          >
-          <p id="wasm-status" role="status"></p>
-          <label class="random-label"><input id="use-wasm" type="checkbox" />Use WASM for Preserve k\
-ey</label>
-          <label class="output-label" for="output-value">Output level <span class="output-entry"><in\
-put id="output-value" type="number" min="-24" step="any" value="-6" aria-describedby="output-help" /\
-> dB</span></label>
-          <input id="output-level" type="range" min="-24" max="12" step="0.1" value="-6" aria-label=\
-"Output level in dB" aria-describedby="output-help" />
-          <p id="output-help">Above 0 dB can clip and become very loud. Start low.</p>
-          <p id="output-status" role="status"></p>
-        </details>
-        <details class="shortcuts">
-          <summary>Shortcuts</summary>
-          <p>Double-click speed or slider: reset to 1\xD7.<br>Shift-click arrows: 0.01\xD7 steps.<br>Alt+S\
-hift+Left/Right: 0.05\xD7 steps.<br>Alt+Shift+Down: reset.</p>
-        </details>
-        <details class="library-backup">
-          <summary>Backup</summary>
-          <div class="backup-actions">
-            <button class="backup-export" type="button">Export backup</button>
-            <button class="backup-import" type="button">Import backup</button>
-          </div>
-          <input class="backup-file" type="file" accept=".json,application/json" aria-label="Choose \
-a Track Control backup" hidden />
-          <div class="backup-preview" hidden>
-            <p class="backup-summary"></p>
-            <p class="backup-preferences"></p>
-            <div class="backup-actions">
-              <button class="backup-confirm" type="button">Confirm import</button>
-              <button class="backup-cancel" type="button">Cancel</button>
-            </div>
-          </div>
-        </details>
-        </div>
-        <p class="settings-status" role="status" aria-live="polite"></p>
-        <button class="saved-undo" type="button" hidden>Undo removal</button>
-      </section>
-    `}var audio_exports={};__export(audio_exports,{createBufferedTransport:()=>createBufferedTransport,createMediaFacade:()=>createMediaFacade,
+localStorage.getItem(tempoIncrementKey));if(validTempoIncrement(value))return value}catch{}return defaultTempoIncrement}var audio_exports={};__export(audio_exports,{createBufferedTransport:()=>createBufferedTransport,createMediaFacade:()=>createMediaFacade,
 createNaturalOutput:()=>createNaturalOutput,createPcmSource:()=>createPcmSource,createPcmWindow:()=>createPcmWindow,
 createPlaybackGate:()=>createPlaybackGate,createPlaybackOwner:()=>createPlaybackOwner,createPreserveOutput:()=>createBundledPreserveOutput,
 createRateWindow:()=>createRateWindow,createSoundCloudHostClock:()=>createSoundCloudHostClock,createSourceBinding:()=>createSourceBinding,
@@ -8119,7 +6949,88 @@ if(released||disposed||call(manager,"getState","globalPlayLock"))return false;ch
 release();throw error2}}function dispose(){if(disposal)return disposal;disposed=true;preparation=void 0;
 preloadRuntime=void 0;disposal=Promise.resolve().then(()=>Promise.all([...preloads].map(release=>Promise.
 resolve().then(release)))).finally(()=>clock?.dispose()).finally(()=>{bindings.clear();clock=void 0;
-context=void 0;installedMethods=void 0});return disposal}return Object.freeze({prepare,preloadNext,dispose})}function createStarMotion(paint,view=window){let frame=0;let previous=null;let speed=0;let x=0;let y=0;
+context=void 0;installedMethods=void 0});return disposal}return Object.freeze({prepare,preloadNext,dispose})}function syncTempoRange(input){const minimum=Number(input.min)||0;const span=Number(input.max)-minimum;
+const value=span>0?(input.valueAsNumber-minimum)/span:0;const fill=`${Math.max(0,Math.min(1,value||0))*
+100}%`;if(input.style.getPropertyValue("--range-fill")!==fill)input.style.setProperty("--range-fill",
+fill)}var tempoRangeStyle=`
+  input[type='range'] {
+    --range-thumb-opacity: 1;
+    appearance: none;
+    -webkit-appearance: none;
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    height: 32px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: linear-gradient(to right,
+      var(--tempo-accent) var(--range-fill, 0%),
+      var(--tempo-track) var(--range-fill, 0%))
+      center / calc(100% - 12px) 2px no-repeat;
+    cursor: pointer;
+    touch-action: none;
+  }
+  input[type='range']::-webkit-slider-runnable-track {
+    height: 2px;
+    background: transparent;
+  }
+  input[type='range']::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    box-sizing: border-box;
+    width: 12px;
+    height: 12px;
+    margin-top: -5px;
+    border: 1px solid color-mix(in srgb, var(--tempo-accent) 85%, var(--tempo-fg));
+    border-radius: 50%;
+    background: var(--tempo-surface);
+    opacity: var(--range-thumb-opacity);
+    transition: opacity 120ms ease-out;
+  }
+  input[type='range']::-moz-range-track,
+  input[type='range']::-moz-range-progress {
+    height: 2px;
+    background: transparent;
+  }
+  input[type='range']::-moz-range-thumb {
+    box-sizing: border-box;
+    width: 12px;
+    height: 12px;
+    border: 1px solid color-mix(in srgb, var(--tempo-accent) 85%, var(--tempo-fg));
+    border-radius: 50%;
+    background: var(--tempo-surface);
+    opacity: var(--range-thumb-opacity);
+    transition: opacity 120ms ease-out;
+  }
+  input[type='range']:disabled {
+    opacity: .45;
+    cursor: default;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    input[type='range']:not(:hover):not(:focus-visible):not(:active) {
+      --range-thumb-opacity: 0;
+    }
+  }
+  @media (any-pointer: coarse), (forced-colors: active) {
+    input[type='range'] {
+      --range-thumb-opacity: 1 !important;
+    }
+  }
+  @media (forced-colors: active) {
+    input[type='range'] {
+      forced-color-adjust: none;
+      --tempo-accent: Highlight;
+      --tempo-track: GrayText;
+      --tempo-surface: Canvas;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    input[type='range']::-webkit-slider-thumb { transition: none; }
+    input[type='range']::-moz-range-thumb { transition: none; }
+  }
+`;function createStarMotion(paint,view=window){let frame=0;let previous=null;let speed=0;let x=0;let y=0;
 let elapsed=0;let period=6+Math.random()*10;let heading=Math.random()*Math.PI*2;let turn=(Math.random()-
 .5)*Math.PI*1.6;function animate(time){const dt=previous===null?0:Math.min((time-previous)/1e3,.05);
 previous=time;elapsed+=dt*speed;if(elapsed>=period){heading=(heading+turn)%(Math.PI*2);elapsed-=period;
@@ -8463,10 +7374,10 @@ return owner.releasePromise;const result=lease.release(position,options);owner.r
 then(snapshot=>{if(state.buffered===owner)state.buffered=null;return snapshot}).catch(error2=>{owner.
 releasePromise=null;throw error2});owner.releasePromise.catch(()=>{});return owner.releasePromise}})}
 function crossfadeReady(audio,{preserve,shift,rate}){const state=states.get(audio);return Boolean(state&&
-state.source.context.state==="running"&&!state.buffered&&!state.gate&&!state.loading&&!state.stopping&&
-(!(shift||preserve&&rate!==1)||state.active))}function fadeNode(state){if(!state.fade){const fade=state.
-source.context.createGain();connect.call(fade,state.output);try{moveNative(state,fade)}catch(error2){
-disconnect.call(fade);throw error2}state.fade=fade}return state.fade}async function prepareIncoming(audio,buffer,settings,{
+state.source.context.state==="running"&&!state.buffered&&!state.loading&&!state.stopping&&(!(shift||
+preserve&&rate!==1)||state.active))}function fadeNode(state){if(state.gate)return state.nativeMix;if(!state.
+fade){const fade=state.source.context.createGain();connect.call(fade,state.output);try{moveNative(state,
+fade)}catch(error2){disconnect.call(fade);throw error2}state.fade=fade}return state.fade}async function prepareIncoming(audio,buffer,settings,{
 signal}){signal.throwIfAborted();const{rate,preserve,shift}=settings;if(!Number.isFinite(rate)||rate<
 .25||rate>4||!Number.isFinite(shift)||Math.abs(shift)>24)throw new Error("Unsupported incoming tempo\
  or pitch.");const sampleRate3=states.get(audio).source.context.sampleRate;const duration=buffer.duration/
@@ -8483,38 +7394,39 @@ const rendered=await timed(offline.startRendering());signal.throwIfAborted();con
 2,Math.floor(duration*sampleRate3),sampleRate3);const start=Math.round(latency*sampleRate3);for(let channel=0;channel<
 2;channel++)result.copyToChannel(rendered.getChannelData(channel).subarray(start,start+result.length),
 channel);return result}finally{input.disconnect();processor?.disconnect();processor?.port.close()}}function beginCrossfade(audio,buffer,offset,rate,seconds,opening){
-const state=states.get(audio);if(!state||state.buffered||state.gate||state.loading||state.stopping||
-state.source.context.state!=="running"||!Number.isFinite(offset)||offset<0||!Number.isFinite(rate)||
-rate<.25||rate>4||!Number.isFinite(seconds)||seconds<=0||seconds>10||!Number.isFinite(opening?.duration)||
-opening.duration<seconds||opening.duration>19)throw new Error("The player audio connection is not re\
-ady for crossfade.");const context=state.source.context;const nativeFade=fadeNode(state);const tail=context.
-createBufferSource();const level=context.createGain();const envelope=context.createGain();const head=context.
-createBufferSource();const headEnvelope=context.createGain();const headLevel=context.createGain();let processor=null;
-let unsubscribe;let levelAudio;let closed=false;const incoming=new Set([state]);const now=context.currentTime;
-function followLevel(target){if(target===levelAudio)return;unsubscribe?.();unsubscribe=outputLevel.subscribeLevel(
-target,({volume,muted,outputDb})=>{level.gain.value=muted?0:volume*10**(outputDb/20);headLevel.gain.
-value=level.gain.value});levelAudio=target}function restore(target){if(!target.fade||target.source.context.
-state==="closed")return;target.fade.gain.cancelScheduledValues(target.source.context.currentTime);target.
-fade.gain.setValueAtTime(1,target.source.context.currentTime)}function dispose(){if(closed)return;closed=
-true;unsubscribe?.();try{tail.stop()}catch{}try{head.stop()}catch{}for(const node of[tail,head,headEnvelope,
-headLevel,level,envelope,processor]){try{if(node)disconnect.call(node)}catch{}}processor?.port.close();
-for(const target of incoming)restore(target)}try{tail.buffer=buffer;head.buffer=opening;tail.playbackRate.
-value=rate;tail.connect(level);envelope.connect(state.output);followLevel(audio);head.connect(headEnvelope).
-connect(headLevel).connect(state.output);if(state.active&&state.node){processor=state.node;disconnect.
-call(state.input,processor);disconnect.call(processor);level.connect(processor);processor.connect(envelope);
-processor.addEventListener("processorerror",dispose,{once:true});state.node=null;state.connected=false;
-state.active=false;state.applied=null;state.needsReset=true;state.wet.gain.cancelScheduledValues(now);
-state.wet.gain.value=0;state.dry.gain.value=1}else level.connect(envelope);nativeFade.gain.cancelScheduledValues(
-now);nativeFade.gain.setValueAtTime(0,now);envelope.gain.setValueAtTime(1,now);envelope.gain.linearRampToValueAtTime(
-0,now+seconds);headEnvelope.gain.setValueAtTime(0,now);headEnvelope.gain.linearRampToValueAtTime(1,now+
-seconds);tail.start(now,offset);tail.stop(now+seconds);head.start(now)}catch(error2){dispose();throw error2}
-return{endTime:now+opening.duration,overlapEnd:now+seconds,startedAt:now,context,silence(target){const next=states.
-get(target);if(!next||closed)return false;followLevel(target);if(!incoming.has(next)){fadeNode(next).
-gain.setValueAtTime(0,next.source.context.currentTime);incoming.add(next)}return true},position(){return Math.
-max(0,context.currentTime-now)},nativePosition(target){const next=states.get(target);return target.currentTime-
-(next?.active?next.latency*target.playbackRate:0)},fadeIn(target,duration=.08){if(!this.silence(target))
-return false;const next=states.get(target);const at=next.source.context.currentTime;next.fade.gain.cancelScheduledValues(
-at);next.fade.gain.setValueAtTime(0,at);next.fade.gain.linearRampToValueAtTime(1,at+duration);const time=context.
+const state=states.get(audio);if(!state||state.buffered||state.loading||state.stopping||state.source.
+context.state!=="running"||!Number.isFinite(offset)||offset<0||!Number.isFinite(rate)||rate<.25||rate>
+4||!Number.isFinite(seconds)||seconds<=0||seconds>10||!Number.isFinite(opening?.duration)||opening.duration<
+seconds||opening.duration>19)throw new Error("The player audio connection is not ready for crossfade\
+.");const context=state.source.context;const nativeFade=fadeNode(state);const tail=context.createBufferSource();
+const level=context.createGain();const envelope=context.createGain();const head=context.createBufferSource();
+const headEnvelope=context.createGain();const headLevel=context.createGain();let processor=null;let unsubscribe;
+let levelAudio;let closed=false;const incoming=new Set([state]);const now=context.currentTime;function followLevel(target){
+if(target===levelAudio)return;unsubscribe?.();unsubscribe=outputLevel.subscribeLevel(target,({volume,
+muted,outputDb})=>{level.gain.value=muted?0:volume*10**(outputDb/20);headLevel.gain.value=level.gain.
+value});levelAudio=target}function restore(target){const fade=target.nativeMix||target.fade;if(!fade||
+target.source.context.state==="closed")return;fade.gain.cancelScheduledValues(target.source.context.
+currentTime);fade.gain.setValueAtTime(1,target.source.context.currentTime)}function dispose(){if(closed)
+return;closed=true;unsubscribe?.();try{tail.stop()}catch{}try{head.stop()}catch{}for(const node of[tail,
+head,headEnvelope,headLevel,level,envelope,processor]){try{if(node)disconnect.call(node)}catch{}}processor?.
+port.close();for(const target of incoming)restore(target)}try{tail.buffer=buffer;head.buffer=opening;
+tail.playbackRate.value=rate;tail.connect(level);envelope.connect(state.output);followLevel(audio);head.
+connect(headEnvelope).connect(headLevel).connect(state.output);if(state.active&&state.node){processor=
+state.node;disconnect.call(state.input,processor);disconnect.call(processor);level.connect(processor);
+processor.connect(envelope);processor.addEventListener("processorerror",dispose,{once:true});state.node=
+null;state.connected=false;state.active=false;state.applied=null;state.needsReset=true;state.wet.gain.
+cancelScheduledValues(now);state.wet.gain.value=0;state.dry.gain.value=1}else level.connect(envelope);
+nativeFade.gain.cancelScheduledValues(now);nativeFade.gain.setValueAtTime(0,now);envelope.gain.setValueAtTime(
+1,now);envelope.gain.linearRampToValueAtTime(0,now+seconds);headEnvelope.gain.setValueAtTime(0,now);
+headEnvelope.gain.linearRampToValueAtTime(1,now+seconds);tail.start(now,offset);tail.stop(now+seconds);
+head.start(now)}catch(error2){dispose();throw error2}return{endTime:now+opening.duration,overlapEnd:now+
+seconds,startedAt:now,context,silence(target){const next=states.get(target);if(!next||closed)return false;
+followLevel(target);if(!incoming.has(next)){fadeNode(next).gain.setValueAtTime(0,next.source.context.
+currentTime);incoming.add(next)}return true},position(){return Math.max(0,context.currentTime-now)},
+nativePosition(target){const next=states.get(target);return target.currentTime-(next?.active?next.latency*
+target.playbackRate:0)},fadeIn(target,duration=.08){if(!this.silence(target))return false;const next=states.
+get(target);const at=next.source.context.currentTime;const fade=fadeNode(next);fade.gain.cancelScheduledValues(
+at);fade.gain.setValueAtTime(0,at);fade.gain.linearRampToValueAtTime(1,at+duration);const time=context.
 currentTime;headEnvelope.gain.cancelScheduledValues(time);headEnvelope.gain.setValueAtTime(1,time);headEnvelope.
 gain.linearRampToValueAtTime(0,time+duration);this.endTime=time+duration;return true},dispose}}AudioContext.
 prototype.createMediaElementSource=function(audio){const source2=create.call(this,audio);if(!(audio instanceof
@@ -8692,50 +7604,54 @@ true;if(error2.code==="SOUNDCLOUD_QUEUE_PENDING")current.retryPosition=current.a
 current.audio).rate;current.waitingNext=false;current.waitingSource=false;current.next?.dispose();current.
 next=null;status(`Playing normally. ${waitingSource?"This track\u2019s audio could not be identified. See\
  crossfade diagnostics.":error2.message}`)}}}function tick(){const audio=selected;if(!enabled||disposed||
-!audio)return;if(job?.route){const current2=job;visual({nextTrack:current2.next.trackUrl,progress:Math.
-max(0,Math.min(1,1-(current2.route.overlapEnd-current2.route.context.currentTime)/current2.overlapSeconds))});
-const remaining2=current2.route.endTime-current2.route.context.currentTime;if(remaining2<=0||current2.
-route.context.state!=="running"){cancel();status(current2.fading?"Crossfade complete.":"The buffered\
- opening ended before SoundCloud could synchronize; native playback restored.");return}const track=readTrack();
-if(track&&track!==current2.track){if(current2.incomingTrack&&current2.incomingTrack!==track){cancel();
-return}current2.incomingTrack=track}current2.route.silence(audio);const changed=audio!==current2.audio||
-audio.currentTime<current2.position-.5;if(!current2.fading&&current2.incomingTrack&&changed&&!audio.
-paused&&!audio.seeking&&audio.readyState>=2&&graph.crossfadeReady(audio,readSettings(audio))){if(!current2.
-next.isCurrent(audio)){cancel();status("The queued track changed; playing normally.");return}const actual=readSettings(
-audio);const expected=current2.nextSettings;if(actual.variable||actual.rate!==expected.rate||actual.
-preserve!==expected.preserve||actual.shift!==expected.shift){cancel("incoming tempo or pitch changed");
-return}const now=current2.route.context.currentTime;const desired=current2.route.position()*expected.
-rate;const audible=current2.route.nativePosition(audio);current2.handoffError=audible-desired;if(Math.
-abs(current2.handoffError)>.02*expected.rate){if(now>=(current2.seekAfter??0)){audio.currentTime=desired+
-Math.max(0,audio.currentTime-audible);current2.seekAfter=now+.75;status("Crossfading; synchronizing \
-SoundCloud underneath\u2026")}}else if(now>=current2.route.overlapEnd){current2.fading=current2.route.
-fadeIn(audio);if(current2.fading)status("Returning to synchronized native playback\u2026")}}return}if(audio.
-paused||audio.seeking||!Number.isFinite(audio.duration))return;const settings=readSettings(audio);const currentSignature=signature(
-audio);if(job&&job.signature!==currentSignature)cancel("track or tempo changed");if(job?.next&&!job.
-next.matches())cancel("queue changed");if(job?.failed&&audio.currentTime>=job.retryPosition)cancel();
-const remaining=(audio.duration-audio.currentTime)/settings.rate;if(settings.variable){status("Cross\
-fade waits until the tempo timeline is steady.");return}if(!graph.crossfadeReady(audio,settings)){status(
-"Crossfade needs a ready player audio connection.");return}if(audio.duration/settings.rate<seconds*2+
-2||remaining<.5){status("Playing normally. Not enough track time for crossfade.");return}if(!job&&remaining>
-Math.max(60,seconds+30)){status("Crossfade enabled. Preloading starts near the end of the track.");return}
-if(!job&&remaining<=Math.max(60,seconds+30)){job={audio,track:readTrack(),signature:currentSignature,
-start:Math.max(0,audio.duration-(seconds+2)*settings.rate),controller:new AbortController};status("P\
-reloading the next track\u2026");void prepare(job)}if(!job?.buffer)return;const nextRate=readNextRate(
-job.next.trackUrl);job.requiredSeconds=(seconds+1)*(Number.isFinite(nextRate)&&nextRate>=.25&&nextRate<=
-4?nextRate:4);job.nextReady=job.next.ready(job.requiredSeconds);if(!job.nextReady){status("Buffering\
- the next track; playback continues normally.");return}if(!job.opening){if(!job.decodingOpening)void prepareOpening(
-job);return}if(JSON.stringify(nextSettingsFor(job.next.trackUrl))!==JSON.stringify(job.nextSettings)||
-job.next.streamUrl()!==job.openingUrl){cancel("next track settings changed");return}status("Crossfad\
-e ready.");if(remaining>seconds)return;const button=nextButton();if(!button){status("Crossfade needs\
- another track in the queue.");return}const current=job;const source2=sourceFor(audio);if(source2.status===
-"unbound"&&source2.reason==="waiting-for-payload-proof"&&source2.sourceId===current.sourceId&&source2.
-generation===current.generation){status("Waiting for stream verification; playback continues normall\
-y.");return}if(source2.status!=="bound"||source2.sourceId!==current.sourceId||source2.generation!==current.
-generation){cancel("stream identity changed");return}try{current.position=audio.currentTime;current.
-route=graph.beginCrossfade(audio,current.buffer,current.position-current.start,settings.rate,remaining,
-current.opening);current.buffer=null;current.opening=null;current.overlapSeconds=remaining;visual({nextTrack:current.
-next.trackUrl,progress:0});button.click();status("Crossfading buffered audio\u2026")}catch(error2){current.
-route?.dispose();current.route=null;visual(null);status(`Playing normally. ${error2.message}`)}}function safeTick(){
+!audio)return;if(job?.route){const current2=job;visual({track:current2.track,position:current2.position+
+current2.route.position()*current2.outgoingRate,duration:current2.duration,paused:current2.route.context.
+state!=="running",nextTrack:current2.next.trackUrl,nextPosition:current2.route.position()*current2.nextSettings.
+rate,progress:Math.max(0,Math.min(1,1-(current2.route.overlapEnd-current2.route.context.currentTime)/
+current2.overlapSeconds))});const remaining2=current2.route.endTime-current2.route.context.currentTime;
+if(remaining2<=0||current2.route.context.state!=="running"){cancel();status(current2.fading?"Crossfa\
+de complete.":"The buffered opening ended before SoundCloud could synchronize; native playback resto\
+red.");return}const track=readTrack();if(track&&track!==current2.track){if(current2.incomingTrack&&current2.
+incomingTrack!==track){cancel();return}current2.incomingTrack=track}current2.route.silence(audio);const changed=audio!==
+current2.audio||audio.currentTime<current2.position-.5;if(!current2.fading&&current2.incomingTrack&&
+changed&&!audio.paused&&!audio.seeking&&audio.readyState>=2&&graph.crossfadeReady(audio,readSettings(
+audio))){if(!current2.next.isCurrent(audio)){cancel();status("The queued track changed; playing norm\
+ally.");return}const actual=readSettings(audio);const expected=current2.nextSettings;if(actual.variable||
+actual.rate!==expected.rate||actual.preserve!==expected.preserve||actual.shift!==expected.shift){cancel(
+"incoming tempo or pitch changed");return}const now=current2.route.context.currentTime;const desired=current2.
+route.position()*expected.rate;const audible=current2.route.nativePosition(audio);current2.handoffError=
+audible-desired;if(Math.abs(current2.handoffError)>.02*expected.rate){if(now>=(current2.seekAfter??0)){
+audio.currentTime=desired+Math.max(0,audio.currentTime-audible);current2.seekAfter=now+.75;status("C\
+rossfading; synchronizing SoundCloud underneath\u2026")}}else if(now>=current2.route.overlapEnd){current2.
+fading=current2.route.fadeIn(audio);if(current2.fading)status("Returning to synchronized native play\
+back\u2026")}}return}if(audio.paused||audio.seeking||!Number.isFinite(audio.duration))return;const settings=readSettings(
+audio);const currentSignature=signature(audio);if(job&&job.signature!==currentSignature)cancel("trac\
+k or tempo changed");if(job?.next&&!job.next.matches())cancel("queue changed");if(job?.failed&&audio.
+currentTime>=job.retryPosition)cancel();const remaining=(audio.duration-audio.currentTime)/settings.
+rate;if(settings.variable){status("Crossfade waits until the tempo timeline is steady.");return}if(!graph.
+crossfadeReady(audio,settings)){status("Crossfade needs a ready player audio connection.");return}if(audio.
+duration/settings.rate<seconds*2+2||remaining<.5){status("Playing normally. Not enough track time fo\
+r crossfade.");return}if(!job&&remaining>Math.max(60,seconds+30)){status("Crossfade enabled. Preload\
+ing starts near the end of the track.");return}if(!job&&remaining<=Math.max(60,seconds+30)){job={audio,
+track:readTrack(),signature:currentSignature,start:Math.max(0,audio.duration-(seconds+2)*settings.rate),
+controller:new AbortController};status("Preloading the next track\u2026");void prepare(job)}if(!job?.
+buffer)return;const nextRate=readNextRate(job.next.trackUrl);job.requiredSeconds=(seconds+1)*(Number.
+isFinite(nextRate)&&nextRate>=.25&&nextRate<=4?nextRate:4);job.nextReady=job.next.ready(job.requiredSeconds);
+if(!job.nextReady){status("Buffering the next track; playback continues normally.");return}if(!job.opening){
+if(!job.decodingOpening)void prepareOpening(job);return}if(JSON.stringify(nextSettingsFor(job.next.trackUrl))!==
+JSON.stringify(job.nextSettings)||job.next.streamUrl()!==job.openingUrl){cancel("next track settings\
+ changed");return}status("Crossfade ready.");if(remaining>seconds)return;const button=nextButton();if(!button){
+status("Crossfade needs another track in the queue.");return}const current=job;const source2=sourceFor(
+audio);if(source2.status==="unbound"&&source2.reason==="waiting-for-payload-proof"&&source2.sourceId===
+current.sourceId&&source2.generation===current.generation){status("Waiting for stream verification; \
+playback continues normally.");return}if(source2.status!=="bound"||source2.sourceId!==current.sourceId||
+source2.generation!==current.generation){cancel("stream identity changed");return}try{current.position=
+audio.currentTime;current.duration=audio.duration;current.outgoingRate=settings.rate;current.route=graph.
+beginCrossfade(audio,current.buffer,current.position-current.start,settings.rate,remaining,current.opening);
+current.buffer=null;current.opening=null;current.overlapSeconds=remaining;visual({track:current.track,
+position:current.position,duration:current.duration,paused:false,nextTrack:current.next.trackUrl,nextPosition:0,
+progress:0});button.click();status("Crossfading buffered audio\u2026")}catch(error2){current.route?.
+dispose();current.route=null;visual(null);status(`Playing normally. ${error2.message}`)}}function safeTick(){
 try{tick()}catch(error2){cancel();status(`Crossfade stopped. ${error2.message}`)}}function reload(){
 cancel();try{enabled=storage.getItem(enabledKey)==="true";const value=Number(storage.getItem(secondsKey));
 seconds=Number.isInteger(value)&&value>=1&&value<=10?value:5}catch{enabled=false}timers.clearInterval(
@@ -8743,13 +7659,13 @@ timer);timer=enabled?timers.setInterval(safeTick,100):void 0;status(enabled?"Cro
 ailable streams play normally.":"Crossfade off.");onState?.()}const events=["pause","seeking","playi\
 ng"];function mediaEvent(event){if(event.type==="playing"){safeTick();return}if(job?.route&&!job.fading&&
 (event.type==="seeking"||!job.incomingTrack))return;cancel(`player ${event.type}`)}return{enabled:()=>enabled,
-seconds:()=>seconds,label:()=>message,diagnostics(){const audio=selected;const round2=value=>Number.
+seconds:()=>seconds,label:()=>message,diagnostics(){const audio=selected;const round3=value=>Number.
 isFinite(value)?Math.round(value*100)/100:null;let player=null;try{const source2=audio&&sourceFor(audio);
-player=audio?{paused:audio.paused,seeking:audio.seeking,readyState:audio.readyState,position:round2(
-audio.currentTime),duration:round2(audio.duration),source:source2.status,sourceReason:source2.reason??
+player=audio?{paused:audio.paused,seeking:audio.seeking,readyState:audio.readyState,position:round3(
+audio.currentTime),duration:round3(audio.duration),source:source2.status,sourceReason:source2.reason??
 null,sourceCapture:sourceStats(),graphReady:graph.crossfadeReady(audio,readSettings(audio)),rate:readSettings(
-audio).rate,nextBufferedSeconds:round2(job?.next?.bufferedSeconds?.()),requiredSeconds:round2(job?.requiredSeconds),
-handoffErrorSeconds:round2(job?.handoffError),openingSecondsRemaining:job?.route?round2(job.route.endTime-
+audio).rate,nextBufferedSeconds:round3(job?.next?.bufferedSeconds?.()),requiredSeconds:round3(job?.requiredSeconds),
+handoffErrorSeconds:round3(job?.handoffError),openingSecondsRemaining:job?.route?round3(job.route.endTime-
 job.route.context.currentTime):null}:null}catch(error2){player={error:clean(error2.message)}}return{
 enabled,overlapSeconds:seconds,status:message,stage:job?.failed?"unavailable":job?.waitingNext?"find\
 ing-next-track":job?.waitingSource?"identifying-source":job?.fading?"handing-off":job?.route?"buffer\
@@ -8765,7 +7681,8 @@ trols changed"),dispose(){disposed=true;cancel();timers.clearInterval(timer);for
 selected?.removeEventListener(event,mediaEvent);selected=null}}}function formatPitchNotice(shift){const values=Array.isArray(shift)?shift:[shift];const min=Math.min(
 ...values),max=Math.max(...values);const format=value=>{const rounded=Number(value.toPrecision(4));return`${rounded<
 0?"\u2212":rounded>0?"+":""}${Math.abs(rounded)}`};if(min===0&&max===0)return"";return`Pitch shifted\
- ${format(min)}${min===max?"":` to ${format(max)}`} st`}function createTrackVisuals({document:document2,readTrack}){let layer,incoming,nextTrack,notice;const avatar=()=>document2.
+ ${format(min)}${min===max?"":` to ${format(max)}`} st`}function artworkTransition(value){const position=Number.isFinite(value)?Math.max(0,Math.min(1,value)):
+0;const progress=position*position*(3-2*position);return{progress,start:1-1.5*progress,end:1.5-1.5*progress}}function createTrackVisuals({document:document2,readTrack}){let layer,incoming,nextTrack,notice;const avatar=()=>document2.
 querySelector(".playControls__soundBadge .playbackSoundBadge__avatar");const cover=element=>{const image=element?.
 querySelector("img");if(image)return`url(${JSON.stringify(image.currentSrc||image.src)})`;const background=element?.
 querySelector(".image")||element;return background?document2.defaultView.getComputedStyle(background).
@@ -8780,14 +7697,14 @@ nextTrack)continue;const row=link.closest(".queueItemView, .sound, .playableTile
 querySelector(".queueItemView__artwork, .sound__coverArt, .playableTile__artwork");const background=cover(
 image);if(background!=="none"){incoming.style.backgroundImage=background;break}}}}const host=avatar();
 if(!host)return;if(layer.parentElement!==host)host.append(layer);if(nextTrack&&readTrack()===nextTrack){
-const background=cover(host);if(background!=="none")incoming.style.backgroundImage=background}const progress=incoming.
-style.backgroundImage?state.progress:0;layer.style.setProperty("--incoming-progress",String(progress));
-layer.style.setProperty("--fade-start",`${110-140*progress}%`);layer.style.setProperty("--fade-end",
-`${130-140*progress}%`)}function pitch(shift){const host=document2.querySelector(".playControls__sou\
-ndBadge .playbackSoundBadge__titleContextContainer");if(!host){notice?.remove();notice=null;return}if(!notice||
-notice.parentElement!==host){notice?.remove();notice=document2.createElement("span");notice.className=
-"soundcloud-tempo-pitch-notice";host.append(notice)}const text=formatPitchNotice(shift);if(notice.textContent!==
-text)notice.textContent=text;notice.hidden=!text}return{overlap,pitch}}function encodeTempoCode(data2){return"SCT1."+btoa(Array.from(new TextEncoder().encode(JSON.stringify(
+const background=cover(host);if(background!=="none")incoming.style.backgroundImage=background}const{
+progress,start,end}=artworkTransition(incoming.style.backgroundImage?state.progress:0);layer.style.setProperty(
+"--tempo-artwork-progress",String(progress));layer.style.setProperty("--tempo-artwork-start",`${start*
+100}%`);layer.style.setProperty("--tempo-artwork-end",`${end*100}%`)}function pitch(shift){const host=document2.
+querySelector(".playControls__soundBadge .playbackSoundBadge__titleContextContainer");if(!host){notice?.
+remove();notice=null;return}if(!notice||notice.parentElement!==host){notice?.remove();notice=document2.
+createElement("span");notice.className="soundcloud-tempo-pitch-notice";host.append(notice)}const text=formatPitchNotice(
+shift);if(notice.textContent!==text)notice.textContent=text;notice.hidden=!text}return{overlap,pitch}}function encodeTempoCode(data2){return"SCT1."+btoa(Array.from(new TextEncoder().encode(JSON.stringify(
 data2)),byte=>String.fromCharCode(byte)).join("")).replaceAll("+","-").replaceAll("/","_").replace(/=+$/,
 "")}function tempoShareLink(data2,website=""){const code=encodeTempoCode(data2);const url=website?new URL(
 "share/",website.endsWith("/")?website:website+"/"):new URL("https://soundcloud.com"+data2.track);if(website)
@@ -8804,7 +7721,210 @@ ontrol share page.")}code=url.searchParams.get("sct")||(url.hash.startsWith("#sc
 code or tempo link.");const bytes=Uint8Array.from(atob(code.slice(5).replaceAll("-","+").replaceAll(
 "_","/")),character=>character.charCodeAt(0));const data2=validate(JSON.parse(new TextDecoder("utf-8",
 {fatal:true}).decode(bytes)));if(linkedTrack!==null&&linkedTrack!==data2.track)throw new Error("The \
-link and tempo settings refer to different tracks.");return data2}var editorStyle=`
+link and tempo settings refer to different tracks.");return data2}var round=value=>Math.round(value*1e3)/1e3;var validKeyShift=value=>Number.isFinite(value)&&Math.abs(
+value)<=12;var curves=["instant","linear","ease-in","ease-out","smooth"];function validatePoints(points,duration,field){
+if(!Array.isArray(points)||!points.length||points.length>200)throw new Error("Use between 1 and 200 \
+points per lane.");const result=points.map((point,index)=>{const previous=points[index-1];if(!point||
+![point.t,point[field],point.d].every(Number.isFinite)||point.t<0||point.t>duration||point.d<0||!curves.
+includes(point.c)||(field==="r"?point.r<.025||point.r>4:!validKeyShift(point.k))||!index&&(point.t!==
+0||point.d!==0)||index&&(point.t<=previous.t||point.t-point.d<previous.t))throw new Error("Invalid p\
+oints: check values, times, and overlapping fades.");return{t:round(point.t),[field]:round(field==="\
+r"?Math.max(.25,point.r):point.k),d:round(point.d),c:point.c}});for(let index=1;index<result.length;index++)
+if(result[index].t<=result[index-1].t||round(result[index].t-result[index].d)<result[index-1].t)throw new Error(
+"Points are too close together.");return result}function validateProfile(value,parseTrack){if(!value||
+value.v!==1||typeof value.track!=="string"||parseTrack(value.track)!==value.track||!Number.isFinite(
+value.duration)||value.duration<1||value.duration>86400)throw new Error("Invalid tempo code or unsup\
+ported version.");if(value.pitch!==void 0&&!["natural","preserve"].includes(value.pitch))throw new Error(
+"Invalid pitch mode.");if(value.keyShift!==void 0&&!validKeyShift(value.keyShift))throw new Error("K\
+ey shift must be between -12 and 12 semitones.");return{v:1,track:value.track,duration:value.duration,
+points:validatePoints(value.points,value.duration,"r"),...value.pitch===void 0?{}:{pitch:value.pitch},
+...value.keyShift===void 0?{}:{keyShift:value.keyShift},...value.pitchPoints===void 0?{}:{pitchPoints:validatePoints(
+value.pitchPoints,value.duration,"k")}}}function evaluatePoints(points,time,field="r"){let previous=points[0];
+for(let index=1;index<points.length;index++){const point=points[index];if(time<point.t){if(!point.d||
+point.c==="instant"||time<=point.t-point.d)return previous[field];let x=Math.max(0,Math.min(1,(time-
+point.t+point.d)/point.d));if(point.c==="ease-in")x*=x;else if(point.c==="ease-out")x=1-(1-x)**2;else if(point.
+c==="smooth")x=x*x*(3-2*x);return previous[field]+(point[field]-previous[field])*x}previous=point}return previous[field]}
+var profilePitchAt=(data2,time)=>data2.pitchPoints?evaluatePoints(data2.pitchPoints,time,"k"):data2.
+keyShift??null;function createTempoEditorPlayback(api,view){const website=api.website??(true?"https://itslush.githu\
+b.io/soundcloud-track-control/":"");const PREFIX="soundcloud.tempo.timeline.";let active=null;let key="";
+let profile=null;let scheduleData=null;let scheduleOverride=null;let schedule=null;let suspended=false;
+let keyOverride=null;let lastPitch=null;let timer=0;function running(){return Boolean(profile?.enabled&&
+!suspended)}function pitchMode(){return running()?profile.data.pitch??null:null}const encodeProfile=value2=>encodeTempoCode(
+validate(value2));const decodeProfile=text=>decodeTempoCode(text,validate,api.parseTrack,website);const storageKey=track=>PREFIX+
+encodeURIComponent(track);const validate=value2=>validateProfile(value2,api.parseTrack);function displayedDuration(){
+const element=document.querySelector(".playbackTimeline__duration");const clock=element?.querySelector(
+'span[aria-hidden="true"]')||element;const text=clock?.textContent.trim()||"";if(text.length>32||!/^(?:\d+:[0-5]\d|\d+):[0-5]\d(?:\.\d+)?$/.
+test(text))return 0;const duration=text.split(":").reduce((total,part)=>total*60+Number(part),0);return duration>=
+1&&duration<=86400?duration:0}function playbackDuration(){const duration=active?.duration;return Number.
+isFinite(duration)&&duration>0?duration:displayedDuration()}function shareLink(text,force=false){if(!api.
+copyLinks&&!force||typeof text!=="string"||text.length>8e3)return text;try{const url=new URL(text);if(url.
+origin!=="https://soundcloud.com"||url.username||url.password||url.hash||url.searchParams.has("sct")||
+api.parseTrack(url.pathname)!==key||!key)return text;const duration=playbackDuration();const data2=profile?.
+enabled&&!suspended?profile.data:{v:1,track:key,duration,points:[{t:0,r:api.rate,d:0,c:"instant"}]};
+url.searchParams.set("sct",encodeProfile({...data2,pitch:api.pitchMode,keyShift:keyOverride??data2.keyShift??
+api.keyShift??0,...keyOverride===null?{}:{pitchPoints:void 0}}));if(website)return tempoShareLink(decodeProfile(
+url.href),website);return url.href.length<=8e3?url.href:text}catch{return text}}const evaluate=(data2,time)=>evaluatePoints(
+data2.points,time);function immutableProfile(data2){for(const points of[data2.points,data2.pitchPoints]){
+if(!points)continue;for(const point of points)Object.freeze(point);Object.freeze(points)}return Object.
+freeze(data2)}function playbackSchedule(audio){if(!key||!active||audio!==active||!running())return null;
+const data2=profile.data;if(data2.track!==key)return null;if(scheduleData!==data2||scheduleOverride!==
+keyOverride){const overridden=keyOverride!==null;let minimumRate=data2.points[0].r;for(let index=1;index<
+data2.points.length;index++)minimumRate=Math.min(minimumRate,data2.points[index].r);schedule=Object.
+freeze({isConstantFrom(time){const rate=evaluate(data2,time);const pitch=profilePitchAt(data2,time);
+return data2.points.every(point=>point.t<time||point.r===rate)&&(overridden||!data2.pitchPoints||data2.
+pitchPoints.every(point=>point.t<time||point.k===pitch))},rateAt(sourceSeconds){if(!Number.isFinite(
+sourceSeconds))throw new RangeError("Timeline source time must be finite");return evaluate(data2,sourceSeconds)},
+minimumRate});scheduleData=data2;scheduleOverride=keyOverride}return schedule}function load(){profile=
+null;keyOverride=null;try{const saved=JSON.parse(localStorage.getItem(storageKey(key))||"null");if(saved)
+profile={data:immutableProfile(validate(saved.data)),enabled:saved.enabled===true};if(profile?.data.
+track!==key)profile=null}catch{profile=null}}function observe(audio){if(!active||!audio.paused)active=
+audio;if(audio.dataset.tempoTimelineObserved)return;audio.dataset.tempoTimelineObserved="true";for(const name of[
+"playing","seeking","seeked","timeupdate","loadedmetadata","pause","ended"]){audio.addEventListener(
+name,()=>{if(!audio.paused||!active||active===audio)active=audio;tick()})}}function value(){if(!key||
+!active||!profile?.enabled||suspended)return null;return Math.round(evaluate(profile.data,active.currentTime||
+0)*1e3)/1e3}function changeTrack(next){if(key===next)return;key=next;keyOverride=null;active=null;suspended=
+api.applySaved===false;load()}function activateSaved(){load();suspended=false}function applyOnce(data2){
+profile={data:immutableProfile(validate(data2)),enabled:true,temporary:true};keyOverride=null;suspended=
+false;api.refresh();view.syncControls()}function stop(){if(profile?.temporary)load();suspended=true;
+api.normal();view.syncControls();wake()}function tick(){const nextRate=value();const nextPitch=effectivePitch();
+const pitchChanged=nextPitch!==lastPitch;lastPitch=nextPitch;if(nextRate!==null&&nextRate!==api.rate||
+pitchChanged)api.refresh();view.updatePlayhead();wake()}function wake(){view.openPendingLink();const automate=running()&&
+(profile.data.points.length>1||keyOverride===null&&profile.data.pitchPoints?.length>1);const animate=view.
+isAnimating();if(!active||active.paused||active.ended||!automate&&!animate){clearTimeout(timer);timer=
+0;return}if(timer)return;timer=setTimeout(()=>{timer=0;tick()},50)}document.addEventListener("visibi\
+litychange",wake);function refreshSaved(track){if(track===key&&!profile?.temporary){const wasRunning=running();
+load();suspended=api.applySaved===false;if(wasRunning&&!profile?.enabled)api.normal();else api.refresh()}
+view.syncControls();wake()}window.addEventListener("storage",e=>{if(e.key===null||e.key===storageKey(
+key)){refreshSaved(key)}});function effectivePitch(){return keyOverride??(running()?profilePitchAt(profile.
+data,active?.currentTime||0):null)}return{get track(){return key},get media(){return active},get profile(){
+return profile},get suspended(){return suspended},get keyOverride(){return keyOverride},website,storageKey,
+validate,encodeProfile,decodeProfile,playbackDuration,running,pitchMode,shareLink,observe,value,playbackSchedule,
+changeTrack,activateSaved,applyOnce,stop,refreshSaved,wake,keyShift:effectivePitch,setKeyShift(value2){
+if(!validKeyShift(value2))throw new RangeError("Invalid key shift");keyOverride=value2},suspend(){suspended=
+true;view.syncControls();wake()}}}var round2=n=>Math.round(n*1e3)/1e3;var timeLabel=n=>`${Math.floor(n/60)}:${String(Math.floor(n%60)).
+padStart(2,"0")}`;var preciseTime=n=>timeLabel(n)+(Number.isInteger(round2(n))?"":"."+String(Math.round(
+n*1e3)%1e3).padStart(3,"0").replace(/0+$/,""));function drawFadeStart(svg,point,previous,position,graphWidth,selected){
+const labelX=position+100<=graphWidth-12?position+8:position-100;const labelLeft=Math.max(44,Math.min(
+graphWidth-104,labelX));const handle=svg("g",{class:"ramp","data-index":selected,"data-kind":"ramp",
+tabindex:0,role:"slider","aria-label":"Fade start","aria-orientation":"horizontal","aria-valuemin":previous.
+t,"aria-valuemax":point.t,"aria-valuenow":round2(point.t-point.d),"aria-valuetext":`${preciseTime(round2(
+point.t-point.d))}, ${point.d} seconds fade`});svg("title",{},"Drag to change fade duration",handle);
+svg("rect",{x:position-12,y:12,width:24,height:176,fill:"transparent"},null,handle);svg("line",{x1:position,
+x2:position,y1:12,y2:188,class:"ramp-line"},null,handle);svg("rect",{x:labelLeft,y:4,width:92,height:44,
+fill:"transparent"},null,handle);svg("rect",{x:labelLeft,y:14,width:92,height:24,rx:3,class:"ramp-la\
+bel"},null,handle);svg("path",{d:`M${labelLeft+8} 26h12m-9 -3-3 3 3 3m6 -6 3 3-3 3`,class:"ramp-arro\
+w"},null,handle);svg("text",{x:labelLeft+26,y:30},"Fade start",handle)}function renderTempoEditorGraph(graph,{
+data:data2,points,field,unit,selected,imported,graphWidth,viewStart,span,speedTop,speedBottom,speedMode,
+lane}){const plotWidth=graphWidth-56;graph.replaceChildren();const svg=(name,attrs,label,parent=graph)=>{
+const node=document.createElementNS("http://www.w3.org/2000/svg",name);for(const[k,v]of Object.entries(
+attrs))node.setAttribute(k,String(v));if(label)node.textContent=label;parent.append(node);return node};
+const x=t=>44+(t-viewStart)/span*plotWidth,y=r=>12+(speedTop-r)/(speedTop-speedBottom)*176;const defs=svg(
+"defs",{});const clip=document.createElementNS("http://www.w3.org/2000/svg","clipPath");clip.id="tem\
+po-plot-clip";const rect=document.createElementNS("http://www.w3.org/2000/svg","rect");for(const[k,v]of Object.
+entries({x:44,y:12,width:plotWidth,height:176}))rect.setAttribute(k,v);clip.append(rect);defs.append(
+clip);const step=speedMode==="custom"?[.025,.05,.1,.25,.5,1,2,3,6].find(value=>value>=(speedTop-speedBottom)/
+8):speedMode==="fine"?.1:.05;const first=Math.ceil(speedBottom/step-1e-9);const last2=Math.floor(speedTop/
+step+1e-9);const ticks=["fine","close","custom"].includes(speedMode)?Array.from({length:last2-first+
+1},(_,i)=>round2((first+i)*step)):speedTop<=2?Array.from({length:speedTop*4},(_,i)=>(i+1)/4):[.5,1,1.5,
+2,2.5,3,3.5,4];if(!ticks.includes(speedBottom))ticks.unshift(speedBottom);if(speedMode==="custom"&&!ticks.
+includes(speedTop))ticks.push(speedTop);for(const r of ticks){svg("line",{x1:44,x2:graphWidth-12,y1:y(
+r),y2:y(r),class:"grid",...r===(lane==="pitch"?0:1)?{style:"stroke:var(--tempo-fg);stroke-width:1;st\
+roke-dasharray:3 4"}:{}});if(r===speedBottom||y(speedBottom)-y(r)>=14&&(r===speedTop||y(r)-y(speedTop)>=
+14))svg("text",{x:2,y:y(r)+4},`${r}${unit}`)}for(let i=0;i<=8;i++){const time=viewStart+span*i/8;svg(
+"line",{x1:x(time),x2:x(time),y1:12,y2:188,class:"grid"});if(i%(graphWidth<480?4:2))continue;svg("te\
+xt",{x:x(time),y:212,"text-anchor":i===8?"end":"start"},span<10?preciseTime(round2(time)):timeLabel(
+time))}let path=`M${x(0)},${y(points[0][field])}`;let previous=points[0];for(const point of points.slice(
+1)){const start=point.c==="instant"?point.t:point.t-point.d;path+=` L${x(start)},${y(previous[field])}`;
+for(let i=1;i<=24;i++){const t=start+(point.t-start)*i/24;path+=` L${x(t)},${y(evaluatePoints(points,
+t,field))}`}previous=point}path+=` L${x(data2.duration)},${y(previous[field])}`;svg("path",{d:path,class:"\
+curve","clip-path":"url(#tempo-plot-clip)"});points.forEach((p,i)=>{if(i===selected&&i&&p.d&&p.c!=="\
+instant")svg("rect",{x:x(p.t-p.d),y:12,width:x(p.t)-x(p.t-p.d),height:176,fill:"var(--tempo-accent)",
+opacity:.08,"clip-path":"url(#tempo-plot-clip)","pointer-events":"none"});if(i===selected&&i&&!imported&&
+p.c!=="instant"&&p.t-p.d>=viewStart&&p.t-p.d<=viewStart+span){drawFadeStart(svg,p,points[i-1],x(p.t-
+p.d),graphWidth,selected)}if(p.t<viewStart||p.t>viewStart+span||p[field]>speedTop||p[field]<speedBottom)
+return;if(!imported)svg("ellipse",{cx:x(p.t),cy:y(p[field]),rx:12,ry:12,fill:"transparent","data-ind\
+ex":i,"data-kind":"point","aria-hidden":"true",class:"point-hit",style:"cursor:grab"});const dot=svg(
+"circle",{cx:x(p.t),cy:y(p[field]),r:7,class:`point ${i===selected?"selected":""}`,"data-index":i,"d\
+ata-kind":"point",tabindex:imported?-1:0,role:"button","aria-label":`Point ${i+1}: ${p.t} seconds, ${p[field]}${unit}\
+. Enter to edit.`});const title=document.createElementNS("http://www.w3.org/2000/svg","title");title.
+textContent=`${preciseTime(p.t)} \xB7 ${p[field]}${unit}`;dot.append(title)});svg("line",{class:"pla\
+yhead",x1:44,x2:44,y1:12,y2:188,stroke:"var(--tempo-fg)","stroke-dasharray":"3 3","pointer-events":"\
+none"})}function enhanceTempoFields(root){const syncs=[];for(const input of root.querySelectorAll('input[typ\
+e="number"]:not(#rate-number)')){let nudge2=function(direction){if(input.disabled||input.readOnly)return;
+const value=input.valueAsNumber;if(!Number.isFinite(value))return;const min=input.min===""?-Infinity:
+Number(input.min);const max=input.max===""?Infinity:Number(input.max);input.value=String(Math.max(min,
+Math.min(max,Math.round((value+direction*(Number(input.step)||1))*1e6)/1e6)));input.dispatchEvent(new Event(
+"input",{bubbles:true}));input.dispatchEvent(new Event("change",{bubbles:true}));sync2()},sync2=function(){
+buttons.forEach((button,index)=>{button.disabled=input.disabled||input.readOnly||(index?input.min!==
+""&&input.valueAsNumber<=Number(input.min):input.max!==""&&input.valueAsNumber>=Number(input.max))})};
+var nudge=nudge2,sync3=sync2;const wrap=document.createElement("span");wrap.className="tempo-number";
+input.before(wrap);wrap.append(input);const arrows=document.createElement("span");arrows.className="\
+tempo-number-arrows";wrap.append(arrows);const label=input.getAttribute("aria-label")||[...input.labels?.[0]?.
+childNodes||[]].filter(node=>node.nodeType===3).map(node=>node.textContent.trim()).join(" ")||"value";
+const buttons=[1,-1].map(direction=>{const button=document.createElement("button");button.type="butt\
+on";button.setAttribute("aria-label",(direction>0?"Increase ":"Decrease ")+label);button.innerHTML='\
+<svg viewBox="0 0 10 8" aria-hidden="true"><path d="'+(direction>0?"m2 5 3-3 3 3":"m2 3 3 3 3-3")+'"\
+/></svg>';button.onclick=()=>nudge2(direction);arrows.append(button);return button});input.addEventListener(
+"keydown",event=>{if(event.key!=="ArrowUp"&&event.key!=="ArrowDown")return;event.preventDefault();nudge2(
+event.key==="ArrowUp"?1:-1)});input.addEventListener("change",sync2);syncs.push(sync2)}for(const select of root.
+querySelectorAll("select")){let close2=function(focus=false){list.hidden=true;trigger.setAttribute("\
+aria-expanded","false");if(focus)trigger.focus()},sync2=function(){caption.textContent=select.selectedOptions[0]?.
+textContent||"Choose";trigger.setAttribute("aria-label",name+": "+(select.selectedOptions[0]?.textContent||
+""));trigger.disabled=select.disabled},open2=function(){list.replaceChildren(...[...select.options].
+map(option=>{const button=document.createElement("button");button.type="button";button.setAttribute(
+"role","option");button.setAttribute("aria-selected",String(option.selected));button.tabIndex=-1;button.
+disabled=option.disabled;button.textContent=option.textContent;button.onclick=()=>{select.value=option.
+value;select.dispatchEvent(new Event("change",{bubbles:true}));sync2();close2(true)};return button}));
+list.hidden=false;trigger.setAttribute("aria-expanded","true");(list.children[select.selectedIndex]||
+list.firstElementChild)?.focus()};var close=close2,sync3=sync2,open=open2;const wrap=document.createElement(
+"span");wrap.className="tempo-choice";select.before(wrap);wrap.append(select);select.hidden=true;const trigger=document.
+createElement("button");trigger.type="button";trigger.className="tempo-choice-trigger";const caption=document.
+createElement("span");const chevron=document.createElementNS("http://www.w3.org/2000/svg","svg");chevron.
+setAttribute("viewBox","0 0 10 8");chevron.setAttribute("aria-hidden","true");chevron.innerHTML='<pa\
+th d="m2 3 3 3 3-3"/>';trigger.append(caption,chevron);trigger.setAttribute("aria-haspopup","listbox");
+trigger.setAttribute("aria-expanded","false");const name=select.getAttribute("aria-label")||[...select.
+labels?.[0]?.childNodes||[]].filter(node=>node.nodeType===3).map(node=>node.textContent.trim()).join(
+" ")||"Choose";const list=document.createElement("span");list.className="tempo-choice-list";list.setAttribute(
+"role","listbox");list.setAttribute("aria-label",name);list.hidden=true;wrap.append(trigger,list);trigger.
+onclick=()=>list.hidden?open2():close2();let search="",searchTime=0;wrap.addEventListener("keydown",
+event=>{if(event.key==="Escape"&&!list.hidden){event.preventDefault();event.stopPropagation();close2(
+true);return}if(event.key==="Tab"){close2();return}const options=[...list.children].filter(option=>!option.
+disabled);if(["ArrowDown","ArrowUp","Home","End"].includes(event.key)){event.preventDefault();if(list.
+hidden){open2();return}const active=wrap.getRootNode().activeElement;const index=options.indexOf(active);
+const next=event.key==="Home"?0:event.key==="End"?options.length-1:(index+(event.key==="ArrowDown"?1:
+-1)+options.length)%options.length;options[next]?.focus()}else if(event.key.length===1&&event.key!==
+" "&&!event.ctrlKey&&!event.metaKey&&!event.altKey){const now=Date.now();search=(now-searchTime<700?
+search:"")+event.key.toLowerCase();searchTime=now;if(list.hidden)open2();[...list.children].find(option=>option.
+textContent.trim().toLowerCase().startsWith(search))?.focus()}});wrap.addEventListener("focusout",event=>{
+if(!wrap.contains(event.relatedTarget))close2()});root.addEventListener("pointerdown",event=>{if(!wrap.
+contains(event.target))close2()});select.addEventListener("change",sync2);syncs.push(sync2)}const sync=()=>syncs.
+forEach(update=>update());sync();return sync}var tempoFieldStyle=`
+.tempo-number { display:inline-flex; align-items:center; min-width:0; vertical-align:middle; }
+.tempo-number input { appearance:textfield; min-width:0; width:64px; }
+.tempo-number input::-webkit-inner-spin-button,.tempo-number input::-webkit-outer-spin-button { appe\
+arance:none; margin:0; }
+.tempo-number-arrows { display:grid; flex-shrink:0; }
+.tempo-number-arrows button { display:grid; place-items:center; min-height:16px; width:22px; padding\
+:0; border:0; background:transparent; color:inherit; }
+.tempo-number-arrows svg { width:10px; height:8px; fill:none; stroke:currentColor; stroke-width:1.4;\
+ }
+.tempo-choice { position:relative; display:inline-block; min-width:0; }
+.tempo-choice-trigger { display:flex; align-items:center; justify-content:space-between; gap:12px; w\
+idth:100%; text-align:left; color:inherit; }
+.tempo-choice-trigger > svg { flex:none; width:10px; height:8px; fill:none; stroke:currentColor; str\
+oke-width:1.5; }
+.tempo-choice-trigger[aria-expanded="true"] > svg { transform:rotate(180deg); }
+.tempo-choice-list { position:absolute; z-index:5; left:0; top:100%; min-width:100%; max-width:240px\
+; max-height:220px; overflow:auto; padding:4px; border:1px solid var(--tempo-track); background:var(\
+--tempo-surface); box-shadow:0 4px 12px #0004; }
+.tempo-choice-list button { display:block; width:100%; text-align:left; border:0; color:inherit; min\
+-height:32px; }
+.tempo-choice-list [aria-selected="true"] { color:var(--tempo-fg); box-shadow:inset 2px 0 var(--temp\
+o-accent); }
+.tempo-number-arrows button:focus-visible,.tempo-choice button:focus-visible { outline:2px solid var\
+(--tempo-accent); outline-offset:1px; }
+.tempo-number-arrows button:disabled { opacity:.35; }
+`;var editorStyle=`
         .tempo-editor {
           position: fixed;
           margin: 0;
@@ -9175,116 +8295,54 @@ e a tempo link or SCT1 code"></textarea></label>
 llcheck="false"></textarea></label>
       </details>
       <p class="editor-status" role="status" aria-live="polite"></p>
-    `}var round=value=>Math.round(value*1e3)/1e3;var validKeyShift=value=>Number.isFinite(value)&&Math.abs(
-value)<=12;var curves=["instant","linear","ease-in","ease-out","smooth"];function validatePoints(points,duration,field){
-if(!Array.isArray(points)||!points.length||points.length>200)throw new Error("Use between 1 and 200 \
-points per lane.");const result=points.map((point,index)=>{const previous=points[index-1];if(!point||
-![point.t,point[field],point.d].every(Number.isFinite)||point.t<0||point.t>duration||point.d<0||!curves.
-includes(point.c)||(field==="r"?point.r<.025||point.r>4:!validKeyShift(point.k))||!index&&(point.t!==
-0||point.d!==0)||index&&(point.t<=previous.t||point.t-point.d<previous.t))throw new Error("Invalid p\
-oints: check values, times, and overlapping fades.");return{t:round(point.t),[field]:round(field==="\
-r"?Math.max(.25,point.r):point.k),d:round(point.d),c:point.c}});for(let index=1;index<result.length;index++)
-if(result[index].t<=result[index-1].t||round(result[index].t-result[index].d)<result[index-1].t)throw new Error(
-"Points are too close together.");return result}function validateProfile(value,parseTrack){if(!value||
-value.v!==1||typeof value.track!=="string"||parseTrack(value.track)!==value.track||!Number.isFinite(
-value.duration)||value.duration<1||value.duration>86400)throw new Error("Invalid tempo code or unsup\
-ported version.");if(value.pitch!==void 0&&!["natural","preserve"].includes(value.pitch))throw new Error(
-"Invalid pitch mode.");if(value.keyShift!==void 0&&!validKeyShift(value.keyShift))throw new Error("K\
-ey shift must be between -12 and 12 semitones.");return{v:1,track:value.track,duration:value.duration,
-points:validatePoints(value.points,value.duration,"r"),...value.pitch===void 0?{}:{pitch:value.pitch},
-...value.keyShift===void 0?{}:{keyShift:value.keyShift},...value.pitchPoints===void 0?{}:{pitchPoints:validatePoints(
-value.pitchPoints,value.duration,"k")}}}function evaluatePoints(points,time,field="r"){let previous=points[0];
-for(let index=1;index<points.length;index++){const point=points[index];if(time<point.t){if(!point.d||
-point.c==="instant"||time<=point.t-point.d)return previous[field];let x=Math.max(0,Math.min(1,(time-
-point.t+point.d)/point.d));if(point.c==="ease-in")x*=x;else if(point.c==="ease-out")x=1-(1-x)**2;else if(point.
-c==="smooth")x=x*x*(3-2*x);return previous[field]+(point[field]-previous[field])*x}previous=point}return previous[field]}
-var profilePitchAt=(data2,time)=>data2.pitchPoints?evaluatePoints(data2.pitchPoints,time,"k"):data2.
-keyShift??null;function createTempoEditor(api){const website=api.website??(true?"https://itslush.github.io/soundclo\
-ud-track-control/":"");const PREFIX="soundcloud.tempo.timeline.";let active=null;let key="";let profile=null;
-let scheduleData=null;let scheduleOverride=null;let schedule=null;let suspended=false;let keyOverride=null;
-let lastPitch=null;let panel=null;let syncFields=()=>{};let draft=null;let selected=0;let imported=null;
-let dirty=false;let dragging=null;let dragOffset=0;let zoom=1;let viewStart=0;let lane="tempo";let speedTop=1.5;
-let speedBottom=.75;let speedMode="custom";const laneViews={tempo:[.75,1.5],pitch:[readPitchSettings().
-min,readPitchSettings().max]};const laneField=()=>lane==="pitch"?"k":"r";const laneUnit=()=>lane==="\
-pitch"?" st":"\xD7";const lanePoints=(data2=draft)=>lane==="pitch"?data2.pitchPoints??[{t:0,k:data2.
-keyShift??0,d:0,c:"instant"}]:data2.points;const laneStep=()=>lane==="pitch"?Number(el(".pitch-step").
-value)||.5:readTempoIncrement();let timer=0;let graphWidth=660;function running(){return Boolean(profile?.
-enabled&&!suspended)}function pitchMode(){return running()?profile.data.pitch??null:null}function draftData(){
+    `}function createTempoEditor(api){const playback=createTempoEditorPlayback(api,{syncControls,updatePlayhead,
+openPendingLink,isAnimating:()=>!document.hidden&&panel&&!panel.hidden&&draft&&!imported});const{website,
+storageKey,validate,encodeProfile,decodeProfile,playbackDuration,running,wake}=playback;let panel=null;
+let syncFields=()=>{};let draft=null;let selected=0;let imported=null;let dirty=false;let dragging=null;
+let dragOffset=0;let zoom=1;let viewStart=0;let lane="tempo";let speedTop=1.5;let speedBottom=.75;let speedMode="\
+custom";const laneViews={tempo:[.75,1.5],pitch:[readPitchSettings().min,readPitchSettings().max]};const laneField=()=>lane===
+"pitch"?"k":"r";const laneUnit=()=>lane==="pitch"?" st":"\xD7";const lanePoints=(data2=draft)=>lane===
+"pitch"?data2.pitchPoints??[{t:0,k:data2.keyShift??0,d:0,c:"instant"}]:data2.points;const laneStep=()=>lane===
+"pitch"?Number(el(".pitch-step").value)||.5:readTempoIncrement();let graphWidth=660;function draftData(){
 return validate({...draft,pitch:draft.pitch??api.defaultPitchMode,keyShift:draft.keyShift??api.keyShift??
-0})}function syncControls(){if(!panel||panel.hidden||!draft)return;const current=draft.track===key;const playing=current&&
-running();let saved=null;try{saved=JSON.parse(localStorage.getItem(storageKey(draft.track))||"null");
-if(saved)validate(saved.data)}catch{saved=null}el(".editor-enable").hidden=!saved||current&&profile?.
-temporary;el(".editor-enabled").checked=Boolean(saved?.enabled&&!(current&&suspended));el(".editor-a\
-pply-once").textContent=playing?"Stop timeline":"Apply once";el(".editor-apply-once").setAttribute("\
-aria-pressed",String(playing));el(".editor-apply-once").disabled=!current;el(".editor-revert").hidden=
-!dirty;el(".editor-import").hidden=!imported;el(".editor-import").disabled=!imported;el(".editor-pre\
-view").disabled=!el(".editor-code").value.trim();el(".playback-state").textContent=!current?"Another\
- track is playing":playing?`${profile.temporary?"Session":"Saved"} timeline \xB7 ${api.pitchMode==="\
-preserve"?"Preserve key":"Natural"}`:suspended&&profile?.enabled?"Timeline stopped":"Timeline off"}function stop(){
-if(profile?.temporary)load();suspended=true;api.normal();syncControls();wake()}async function copyDraft(kind,button){
-button.disabled=true;try{if(api.canShare===false)throw new Error("Sharing needs a full SoundCloud tr\
-ack.");const data2=draftData();const code=encodeProfile(data2);const text=kind==="link"?tempoShareLink(
-data2,website):code;if(kind==="link"&&text.length>8e3){el(".editor-sharing").open=true;throw new Error(
-"Too large for a link. Use Copy code in Advanced sharing.")}try{await navigator.clipboard.writeText(
-text);status(kind==="link"?"Link copied.":"Code copied.")}catch{el(".editor-sharing").open=true;el("\
-.editor-output").hidden=false;el(".share-output").value=text;el(".share-output").focus();el(".share-\
-output").select();status("Copy unavailable. Press Ctrl+C to copy the selected text.")}}catch(error2){
-status(error2.message)}finally{button.disabled=false}}function setSpeedRange(mode,center){speedMode=
-mode;if(mode==="custom")return;if(mode==="fine"||mode==="close"){const data2=imported||draft;const width=mode===
-"fine"?.5:.2;const step=mode==="fine"?.1:.05;const rate=center??lanePoints(data2)[Math.min(selected,
-lanePoints(data2).length-1)][laneField()];const bottom=Math.max(.25,Math.min(4-width,rate-width/2));
-speedBottom=round2(Math.max(.25,Math.floor(bottom/step+1e-9)*step));speedTop=round2(Math.min(4,Math.
-ceil((bottom+width)/step-1e-9)*step))}else{speedBottom=.25;speedTop=Number(mode)}}function revealSpeed(rate){
-if(speedMode==="custom"||rate>=speedBottom&&rate<=speedTop)return;setSpeedRange(["fine","close"].includes(
-speedMode)?speedMode:rate>2?"4":"2",rate)}function zoomView(factor){const data2=imported||draft;const center=viewStart+
-data2.duration/zoom/2;zoom=Math.max(1,Math.min(data2.duration,zoom*factor));viewStart=Math.max(0,Math.
-min(data2.duration-data2.duration/zoom,center-data2.duration/zoom/2));draw(data2)}function hasTempoLink(){
-return location.hash.startsWith("#sct=")||typeof location.search==="string"&&new URLSearchParams(location.
-search).has("sct")}let pendingLink=hasTempoLink()?location.href:null;window.addEventListener("hashch\
-ange",()=>{if(hasTempoLink())pendingLink=location.href;wake()});const encodeProfile=value2=>encodeTempoCode(
-validate(value2));const decodeProfile=text=>decodeTempoCode(text,validate,api.parseTrack,website);const round2=n=>Math.
-round(n*1e3)/1e3;const storageKey=track=>PREFIX+encodeURIComponent(track);const timeLabel=n=>`${Math.
-floor(n/60)}:${String(Math.floor(n%60)).padStart(2,"0")}`;const preciseTime=n=>timeLabel(n)+(Number.
-isInteger(round2(n))?"":"."+String(Math.round(n*1e3)%1e3).padStart(3,"0").replace(/0+$/,""));const validate=value2=>validateProfile(
-value2,api.parseTrack);function displayedDuration(){const element=document.querySelector(".playbackT\
-imeline__duration");const clock=element?.querySelector('span[aria-hidden="true"]')||element;const text=clock?.
-textContent.trim()||"";if(text.length>32||!/^(?:\d+:[0-5]\d|\d+):[0-5]\d(?:\.\d+)?$/.test(text))return 0;
-const duration=text.split(":").reduce((total,part)=>total*60+Number(part),0);return duration>=1&&duration<=
-86400?duration:0}function playbackDuration(){const duration=active?.duration;return Number.isFinite(
-duration)&&duration>0?duration:displayedDuration()}function shareLink(text,force=false){if(!api.copyLinks&&
-!force||typeof text!=="string"||text.length>8e3)return text;try{const url=new URL(text);if(url.origin!==
-"https://soundcloud.com"||url.username||url.password||url.hash||url.searchParams.has("sct")||api.parseTrack(
-url.pathname)!==key||!key)return text;const duration=playbackDuration();const data2=profile?.enabled&&
-!suspended?profile.data:{v:1,track:key,duration,points:[{t:0,r:api.rate,d:0,c:"instant"}]};url.searchParams.
-set("sct",encodeProfile({...data2,pitch:api.pitchMode,keyShift:keyOverride??data2.keyShift??api.keyShift??
-0,...keyOverride===null?{}:{pitchPoints:void 0}}));if(website)return tempoShareLink(decodeProfile(url.
-href),website);return url.href.length<=8e3?url.href:text}catch{return text}}const evaluate=(data2,time)=>evaluatePoints(
-data2.points,time);function immutableProfile(data2){for(const points of[data2.points,data2.pitchPoints]){
-if(!points)continue;for(const point of points)Object.freeze(point);Object.freeze(points)}return Object.
-freeze(data2)}function playbackSchedule(audio){if(!key||!active||audio!==active||!running())return null;
-const data2=profile.data;if(data2.track!==key)return null;if(scheduleData!==data2||scheduleOverride!==
-keyOverride){const overridden=keyOverride!==null;let minimumRate=data2.points[0].r;for(let index=1;index<
-data2.points.length;index++)minimumRate=Math.min(minimumRate,data2.points[index].r);schedule=Object.
-freeze({isConstantFrom(time){const rate=evaluate(data2,time);const pitch=profilePitchAt(data2,time);
-return data2.points.every(point=>point.t<time||point.r===rate)&&(overridden||!data2.pitchPoints||data2.
-pitchPoints.every(point=>point.t<time||point.k===pitch))},rateAt(sourceSeconds){if(!Number.isFinite(
-sourceSeconds))throw new RangeError("Timeline source time must be finite");return evaluate(data2,sourceSeconds)},
-minimumRate});scheduleData=data2;scheduleOverride=keyOverride}return schedule}function load(){profile=
-null;keyOverride=null;try{const saved=JSON.parse(localStorage.getItem(storageKey(key))||"null");if(saved)
-profile={data:immutableProfile(validate(saved.data)),enabled:saved.enabled===true};if(profile?.data.
-track!==key)profile=null}catch{profile=null}}function observe(audio){if(!active||!audio.paused)active=
-audio;if(audio.dataset.tempoTimelineObserved)return;audio.dataset.tempoTimelineObserved="true";for(const name of[
-"playing","seeking","seeked","timeupdate","loadedmetadata","pause","ended"]){audio.addEventListener(
-name,()=>{if(!audio.paused||!active||active===audio)active=audio;tick()})}}function value(){if(!key||
-!active||!profile?.enabled||suspended)return null;return round2(evaluate(profile.data,active.currentTime||
-0))}function changeTrack(next){if(key===next)return;key=next;keyOverride=null;active=null;suspended=
-api.applySaved===false;load();syncControls();if(panel&&!panel.hidden)status(draft?.track===key?"":"P\
-laying track changed. This draft still belongs to the track shown above.")}function status(message){
-panel.querySelector(".editor-status").textContent=message}function el(selector){return panel.querySelector(
-selector)}function close(){if(!panel)return;panel.hidden=true;panel.hidePopover?.();wake();api.root.
-querySelector(".settings-button").focus()}function fit(){if(!panel||panel.hidden||api.inline)return;
-panel.style.width=`${Math.min(720,innerWidth-24)}px`;panel.style.left=`${Math.max(12,(innerWidth-Math.
-min(720,innerWidth-24))/2)}px`;panel.style.top="50%";panel.style.bottom="auto";panel.style.transform=
+0})}function syncControls(){if(!panel||panel.hidden||!draft)return;const current=draft.track===playback.
+track;const playing=current&&running();let saved=null;try{saved=JSON.parse(localStorage.getItem(storageKey(
+draft.track))||"null");if(saved)validate(saved.data)}catch{saved=null}el(".editor-enable").hidden=!saved||
+current&&playback.profile?.temporary;el(".editor-enabled").checked=Boolean(saved?.enabled&&!(current&&
+playback.suspended));el(".editor-apply-once").textContent=playing?"Stop timeline":"Apply once";el(".\
+editor-apply-once").setAttribute("aria-pressed",String(playing));el(".editor-apply-once").disabled=!current;
+el(".editor-revert").hidden=!dirty;el(".editor-import").hidden=!imported;el(".editor-import").disabled=
+!imported;el(".editor-preview").disabled=!el(".editor-code").value.trim();el(".playback-state").textContent=
+!current?"Another track is playing":playing?`${playback.profile.temporary?"Session":"Saved"} timelin\
+e \xB7 ${api.pitchMode==="preserve"?"Preserve key":"Natural"}`:playback.suspended&&playback.profile?.
+enabled?"Timeline stopped":"Timeline off"}async function copyDraft(kind,button){button.disabled=true;
+try{if(api.canShare===false)throw new Error("Sharing needs a full SoundCloud track.");const data2=draftData();
+const code=encodeProfile(data2);const text=kind==="link"?tempoShareLink(data2,website):code;if(kind===
+"link"&&text.length>8e3){el(".editor-sharing").open=true;throw new Error("Too large for a link. Use \
+Copy code in Advanced sharing.")}try{await navigator.clipboard.writeText(text);status(kind==="link"?
+"Link copied.":"Code copied.")}catch{el(".editor-sharing").open=true;el(".editor-output").hidden=false;
+el(".share-output").value=text;el(".share-output").focus();el(".share-output").select();status("Copy\
+ unavailable. Press Ctrl+C to copy the selected text.")}}catch(error2){status(error2.message)}finally{
+button.disabled=false}}function setSpeedRange(mode,center){speedMode=mode;if(mode==="custom")return;
+if(mode==="fine"||mode==="close"){const data2=imported||draft;const width=mode==="fine"?.5:.2;const step=mode===
+"fine"?.1:.05;const rate=center??lanePoints(data2)[Math.min(selected,lanePoints(data2).length-1)][laneField()];
+const bottom=Math.max(.25,Math.min(4-width,rate-width/2));speedBottom=round2(Math.max(.25,Math.floor(
+bottom/step+1e-9)*step));speedTop=round2(Math.min(4,Math.ceil((bottom+width)/step-1e-9)*step))}else{
+speedBottom=.25;speedTop=Number(mode)}}function revealSpeed(rate){if(speedMode==="custom"||rate>=speedBottom&&
+rate<=speedTop)return;setSpeedRange(["fine","close"].includes(speedMode)?speedMode:rate>2?"4":"2",rate)}
+function zoomView(factor){const data2=imported||draft;const center=viewStart+data2.duration/zoom/2;zoom=
+Math.max(1,Math.min(data2.duration,zoom*factor));viewStart=Math.max(0,Math.min(data2.duration-data2.
+duration/zoom,center-data2.duration/zoom/2));draw(data2)}function hasTempoLink(){return location.hash.
+startsWith("#sct=")||typeof location.search==="string"&&new URLSearchParams(location.search).has("sc\
+t")}let pendingLink=hasTempoLink()?location.href:null;window.addEventListener("hashchange",()=>{if(hasTempoLink())
+pendingLink=location.href;wake()});const evaluate=(data2,time)=>evaluatePoints(data2.points,time);function changeTrack(next){
+if(playback.track===next)return;playback.changeTrack(next);syncControls();if(panel&&!panel.hidden)status(
+draft?.track===playback.track?"":"Playing track changed. This draft still belongs to the track shown\
+ above.")}function status(message){panel.querySelector(".editor-status").textContent=message}function el(selector){
+return panel.querySelector(selector)}function close(){if(!panel)return;panel.hidden=true;panel.hidePopover?.();
+wake();api.root.querySelector(".settings-button").focus()}function fit(){if(!panel||panel.hidden||api.
+inline)return;panel.style.width=`${Math.min(720,innerWidth-24)}px`;panel.style.left=`${Math.max(12,(innerWidth-
+Math.min(720,innerWidth-24))/2)}px`;panel.style.top="50%";panel.style.bottom="auto";panel.style.transform=
 "translateY(-50%)"}function create(){panel=document.createElement("section");panel.className="tempo-\
 editor";panel.setAttribute("role",api.inline?"region":"dialog");panel.setAttribute("aria-label","Tem\
 po timeline editor");if(!api.inline)panel.setAttribute("popover","manual");else panel.classList.add(
@@ -9320,203 +8378,151 @@ Boolean(api.inline);panel.addEventListener("keydown",e=>{e.stopPropagation();if(
 inline){e.preventDefault();close()}});el(".editor-enabled").onchange=()=>{const enabled=el(".editor-\
 enabled").checked;try{const stored=JSON.parse(localStorage.getItem(storageKey(draft.track))||"null");
 if(!stored)throw new Error("Save this timeline first.");stored.data=validate(stored.data);localStorage.
-setItem(storageKey(draft.track),JSON.stringify({data:stored.data,enabled}));if(draft.track===key){load();
-suspended=false;if(!enabled)api.normal();api.refresh()}status(enabled?"Saved timeline enabled.":"Tim\
-eline disabled. Current track returns to 1\xD7.");syncControls()}catch(e){el(".editor-enabled").checked=
-!enabled;status(e.message)}};for(const name of["time","rate","duration","curve"])el(".point-"+name).
-onchange=updatePoint;el(".point-add").onclick=()=>addPoint(draft.track===key&&active?active.currentTime:
-draft.duration/2,lane==="pitch"?draft.keyShift??0:1);el(".point-remove").onclick=()=>{if(!selected)return;
-lanePoints().splice(selected,1);selected=Math.max(0,selected-1);normalize();changed()};el(".editor-r\
-evert").onclick=()=>{const track=draft.track;dirty=false;draft=null;open(track)};el(".editor-save").
-onclick=()=>{try{const data2=draftData();localStorage.setItem(storageKey(data2.track),JSON.stringify(
-{data:data2,enabled:true}));if(data2.track===key){load();suspended=false;api.refresh()}draft=data2;dirty=
-false;syncControls();status("Timeline saved.")}catch(e){status(`Not saved: ${e.message}`)}};el(".edi\
-tor-apply-once").onclick=()=>{if(draft.track!==key)return;if(running()){stop();status("Timeline stop\
-ped \xB7 1\xD7");return}try{profile={data:immutableProfile(draftData()),enabled:true,temporary:true};
-keyOverride=null;suspended=false;api.refresh();syncControls();status("Applied for this session.")}catch(error2){
-status(error2.message)}};el(".editor-link").onclick=event=>copyDraft("link",event.currentTarget);el(
-".editor-copy").onclick=event=>copyDraft("code",event.currentTarget);el(".editor-pitch").onchange=()=>{
-draft.pitch=el(".editor-pitch").value;changed()};el(".editor-key-shift").onchange=()=>{const value2=Number(
-el(".editor-key-shift").value);if(validKeyShift(value2)){draft.keyShift=value2;changed()}else refresh()};
-el(".editor-code").oninput=()=>{imported=null;el(".editor-import").disabled=true;el(".import-summary").
-textContent="";syncControls();draw()};el(".editor-preview").onclick=()=>{imported=null;syncControls();
-try{imported=decodeProfile(el(".editor-code").value);el(".import-summary").textContent=`${imported.track}\
- \xB7 ${timeLabel(imported.duration)} \xB7 ${imported.points.length} points \xB7 ${(imported.pitch??
-api.defaultPitchMode)==="preserve"?"Preserve key":"Natural"}`;draw(imported);syncControls();status("\
-Preview only \xB7 playback unchanged.")}catch(e){syncControls();draw();status(`Cannot import: ${e.message}`)}};
-el(".editor-import").onclick=()=>{if(!imported)return;draft=structuredClone(imported);lane="tempo";[
-speedBottom,speedTop]=laneViews.tempo;imported=null;selected=0;dirty=true;el(".editor-import").disabled=
-true;el(".import-summary").textContent="";refresh();status("Draft loaded.")};syncFields=enhanceTempoFields(
-panel);const graph=el(".editor-graph");const coords=event=>{const bounds=graph.getBoundingClientRect();
-const x=(event.clientX-bounds.left)/bounds.width*graphWidth;const y=(event.clientY-bounds.top)/bounds.
-height*220;const time=viewStart+(x-44)/(graphWidth-56)*draft.duration/zoom;const rate=speedTop-(y-12)/
-176*(speedTop-speedBottom);return{t:Math.max(0,Math.min(draft.duration,time)),[laneField()]:Math.max(
-speedBottom,Math.min(speedTop,rate))}};graph.addEventListener("dblclick",e=>{if(!e.target.closest("[\
-data-index]")&&!imported){const p=coords(e);addPoint(p.t,p[laneField()])}});graph.addEventListener("\
-pointerdown",e=>{const target=e.target.closest("[data-index]");if(imported||e.button!==0||!target)return;
-selected=Number(target.dataset.index);dragging=target.dataset.kind;dragOffset=dragging==="ramp"?coords(
-e).t-(lanePoints()[selected].t-lanePoints()[selected].d):0;graph.setPointerCapture(e.pointerId);e.preventDefault();
-refresh()});graph.addEventListener("pointermove",e=>{if(!dragging)return;const p=coords(e),point=lanePoints()[selected];
-const previous=lanePoints()[selected-1];if(dragging==="ramp")point.d=round2(point.t-Math.max(previous.
-t,Math.min(point.t,p.t-dragOffset)));else{if(selected)point.t=round2(Math.max(previous.t+.01,Math.min(
-(lanePoints()[selected+1]?.t??draft.duration+.01)-.01,p.t)));const step=e.shiftKey?laneStep()/5:laneStep();
-point[laneField()]=round2(Math.max(lane==="pitch"?-12:.25,Math.min(lane==="pitch"?12:4,Math.round(p[laneField()]/
-step)*step)))}normalize();changed()});for(const name of["pointerup","pointercancel","lostpointercapt\
-ure"])graph.addEventListener(name,()=>{dragging=null});graph.addEventListener("keydown",e=>{const target=e.
-target.closest("[data-index]");if(!target||imported)return;selected=Number(target.dataset.index);if(target.
-dataset.kind==="ramp"&&adjustFadeStart(e))return;if(target.dataset.kind!=="ramp"&&["ArrowUp","ArrowD\
-own"].includes(e.key)){e.preventDefault();const point=lanePoints()[selected];const step=laneStep()/(e.
-shiftKey?5:1);point[laneField()]=round2(Math.max(lane==="pitch"?-12:.25,Math.min(lane==="pitch"?12:4,
-point[laneField()]+(e.key==="ArrowUp"?step:-step))));changed();el(".point.selected")?.focus({preventScroll:true});
-return}if(["Enter"," "].includes(e.key)){e.preventDefault();refresh();const advanced=panel.querySelector(
-".editor-advanced");if(advanced)advanced.open=true;el(target.dataset.kind==="ramp"?".point-duration":
-selected?".point-time":".point-rate").focus()}});window.addEventListener("resize",()=>{fit();if(panel&&
-!panel.hidden&&draft)draw(imported||draft)})}function normalize(){lanePoints().forEach((p,i)=>{p.d=i?
-round2(Math.min(p.d,p.t-lanePoints()[i-1].t)):0})}function adjustFadeStart(event){const point=lanePoints()[selected];
-const previous=lanePoints()[selected-1];const step=event.shiftKey?.1:1;const start=point.t-point.d;const positions={
-ArrowLeft:start-step,ArrowRight:start+step,Home:previous.t,End:point.t};if(!(event.key in positions))
-return false;event.preventDefault();point.d=round2(point.t-Math.max(previous.t,Math.min(point.t,positions[event.
-key])));const nextStart=point.t-point.d;const span=draft.duration/zoom;if(nextStart<viewStart||nextStart>
-viewStart+span)viewStart=Math.max(0,Math.min(draft.duration-span,nextStart-span/2));changed();el(".r\
-amp")?.focus({preventScroll:true});return true}function drawFadeStart(svg,point,previous,position){const labelX=position+
-100<=graphWidth-12?position+8:position-100;const labelLeft=Math.max(44,Math.min(graphWidth-104,labelX));
-const handle=svg("g",{class:"ramp","data-index":selected,"data-kind":"ramp",tabindex:0,role:"slider",
-"aria-label":"Fade start","aria-orientation":"horizontal","aria-valuemin":previous.t,"aria-valuemax":point.
-t,"aria-valuenow":round2(point.t-point.d),"aria-valuetext":`${preciseTime(round2(point.t-point.d))},\
- ${point.d} seconds fade`});svg("title",{},"Drag to change fade duration",handle);svg("rect",{x:position-
-12,y:12,width:24,height:176,fill:"transparent"},null,handle);svg("line",{x1:position,x2:position,y1:12,
-y2:188,class:"ramp-line"},null,handle);svg("rect",{x:labelLeft,y:4,width:92,height:44,fill:"transpar\
-ent"},null,handle);svg("rect",{x:labelLeft,y:14,width:92,height:24,rx:3,class:"ramp-label"},null,handle);
-svg("path",{d:`M${labelLeft+8} 26h12m-9 -3-3 3 3 3m6 -6 3 3-3 3`,class:"ramp-arrow"},null,handle);svg(
-"text",{x:labelLeft+26,y:30},"Fade start",handle)}function changed(){dirty=true;imported=null;el(".e\
-ditor-import").disabled=true;el(".editor-output").hidden=true;refresh();status("Unsaved changes");if(api.
-inline)api.refresh()}function updatePoint(){const p=lanePoints()[selected];const t=Number(el(".point\
--time").value),r=Number(el(".point-rate").value),d=Number(el(".point-duration").value);if([el(".poin\
-t-time"),el(".point-rate"),el(".point-duration")].some(n=>n.value==="")||![t,r,d].every(Number.isFinite)){
-status("Enter valid numbers for time, speed, and duration.");refresh();return}p.t=selected?round2(Math.
-max(lanePoints()[selected-1].t+.01,Math.min((lanePoints()[selected+1]?.t??draft.duration+.01)-.01,t))):
-0;p[laneField()]=round2(Math.max(lane==="pitch"?-12:.25,Math.min(lane==="pitch"?12:4,r)));revealSpeed(
-p[laneField()]);p.d=Math.max(0,d);p.c=el(".point-curve").value;normalize();changed()}function addPoint(time,speed){
-if(lanePoints().length>=200){status("Maximum 200 points per timeline.");return}const t=round2(Math.max(
-.01,Math.min(draft.duration,time)));if(lanePoints().some(p=>Math.abs(p.t-t)<.01)){status("A point al\
-ready exists here. Move it or choose another time.");return}const previous=[...lanePoints()].reverse().
-find(p=>p.t<t);const point={t,[laneField()]:round2(Math.max(lane==="pitch"?-12:.25,Math.min(lane==="\
-pitch"?12:4,Math.round(speed/laneStep())*laneStep()))),d:Math.min(4,t-previous.t),c:"linear"};lanePoints().
-push(point);lanePoints().sort((a,b)=>a.t-b.t);selected=lanePoints().indexOf(point);normalize();changed()}
-function draw(data2=draft){const graph=el(".editor-graph");graphWidth=Math.max(260,graph.clientWidth);
-graph.setAttribute("viewBox",`0 0 ${graphWidth} 220`);const plotWidth=graphWidth-56;zoom=Math.max(1,
-Math.min(data2.duration,zoom));const span=data2.duration/zoom;viewStart=Math.max(0,Math.min(data2.duration-
-span,viewStart));el(".zoom-label").textContent=`Time zoom ${round2(zoom)}\xD7`;el(".zoom-in").disabled=
-zoom>=data2.duration;el(".zoom-out").disabled=zoom<=1;el(".speed-range").value=speedMode;for(const[name,
-value2]of[["min",speedBottom],["max",speedTop]]){el(".speed-"+name).value=String(value2);el(".speed-"+
-name).setAttribute("aria-invalid","false")}const pan=el(".editor-pan");const visibleRange=`${preciseTime(
-round2(viewStart))}\u2013${preciseTime(round2(viewStart+span))}`;pan.max=String(Math.max(0,data2.duration-
-span));pan.value=String(viewStart);syncTempoRange(pan);pan.disabled=zoom===1;pan.setAttribute("aria-\
-valuetext",`Viewing ${visibleRange} of ${timeLabel(data2.duration)}`);el(".timeline-navigation").hidden=
-zoom===1;el(".view-window").textContent=visibleRange;el(".timeline-end").textContent=timeLabel(data2.
-duration);const chosen=lanePoints(data2)[Math.min(selected,lanePoints(data2).length-1)];el(".zoom-fo\
-cus").hidden=!chosen.d||chosen.c==="instant";el(".point-readout").textContent=`${chosen[laneField()]}${laneUnit()}\
- \xB7 ${chosen.d?chosen.d+"s fade":"Instant"}`;const picker=el(".editor-point-picker");picker.replaceChildren(
-...lanePoints(data2).map((point,index)=>{const option=document.createElement("option");option.value=
-index;option.textContent=`${index+1} \xB7 ${preciseTime(point.t)} \xB7 ${point[laneField()]}${laneUnit()}`;
-return option}));picker.value=String(Math.min(selected,lanePoints(data2).length-1));picker.disabled=
-Boolean(imported);syncFields();graph.replaceChildren();const svg=(name,attrs,label,parent=graph)=>{const node=document.
-createElementNS("http://www.w3.org/2000/svg",name);for(const[k,v]of Object.entries(attrs))node.setAttribute(
-k,String(v));if(label)node.textContent=label;parent.append(node);return node};const x=t=>44+(t-viewStart)/
-span*plotWidth,y=r=>12+(speedTop-r)/(speedTop-speedBottom)*176;const defs=svg("defs",{});const clip=document.
-createElementNS("http://www.w3.org/2000/svg","clipPath");clip.id="tempo-plot-clip";const rect=document.
-createElementNS("http://www.w3.org/2000/svg","rect");for(const[k,v]of Object.entries({x:44,y:12,width:plotWidth,
-height:176}))rect.setAttribute(k,v);clip.append(rect);defs.append(clip);const step=speedMode==="cust\
-om"?[.025,.05,.1,.25,.5,1,2,3,6].find(value2=>value2>=(speedTop-speedBottom)/8):speedMode==="fine"?.1:
-.05;const first=Math.ceil(speedBottom/step-1e-9);const last2=Math.floor(speedTop/step+1e-9);const ticks=[
-"fine","close","custom"].includes(speedMode)?Array.from({length:last2-first+1},(_,i)=>round2((first+
-i)*step)):speedTop<=2?Array.from({length:speedTop*4},(_,i)=>(i+1)/4):[.5,1,1.5,2,2.5,3,3.5,4];if(!ticks.
-includes(speedBottom))ticks.unshift(speedBottom);if(speedMode==="custom"&&!ticks.includes(speedTop))
-ticks.push(speedTop);for(const r of ticks){svg("line",{x1:44,x2:graphWidth-12,y1:y(r),y2:y(r),class:"\
-grid",...r===(lane==="pitch"?0:1)?{style:"stroke:var(--tempo-fg);stroke-width:1;stroke-dasharray:3 4"}:
-{}});if(r===speedBottom||y(speedBottom)-y(r)>=14&&(r===speedTop||y(r)-y(speedTop)>=14))svg("text",{x:2,
-y:y(r)+4},`${r}${laneUnit()}`)}for(let i=0;i<=8;i++){const time=viewStart+span*i/8;svg("line",{x1:x(
-time),x2:x(time),y1:12,y2:188,class:"grid"});if(i%(graphWidth<480?4:2))continue;svg("text",{x:x(time),
-y:212,"text-anchor":i===8?"end":"start"},span<10?preciseTime(round2(time)):timeLabel(time))}let path=`\
-M${x(0)},${y(lanePoints(data2)[0][laneField()])}`;let previous=lanePoints(data2)[0];for(const point of lanePoints(
-data2).slice(1)){const start=point.c==="instant"?point.t:point.t-point.d;path+=` L${x(start)},${y(previous[laneField()])}`;
-for(let i=1;i<=24;i++){const t=start+(point.t-start)*i/24;path+=` L${x(t)},${y(evaluatePoints(lanePoints(
-data2),t,laneField()))}`}previous=point}path+=` L${x(data2.duration)},${y(previous[laneField()])}`;svg(
-"path",{d:path,class:"curve","clip-path":"url(#tempo-plot-clip)"});lanePoints(data2).forEach((p,i)=>{
-if(i===selected&&i&&p.d&&p.c!=="instant")svg("rect",{x:x(p.t-p.d),y:12,width:x(p.t)-x(p.t-p.d),height:176,
-fill:"var(--tempo-accent)",opacity:.08,"clip-path":"url(#tempo-plot-clip)","pointer-events":"none"});
-if(i===selected&&i&&!imported&&p.c!=="instant"&&p.t-p.d>=viewStart&&p.t-p.d<=viewStart+span){drawFadeStart(
-svg,p,lanePoints(data2)[i-1],x(p.t-p.d))}if(p.t<viewStart||p.t>viewStart+span||p[laneField()]>speedTop||
-p[laneField()]<speedBottom)return;if(!imported)svg("ellipse",{cx:x(p.t),cy:y(p[laneField()]),rx:12,ry:12,
-fill:"transparent","data-index":i,"data-kind":"point","aria-hidden":"true",class:"point-hit",style:"\
-cursor:grab"});const dot=svg("circle",{cx:x(p.t),cy:y(p[laneField()]),r:7,class:`point ${i===selected?
-"selected":""}`,"data-index":i,"data-kind":"point",tabindex:imported?-1:0,role:"button","aria-label":`\
-Point ${i+1}: ${p.t} seconds, ${p[laneField()]}${laneUnit()}. Enter to edit.`});const title=document.
-createElementNS("http://www.w3.org/2000/svg","title");title.textContent=`${preciseTime(p.t)} \xB7 ${p[laneField()]}${laneUnit()}`;
-dot.append(title)});svg("line",{class:"playhead",x1:44,x2:44,y1:12,y2:188,stroke:"var(--tempo-fg)","\
-stroke-dasharray":"3 3","pointer-events":"none"})}function refresh(){const p=lanePoints()[selected];
-for(const button of panel.querySelectorAll("[data-lane]"))button.setAttribute("aria-pressed",String(
-button.dataset.lane===lane));el(".pitch-options").hidden=lane!=="pitch";el(".speed-range").closest("\
-label").hidden=lane==="pitch";el(".target-label").textContent=lane==="pitch"?"Target pitch (semitone\
-s)":"Target speed";el(".editor-point-picker").setAttribute("aria-label","Selected "+lane+" point");el(
-".editor-graph").setAttribute("aria-label",lane+" over original song time");for(const selector of[".\
-point-rate",".speed-min",".speed-max"]){el(selector).min=lane==="pitch"?"-12":"0.25";el(selector).max=
-lane==="pitch"?"12":"4"}el(".point-rate").step=String(laneStep());for(const unit of panel.querySelectorAll(
-".axis-unit"))unit.textContent=laneUnit();el(".editor-key-shift").disabled=Boolean(draft.pitchPoints);
-el(".editor-track").textContent=draft.track;el(".editor-track").href="https://soundcloud.com"+draft.
-track;el(".point-time").value=p.t;el(".point-time").disabled=selected===0;el(".point-rate").value=p[laneField()];
-el(".point-duration").value=p.d;el(".point-duration").disabled=selected===0||p.c==="instant";el(".po\
-int-curve").value=p.c;el(".point-curve").disabled=selected===0;el(".point-remove").disabled=selected===
-0;el(".editor-pitch").value=draft.pitch??api.defaultPitchMode;el(".editor-key-shift").value=draft.keyShift??
-0;syncControls();draw()}function open(requested){const target=requested||(dirty&&draft?draft.track:key);
-if(requested&&dirty&&draft?.track!==requested){api.message("An unsaved timeline is open. Finish or d\
-iscard it before editing another track.");return}if(!panel)create();imported=null;el(".editor-import").
-disabled=true;el(".import-summary").textContent="";if(!draft||!dirty){let stored=null;try{stored=JSON.
-parse(localStorage.getItem(storageKey(target))||"null");if(stored)stored.data=validate(stored.data);
-if(stored?.data.track!==target)stored=null}catch{stored=null}const duration=playbackDuration();if(!target){
-api.message("Play a track before opening its tempo editor.");return}if(!stored&&(target!==key||duration<=
-0)){api.message("Track duration is not available yet. Load a track and retry.");return}draft=stored?.
-data||{v:1,track:target,duration,points:[{t:0,r:api.rate,d:0,c:"instant"}],pitch:api.pitchMode,keyShift:api.
-keyShift??0};if(target===key&&keyOverride!==null){draft.keyShift=keyOverride;delete draft.pitchPoints}
-lane="tempo";[speedBottom,speedTop]=laneViews.tempo;selected=0}api.closeSettings?.();panel.hidden=false;
-if(!api.inline)panel.showPopover?.();fit();refresh();status(dirty?"Unsaved draft restored.":"Double-\
-click the graph to add a point.");if(!api.inline)el(".editor-close").focus();wake()}function openPendingLink(){
-if(!pendingLink||!api.ready)return;const link=pendingLink;pendingLink=null;try{const data2=decodeProfile(
-link);if(dirty){api.message("Tempo link received. Your unsaved draft was kept; paste the link in the\
- editor to preview it.");return}draft=data2;selected=0;dirty=true;open();status("")}catch(error2){api.
-message("Cannot open tempo link: "+error2.message)}}function updatePlayhead(){if(document.hidden||!panel||
-panel.hidden||!draft||imported)return;const line=el(".playhead");if(!line)return;const visible=active&&
-draft.track===key&&active.currentTime>=viewStart&&active.currentTime<=viewStart+draft.duration/zoom;
-line.style.display=visible?"":"none";if(!visible)return;const x=44+(Math.min(draft.duration,active.currentTime)-
+setItem(storageKey(draft.track),JSON.stringify({data:stored.data,enabled}));if(draft.track===playback.
+track){playback.activateSaved();if(!enabled)api.normal();api.refresh()}status(enabled?"Saved timelin\
+e enabled.":"Timeline disabled. Current track returns to 1\xD7.");syncControls()}catch(e){el(".edito\
+r-enabled").checked=!enabled;status(e.message)}};for(const name of["time","rate","duration","curve"])
+el(".point-"+name).onchange=updatePoint;el(".point-add").onclick=()=>addPoint(draft.track===playback.
+track&&playback.media?playback.media.currentTime:draft.duration/2,lane==="pitch"?draft.keyShift??0:1);
+el(".point-remove").onclick=()=>{if(!selected)return;lanePoints().splice(selected,1);selected=Math.max(
+0,selected-1);normalize();changed()};el(".editor-revert").onclick=()=>{const track=draft.track;dirty=
+false;draft=null;open(track)};el(".editor-save").onclick=()=>{try{const data2=draftData();localStorage.
+setItem(storageKey(data2.track),JSON.stringify({data:data2,enabled:true}));if(data2.track===playback.
+track){playback.activateSaved();api.refresh()}draft=data2;dirty=false;syncControls();status("Timelin\
+e saved.")}catch(e){status(`Not saved: ${e.message}`)}};el(".editor-apply-once").onclick=()=>{if(draft.
+track!==playback.track)return;if(running()){playback.stop();status("Timeline stopped \xB7 1\xD7");return}
+try{playback.applyOnce(draftData());status("Applied for this session.")}catch(error2){status(error2.
+message)}};el(".editor-link").onclick=event=>copyDraft("link",event.currentTarget);el(".editor-copy").
+onclick=event=>copyDraft("code",event.currentTarget);el(".editor-pitch").onchange=()=>{draft.pitch=el(
+".editor-pitch").value;changed()};el(".editor-key-shift").onchange=()=>{const value=Number(el(".edit\
+or-key-shift").value);if(validKeyShift(value)){draft.keyShift=value;changed()}else refresh()};el(".e\
+ditor-code").oninput=()=>{imported=null;el(".editor-import").disabled=true;el(".import-summary").textContent=
+"";syncControls();draw()};el(".editor-preview").onclick=()=>{imported=null;syncControls();try{imported=
+decodeProfile(el(".editor-code").value);el(".import-summary").textContent=`${imported.track} \xB7 ${timeLabel(
+imported.duration)} \xB7 ${imported.points.length} points \xB7 ${(imported.pitch??api.defaultPitchMode)===
+"preserve"?"Preserve key":"Natural"}`;draw(imported);syncControls();status("Preview only \xB7 playback \
+unchanged.")}catch(e){syncControls();draw();status(`Cannot import: ${e.message}`)}};el(".editor-impo\
+rt").onclick=()=>{if(!imported)return;draft=structuredClone(imported);lane="tempo";[speedBottom,speedTop]=
+laneViews.tempo;imported=null;selected=0;dirty=true;el(".editor-import").disabled=true;el(".import-s\
+ummary").textContent="";refresh();status("Draft loaded.")};syncFields=enhanceTempoFields(panel);const graph=el(
+".editor-graph");const coords=event=>{const bounds=graph.getBoundingClientRect();const x=(event.clientX-
+bounds.left)/bounds.width*graphWidth;const y=(event.clientY-bounds.top)/bounds.height*220;const time=viewStart+
+(x-44)/(graphWidth-56)*draft.duration/zoom;const rate=speedTop-(y-12)/176*(speedTop-speedBottom);return{
+t:Math.max(0,Math.min(draft.duration,time)),[laneField()]:Math.max(speedBottom,Math.min(speedTop,rate))}};
+graph.addEventListener("dblclick",e=>{if(!e.target.closest("[data-index]")&&!imported){const p=coords(
+e);addPoint(p.t,p[laneField()])}});graph.addEventListener("pointerdown",e=>{const target=e.target.closest(
+"[data-index]");if(imported||e.button!==0||!target)return;selected=Number(target.dataset.index);dragging=
+target.dataset.kind;dragOffset=dragging==="ramp"?coords(e).t-(lanePoints()[selected].t-lanePoints()[selected].
+d):0;graph.setPointerCapture(e.pointerId);e.preventDefault();refresh()});graph.addEventListener("poi\
+ntermove",e=>{if(!dragging)return;const p=coords(e),point=lanePoints()[selected];const previous=lanePoints()[selected-
+1];if(dragging==="ramp")point.d=round2(point.t-Math.max(previous.t,Math.min(point.t,p.t-dragOffset)));else{
+if(selected)point.t=round2(Math.max(previous.t+.01,Math.min((lanePoints()[selected+1]?.t??draft.duration+
+.01)-.01,p.t)));const step=e.shiftKey?laneStep()/5:laneStep();point[laneField()]=round2(Math.max(lane===
+"pitch"?-12:.25,Math.min(lane==="pitch"?12:4,Math.round(p[laneField()]/step)*step)))}normalize();changed()});
+for(const name of["pointerup","pointercancel","lostpointercapture"])graph.addEventListener(name,()=>{
+dragging=null});graph.addEventListener("keydown",e=>{const target=e.target.closest("[data-index]");if(!target||
+imported)return;selected=Number(target.dataset.index);if(target.dataset.kind==="ramp"&&adjustFadeStart(
+e))return;if(target.dataset.kind!=="ramp"&&["ArrowUp","ArrowDown"].includes(e.key)){e.preventDefault();
+const point=lanePoints()[selected];const step=laneStep()/(e.shiftKey?5:1);point[laneField()]=round2(
+Math.max(lane==="pitch"?-12:.25,Math.min(lane==="pitch"?12:4,point[laneField()]+(e.key==="ArrowUp"?step:
+-step))));changed();el(".point.selected")?.focus({preventScroll:true});return}if(["Enter"," "].includes(
+e.key)){e.preventDefault();refresh();const advanced=panel.querySelector(".editor-advanced");if(advanced)
+advanced.open=true;el(target.dataset.kind==="ramp"?".point-duration":selected?".point-time":".point-\
+rate").focus()}});window.addEventListener("resize",()=>{fit();if(panel&&!panel.hidden&&draft)draw(imported||
+draft)})}function normalize(){lanePoints().forEach((p,i)=>{p.d=i?round2(Math.min(p.d,p.t-lanePoints()[i-
+1].t)):0})}function adjustFadeStart(event){const point=lanePoints()[selected];const previous=lanePoints()[selected-
+1];const step=event.shiftKey?.1:1;const start=point.t-point.d;const positions={ArrowLeft:start-step,
+ArrowRight:start+step,Home:previous.t,End:point.t};if(!(event.key in positions))return false;event.preventDefault();
+point.d=round2(point.t-Math.max(previous.t,Math.min(point.t,positions[event.key])));const nextStart=point.
+t-point.d;const span=draft.duration/zoom;if(nextStart<viewStart||nextStart>viewStart+span)viewStart=
+Math.max(0,Math.min(draft.duration-span,nextStart-span/2));changed();el(".ramp")?.focus({preventScroll:true});
+return true}function changed(){dirty=true;imported=null;el(".editor-import").disabled=true;el(".edit\
+or-output").hidden=true;refresh();status("Unsaved changes");if(api.inline)api.refresh()}function updatePoint(){
+const p=lanePoints()[selected];const t=Number(el(".point-time").value),r=Number(el(".point-rate").value),
+d=Number(el(".point-duration").value);if([el(".point-time"),el(".point-rate"),el(".point-duration")].
+some(n=>n.value==="")||![t,r,d].every(Number.isFinite)){status("Enter valid numbers for time, speed,\
+ and duration.");refresh();return}p.t=selected?round2(Math.max(lanePoints()[selected-1].t+.01,Math.min(
+(lanePoints()[selected+1]?.t??draft.duration+.01)-.01,t))):0;p[laneField()]=round2(Math.max(lane==="\
+pitch"?-12:.25,Math.min(lane==="pitch"?12:4,r)));revealSpeed(p[laneField()]);p.d=Math.max(0,d);p.c=el(
+".point-curve").value;normalize();changed()}function addPoint(time,speed){if(lanePoints().length>=200){
+status("Maximum 200 points per timeline.");return}const t=round2(Math.max(.01,Math.min(draft.duration,
+time)));if(lanePoints().some(p=>Math.abs(p.t-t)<.01)){status("A point already exists here. Move it o\
+r choose another time.");return}const previous=[...lanePoints()].reverse().find(p=>p.t<t);const point={
+t,[laneField()]:round2(Math.max(lane==="pitch"?-12:.25,Math.min(lane==="pitch"?12:4,Math.round(speed/
+laneStep())*laneStep()))),d:Math.min(4,t-previous.t),c:"linear"};lanePoints().push(point);lanePoints().
+sort((a,b)=>a.t-b.t);selected=lanePoints().indexOf(point);normalize();changed()}function draw(data2=draft){
+const graph=el(".editor-graph");graphWidth=Math.max(260,graph.clientWidth);graph.setAttribute("viewB\
+ox",`0 0 ${graphWidth} 220`);const plotWidth=graphWidth-56;zoom=Math.max(1,Math.min(data2.duration,zoom));
+const span=data2.duration/zoom;viewStart=Math.max(0,Math.min(data2.duration-span,viewStart));el(".zo\
+om-label").textContent=`Time zoom ${round2(zoom)}\xD7`;el(".zoom-in").disabled=zoom>=data2.duration;
+el(".zoom-out").disabled=zoom<=1;el(".speed-range").value=speedMode;for(const[name,value]of[["min",speedBottom],
+["max",speedTop]]){el(".speed-"+name).value=String(value);el(".speed-"+name).setAttribute("aria-inva\
+lid","false")}const pan=el(".editor-pan");const visibleRange=`${preciseTime(round2(viewStart))}\u2013${preciseTime(
+round2(viewStart+span))}`;pan.max=String(Math.max(0,data2.duration-span));pan.value=String(viewStart);
+syncTempoRange(pan);pan.disabled=zoom===1;pan.setAttribute("aria-valuetext",`Viewing ${visibleRange}\
+ of ${timeLabel(data2.duration)}`);el(".timeline-navigation").hidden=zoom===1;el(".view-window").textContent=
+visibleRange;el(".timeline-end").textContent=timeLabel(data2.duration);const chosen=lanePoints(data2)[Math.
+min(selected,lanePoints(data2).length-1)];el(".zoom-focus").hidden=!chosen.d||chosen.c==="instant";el(
+".point-readout").textContent=`${chosen[laneField()]}${laneUnit()} \xB7 ${chosen.d?chosen.d+"s fade":
+"Instant"}`;const picker=el(".editor-point-picker");picker.replaceChildren(...lanePoints(data2).map(
+(point,index)=>{const option=document.createElement("option");option.value=index;option.textContent=
+`${index+1} \xB7 ${preciseTime(point.t)} \xB7 ${point[laneField()]}${laneUnit()}`;return option}));picker.
+value=String(Math.min(selected,lanePoints(data2).length-1));picker.disabled=Boolean(imported);syncFields();
+renderTempoEditorGraph(graph,{data:data2,points:lanePoints(data2),field:laneField(),unit:laneUnit(),
+selected,imported,graphWidth,viewStart,span,speedTop,speedBottom,speedMode,lane})}function refresh(){
+const p=lanePoints()[selected];for(const button of panel.querySelectorAll("[data-lane]"))button.setAttribute(
+"aria-pressed",String(button.dataset.lane===lane));el(".pitch-options").hidden=lane!=="pitch";el(".s\
+peed-range").closest("label").hidden=lane==="pitch";el(".target-label").textContent=lane==="pitch"?"\
+Target pitch (semitones)":"Target speed";el(".editor-point-picker").setAttribute("aria-label","Selec\
+ted "+lane+" point");el(".editor-graph").setAttribute("aria-label",lane+" over original song time");
+for(const selector of[".point-rate",".speed-min",".speed-max"]){el(selector).min=lane==="pitch"?"-12":
+"0.25";el(selector).max=lane==="pitch"?"12":"4"}el(".point-rate").step=String(laneStep());for(const unit of panel.
+querySelectorAll(".axis-unit"))unit.textContent=laneUnit();el(".editor-key-shift").disabled=Boolean(
+draft.pitchPoints);el(".editor-track").textContent=draft.track;el(".editor-track").href="https://sou\
+ndcloud.com"+draft.track;el(".point-time").value=p.t;el(".point-time").disabled=selected===0;el(".po\
+int-rate").value=p[laneField()];el(".point-duration").value=p.d;el(".point-duration").disabled=selected===
+0||p.c==="instant";el(".point-curve").value=p.c;el(".point-curve").disabled=selected===0;el(".point-\
+remove").disabled=selected===0;el(".editor-pitch").value=draft.pitch??api.defaultPitchMode;el(".edit\
+or-key-shift").value=draft.keyShift??0;syncControls();draw()}function open(requested){const target=requested||
+(dirty&&draft?draft.track:playback.track);if(requested&&dirty&&draft?.track!==requested){api.message(
+"An unsaved timeline is open. Finish or discard it before editing another track.");return}if(!panel)
+create();imported=null;el(".editor-import").disabled=true;el(".import-summary").textContent="";if(!draft||
+!dirty){let stored=null;try{stored=JSON.parse(localStorage.getItem(storageKey(target))||"null");if(stored)
+stored.data=validate(stored.data);if(stored?.data.track!==target)stored=null}catch{stored=null}const duration=playbackDuration();
+if(!target){api.message("Play a track before opening its tempo editor.");return}if(!stored&&(target!==
+playback.track||duration<=0)){api.message("Track duration is not available yet. Load a track and ret\
+ry.");return}draft=stored?.data||{v:1,track:target,duration,points:[{t:0,r:api.rate,d:0,c:"instant"}],
+pitch:api.pitchMode,keyShift:api.keyShift??0};if(target===playback.track&&playback.keyOverride!==null){
+draft.keyShift=playback.keyOverride;delete draft.pitchPoints}lane="tempo";[speedBottom,speedTop]=laneViews.
+tempo;selected=0}api.closeSettings?.();panel.hidden=false;if(!api.inline)panel.showPopover?.();fit();
+refresh();status(dirty?"Unsaved draft restored.":"Double-click the graph to add a point.");if(!api.inline)
+el(".editor-close").focus();wake()}function openPendingLink(){if(!pendingLink||!api.ready)return;const link=pendingLink;
+pendingLink=null;try{const data2=decodeProfile(link);if(dirty){api.message("Tempo link received. You\
+r unsaved draft was kept; paste the link in the editor to preview it.");return}draft=data2;selected=
+0;dirty=true;open();status("")}catch(error2){api.message("Cannot open tempo link: "+error2.message)}}
+function updatePlayhead(){if(document.hidden||!panel||panel.hidden||!draft||imported)return;const line=el(
+".playhead");if(!line)return;const visible=playback.media&&draft.track===playback.track&&playback.media.
+currentTime>=viewStart&&playback.media.currentTime<=viewStart+draft.duration/zoom;line.style.display=
+visible?"":"none";if(!visible)return;const x=44+(Math.min(draft.duration,playback.media.currentTime)-
 viewStart)/(draft.duration/zoom)*(graphWidth-56);line.setAttribute("x1",x);line.setAttribute("x2",x)}
-function tick(){const nextRate=value();const nextPitch=effectivePitch();const pitchChanged=nextPitch!==
-lastPitch;lastPitch=nextPitch;if(nextRate!==null&&nextRate!==api.rate||pitchChanged)api.refresh();updatePlayhead();
-wake()}function wake(){openPendingLink();const automate=running()&&(profile.data.points.length>1||keyOverride===
-null&&profile.data.pitchPoints?.length>1);const animate=!document.hidden&&panel&&!panel.hidden&&draft&&
-!imported;if(!active||active.paused||active.ended||!automate&&!animate){clearTimeout(timer);timer=0;
-return}if(timer)return;timer=setTimeout(()=>{timer=0;tick()},50)}document.addEventListener("visibili\
-tychange",wake);function refreshSaved(track){if(track===key&&!profile?.temporary){const wasRunning=running();
-load();suspended=api.applySaved===false;if(wasRunning&&!profile?.enabled)api.normal();else api.refresh()}
-syncControls();wake()}window.addEventListener("storage",e=>{if(e.key===null||e.key===storageKey(key)){
-refreshSaved(key)}});function effectivePitch(){return keyOverride??(running()?profilePitchAt(profile.
-data,active?.currentTime||0):null)}return{wake,pitchMode,shareLink,keyShift:effectivePitch,setKeyShift(value2){
-if(!validKeyShift(value2))throw new RangeError("Invalid key shift");keyOverride=value2;if(draft?.track===
-key){draft.keyShift=value2;delete draft.pitchPoints;selected=0;dirty=true;if(panel&&!panel.hidden){refresh();
-status("Pitch changed. Save to keep it for this track.")}}},observe,value,playbackSchedule,changeTrack,
-open,validate,draftProfile:()=>draft?draftData():null,draftPlayback(time){return draft?{rate:evaluate(
-draft,time),pitch:draft.pitch??api.defaultPitchMode,keyShift:profilePitchAt(draft,time)}:null},loadDraft(data2){
-draft=validate(data2);selected=0;lane="tempo";[speedBottom,speedTop]=laneViews.tempo;dirty=true;open()},
-refreshSaved,suspend(){suspended=true;syncControls();wake()},contains(target){return panel?.contains(
-target)}}}function createTempoStore(api){const speedPrefix="soundcloud.tempo.track.";const timelinePrefix="sou\
+return{wake,pitchMode:playback.pitchMode,shareLink:playback.shareLink,keyShift:playback.keyShift,setKeyShift(value){
+playback.setKeyShift(value);if(draft?.track===playback.track){draft.keyShift=value;delete draft.pitchPoints;
+selected=0;dirty=true;if(panel&&!panel.hidden){refresh();status("Pitch changed. Save to keep it for \
+this track.")}}},observe:playback.observe,value:playback.value,playbackSchedule:playback.playbackSchedule,
+changeTrack,open,validate,draftProfile:()=>draft?draftData():null,draftPlayback(time){return draft?{
+rate:evaluate(draft,time),pitch:draft.pitch??api.defaultPitchMode,keyShift:profilePitchAt(draft,time)}:
+null},loadDraft(data2){draft=validate(data2);selected=0;lane="tempo";[speedBottom,speedTop]=laneViews.
+tempo;dirty=true;open()},refreshSaved:playback.refreshSaved,suspend:playback.suspend,contains(target){
+return panel?.contains(target)}}}function createTempoStore(api){const speedPrefix="soundcloud.tempo.track.";const timelinePrefix="sou\
 ndcloud.tempo.timeline.";const limit=2*1024*1024;const preferences={randomSaved:false,applySaved:true,
 controlStyle:"slider",tempoIncrement:defaultTempoIncrement,showKey:true,crossfade:false,crossfadeSeconds:5,
 keyShift:0,pitchControls:defaultPitchSettings,copyLinks:false,preserveKey:false,useWasm:true,outputDb:-6};
-const storage=()=>api.storage();const round2=value=>Math.round(value*1e3)/1e3;const keyFor=(prefix,track)=>prefix+
+const storage=()=>api.storage();const round3=value=>Math.round(value*1e3)/1e3;const keyFor=(prefix,track)=>prefix+
 encodeURIComponent(track);function validTrack(track){return typeof track==="string"&&track.length<=800&&
 !/[\u0000-\u0020\u007f<>"\\]/.test(track)&&api.parseTrack(track)===track}function validateSpeed(value){
 const entry=typeof value==="number"?{rate:value,enabled:true}:value;if(!entry||!Number.isFinite(entry.
 rate)||entry.rate<.025||entry.rate>4||typeof entry.enabled!=="boolean")throw new Error("Saved speeds\
- must be between 0.025 and 4\xD7.");return{rate:round2(Math.max(.25,entry.rate)),enabled:entry.enabled}}
+ must be between 0.025 and 4\xD7.");return{rate:round3(Math.max(.25,entry.rate)),enabled:entry.enabled}}
 function validateTimeline(value,track){if(!value||typeof value.enabled!=="boolean")throw new Error("\
 Each timeline needs an on or off state.");const data2=api.validateTimeline(value.data);if(data2.track!==
 track)throw new Error("A timeline belongs to a different track.");return{data:data2,enabled:value.enabled}}
@@ -9684,12 +8690,12 @@ entry);entry.observer.disconnect();for(const cleanup of entry.cleanup)cleanup();
 entry.doc.querySelectorAll(badgeSelector).forEach(badge=>badge.remove());entry.doc.querySelectorAll(
 ".soundcloud-tempo-page-position").forEach(artwork=>artwork.classList.remove("soundcloud-tempo-page-\
 position"))}function attach(frame,value){const entry={frame,...value,cleanup:[],copyUntil:0,contextLink:null};
-const style=entry.doc.createElement("style");style.dataset.soundcloudTempoEmbedded="";style.textContent=
+const style2=entry.doc.createElement("style");style2.dataset.soundcloudTempoEmbedded="";style2.textContent=
 `
       .soundcloud-tempo-page-position {
         position: relative;
       }
-    `;(entry.doc.head||entry.doc.documentElement).append(style);entry.style=style;const releaseAppearance=api.
+    `;(entry.doc.head||entry.doc.documentElement).append(style2);entry.style=style2;const releaseAppearance=api.
 appearance?.(entry.doc);if(releaseAppearance)entry.cleanup.push(releaseAppearance);entry.observer=new MutationObserver(
 mutations=>{if(!current(entry))return sync();if(mutations.some(relevantMutation))api.changed()});entry.
 observer.observe(entry.doc,{childList:true,subtree:true,attributes:true,attributeFilter:["href","src",
@@ -9713,7 +8719,7 @@ if(entry?.doc===doc&&current(entry))return entry.key;return""}}}var releaseNotic
 !ui?.host.isConnected)return;releaseNoticeChecked=true;const key="soundcloud.tempo.seenVersion";let previous;
 try{previous=localStorage.getItem(key);if(previous===VERSION)return;localStorage.setItem(key,VERSION)}catch{
 return}if(!previous)return;const notice=document.createElement("aside");notice.className="release-no\
-tice";const style=document.createElement("style");style.textContent=`
+tice";const style2=document.createElement("style");style2.textContent=`
     .release-notice {
       position: fixed;
       right: 16px;
@@ -9749,503 +8755,174 @@ tice";const style=document.createElement("style");style.textContent=`
 `Track Control updated \xB7 v${VERSION}`;notice.append(message);if(WEBSITE){const link=document.createElement(
 "a");link.textContent="What's new";link.href=new URL("updates/",WEBSITE).href;link.target="_blank";link.
 rel="noopener noreferrer";notice.append(link)}const dismiss=document.createElement("button");dismiss.
-type="button";dismiss.textContent="Dismiss";dismiss.addEventListener("click",()=>{notice.remove();style.
-remove();ui.settingsButton.focus()},{once:true});notice.append(dismiss);ui.root.append(style,notice)}(()=>{"use strict";const KEY="__soundCloudTempoControlV1";if(window[KEY]){return}window[KEY]=true;const VERSION="\
-1.2.3";const WEBSITE="https://itslush.github.io/soundcloud-track-control/";const COPY_STORAGE="sound\
-cloud.tempo.copyLinks";function copyLinksEnabled(){try{return localStorage.getItem(COPY_STORAGE)==="\
-true"}catch{return false}}const PITCH_STORAGE="soundcloud.tempo.preserveKey";const WASM_STORAGE="sou\
-ndcloud.tempo.useWasm";let timeline=null;let contextLink=null;let bufferedAudio=null;let crossfade=null;
-const trackVisuals=createTrackVisuals({document,readTrack:()=>currentTrackKey()});let badgeAnimations=[];
-let appearance=null;const MIN=.25;const MAX=4;const SLIDER_MAX=2;const SLIDER_STEP=.025;const SLIDER_STEPS=Math.
-round((SLIDER_MAX-MIN)/SLIDER_STEP);const TRACK_STORAGE="soundcloud.tempo.track.";migrateTrackStorage();
-function migrateTrackStorage(){try{for(const key of Object.keys(localStorage)){const match=key.match(
-/^[^.]+\.(soundcloud\.tempo\.track\..+)$/);if(!match)continue;const destination=match[1];if(localStorage.
-getItem(destination)===null){localStorage.setItem(destination,localStorage.getItem(key))}localStorage.
-removeItem(key)}}catch{}}const SAVED_STORAGE="soundcloud.tempo.applySaved";const STYLE_STORAGE="soun\
-dcloud.tempo.controlStyle";const SHOW_KEY_STORAGE="soundcloud.tempo.showKey";const KEY_SHIFT_STORAGE="\
-soundcloud.tempo.keyShift";const TRACK_LINK=".playControls__soundBadge .playbackSoundBadge__titleLin\
-k";const proto=HTMLMediaElement.prototype;const pitchNames=["preservesPitch","mozPreservesPitch","we\
-bkitPreservesPitch"];const properties=["playbackRate","defaultPlaybackRate",...pitchNames];const native=Object.
-fromEntries(properties.map(name=>[name,Object.getOwnPropertyDescriptor(proto,name)]));const known=new WeakSet;
-const references=new Set;let ui;let controlSetupShown=false;let mountQueued=false;let savedRefreshFrame=0;
-let failure2="";let storageFailure="";let rate=1;let savedRate=null;let trackKey="";let lastTrackKey="";
-let applySaved=readSavedSetting();let keyShift=readKeyShift();let preserveKey=readPitchSetting();let useWasm=readWasmSetting();
-function readWasmSetting(){try{return localStorage.getItem(WASM_STORAGE)!=="false"}catch{return true}}
-function preservesKey(){const mode=timeline?.pitchMode();return mode?mode==="preserve":preserveKey}const pageArtwork=new Map;
-let embeddedPages;let artworkDirty=true;let artworkFrame=0;function readSavedSetting(){try{return localStorage.
-getItem(SAVED_STORAGE)!=="false"}catch{return true}}function readKeyShift(){try{const value=Number(localStorage.
-getItem(KEY_SHIFT_STORAGE));return Number.isFinite(value)&&Math.abs(value)<=12?value:0}catch{return 0}}
-function readControlStyle(){try{const value=localStorage.getItem(STYLE_STORAGE);return["slider","dia\
-l","vertical"].includes(value)?value:"slider"}catch{return"slider"}}function syncControlStyle(){if(!ui)
-return;const style=readControlStyle();let showKey=true;try{showKey=localStorage.getItem(SHOW_KEY_STORAGE)!==
-"false"}catch{}ui.root.querySelector(".quick-key").hidden=!showKey;ui.root.querySelector("#show-key").
-checked=showKey;ui.root.querySelector(".controls").classList.toggle("hide-key",!showKey);const keySpace=showKey?
-0:136;ui.host.style.flexBasis=`${(style==="slider"?416:312)-keySpace}px`;ui.host.style.minWidth=`${(style===
-"slider"?320:312)-keySpace}px`;ui.host.style.setProperty("--tempo-compact-width",`${308-keySpace}px`);
-ui.root.querySelector(".slider-wrap").dataset.style=style;ui.root.querySelector("#control-style").value=
-style;ui.slider.hidden=style==="dial";ui.slider.max=String(style==="vertical"?MAX:SLIDER_MAX);ui.dial.
-hidden=style!=="dial";ui.verticalToggle.hidden=style!=="vertical";if(style==="vertical")ui.fader.setAttribute(
-"popover","auto");else{if(ui.fader.matches(":popover-open"))ui.fader.hidePopover();ui.fader.removeAttribute(
-"popover")}ui.slider.setAttribute("aria-orientation",style==="vertical"?"vertical":"horizontal");render()}
-function readPitchSetting(){try{return pitchNames.some(name=>native[name]?.set)&&localStorage.getItem(
-PITCH_STORAGE)==="true"}catch{return false}}function clamp2(value){return Math.round(Math.max(MIN,Math.
-min(MAX,value))*1e3)/1e3}function formatRate(value){return`${value.toFixed(3).replace(/(\.\d{2})0$/,
-"$1")}\xD7`}function sliderTicks(){return Array.from({length:SLIDER_STEPS+1},(_,index)=>{const units=Math.
-round(MIN/SLIDER_STEP)+index;const height=units%10===0?5:units%2===0?3:1.5;return`M${index} 0v${height}`}).
-join("")}function tempoLogo(){return`
-      <svg viewBox="0 0 64 64" aria-hidden="true">
-        <g fill="currentColor">
-          <rect x="5" y="36" width="3" height="10" rx="1.5" />
-          <rect x="10" y="31" width="3" height="18" rx="1.5" />
-          <rect x="15" y="26" width="3" height="23" rx="1.5" />
-          <rect x="20" y="21" width="3" height="28" rx="1.5" />
-          <path d="M26 20C33 9 49 14 49 29C62 27 66 49 51 49H30Q26 49 26 45Z" />
-        </g>
-        <path d="M31 40H54" stroke="var(--logo-cutout)" stroke-width="3" stroke-linecap="round" />
-        <circle cx="45" cy="40" r="4" fill="currentColor" stroke="var(--logo-cutout)" stroke-width="\
-2" />
-      </svg>
-    `}function currentTrackKey(){const anchor=document.querySelector(TRACK_LINK);const href=anchor?.
-getAttribute("href");return parseTrackKey(contextLink?.anchor===anchor&&href===contextLink.shared?contextLink.
-original:href)}function parseTrackKey(href){if(!href){return""}try{const url=new URL(href,"https://s\
-oundcloud.com");if(!["soundcloud.com","www.soundcloud.com","m.soundcloud.com"].includes(url.hostname)||
-url.protocol!=="https:"){return""}const parts=url.pathname.split("/").filter(Boolean);if(parts.length<
-2||parts.length>3||parts.length===3&&!/^s-[\w-]+$/.test(parts[2])){return""}if(["sets","tracks","alb\
-ums","likes","reposts","followers","following"].includes(parts[1])){return""}return`/${parts[0]}/${parts[1]}`}catch{
-return""}}function storageKey(key){return TRACK_STORAGE+encodeURIComponent(key)}function readSavedRate(key){
-try{const saved=tempoStore.speed(key);return saved?.enabled?saved.rate:null}catch{storageFailure="Tr\
-ack memory is unavailable. Allow site storage and reload.";return null}}function announce(message){if(ui&&
-ui.status.textContent!==message){ui.status.textContent=message}}function syncTrack(){const next=currentTrackKey();
-if(next===trackKey){return false}bufferedAudio?.changeTrack(trackKey,next);for(const animation of badgeAnimations)
-animation.cancel();badgeAnimations=[];if(trackKey&&next&&crossfade?.diagnostics().stage!=="buffered-\
-overlap"&&!matchMedia("(prefers-reduced-motion: reduce)").matches){badgeAnimations=[...document.querySelectorAll(
-".playControls__soundBadge .playbackSoundBadge__avatar, .playControls__soundBadge .playbackSoundBadg\
-e__titleContextContainer")].map(element=>element.animate([{opacity:.25},{opacity:1}],{duration:240,easing:"\
-ease-out"}))}trackKey=next;timeline?.changeTrack(next);if(!next){savedRate=null;render();return false}
-storageFailure="";savedRate=readSavedRate(next);if(next===lastTrackKey){render();return false}lastTrackKey=
-next;rate=applySaved?clamp2(savedRate??1):1;if(ui){delete ui.memory.dataset.feedback;ui.editTrack=next;
-ui.rateNumber.value=String(rate)}announce(savedRate===null?"New track. Normal speed.":`Playback spee\
-d: ${formatRate(rate)}.`);render();return true}function rememberTrack(forget=false){if(ui){delete ui.
-memory.dataset.feedback}if(syncTrack()){updateAll();return}if(!trackKey){return}const remove=savedRate!==
-null&&(forget||savedRate===rate);try{if(remove){localStorage.removeItem(storageKey(trackKey))}else{localStorage.
-setItem(storageKey(trackKey),String(rate))}savedRate=remove?null:rate;clearTimeout(ui.feedbackTimer);
-ui.memory.dataset.feedback=remove?"":"saved";ui.feedbackTimer=setTimeout(()=>delete ui.memory.dataset.
-feedback,1e3);storageFailure="";announce(remove?"Saved tempo removed. Playback is unchanged; next vi\
-sit starts at 1\xD7.":`Remembered ${formatRate(rate)} for this track.`)}catch(error2){console.warn("\
-[SoundCloud Tempo] Could not save track tempo.",error2);storageFailure="Could not save track tempo. \
-Allow site storage or free space, then click to retry.";announce(storageFailure)}render()}function closeSettings(restoreFocus=false){
-if(!ui){return}if(ui.settings.hasAttribute("data-choosing-style")){try{localStorage.setItem(STYLE_STORAGE,
-ui.root.querySelector("#control-style").value)}catch{announce("Control style could not be saved. All\
-ow site storage to remember your choice.")}ui.settings.removeAttribute("data-choosing-style");ui.root.
-querySelector(".control-setup-intro").hidden=true;ui.root.querySelector("#settings-title").textContent=
-"Tempo settings";const close=ui.root.querySelector(".close-settings");close.textContent="Close";close.
-setAttribute("aria-label","Close tempo settings")}ui.settings.hidden=true;ui.settings.hidePopover?.();
-ui.memory.setAttribute("aria-expanded","false");ui.settingsButton.setAttribute("aria-expanded","fals\
-e");if(restoreFocus){(ui.settingsTrigger||ui.settingsButton).focus()}}function positionSettings(){if(!ui||
-ui.settings.hidden){return}const width=Math.min(600,Math.max(0,innerWidth-24));ui.settings.style.width=
-`${width}px`;ui.settings.style.left=`${(innerWidth-width)/2}px`;ui.settings.style.top="50%";ui.settings.
-style.bottom="auto";ui.settings.style.transform="translateY(-50%)"}function openSettings(trigger=ui.
-memory){ui.settingsTrigger=trigger;ui.settings.hidden=false;ui.memory.setAttribute("aria-expanded","\
-true");ui.settingsButton.setAttribute("aria-expanded","true");ui.savedToggle.checked=applySaved;ui.pitchToggle.
-checked=preserveKey;ui.settingsStatus.textContent="";ui.savedFilter.value="";ui.library.clearPreview();
-populateSavedTracks();positionSettings();if(ui.settings.showPopover&&!ui.settings.matches(":popover-\
-open")){ui.settings.showPopover()}ui.savedToggle.focus()}function populateSavedTracks(){ui.library.render()}
-function scheduleSavedTracks(){if(!ui||ui.settings.hidden||savedRefreshFrame)return;savedRefreshFrame=
-requestAnimationFrame(()=>{savedRefreshFrame=0;if(!ui.settings.hidden)populateSavedTracks()})}function isAudio(audio){
-return audio instanceof HTMLAudioElement}function discover(audio){if(!isAudio(audio)||known.has(audio)){
-return}outputLevel.attach(audio);known.add(audio);references.add(new WeakRef(audio));for(const event of[
-"play","playing","loadstart","loadedmetadata","ratechange","emptied"]){audio.addEventListener(event,
-()=>apply(audio))}}function setNative(audio,name,value){const descriptor=native[name];if(descriptor?.
-set&&descriptor.get.call(audio)!==value){descriptor.set.call(audio,value)}}function apply(audio){if(!isAudio(
-audio)){return}syncTrack();discover(audio);timeline?.observe(audio);const automated=timeline?.value();
-if(automated!==null&&automated!==void 0){rate=automated}try{if(!bufferedAudio?.sync(audio))applyNative(
-audio)}catch(error2){if(!failure2){console.warn("[SoundCloud Tempo]",error2)}failure2="Could not cha\
-nge playback rate. Reload SoundCloud and retry.";announce(failure2);render()}}function applyNative(audio){
-const wasmActive=wasmAudio.sync(audio,preservesKey()&&useWasm||(timeline.keyShift()??keyShift)!==0,rate);
-for(const name of pitchNames){setNative(audio,name,preservesKey()&&!wasmActive)}setNative(audio,"def\
-aultPlaybackRate",rate);setNative(audio,"playbackRate",rate)}function updateAll(){syncTrack();for(const reference of references){
-const audio=reference.deref();if(!audio)references.delete(reference);else apply(audio)}render();timeline?.
-wake()}function setRate(value){crossfade?.cancel();if(syncTrack()){updateAll();return}if(String(value).
-trim()===""){return}const number=Number(value);if(!Number.isFinite(number)){return}rate=clamp2(number);
-timeline?.suspend();failure2="";updateAll();if(!failure2)announce(`Playback speed ${formatRate(rate)}\
-.`)}function handleShortcut(event){if(!event.altKey||!event.shiftKey||event.ctrlKey||event.metaKey||
-event.isComposing){return false}if(!["ArrowLeft","ArrowRight","ArrowDown"].includes(event.key)){return false}
-event.preventDefault();event.stopPropagation();setRate(event.key==="ArrowDown"?1:rate+(event.key==="\
-ArrowLeft"?-.05:.05));return true}function installGuards(){for(const name of properties){const descriptor=native[name];
-if(!descriptor?.configurable||!descriptor.set){continue}Object.defineProperty(proto,name,{...Object.
-getOwnPropertyDescriptor(proto,name)||descriptor,set(value){if(!isAudio(this)){return descriptor.set.
-call(this,value)}discover(this);if(pitchNames.includes(name)){return descriptor.set.call(this,preservesKey()&&
-!wasmAudio.active(this))}apply(this)}})}const play=proto.play;proto.play=function(...args){if(isAudio(
-this)){bufferedAudio.select(this);crossfade?.select(this);apply(this);return bufferedAudio.play(this,
-()=>Reflect.apply(play,this,args))}return Reflect.apply(play,this,args)};const pause=proto.pause;proto.
-pause=function(...args){if(isAudio(this)&&bufferedAudio.pause(this))return;return Reflect.apply(pause,
-this,args)};for(const event of["play","loadedmetadata"]){document.addEventListener(event,e=>{if(isAudio(
-e.target)){if(e.type==="play"&&e.isTrusted)bufferedAudio.select(e.target);if(e.type==="play")crossfade?.
-select(e.target);apply(e.target)}},true)}document.addEventListener("keydown",event=>{if(event.composedPath().
-some(el=>el instanceof Element&&(el===ui?.host||el.matches("input,textarea,select")||el.isContentEditable))){
-return}handleShortcut(event)},true)}function createUi(){const host=document.createElement("span");host.
-id="soundcloud-tempo-control";host.style.cssText=`
-      display: flex;
-      align-items: center;
-      flex: 0 0 348px;
-      min-width: 348px;
-      margin-inline: 4px;
-    `;const root=host.attachShadow({mode:"open"});root.innerHTML=controlsTemplate({MIN,MAX,SLIDER_MAX,
-SLIDER_STEP,SLIDER_STEPS,sliderTicks});const get=selector=>root.querySelector(selector);ui={host,root,
-rateNumber:get("#rate-number"),slider:get("#rate-slider"),dial:get("#rate-dial"),verticalToggle:get(
-"#vertical-toggle"),fader:get("#tempo-fader"),stepUp:get(".step-up"),stepDown:get(".step-down"),memory:get(
-".memory"),settingsButton:get(".settings-button"),error:get(".error"),unit:get(".unit"),status:get("\
-.status"),editTrack:trackKey,editingNumber:false,settings:get(".settings"),savedToggle:get("#apply-s\
-aved"),copyToggle:get("#copy-tempo-links"),pitchToggle:get("#preserve-key"),savedFilter:get("#saved-\
-filter"),savedList:get(".saved-list"),savedCount:get(".saved-count"),settingsStatus:get(".settings-s\
-tatus"),wasmStatus:get("#wasm-status"),outputSlider:get("#output-level"),outputValue:get("#output-va\
-lue"),outputStatus:get("#output-status"),wasmToggle:get("#use-wasm")};syncControlStyle();ui.fader.addEventListener(
-"beforetoggle",event=>{if(event.newState!=="open")return;const rect=ui.verticalToggle.getBoundingClientRect();
-const footerTop=ui.host.closest(".playControls")?.getBoundingClientRect().top??rect.top;ui.fader.style.
-left=`${Math.max(8,Math.min(innerWidth-104,rect.x+rect.width/2-48))}px`;ui.fader.style.bottom=`${innerHeight-
-Math.min(rect.top,footerTop)+8}px`});ui.fader.addEventListener("toggle",event=>{const open=event.newState===
-"open";ui.verticalToggle.setAttribute("aria-expanded",String(open));if(open)ui.slider.focus()});window.
-addEventListener("resize",()=>{if(ui.fader.matches(":popover-open"))ui.fader.hidePopover()});get(".f\
-ader-reset").addEventListener("click",()=>setRate(1));const starMotion=get("#star-motion");starMotion.
-checked=appearance.motion()==="on";starMotion.addEventListener("change",()=>appearance.setMotion(starMotion.
-checked?"on":"off"));const starSpeed=get("#star-speed");starSpeed.value=String(appearance.speed());starSpeed.
-disabled=!starMotion.checked;syncTempoRange(starSpeed);get("#star-speed-value").value=`${appearance.
-speed()}\xD7`;starSpeed.addEventListener("input",()=>appearance.setSpeed(Number(starSpeed.value)));get(
-"#control-style").addEventListener("change",event=>{try{localStorage.setItem(STYLE_STORAGE,event.target.
-value)}catch{ui.settingsStatus.textContent="Control style could not be saved."}syncControlStyle()});
-const shiftInput=get("#key-shift");for(const id of["#crossfade","#crossfade-seconds"])get(id).addEventListener(
-"change",()=>{try{crossfade.set(get("#crossfade").checked,Number(get("#crossfade-seconds").value))}catch(error2){
-ui.settingsStatus.textContent=`Crossfade could not be saved. ${error2.message}`;render()}});get("#cr\
-ossfade-seconds").addEventListener("input",()=>{get("#crossfade-value").value=`${get("#crossfade-sec\
-onds").value} seconds`});const refreshCrossfadeDebug=()=>{const report=JSON.stringify({version:VERSION,
-...crossfade.diagnostics()},null,2);get("#crossfade-debug-output").textContent=report;return report};
-get(".crossfade-debug").addEventListener("toggle",()=>{if(get(".crossfade-debug").open)refreshCrossfadeDebug()});
-get("#crossfade-debug-refresh").addEventListener("click",refreshCrossfadeDebug);get("#crossfade-debu\
-g-copy").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(refreshCrossfadeDebug());
-get("#crossfade-debug-feedback").textContent="Diagnostics copied. No track links or account details \
-included."}catch{get("#crossfade-debug-feedback").textContent="Could not copy. Select the diagnostic\
-s above and copy them manually."}});get("#show-key").addEventListener("change",event=>{try{localStorage.
-setItem(SHOW_KEY_STORAGE,String(event.target.checked))}catch{ui.settingsStatus.textContent="Key visi\
-bility could not be saved."}syncControlStyle()});shiftInput.value=String(keyShift);for(const input of[
-shiftInput,get("#quick-key-shift")])input.addEventListener("change",()=>{const next=Number(input.value);
-if(input.value===""||!Number.isFinite(next)||Math.abs(next)>12){input.value=String(timeline.keyShift()??
-keyShift);return}try{localStorage.setItem(KEY_SHIFT_STORAGE,String(next))}catch{input.value=String(timeline.
-keyShift()??keyShift);ui.settingsStatus.textContent="Key shift could not be saved.";ui.status.textContent=
-"Key shift could not be saved.";return}keyShift=next;crossfade?.cancel();timeline.setKeyShift(next);
-updateAll()});ui.syncFields=enhanceTempoFields(ui.root);get("#tempo-increment").addEventListener("ch\
-ange",event=>{const increment=Number(event.target.value);if(!validTempoIncrement(increment)){ui.settingsStatus.
-textContent="Choose a tempo increment from 0.001 to 1."}else{try{localStorage.setItem(tempoIncrementKey,
-String(increment));ui.settingsStatus.textContent=""}catch{ui.settingsStatus.textContent="Tempo incre\
-ment could not be saved."}}event.target.value=String(readTempoIncrement());render()});const syncPitchControls=()=>{
-const settings=readPitchSettings();for(const name of["min","max","step"])get("#pitch-"+name).value=String(
-settings[name]);for(const input of[shiftInput,get("#quick-key-shift")]){input.min=String(settings.min);
-input.max=String(settings.max);input.step=String(settings.step)}ui.syncFields()};for(const name of["\
-min","max","step"])get("#pitch-"+name).addEventListener("change",()=>{const settings=Object.fromEntries(
-["min","max","step"].map(name2=>[name2,Number(get("#pitch-"+name2).value)]));if(!validPitchSettings(
-settings)){ui.settingsStatus.textContent="Choose a pitch range inside \u221212 to +12 and a step between \
-0.001 and 12.";syncPitchControls();return}try{localStorage.setItem(pitchSettingsKey,JSON.stringify(settings))}catch{
-ui.settingsStatus.textContent="Pitch controls could not be saved."}syncPitchControls();render()});ui.
-syncPitchControls=syncPitchControls;syncPitchControls();let dialDrag;ui.dial.addEventListener("point\
-erdown",event=>{if(event.button!==0)return;event.preventDefault();ui.dial.focus();ui.dial.setPointerCapture(
-event.pointerId);dialDrag={y:event.clientY,rate,track:trackKey}});ui.dial.addEventListener("pointerm\
-ove",event=>{if(!dialDrag||dialDrag.track!==currentTrackKey())return;const distance=dialDrag.y-event.
-clientY;dialDrag.y=event.clientY;dialDrag.rate=Math.max(MIN,Math.min(MAX,dialDrag.rate*2**(distance/
-(event.shiftKey?800:160))));setRate(dialDrag.rate)});for(const name of["pointerup","pointercancel","\
-lostpointercapture"])ui.dial.addEventListener(name,()=>{dialDrag=null});const stepTempo=event=>{if(event.
-altKey||event.ctrlKey||event.metaKey)return;const limit=event.currentTarget===ui.slider?Number(ui.slider.
-max):MAX;const current=Math.min(rate,limit);const changes={ArrowUp:readTempoIncrement(),ArrowRight:readTempoIncrement(),
-ArrowDown:-readTempoIncrement(),ArrowLeft:-readTempoIncrement(),PageUp:.25,PageDown:-.25};if(event.key===
-"Home"||event.key==="End"||event.key in changes){event.preventDefault();setRate(Math.min(limit,event.
-key==="Home"?MIN:event.key==="End"?limit:current+changes[event.key]*(event.shiftKey?.2:1)))}};ui.dial.
-addEventListener("keydown",stepTempo);ui.slider.addEventListener("keydown",stepTempo);ui.dial.addEventListener(
-"dblclick",()=>setRate(1));for(const input of root.querySelectorAll('[name="appearance"]')){input.checked=
-input.value===appearance.mode();input.addEventListener("change",()=>{if(!input.checked)return;try{appearance.
-setMode(input.value)}catch{for(const option of root.querySelectorAll('[name="appearance"]'))option.checked=
-option.value===appearance.mode();ui.settingsStatus.textContent="Theme could not be saved."}})}ui.library=
-createTempoLibrary({root,store:tempoStore,edit:track=>timeline.open(track),changed:(track,type)=>{if(type===
-"timeline")timeline.refreshSaved(track);if(track===trackKey){savedRate=readSavedRate(trackKey);if(type===
-"speed"&&applySaved)rate=clamp2(savedRate??1)}updateAll()},imported:()=>{ui.syncPitchControls?.();applySaved=
-readSavedSetting();keyShift=readKeyShift();shiftInput.value=String(keyShift);syncControlStyle();preserveKey=
-readPitchSetting();useWasm=readWasmSetting();savedRate=readSavedRate(trackKey);ui.savedToggle.checked=
-applySaved;ui.pitchToggle.checked=preserveKey;ui.wasmToggle.checked=useWasm;ui.copyToggle.checked=copyLinksEnabled();
-outputLevel.reload();crossfade.reload();timeline.refreshSaved(trackKey);rate=applySaved?clamp2(savedRate??
-1):1;updateAll()}});ui.wasmToggle.checked=useWasm;ui.wasmToggle.addEventListener("change",()=>{try{localStorage.
-setItem(WASM_STORAGE,String(ui.wasmToggle.checked));useWasm=ui.wasmToggle.checked;updateAll()}catch{
-ui.wasmToggle.checked=useWasm;ui.settingsStatus.textContent="Audio setting could not be saved."}});outputLevel.
-syncUI();const setOutput=event=>{try{outputLevel.set(event.target.value);ui.settingsStatus.textContent=
-"";render()}catch(error2){ui.settingsStatus.textContent=error2.message;outputLevel.syncUI()}};ui.outputSlider.
-addEventListener("input",setOutput);ui.outputValue.addEventListener("change",setOutput);root.addEventListener(
-"input",event=>{if(event.target.matches("input[type='range']"))syncTempoRange(event.target)});ui.copyToggle.
-checked=copyLinksEnabled();ui.copyToggle.addEventListener("change",()=>{try{localStorage.setItem(COPY_STORAGE,
-String(ui.copyToggle.checked))}catch{ui.copyToggle.checked=copyLinksEnabled();ui.settingsStatus.textContent=
-"Could not save setting."}});ui.settingsButton.addEventListener("click",()=>{ui.copyToggle.checked=copyLinksEnabled();
-if(ui.settings.hidden){openSettings(ui.settingsButton)}else{closeSettings(true)}});get(".open-editor").
-addEventListener("click",()=>timeline.open());if(WEBSITE){const buildSet=document.createElement("but\
-ton");buildSet.type="button";buildSet.className="build-set";buildSet.textContent="Build a set";buildSet.
-addEventListener("click",()=>{const original=trackKey?"https://soundcloud.com"+trackKey:"";const shared=timeline.
-shareLink(original,true);const destination=new URL("set/",WEBSITE);if(shared!==original)destination.
-hash=new URL(shared).hash;window.open(destination.href,"_blank","noopener,noreferrer")});get(".setti\
-ngs-actions").prepend(buildSet)}ui.pitchToggle.setAttribute("aria-describedby","pitch-mode-help");ui.
-pitchToggle.disabled=!pitchNames.some(name=>native[name]?.set);if(ui.pitchToggle.disabled){get("#pit\
-ch-mode-help").textContent="Pitch preservation is unavailable in this browser. Natural mode remains \
-active."}ui.pitchToggle.addEventListener("change",()=>{try{localStorage.setItem(PITCH_STORAGE,String(
-ui.pitchToggle.checked));preserveKey=ui.pitchToggle.checked;updateAll();ui.settingsStatus.textContent=
-timeline.pitchMode()?"Default saved. This timeline keeps its own pitch mode.":preserveKey?wasmAudio.
-label():"Natural pitch restored."}catch{ui.pitchToggle.checked=preserveKey;ui.settingsStatus.textContent=
-"Could not save audio mode. Allow site storage and retry."}});ui.memory.addEventListener("contextmen\
-u",event=>{event.preventDefault();event.stopPropagation();openSettings()});ui.memory.addEventListener(
-"keydown",event=>{if(event.key==="ContextMenu"||event.shiftKey&&event.key==="F10"||event.altKey&&event.
-key==="Enter"){event.preventDefault();event.stopPropagation();openSettings()}});get(".close-settings").
-addEventListener("click",()=>closeSettings(true));ui.savedFilter.addEventListener("input",populateSavedTracks);
-ui.savedToggle.addEventListener("change",()=>{try{localStorage.setItem(SAVED_STORAGE,String(ui.savedToggle.
-checked));applySaved=ui.savedToggle.checked;timeline.changeTrack("");timeline.changeTrack(trackKey);
-rate=applySaved?clamp2(savedRate??1):1;updateAll();ui.settingsStatus.textContent=applySaved?"Saved t\
-empos enabled.":"Saved tempos off."}catch{ui.savedToggle.checked=applySaved;ui.settingsStatus.textContent=
-"Could not save this preference. Allow site storage and retry."}});document.addEventListener("pointe\
-rdown",event=>{if(!event.composedPath().includes(ui.settings)&&!event.composedPath().includes(ui.memory)&&
-!event.composedPath().includes(ui.settingsButton)){closeSettings()}});ui.slider.addEventListener("in\
-put",()=>setRate(ui.slider.value));for(const[button,direction]of[[ui.stepUp,1],[ui.stepDown,-1]]){let timer;
-let repeated=false;let pressedTrack="";const stop=()=>clearTimeout(timer);button.addEventListener("p\
-ointerdown",event=>{if(event.button!==0){return}stop();repeated=false;button.setPointerCapture(event.
-pointerId);const startingTrack=currentTrackKey();pressedTrack=startingTrack;const step=event.shiftKey?
-.01:readTempoIncrement();const repeat=()=>{if(currentTrackKey()!==startingTrack||!button.isConnected||
-button.disabled){stop();return}repeated=true;setRate(rate+direction*step);timer=setTimeout(repeat,100)};
-timer=setTimeout(repeat,400)});for(const type of["pointerup","pointercancel","lostpointercapture"]){
-button.addEventListener(type,stop)}window.addEventListener("blur",stop);document.addEventListener("v\
-isibilitychange",stop);button.addEventListener("click",event=>{event.stopPropagation();if(event.detail!==
-0&&pressedTrack!==currentTrackKey()){return}if(repeated&&event.detail!==0){repeated=false;return}setRate(
-rate+direction*(event.shiftKey?.01:readTempoIncrement()))})}ui.slider.addEventListener("dblclick",()=>setRate(
-1));ui.rateNumber.addEventListener("dblclick",()=>{setRate(1);ui.rateNumber.value=String(rate)});ui.
-slider.addEventListener("pointerdown",()=>{if(ui.root.activeElement===ui.rateNumber){ui.rateNumber.blur()}
-if(rate>Number(ui.slider.max)){setRate(Number(ui.slider.max))}});for(const type of["pointerdown","mo\
-usedown","touchstart","click","dblclick"]){ui.slider.addEventListener(type,event=>event.stopPropagation())}
-ui.rateNumber.addEventListener("focus",()=>{ui.editTrack=trackKey});ui.rateNumber.addEventListener("\
-input",()=>{ui.editingNumber=true});const commitNumber=()=>{const draft=ui.rateNumber.value;ui.editingNumber=
-false;const editingTrack=ui.editTrack;const changed=syncTrack();if(!changed&&editingTrack===trackKey){
-setRate(draft)}else{updateAll()}ui.rateNumber.value=String(rate);render()};ui.rateNumber.addEventListener(
-"change",commitNumber);ui.rateNumber.addEventListener("keydown",event=>{if(event.key==="ArrowUp"||event.
-key==="ArrowDown"){commitNumber();stepTempo(event)}});ui.rateNumber.addEventListener("blur",()=>{ui.
-editingNumber=false;ui.rateNumber.value=String(rate)});ui.memory.addEventListener("click",event=>trackKey?
-rememberTrack(event.shiftKey):openSettings());root.addEventListener("keydown",event=>{if(event.key===
-"Escape"&&ui.fader.matches(":popover-open")){event.preventDefault();event.stopPropagation();ui.fader.
-hidePopover();ui.verticalToggle.focus();return}if(event.key==="Escape"&&!ui.settings.hidden){event.preventDefault();
-event.stopPropagation();closeSettings(true);return}if(ui.settings.contains(event.target)||timeline?.
-contains(event.target)){event.stopPropagation();return}if(handleShortcut(event)){ui.rateNumber.value=
-String(rate);return}if(event.target===ui.rateNumber&&event.key==="Enter"){event.preventDefault();commitNumber()}
-if(event.key==="Escape"){event.preventDefault();ui.rateNumber.value=String(rate);ui.root.activeElement?.
-blur()}event.stopPropagation()});render()}function installFooterStyle(){if(document.getElementById("\
-soundcloud-tempo-footer-style")){return}const style=document.createElement("style");style.id="soundc\
-loud-tempo-footer-style";style.textContent=`
-      .playControls:has(.soundcloud-tempo-footer) .playControls__inner {
-        width: 100%;
-        max-width: none;
-        box-sizing: border-box;
-        padding-inline: 20px;
+type="button";dismiss.textContent="Dismiss";dismiss.addEventListener("click",()=>{notice.remove();style2.
+remove();ui.settingsButton.focus()},{once:true});notice.append(dismiss);ui.root.append(style2,notice)}function installFooterStyle(){if(document.getElementById("soundcloud-tempo-footer-style")){return}const style2=document.
+createElement("style");style2.id="soundcloud-tempo-footer-style";style2.textContent=`
+    @property --tempo-artwork-start { syntax: '<percentage>'; inherits: true; initial-value: 100%; }\
+
+    @property --tempo-artwork-end { syntax: '<percentage>'; inherits: true; initial-value: 150%; }
+    @property --tempo-artwork-progress { syntax: '<number>'; inherits: true; initial-value: 0; }
+    .playControls:has(.soundcloud-tempo-footer) .playControls__inner {
+      width: 100%;
+      max-width: none;
+      box-sizing: border-box;
+      padding-inline: 20px;
+    }
+    .playControls__elements.soundcloud-tempo-footer {
+      width: 100%;
+      max-width: none;
+      box-sizing: border-box;
+    }
+    .playControls__elements.soundcloud-tempo-footer > .playControls__timeline {
+      flex: 1 1 240px;
+      min-width: 90px;
+      max-width: 480px;
+      margin-left: 12px !important;
+      margin-right: 8px !important;
+    }
+
+    .soundcloud-tempo-footer .playbackTimeline__progressWrapper {
+      min-width: 24px;
+    }
+
+    .playControls__elements.soundcloud-tempo-footer > .playControls__soundBadge {
+      flex: 1 1 320px;
+      width: auto;
+      min-width: 250px;
+      margin-left: 12px !important;
+    }
+
+    .soundcloud-tempo-footer .playbackSoundBadge__titleContextContainer {
+      flex: 1 1 0;
+      width: auto;
+      max-width: none;
+      min-width: 0;
+      margin-right: 12px !important;
+    }
+
+    .soundcloud-tempo-footer .playbackSoundBadge__avatar {
+      flex-shrink: 0;
+      margin-right: 8px !important;
+    }
+
+    .playbackSoundBadge__avatar.soundcloud-tempo-artwork {
+      position: relative;
+    }
+
+    .soundcloud-tempo-crossfade-artwork,
+    .soundcloud-tempo-crossfade-artwork > span {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-size: cover;
+      background-position: center;
+    }
+    .soundcloud-tempo-crossfade-artwork {
+      overflow: hidden;
+      z-index: 2;
+      transition: --tempo-artwork-start 100ms linear, --tempo-artwork-end 100ms linear, --tempo-artw\
+ork-progress 100ms linear;
+    }
+    .soundcloud-tempo-incoming-artwork {
+      mask-image: linear-gradient(to right, transparent var(--tempo-artwork-start), #000 var(--tempo\
+-artwork-end));
+    }
+    .soundcloud-tempo-pitch-notice {
+      display: block;
+      font-size: 10px;
+      line-height: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+    .soundcloud-tempo-pitch-notice[hidden] { display: none; }
+    .soundcloud-tempo-footer .playbackSoundBadge__titleContextContainer:has(.soundcloud-tempo-pitch-\
+notice:not([hidden])) {
+      height: auto;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .soundcloud-tempo-crossfade-artwork {
+        transition: --tempo-artwork-progress 100ms linear;
       }
-      .playControls__elements.soundcloud-tempo-footer {
-        width: 100%;
-        max-width: none;
-        box-sizing: border-box;
+      .soundcloud-tempo-incoming-artwork {
+        mask-image: none;
+        opacity: var(--tempo-artwork-progress);
       }
-      .playControls__elements.soundcloud-tempo-footer > .playControls__timeline {
-        flex: 1 1 240px;
-        min-width: 90px;
-        max-width: 480px;
-        margin-left: 12px !important;
+    }
+
+    .soundcloud-tempo-page-position {
+      position: relative;
+    }
+
+    .soundcloud-tempo-footer .playbackSoundBadge__actions {
+      flex-shrink: 0;
+    }
+
+    .playControls__elements.soundcloud-tempo-footer > .playControls__volume {
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 1100px) {
+      .playControls__elements.soundcloud-tempo-footer > .playControls__prev,
+      .playControls__elements.soundcloud-tempo-footer > .playControls__play,
+      .playControls__elements.soundcloud-tempo-footer > .playControls__next {
         margin-right: 8px !important;
-      }
-
-      .soundcloud-tempo-footer .playbackTimeline__progressWrapper {
-        min-width: 24px;
-      }
-
-      .playControls__elements.soundcloud-tempo-footer > .playControls__soundBadge {
-        flex: 1 1 320px;
-        width: auto;
-        min-width: 250px;
-        margin-left: 12px !important;
       }
 
       .soundcloud-tempo-footer .playbackSoundBadge__titleContextContainer {
-        flex: 1 1 0;
-        width: auto;
-        max-width: none;
-        min-width: 0;
-        margin-right: 12px !important;
-      }
-
-      .soundcloud-tempo-footer .playbackSoundBadge__avatar {
-        flex-shrink: 0;
         margin-right: 8px !important;
       }
+    }
 
-      .playbackSoundBadge__avatar.soundcloud-tempo-artwork {
-        position: relative;
+    @media (max-width: 1100px) {
+      .playControls__elements.soundcloud-tempo-footer > .playControls__timeline {
+        min-width: 54px;
       }
+    }
 
-      .soundcloud-tempo-crossfade-artwork,
-      .soundcloud-tempo-crossfade-artwork > span {
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        background-size: cover;
-        background-position: center;
-      }
-      .soundcloud-tempo-crossfade-artwork {
-        overflow: hidden;
-        z-index: 2;
-      }
-      .soundcloud-tempo-incoming-artwork {
-        mask-image: linear-gradient(to right, transparent var(--fade-start), #000 var(--fade-end));
-      }
-      .soundcloud-tempo-pitch-notice {
-        display: block;
-        font-size: 10px;
-        line-height: 12px;
-        font-variant-numeric: tabular-nums;
-      }
-      .soundcloud-tempo-pitch-notice[hidden] { display: none; }
-      .soundcloud-tempo-footer .playbackSoundBadge__titleContextContainer:has(.soundcloud-tempo-pitc\
-h-notice:not([hidden])) {
+    @media (max-width: 1100px) {
+      .playControls:has(.soundcloud-tempo-footer) {
         height: auto;
       }
-      @media (prefers-reduced-motion: reduce) {
-        .soundcloud-tempo-incoming-artwork {
-          mask-image: none;
-          opacity: var(--incoming-progress);
-        }
+
+      .playControls:has(.soundcloud-tempo-footer) .playControls__inner {
+        height: auto;
+        padding-inline: 0;
       }
 
-      .soundcloud-tempo-page-position {
-        position: relative;
-      }
-
-      .soundcloud-tempo-footer .playbackSoundBadge__actions {
-        flex-shrink: 0;
+      .playControls__elements.soundcloud-tempo-footer {
+        height: auto;
+        min-height: 92px;
+        flex-wrap: wrap;
+        row-gap: 6px;
+        padding: 6px 8px;
       }
 
       .playControls__elements.soundcloud-tempo-footer > .playControls__volume {
-        flex-shrink: 0;
+        order: 5;
       }
 
-      @media (max-width: 1100px) {
-        .playControls__elements.soundcloud-tempo-footer > .playControls__prev,
-        .playControls__elements.soundcloud-tempo-footer > .playControls__play,
-        .playControls__elements.soundcloud-tempo-footer > .playControls__next {
-          margin-right: 8px !important;
-        }
-
-        .soundcloud-tempo-footer .playbackSoundBadge__titleContextContainer {
-          margin-right: 8px !important;
-        }
+      .playControls__elements.soundcloud-tempo-footer > .playControls__timeline {
+        order: 6;
+        flex: 1 1 90px;
+        margin: 0 4px !important;
       }
 
-      @media (max-width: 1100px) {
-        .playControls__elements.soundcloud-tempo-footer > .playControls__timeline {
-          min-width: 54px;
-        }
+      .playControls__elements.soundcloud-tempo-footer > #soundcloud-tempo-control {
+        order: 10;
+        flex: 1 1 416px !important;
+        min-width: 292px !important;
+        margin: 0 4px 0 0;
       }
 
-      @media (max-width: 1100px) {
-        .playControls:has(.soundcloud-tempo-footer) {
-          height: auto;
-        }
-
-        .playControls:has(.soundcloud-tempo-footer) .playControls__inner {
-          height: auto;
-          padding-inline: 0;
-        }
-
-        .playControls__elements.soundcloud-tempo-footer {
-          height: auto;
-          min-height: 92px;
-          flex-wrap: wrap;
-          row-gap: 6px;
-          padding: 6px 8px;
-        }
-
-        .playControls__elements.soundcloud-tempo-footer > .playControls__volume {
-          order: 5;
-        }
-
-        .playControls__elements.soundcloud-tempo-footer > .playControls__timeline {
-          order: 6;
-          flex: 1 1 90px;
-          margin: 0 4px !important;
-        }
-
-        .playControls__elements.soundcloud-tempo-footer > #soundcloud-tempo-control {
-          order: 10;
-          flex: 1 1 416px !important;
-          min-width: 292px !important;
-          margin: 0 4px 0 0;
-        }
-
-        .playControls__elements.soundcloud-tempo-footer > .playControls__soundBadge {
-          order: 11;
-          flex: 1 1 250px;
-          width: auto;
-          margin: 0 !important;
-        }
+      .playControls__elements.soundcloud-tempo-footer > .playControls__soundBadge {
+        order: 11;
+        flex: 1 1 250px;
+        width: auto;
+        margin: 0 !important;
       }
-    `;(document.head||document.documentElement).append(style)}function syncTheme(){if(!ui?.host.isConnected){
-return}const bar=ui.host.closest(".playControls");const reference=bar?.querySelector(".volume__butto\
-n")||bar||document.body;const foreground=getComputedStyle(reference).color;const values=foreground.match(
-/[\d.]+/g)?.map(Number)||[34,34,34];const dark=values.slice(0,3).reduce((a,b)=>a+b,0)>450;ui.host.style.
-setProperty("--tempo-fg",foreground);const progress=bar?.querySelector(".playbackTimeline__progressB\
-ar");const accent=progress&&getComputedStyle(progress).backgroundColor;const nativeRail=progress?.getBoundingClientRect();
-const controls=ui.root.querySelector(".controls").getBoundingClientRect();const offset=nativeRail?.height?
-nativeRail.y+nativeRail.height/2-controls.y-controls.height/2:0;ui.host.style.setProperty("--tempo-r\
-ail-offset",`${Math.abs(offset)<=8?offset:0}px`);ui.host.style.setProperty("--tempo-accent",accent&&
-accent!=="rgba(0, 0, 0, 0)"?accent:"#ff5500");ui.host.style.setProperty("--tempo-track",dark?"#888":
-"#777");const surface=getComputedStyle(document.documentElement).getPropertyValue("--tempo-page-surf\
-ace").trim();ui.host.style.setProperty("--tempo-surface",surface||(dark?"#303030":"#f2f2f2"));ui.host.
-style.setProperty("--tempo-accent-surface",surface||"#242424");ui.host.style.colorScheme=dark?"dark":
-"light";ui.host.style.fontFamily=getComputedStyle(reference).fontFamily}function syncArtworkIndicator(description){
-const artwork=document.querySelector(".playControls__soundBadge .playbackSoundBadge__avatar");if(ui.
-artwork!==artwork){ui.artwork?.classList.remove("soundcloud-tempo-artwork");ui.artworkIndicator?.remove();
-ui.artwork=artwork;ui.artworkIndicator=null}if(!artwork){return}if(!ui.artworkIndicator?.isConnected){
-artwork.querySelectorAll("#soundcloud-tempo-artwork-indicator").forEach(node=>{node.remove()});const indicator2=document.
-createElement("span");indicator2.id="soundcloud-tempo-artwork-indicator";indicator2.setAttribute("ro\
-le","img");indicator2.attachShadow({mode:"open"}).innerHTML=`
-        <style>
-          :host {
-            position: absolute;
-            inset: auto 1px 1px auto;
-            display: grid;
-            place-items: center;
-            width: 18px;
-            height: 18px;
-            box-sizing: border-box;
-            border: 1px solid #161616;
-            border-radius: 3px;
-            background: #ff5500;
-            color: #fff;
-            --logo-cutout: #ff5500;
-            z-index: 1;
-            line-height: 0;
-          }
-          :host([hidden]) {
-            display: none;
-          }
-          svg {
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-          }
-          @media (forced-colors: active) {
-            :host {
-              background: Canvas;
-              color: CanvasText;
-              border-color: CanvasText;
-            }
-          }
-        </style>
-        ${tempoLogo()}
-      `;artwork.classList.add("soundcloud-tempo-artwork");artwork.append(indicator2);ui.artworkIndicator=
-indicator2}const label=description;const indicator=ui.artworkIndicator;const hidden=rate===1||!trackKey||
-Boolean(failure2);if(indicator.hidden!==hidden){indicator.hidden=hidden}if(indicator.title!==label){
-indicator.title=label;indicator.setAttribute("aria-label",label)}}function embeddedArtwork(image){const artwork=image.
+    }
+  `;(document.head||document.documentElement).append(style2)}function createPageArtwork({parseTrackKey,readSavedRate,formatRate,tempoLogo,readTrack,readEmbeddedPages}){
+const pageArtwork=new Map;const tracks=new Map;const savedRates=new Map;const changedTracks=new Set;
+let lastPlayback;let artworkDirty=true;let artworkFrame=0;function embeddedArtwork(image){const artwork=image.
 parentElement;if(!artwork)return null;try{const url=new URL(image.currentSrc||image.src);if(url.protocol!==
 "https:"||!url.hostname.endsWith(".sndcdn.com"))return null;if(url.pathname.startsWith("/artworks-"))
 return artwork;if(!url.pathname.startsWith("/avatars-"))return null;const title=image.closest('secti\
@@ -10266,22 +8943,29 @@ mainHeading a, a.soundTitle__title, a.queueItemView__title, .queueItemView__titl
 itleLink, a.trackItem__trackTitle");const key=parseTrackKey(title?.getAttribute("href"));const artwork=card.
 querySelector(".playableTile__artwork .image, .sound__coverArt .image, .queueItemView__artwork .imag\
 e, .soundBadge__avatar .image, .trackItem__artwork .image");if(key&&artwork&&!targets.has(artwork)){
-targets.set(artwork,key)}}const pageKey=page===document?parseTrackKey(location.href):embeddedPages.key(
-page);if(pageKey){page.querySelectorAll(".listenArtworkWrapper .image, .fullHero__artwork .image").forEach(
-artwork=>targets.set(artwork,pageKey));if(page!==document){for(const image of page.querySelectorAll(
+targets.set(artwork,key)}}const pageKey=page===document?parseTrackKey(location.href):readEmbeddedPages().
+key(page);if(pageKey){page.querySelectorAll(".listenArtworkWrapper .image, .fullHero__artwork .image").
+forEach(artwork=>targets.set(artwork,pageKey));if(page!==document){for(const image of page.querySelectorAll(
 'section[aria-label="Track header"] img')){const artwork=embeddedArtwork(image);if(artwork)targets.set(
-artwork,pageKey)}}}}function collectPageArtwork(){const targets=new Map;for(const page of[document,...embeddedPages?.
+artwork,pageKey)}}}}function collectPageArtwork(){const targets=new Map;for(const page of[document,...readEmbeddedPages()?.
 documents()||[]])collectArtworkTargets(page,targets);for(const[artwork,entry]of pageArtwork){if(targets.
 get(artwork)!==entry.key){entry.badge?.remove();if(entry.positioned){artwork.classList.remove("sound\
 cloud-tempo-page-position")}pageArtwork.delete(artwork)}}for(const[artwork,key]of targets){if(!pageArtwork.
 has(artwork)){artwork.classList.remove("soundcloud-tempo-page-position");artwork.querySelectorAll(":\
 scope > .soundcloud-tempo-page-indicator").forEach(badge=>badge.remove());pageArtwork.set(artwork,{key,
-badge:null,positioned:false})}}}function renderPageArtwork(){const saved=new Map;for(const[artwork,entry]of pageArtwork){
-if(!artwork.isConnected){pageArtwork.delete(artwork);continue}if(!saved.has(entry.key)){saved.set(entry.
-key,readSavedRate(entry.key))}const stored=saved.get(entry.key);const active=entry.key===trackKey&&rate!==
-1&&!failure2;const value=active?rate:stored;if(value===null||value===1){if(entry.badge){entry.badge.
-hidden=true}continue}if(!entry.badge?.isConnected){const badge=artwork.ownerDocument.createElement("\
-span");badge.className="soundcloud-tempo-page-indicator";badge.setAttribute("role","img");badge.attachShadow(
+badge:null,positioned:false})}}tracks.clear();savedRates.clear();for(const[artwork,entry]of pageArtwork){
+entry.small=void 0;if(!tracks.has(entry.key))tracks.set(entry.key,new Map);tracks.get(entry.key).set(
+artwork,entry)}}function renderPageArtwork(full){const{trackKey,rate,failure:failure2}=readTrack();const playbackChanged=!lastPlayback||
+lastPlayback.trackKey!==trackKey||lastPlayback.rate!==rate||lastPlayback.failed!==Boolean(failure2);
+const targets=full?pageArtwork:new Map;if(!full){const keys=new Set(changedTracks);if(playbackChanged){
+keys.add(trackKey);keys.add(lastPlayback?.trackKey)}for(const key of keys)for(const[artwork,entry]of tracks.
+get(key)||[])targets.set(artwork,entry)}changedTracks.clear();lastPlayback={trackKey,rate,failed:Boolean(
+failure2)};for(const[artwork,entry]of targets){if(!artwork.isConnected){pageArtwork.delete(artwork);
+tracks.get(entry.key)?.delete(artwork);continue}if(!savedRates.has(entry.key)){savedRates.set(entry.
+key,readSavedRate(entry.key))}const stored=savedRates.get(entry.key);const active=entry.key===trackKey&&
+rate!==1&&!failure2;const value=active?rate:stored;if(value===null||value===1){if(entry.badge){entry.
+badge.hidden=true}continue}if(!entry.badge?.isConnected){const badge=artwork.ownerDocument.createElement(
+"span");badge.className="soundcloud-tempo-page-indicator";badge.setAttribute("role","img");badge.attachShadow(
 {mode:"open"}).innerHTML=`
           <style>
             :host {
@@ -10339,130 +9023,1930 @@ span");badge.className="soundcloud-tempo-page-indicator";badge.setAttribute("rol
 tatic";if(entry.positioned){artwork.classList.add("soundcloud-tempo-page-position")}artwork.append(badge);
 entry.badge=badge}const label=active?`Playing at ${formatRate(value)}`:`Saved tempo ${formatRate(value)}`;
 if(entry.badge.hidden){entry.badge.hidden=false}if(entry.badge.dataset.active!==String(active)){entry.
-badge.dataset.active=String(active)}const width=artwork.getBoundingClientRect().width;const small=String(
-width>0&&width<=48);if(entry.badge.dataset.small!==small){entry.badge.dataset.small=small}if(entry.badge.
-title!==label){entry.badge.title=label;entry.badge.setAttribute("aria-label",label)}}}function schedulePageArtwork(){
-if(artworkFrame)return;artworkFrame=requestAnimationFrame(()=>{artworkFrame=0;if(artworkDirty){artworkDirty=
-false;collectPageArtwork()}renderPageArtwork()})}function mount(){const bar=document.querySelector("\
-.playControls__elements");if(!bar){return}installFooterStyle();if(!ui){createUi()}bar.classList.add(
-"soundcloud-tempo-footer");if(ui.host.parentNode!==bar){closeSettings();bar.querySelectorAll("#sound\
-cloud-tempo-control").forEach(node=>{if(node!==ui.host){node.remove()}});const volume=bar.querySelector(
-".playControls__volume");bar.insertBefore(ui.host,volume||bar.querySelector(".playControls__soundBad\
-ge"));syncTheme();showReleaseNotice(ui,VERSION,WEBSITE)}if(!controlSetupShown){controlSetupShown=true;
-try{if(localStorage.getItem(STYLE_STORAGE))return}catch{return}if(new URLSearchParams(location.search).
-has("sct")||location.hash.startsWith("#sct="))return;ui.settings.setAttribute("data-choosing-style",
-"");ui.root.querySelector(".control-setup-intro").hidden=false;ui.root.querySelector("#settings-titl\
-e").textContent="Choose your tempo control";ui.root.querySelector(".appearance-settings").open=true;
-const close=ui.root.querySelector(".close-settings");close.textContent="Use this style";close.setAttribute(
-"aria-label","Use this style");openSettings(ui.settingsButton);ui.root.querySelector("#control-style").
-nextElementSibling?.focus()}}function render(){if(!ui){return}ui.wasmStatus.textContent=bufferedAudio?.
-label()||wasmAudio.label();const increment=readTempoIncrement();const incrementInput=ui.root.querySelector(
-"#tempo-increment");if(ui.root.activeElement!==incrementInput)incrementInput.value=String(increment);
-ui.stepUp.setAttribute("aria-label",`Increase speed by ${increment}\xD7; Shift for 0.01\xD7`);ui.stepDown.
-setAttribute("aria-label",`Decrease speed by ${increment}\xD7; Shift for 0.01\xD7`);ui.root.querySelector(
-"#crossfade").checked=crossfade?.enabled()??false;ui.root.querySelector("#crossfade-seconds").value=
-String(crossfade?.seconds()??5);ui.root.querySelector("#crossfade-seconds").disabled=!crossfade?.enabled();
-syncTempoRange(ui.root.querySelector("#crossfade-seconds"));ui.root.querySelector("#crossfade-value").
-value=`${crossfade?.seconds()??5} seconds`;ui.root.querySelector("#crossfade-status").textContent=crossfade?.
-label()??"";ui.outputStatus.textContent=outputLevel.value()>0&&![...references].some(ref=>{const audio=ref.
-deref();return audio&&wasmAudio.hasGraph(audio)})?"Boost needs the player\u2019s audio connection. Start \
-playback; reload SoundCloud if it stays unavailable.":"";const text=formatRate(rate);const shift=timeline.
-keyShift()??keyShift;trackVisuals.pitch(trackKey&&!failure2?shift:0);const pitch=12*Math.log2(rate)+
-shift;const pitchText=`${pitch>0?"+":""}${pitch.toFixed(2)} st`;const description=preservesKey()?`${text}\
- \xB7 Preserve key${shift?` \xB7 key shift ${shift>0?"+":""}${shift} st`:""}`:`${text} \xB7 natural pit\
-ch ${pitchText}`;const sliderRate=clamp2(Math.round(Math.min(rate,Number(ui.slider.max))/.025)*.025);
-ui.stepUp.disabled=rate>=MAX;ui.stepDown.disabled=rate<=MIN;if(ui.slider.valueAsNumber!==sliderRate){
-ui.slider.value=String(sliderRate)}syncTempoRange(ui.slider);ui.dial.setAttribute("aria-valuenow",String(
+badge.dataset.active=String(active)}if(entry.small===void 0){const width=artwork.getBoundingClientRect().
+width;entry.small=String(width>0&&width<=48)}if(entry.badge.dataset.small!==entry.small){entry.badge.
+dataset.small=entry.small}if(entry.badge.title!==label){entry.badge.title=label;entry.badge.setAttribute(
+"aria-label",label)}}}function schedulePageArtwork(){if(artworkFrame)return;artworkFrame=requestAnimationFrame(
+()=>{artworkFrame=0;const full=artworkDirty;if(full){artworkDirty=false;collectPageArtwork()}renderPageArtwork(
+full)})}function refreshSaved(track){if(track){savedRates.delete(track);changedTracks.add(track)}else
+artworkDirty=true;schedulePageArtwork()}window.addEventListener("resize",()=>{artworkDirty=true;schedulePageArtwork()});
+window.addEventListener("storage",event=>{const prefix="soundcloud.tempo.track.";if(event.key===null)
+refreshSaved();else if(event.key?.startsWith(prefix)){try{refreshSaved(decodeURIComponent(event.key.
+slice(prefix.length)))}catch{}}});return{schedule:schedulePageArtwork,refreshSaved,markDirty(){artworkDirty=
+true}}}function createMediaGuards({apply,readPlayback,readServices,readUI,handleShortcut}){const proto=HTMLMediaElement.
+prototype;const pitchNames=["preservesPitch","mozPreservesPitch","webkitPreservesPitch"];const properties=[
+"playbackRate","defaultPlaybackRate",...pitchNames];const native=Object.fromEntries(properties.map(name=>[
+name,Object.getOwnPropertyDescriptor(proto,name)]));const known=new WeakSet;const references=new Set;
+function isAudio(audio){return audio instanceof HTMLAudioElement}function discover(audio){if(!isAudio(
+audio)||known.has(audio)){return}readServices().outputLevel.attach(audio);known.add(audio);references.
+add(new WeakRef(audio));for(const event of["play","playing","loadstart","loadedmetadata","ratechange",
+"emptied"]){audio.addEventListener(event,()=>apply(audio))}}function setNative(audio,name,value){const descriptor=native[name];
+if(descriptor?.set&&descriptor.get.call(audio)!==value){descriptor.set.call(audio,value)}}function applyNative(audio){
+const{wasmAudio}=readServices();const{preserve,useWasm,keyShift,rate}=readPlayback();const wasmActive=wasmAudio.
+sync(audio,preserve&&useWasm||keyShift!==0,rate);for(const name of pitchNames)setNative(audio,name,preserve&&
+!wasmActive);setNative(audio,"defaultPlaybackRate",rate);setNative(audio,"playbackRate",rate)}function installGuards(){
+for(const name of properties){const descriptor=native[name];if(!descriptor?.configurable||!descriptor.
+set){continue}Object.defineProperty(proto,name,{...Object.getOwnPropertyDescriptor(proto,name)||descriptor,
+set(value){if(!isAudio(this)){return descriptor.set.call(this,value)}discover(this);if(pitchNames.includes(
+name)){return descriptor.set.call(this,readPlayback().preserve&&!readServices().wasmAudio.active(this))}
+apply(this)}})}const play=proto.play;proto.play=function(...args){if(isAudio(this)){readServices().bufferedAudio.
+select(this);readServices().crossfade?.select(this);apply(this);return readServices().bufferedAudio.
+play(this,()=>Reflect.apply(play,this,args))}return Reflect.apply(play,this,args)};const pause=proto.
+pause;proto.pause=function(...args){if(isAudio(this)&&readServices().bufferedAudio.pause(this))return;
+return Reflect.apply(pause,this,args)};for(const event of["play","loadedmetadata"]){document.addEventListener(
+event,e=>{if(isAudio(e.target)){if(e.type==="play"&&e.isTrusted)readServices().bufferedAudio.select(
+e.target);if(e.type==="play")readServices().crossfade?.select(e.target);apply(e.target)}},true)}document.
+addEventListener("keydown",event=>{if(event.composedPath().some(el=>el instanceof Element&&(el===readUI()?.
+host||el.matches("input,textarea,select")||el.isContentEditable))){return}handleShortcut(event)},true)}
+return{references,discover,isAudio,applyNative,installGuards,supportsPitch:()=>pitchNames.some(name=>native[name]?.
+set)}}var MAX_JSON_BYTES=128*1024;var MAX_PAGE_BYTES=2*1024*1024;function waveformTrack(value){const url=new URL(
+value,"https://soundcloud.com");if(url.protocol!=="https:"||url.hostname!=="soundcloud.com"||url.username||
+url.password||url.port||url.search||url.hash||!/^\/[^/]+\/[^/]+\/?$/.test(url.pathname))throw new TypeError(
+"A public SoundCloud track is required.");return url.origin+url.pathname.replace(/\/$/,"")}function waveformData(data2){
+if(!data2||!Number.isInteger(data2.width)||data2.width<1||data2.width>16384||!Number.isFinite(data2.
+height)||data2.height<=0||data2.height>65535||!Array.isArray(data2.samples)||data2.samples.length!==
+data2.width||data2.samples.some(value=>!Number.isFinite(value)||value<0||value>data2.height))throw new TypeError(
+"The waveform data is invalid.");return Float32Array.from(data2.samples,value=>value/data2.height)}async function boundedText(response,limit,signal){
+if(!response.ok||Number(response.headers.get("content-length"))>limit||!response.body)throw new Error(
+"Waveform data is unavailable.");const reader=response.body.getReader();const decoder=new TextDecoder;
+let bytes=0,text="";const abort=()=>{void reader.cancel().catch(()=>{})};signal.addEventListener("ab\
+ort",abort,{once:true});try{while(true){signal.throwIfAborted();const chunk=await reader.read();signal.
+throwIfAborted();if(chunk.done)break;bytes+=chunk.value.byteLength;if(bytes>limit)throw new Error("W\
+aveform data exceeds its size limit.");text+=decoder.decode(chunk.value,{stream:true})}return text+decoder.
+decode()}finally{signal.removeEventListener("abort",abort);await reader.cancel().catch(()=>{});reader.
+releaseLock()}}function matchingMetadata(items,track){if(!Array.isArray(items))return null;return items.
+find(item=>{try{return item?.hydratable==="sound"&&waveformTrack(item.data?.permalink_url)===track}catch{
+return false}})?.data||null}function createWaveformLoader({document:document2=globalThis.document,fetch:fetch2=globalThis.
+fetch}={}){const cache=new Map,active=new Set;let disposed=false;return{async load(value,{signal,metadata}={}){
+const track=waveformTrack(value);signal?.throwIfAborted();if(disposed)throw new DOMException("Wavefo\
+rm disposed.","AbortError");if(cache.has(track))return cache.get(track);if([...active].filter(controller2=>!controller2.
+signal.aborted).length>=2)throw new Error("Waveform loading is busy.");const controller=new AbortController;
+const abort=()=>controller.abort(signal.reason);signal?.addEventListener("abort",abort,{once:true});
+const timeout=setTimeout(()=>controller.abort(new Error("Waveform loading timed out.")),8e3);active.
+add(controller);try{if(metadata&&waveformTrack(metadata.permalink_url)!==track)throw new TypeError("\
+Waveform metadata belongs to another track.");metadata||=matchingMetadata(document2?.defaultView?.__sc_hydration,
+track);if(!metadata){if(document2?.location?.origin!=="https://soundcloud.com")throw new Error("Wave\
+form metadata is unavailable.");const response2=await fetch2(track,{signal:controller.signal,credentials:"\
+omit",redirect:"error"});const html=await boundedText(response2,MAX_PAGE_BYTES,controller.signal);const hydration=html.
+match(/window\.__sc_hydration\s*=\s*(\[.*?\]);/s);metadata=hydration&&matchingMetadata(JSON.parse(hydration[1]),
+track)}if(!metadata||!Number.isFinite(metadata.duration)||metadata.duration<=0)throw new Error("Wave\
+form metadata is unavailable.");const url=new URL(metadata.waveform_url);if(url.protocol!=="https:"||
+url.hostname!=="wave.sndcdn.com"||url.username||url.password||url.port||url.search||url.hash||!/^\/[\w-]+\.json$/.
+test(url.pathname))throw new TypeError("The waveform host is unsupported.");const response=await fetch2(
+url.href,{signal:controller.signal,credentials:"omit",redirect:"error"});const text=await boundedText(
+response,MAX_JSON_BYTES,controller.signal);const result={samples:waveformData(JSON.parse(text)),duration:metadata.
+duration/1e3};controller.signal.throwIfAborted();cache.set(track,result);if(cache.size>3)cache.delete(
+cache.keys().next().value);return result}finally{clearTimeout(timeout);active.delete(controller);signal?.
+removeEventListener("abort",abort)}},dispose(){disposed=true;for(const controller of active)controller.
+abort();cache.clear()}}}function envelopeColumns(samples,duration,start,span,columns){const values=new Float32Array(Math.min(
+1024,Math.max(1,Math.floor(columns))));if(!(duration>0)||!(span>0))return values;for(let column=0;column<
+values.length;column++){const from=start+span*column/values.length;const to=start+span*(column+1)/values.
+length;if(to<=0||from>=duration)continue;const first=Math.max(0,Math.floor(from/duration*samples.length));
+const last2=Math.min(samples.length,Math.max(first+1,Math.ceil(to/duration*samples.length)));for(let i=first;i<
+last2;i++)values[column]=Math.max(values[column],samples[i])}return values}function waveformTime(value){
+const seconds=Math.max(0,Math.floor(Number.isFinite(value)?value:0));return`${Math.floor(seconds/60)}\
+:${String(seconds%60).padStart(2,"0")}`}var waveformStyle=`
+.tempo-waveform { min-width:0; color:var(--tempo-fg); background:var(--tempo-surface); }
+.tempo-waveform canvas { display:block; width:100%; height:160px; touch-action:pan-y; cursor:pointer\
+; }
+.tempo-waveform canvas:focus-visible, .tempo-waveform input:focus-visible, .tempo-waveform button:fo\
+cus-visible { outline:2px solid var(--tempo-accent); outline-offset:2px; }
+.tempo-waveform p { margin:.4rem 0; font:inherit; font-size:.85em; }
+.tempo-waveform form { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; }
+.tempo-waveform form[hidden] { display:none; }
+.tempo-waveform label { display:flex; align-items:center; flex-wrap:wrap; gap:.5rem; }
+.tempo-waveform input { width:6rem; min-height:44px; box-sizing:border-box; border:1px solid var(--t\
+empo-fg); border-radius:4px; background:var(--tempo-surface); color:var(--tempo-fg); padding:.5rem; \
+font:inherit; }
+.tempo-waveform input::placeholder { color:var(--tempo-fg); opacity:1; }
+.tempo-waveform button { min-height:44px; padding:.5rem .8rem; border:1px solid var(--tempo-fg); bor\
+der-radius:4px; color:var(--tempo-fg); background:var(--tempo-surface); font:inherit; }
+.tempo-waveform button:disabled { opacity:.5; cursor:default; }
+@media (min-width:600px) { .tempo-waveform canvas { height:180px; } }
+@media (forced-colors:active) { .tempo-waveform { --tempo-fg:CanvasText; --tempo-surface:Canvas; --t\
+empo-accent:Highlight; --tempo-border:CanvasText; } }
+`;function createTrackWaveform({container,seek,loadWaveform}){const document2=container.ownerDocument,
+window2=document2.defaultView;const loader=loadWaveform?null:createWaveformLoader({document:document2});
+const load=loadWaveform||((track,options)=>loader.load(track,options));const element=document2.createElement(
+"section");element.className="tempo-waveform";element.setAttribute("aria-label","Track waveform");const style2=document2.
+createElement("style");style2.textContent=waveformStyle;const canvas=document2.createElement("canvas");
+canvas.setAttribute("role","slider");canvas.setAttribute("aria-label","Playback position. Arrow keys\
+ seek five seconds.");canvas.setAttribute("aria-valuemin","0");canvas.tabIndex=seek?0:-1;const status=document2.
+createElement("p");status.setAttribute("role","status");status.textContent="Choose a track to see it\
+s waveform.";const form=document2.createElement("form"),label=document2.createElement("label");form.
+noValidate=true;label.textContent="Seek to";const input=document2.createElement("input");input.type=
+"text";input.inputMode="decimal";input.placeholder="0:00";input.setAttribute("aria-label","Playback \
+time in minutes and seconds or seconds");const button=document2.createElement("button");button.type=
+"submit";button.textContent="Seek";label.append(input);form.append(label,button);form.hidden=!seek;element.
+append(style2,canvas,status,form);container.append(element);const context=canvas.getContext("2d");const events=new AbortController;
+let state={paused:true,position:0,duration:0},lanes=[],disposed=false;let timer,frame,lastDraw=-Infinity,
+visible=true,signature="";const on=(target,type,listener)=>target.addEventListener(type,listener,{signal:events.
+signal});function cancelDraw(){window2.clearTimeout(timer);window2.cancelAnimationFrame(frame);timer=
+frame=void 0}function schedule(){if(disposed||document2.hidden||!visible||!element.isConnected||element.
+hidden||timer!==void 0||frame!==void 0)return;timer=window2.setTimeout(()=>{timer=void 0;frame=window2.
+requestAnimationFrame(()=>{frame=void 0;draw()})},Math.max(0,50-(window2.performance.now()-lastDraw)))}
+function bars(data2,y,height,start,span,color,width){if(!data2)return;const columns=envelopeColumns(
+data2.samples,data2.duration,start,span,Math.ceil(width/2));context.fillStyle=color;const step=width/
+columns.length;for(let i=0;i<columns.length;i++){const amplitude=columns[i]*(height-6);if(amplitude)
+context.fillRect(i*step,y+(height-amplitude)/2,Math.max(1,step-1),amplitude)}}function draw(){if(disposed||
+document2.hidden||!visible||!element.isConnected||element.hidden||!context)return;const width=Math.min(
+2048,canvas.clientWidth);if(width<=0)return;const height=canvas.clientHeight,dpr=Math.min(2,window2.
+devicePixelRatio||1);if(canvas.width!==Math.round(width*dpr)||canvas.height!==Math.round(height*dpr)){
+canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr)}context.setTransform(dpr,0,0,
+dpr,0,0);context.clearRect(0,0,width,height);const css=window2.getComputedStyle(element);const fg=css.
+getPropertyValue("--tempo-fg").trim()||css.color;const accent=css.getPropertyValue("--tempo-accent").
+trim()||fg;const position=Number.isFinite(state.position)?state.position:0;const duration=Number.isFinite(
+state.duration)?state.duration:0;const second=Boolean(state.nextTrack),rowHeight=second?44:72;bars(lanes[0]?.
+data,0,24,0,duration,fg,width);bars(lanes[0]?.data,38,rowHeight,position-10,20,accent,width);if(second)
+bars(lanes[1]?.data,90,44,(state.nextPosition||0)-10,20,fg,width);context.fillStyle=fg;context.font=
+`12px ${css.fontFamily}`;context.fillText(second?"Current":"Now",2,35);if(second)context.fillText("I\
+ncoming",2,88);for(let tick=Math.ceil((position-10)/5)*5;tick<=position+10;tick+=5){if(tick<0||tick>
+duration)continue;const x=(tick-position+10)/20*width;context.fillRect(x,height-20,1,4);context.fillText(
+waveformTime(tick),Math.min(width-32,Math.max(0,x-12)),height-3)}context.fillStyle=fg;context.fillRect(
+width/2,32,1,height-54);if(duration>0)context.fillRect(Math.min(width-1,Math.max(0,position/duration*
+width)),0,2,24);lastDraw=window2.performance.now()}function requestLane(index,track,metadata){const old=lanes[index];
+if(old&&old.track===track&&!(old.status==="unavailable"&&metadata?.waveform_url&&old.waveformUrl!==metadata.
+waveform_url))return;old?.controller.abort();const lane={track,controller:new AbortController,data:null,
+status:"loading",waveformUrl:metadata?.waveform_url};lanes[index]=lane;if(!track){lane.status="empty";
+return}Promise.resolve().then(()=>load(track,{signal:lane.controller.signal,metadata})).then(data2=>{
+if(disposed||lane.controller.signal.aborted||lanes[index]!==lane)return;lane.data=data2;lane.status=
+"ready";updateStatus();schedule()}).catch(()=>{if(disposed||lane.controller.signal.aborted||lanes[index]!==
+lane)return;lane.status="unavailable";updateStatus();schedule()})}function updateStatus(){const value=input.
+validationMessage||(!state.track?"Choose a track to see its waveform.":lanes.some(lane=>lane.track&&
+lane.status==="loading")?"Loading waveform\u2026":lanes.some(lane=>lane.track&&lane.status==="unavai\
+lable")?"Waveform unavailable for this track. Playback controls still work.":state.nextTrack?"Curren\
+t and incoming audio envelopes. Time marks are seconds, not detected beats.":"Audio envelope. Time m\
+arks are seconds, not detected beats.");if(status.textContent!==value)status.textContent=value}function seekTo(value){
+if(!seek||!Number.isFinite(value)||!(state.duration>0)||state.nextTrack)return;seek(Math.max(0,Math.
+min(state.duration,value)))}on(canvas,"pointerup",event=>{if(event.button!==0)return;const rect=canvas.
+getBoundingClientRect();if(!rect.width||!rect.height)return;const y=(event.clientY-rect.top)*canvas.
+clientHeight/rect.height;if(y>30)seekTo(state.position+((event.clientX-rect.left)/rect.width-.5)*20);else
+seekTo((event.clientX-rect.left)/rect.width*state.duration)});on(canvas,"keydown",event=>{const values={
+ArrowLeft:state.position-5,ArrowRight:state.position+5,Home:0,End:state.duration};if(Object.hasOwn(values,
+event.key)){event.preventDefault();seekTo(values[event.key])}});on(form,"submit",event=>{event.preventDefault();
+const text=input.value.trim(),match=text.match(/^(\d+):([0-5]\d)(?:\.(\d+))?$/);const value=match?Number(
+match[1])*60+Number(match[2])+Number(`0.${match[3]||0}`):/^\d+(?:\.\d+)?$/.test(text)?Number(text):NaN;
+if(!Number.isFinite(value)){input.setCustomValidity("Enter seconds or a time such as 1:30.");input.setAttribute(
+"aria-invalid","true");updateStatus();input.focus();return}input.setCustomValidity("");input.setAttribute(
+"aria-invalid","false");updateStatus();seekTo(value)});on(input,"input",()=>{input.setCustomValidity(
+"");input.setAttribute("aria-invalid","false");updateStatus()});on(document2,"visibilitychange",()=>{
+cancelDraw();if(!document2.hidden)schedule()});const resize=new window2.ResizeObserver(schedule);resize.
+observe(element);const intersection=new window2.IntersectionObserver(entries=>{visible=entries[0].isIntersecting;
+cancelDraw();if(visible)schedule()});intersection.observe(element);return{element,update(next){if(disposed)
+return;const duration=Number.isFinite(next.duration)?Math.max(0,next.duration):0;const position=Number.
+isFinite(next.position)?Math.max(0,Math.min(duration,next.position)):0;next={...next,duration,position};
+state=next;requestLane(0,next.track,next.metadata);requestLane(1,next.nextTrack,next.nextMetadata);canvas.
+setAttribute("aria-valuemax",String(Math.max(0,next.duration||0)));canvas.setAttribute("aria-valueno\
+w",String(Math.max(0,next.position||0)));canvas.setAttribute("aria-valuetext",`${waveformTime(next.position)}\
+ of ${waveformTime(next.duration)}`);const disabled=!seek||!(next.duration>0)||Boolean(next.nextTrack);
+canvas.setAttribute("aria-disabled",String(disabled));button.disabled=input.disabled=disabled;updateStatus();
+const key=JSON.stringify([next.track,next.position,next.duration,next.paused,next.nextTrack,next.nextPosition,
+next.nextDuration,next.progress]);if(key!==signature){signature=key;schedule()}},refresh:schedule,dispose(){
+disposed=true;cancelDraw();events.abort();resize.disconnect();intersection.disconnect();lanes.forEach(
+lane=>lane.controller.abort());loader?.dispose();element.remove()}}}function touchViewport(viewport,screenWidth,coarse){const scale=Math.max(.01,viewport?.scale||1);const width=(viewport?.
+width||screenWidth)*scale;return{touch:coarse&&Math.min(screenWidth||width,width)<=600,scale,width,height:(viewport?.
+height||0)*scale,left:viewport?.offsetLeft||0,top:viewport?.offsetTop||0}}var style=`
+:host { position:relative; }
+.touch-adjustments [hidden] { display:none !important; }
+.touch-transport,.touch-adjustments { display:none; }
+.waveform-panel { position:fixed; right:12px; bottom:var(--waveform-bottom,58px); width:min(680px,ca\
+lc(100vw - 24px)); max-height:calc(100dvh - 120px); overflow:auto; font-size:14px; }
+.waveform-panel > summary { margin-left:auto; width:max-content; min-height:36px; padding:6px 12px; \
+border:1px solid var(--tempo-track); border-radius:4px; color:var(--tempo-fg); background:var(--temp\
+o-surface); cursor:pointer; list-style:none; }
+.waveform-panel > summary::-webkit-details-marker { display:none; }
+.waveform-panel > summary::after { content:' +'; }
+.waveform-panel[open] > summary::after { content:' \u2212'; }
+.waveform-panel[open] { padding:12px; background:var(--tempo-surface); border:1px solid var(--tempo-\
+track); border-radius:4px; }
+.waveform-panel:not([open]) .waveform-content { display:none; }
+:host([data-touch-player]) { position:fixed !important; display:block !important; left:var(--touch-l\
+eft) !important; top:var(--touch-dock-top) !important; bottom:auto !important; width:var(--touch-wid\
+th) !important; max-height:var(--touch-panel-height); overflow:auto; overscroll-behavior:contain; mi\
+n-width:0 !important; margin:0 !important; padding:8px 12px max(8px,env(safe-area-inset-bottom)); tr\
+ansform:scale(var(--touch-inverse)); transform-origin:0 0; z-index:2147483646; font:16px/1.4 Arial,s\
+ans-serif; color:var(--tempo-fg); background:var(--tempo-surface); border-top:1px solid var(--tempo-\
+track); visibility:visible !important; box-sizing:border-box; }
+:host([data-touch-player]) .controls { display:none; }
+:host([data-touch-player]) .touch-transport { display:grid; grid-template-columns:44px minmax(0,1fr)\
+ 44px 44px 64px; align-items:center; gap:6px; }
+.touch-transport button,.touch-adjustments button { display:flex; align-items:center; justify-conten\
+t:center; min-height:44px; min-width:44px; border:1px solid var(--tempo-track); border-radius:4px; p\
+adding:6px; background:var(--tempo-surface); color:var(--tempo-fg); font:inherit; }
+.touch-transport button:disabled { opacity:.5; }
+.touch-transport svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.8; }
+.touch-art { width:44px; height:44px; border-radius:4px; background-position:center; background-size\
+:cover; }
+.touch-art { position:relative; overflow:hidden; }
+.touch-cover,.touch-cover > span { position:absolute; inset:0; pointer-events:none; background-posit\
+ion:center; background-size:cover; }
+.touch-cover { transition:--tempo-artwork-start 100ms linear,--tempo-artwork-end 100ms linear,--temp\
+o-artwork-progress 100ms linear; }
+.touch-cover > span:last-child { mask-image:linear-gradient(to right,transparent var(--tempo-artwork\
+-start),#000 var(--tempo-artwork-end)); }
+@media(prefers-reduced-motion:reduce) { .touch-cover { transition:--tempo-artwork-progress 100ms lin\
+ear; } .touch-cover > span:last-child { mask-image:none; opacity:var(--tempo-artwork-progress); } }
+.touch-pitch-notice[hidden],.touch-feedback:empty { display:none; }
+.touch-feedback { margin:0; font-size:14px; }
+.touch-caption { min-width:0; overflow:hidden; }
+.touch-caption strong,.touch-caption span { display:block; overflow:hidden; text-overflow:ellipsis; \
+white-space:nowrap; }
+.touch-caption strong { font-size:14px; }
+.touch-caption span { font-size:12px; }
+:host([data-touch-player]) .touch-caption { grid-column:2 / -1; }
+:host([data-touch-player]) .touch-caption strong { white-space:normal; display:-webkit-box; -webkit-\
+line-clamp:2; -webkit-box-orient:vertical; }
+:host([data-touch-player]) .touch-play { grid-column:3; grid-row:2; }
+:host([data-touch-player]) .touch-next { grid-column:4; grid-row:2; }
+:host([data-touch-player]) .touch-expand { grid-column:5; grid-row:2; font-size:14px; }
+:host([data-touch-player][data-touch-expanded]) .touch-adjustments { display:grid; gap:12px; padding\
+-top:12px; }
+.touch-adjustments label { display:grid; grid-template-columns:68px minmax(0,1fr); gap:8px; align-it\
+ems:center; }
+.touch-adjustments .touch-number-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6\
+px; align-items:center; }
+.touch-adjustments .tempo-number { display:grid; grid-template-columns:minmax(0,1fr) 44px 44px; widt\
+h:100%; }
+.touch-adjustments .tempo-number-arrows { display:contents; }
+.touch-adjustments .tempo-number input { width:100%; min-width:0; min-height:44px; padding:6px 12px;\
+ border:1px solid var(--tempo-track); border-radius:4px; font:inherit; text-align:center; background\
+:var(--tempo-surface); color:var(--tempo-fg); appearance:textfield; }
+.touch-adjustments .tempo-number input::-webkit-inner-spin-button { appearance:none; }
+.touch-adjustments input[type=range] { height:44px; touch-action:pan-y; }
+.touch-adjustments input[type=range]::-webkit-slider-thumb { width:20px; height:20px; margin-top:-9p\
+x; }
+.touch-adjustments input[type=range]::-moz-range-thumb { width:20px; height:20px; }
+.touch-tools { display:flex; flex-wrap:wrap; gap:8px; }
+:host([data-touch-player]) .waveform-panel { position:static; width:100%; margin-top:12px; font-size\
+:14px; }
+:host([data-touch-player]:not([data-touch-expanded])) .waveform-panel { display:none; }
+:host([data-touch-player]) .waveform-panel > summary { margin:0; min-height:44px; display:flex; alig\
+n-items:center; }
+:host([data-touch-player]) .settings,:host([data-touch-player]) .tempo-editor,:host([data-touch-play\
+er]) #tempo-fader[popover] { left:var(--touch-left) !important; top:var(--touch-top) !important; bot\
+tom:auto !important; width:var(--touch-width) !important; max-width:none !important; max-height:var(\
+--touch-panel-height) !important; transform:scale(var(--touch-inverse)) !important; transform-origin\
+:0 0 !important; font-size:16px !important; margin:0 !important; }
+:host([data-touch-player]) .settings button,:host([data-touch-player]) .settings input:not([type=che\
+ckbox],[type=radio]),:host([data-touch-player]) .tempo-editor button,:host([data-touch-player]) .tem\
+po-editor input:not([type=checkbox],[type=radio]) { min-height:44px; }
+:host([data-touch-player]) .settings header,:host([data-touch-player]) .settings-actions { flex-wrap\
+:wrap; }
+:host([data-touch-player]) .editor-fields { grid-template-columns:1fr; }
+:host([data-touch-player]) .pitch-bounds { grid-template-columns:1fr; }
+:host([data-touch-player]) .tempo-number-arrows { width:44px; }
+:host([data-touch-player]) .settings .tempo-number-arrows,:host([data-touch-player]) .tempo-editor .\
+tempo-number-arrows { display:flex; flex-direction:row; width:88px; }
+:host([data-touch-player]) .tempo-number-arrows button { width:44px; min-height:44px; }
+:host([data-touch-player]) .tempo-choice-list button { min-height:44px; }
+:host([data-touch-player]) .settings summary,:host([data-touch-player]) .tempo-editor summary { min-\
+height:44px; padding:8px 0; }
+:host([data-touch-player]) .settings input[type=checkbox],:host([data-touch-player]) .settings input\
+[type=radio],:host([data-touch-player]) .tempo-editor input[type=checkbox] { width:24px; height:24px\
+; }
+:host([data-touch-player]) label:has(input[type=checkbox],input[type=radio]) { min-height:44px; alig\
+n-items:center; }
+:host([data-touch-player]) ::selection { color:var(--tempo-surface); background:var(--tempo-fg); }
+:host([data-touch-player]) :focus-visible { outline:2px solid var(--tempo-fg); outline-offset:2px; }\
+
+`;function createMobilePlayer({host,root,document:document2,media,readTrack,canSeek,changeRate,cancelTransition,
+openSettings}){const window2=document2.defaultView;const events=new AbortController;const on=(target,name,listener)=>target?.
+addEventListener(name,listener,{signal:events.signal});function readPlayback(){let audio;for(const reference of media){
+const candidate=reference.deref();if(candidate&&(!audio||!candidate.paused))audio=candidate}return{audio,
+track:readTrack(),position:audio?.currentTime||0,duration:Number.isFinite(audio?.duration)?audio.duration:
+0,paused:!audio||audio.paused}}function onSeek(position){if(!canSeek()||!Number.isFinite(position))return;
+const state=readPlayback();if(state.audio&&state.duration>0)state.audio.currentTime=Math.max(0,Math.
+min(state.duration,position))}const sheet=document2.createElement("style");sheet.textContent=style;const transport=document2.
+createElement("div");transport.className="touch-transport";transport.innerHTML=`<div class="touch-ar\
+t" aria-hidden="true"></div><div class="touch-caption"><strong></strong><span></span></div><button t\
+ype="button" class="touch-play" aria-label="Play"><svg viewBox="0 0 24 24" aria-hidden="true"><path \
+d="M8 4l12 8-12 8Z"/></svg></button><button type="button" class="touch-next" aria-label="Next track"\
+><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4l12 8-12 8ZM20 4v16"/></svg></button><butt\
+on type="button" class="touch-expand" aria-expanded="false" aria-controls="touch-adjustments">Contro\
+ls</button>`;const pitchNotice=document2.createElement("span");pitchNotice.className="touch-pitch-no\
+tice";pitchNotice.hidden=true;transport.querySelector(".touch-caption").append(pitchNotice);const adjustments=document2.
+createElement("div");adjustments.className="touch-adjustments";adjustments.id="touch-adjustments";adjustments.
+innerHTML=`<label>Tempo <span class="touch-number-row"><input id="touch-rate" type="number" min="0.2\
+5" max="4" step="0.025" value="1" aria-label="Exact playback speed on mobile"><span>\xD7</span></span><\
+/label><input id="touch-rate-slider" type="range" min="0.25" max="4" step="0.001" value="1" aria-lab\
+el="Playback speed on mobile"><label class="touch-pitch">Pitch <span class="touch-number-row"><input\
+ id="touch-pitch" type="number" min="-12" max="12" step="0.5" value="0" aria-label="Key shift in sem\
+itones on mobile"><span>st</span></span></label><input id="touch-pitch-slider" type="range" min="-12\
+" max="12" step="0.001" value="0" aria-label="Key shift on mobile"><label>Volume <input id="touch-vo\
+lume" type="range" min="0" max="1" step="0.01" value="1" aria-label="Volume on mobile"></label><div \
+class="touch-tools"><button type="button" data-action="previous">Previous</button><button type="butt\
+on" data-action="reset">Reset tempo</button><button type="button" data-action="pitch-reset">Reset pi\
+tch</button><button type="button" data-action="save">Save tempo</button><button type="button" data-a\
+ction="settings">Settings</button></div>`;const details=document2.createElement("details");details.className=
+"waveform-panel";details.innerHTML='<summary>Waveform</summary><div class="waveform-content"></div>';
+root.append(sheet,transport,adjustments,details);const feedback=document2.createElement("p");feedback.
+className="touch-feedback";adjustments.append(feedback);const waveform=createTrackWaveform({container:details.
+lastElementChild,seek:onSeek});const syncFields=enhanceTempoFields(adjustments);const native=selector=>document2.
+querySelector(`.playControls ${selector}`);const rate=adjustments.querySelector("#touch-rate"),pitch=adjustments.
+querySelector("#touch-pitch");const rateSlider=adjustments.querySelector("#touch-rate-slider"),pitchSlider=adjustments.
+querySelector("#touch-pitch-slider");const volume=adjustments.querySelector("#touch-volume");const play=transport.
+querySelector(".touch-play"),expand=transport.querySelector(".touch-expand");let overlap,timer,frame,
+disposed=false,touch=false;let hiddenBar,originalVisibility;function restoreBar(){if(hiddenBar)hiddenBar.
+style.visibility=originalVisibility;hiddenBar=void 0}const coarse=window2.matchMedia("(any-pointer: \
+coarse)");function forward(input,selector){const original=root.querySelector(selector);original.value=
+input.value;original.dispatchEvent(new window2.Event("change",{bubbles:true}));refresh()}let editingTrack;
+on(rate,"focus",()=>{editingTrack=readTrack()});adjustments.addEventListener("click",event=>{if(event.
+target.closest("button")&&rate.closest(".touch-number-row").contains(event.target))editingTrack=readTrack()},
+{capture:true,signal:events.signal});on(rate,"change",()=>{if(editingTrack===readTrack())changeRate(
+rate.value);refresh()});on(rate,"blur",refresh);on(rateSlider,"input",()=>{changeRate(rateSlider.value);
+refresh()});on(pitch,"change",()=>forward(pitch,"#quick-key-shift"));on(pitchSlider,"input",()=>forward(
+pitchSlider,"#quick-key-shift"));on(volume,"input",()=>{const audio=readPlayback().audio;if(audio){audio.
+volume=volume.valueAsNumber;audio.muted=false}syncTempoRange(volume)});function nativeTransport(selector){
+const button=native(selector);if(!button||button.disabled||button.getAttribute("aria-disabled")==="t\
+rue")return;cancelTransition();button.click()}on(play,"click",()=>nativeTransport(".playControls__pl\
+ay"));on(transport.querySelector(".touch-next"),"click",()=>nativeTransport(".playControls__next"));
+on(expand,"click",()=>{const expanded=host.toggleAttribute("data-touch-expanded");expand.setAttribute(
+"aria-expanded",String(expanded));expand.textContent=expanded?"Close":"Controls";if(!expanded)details.
+open=false;refresh();layout()});on(adjustments,"click",event=>{switch(event.target.closest("[data-ac\
+tion]")?.dataset.action){case"previous":nativeTransport(".playControls__prev");break;case"reset":rate.
+value="1";changeRate(1);refresh();break;case"pitch-reset":pitch.value="0";forward(pitch,"#quick-key-\
+shift");break;case"save":root.querySelector(".memory").click();break;case"settings":openSettings(event.
+target.closest("[data-action]"));break}});function refresh(){if(disposed)return;const state=readPlayback();
+const currentRate=root.querySelector("#rate-number");const currentPitch=root.querySelector("#quick-k\
+ey-shift");for(const[input,source2]of[[rate,currentRate],[pitch,currentPitch]]){if(root.activeElement!==
+input)input.value=source2.value;input.min=source2.min;input.max=source2.max}rate.step=root.querySelector(
+"#tempo-increment").value||"0.025";pitch.step=currentPitch.step;for(const[slider,input]of[[rateSlider,
+rate],[pitchSlider,pitch]]){slider.min=input.min;slider.max=input.max;if(root.activeElement!==slider)
+slider.value=input.value;syncTempoRange(slider)}const hiddenPitch=root.querySelector(".quick-key").hidden;
+adjustments.querySelector(".touch-pitch").hidden=hiddenPitch;pitchSlider.hidden=hiddenPitch;adjustments.
+querySelector("[data-action=pitch-reset]").hidden=hiddenPitch;const nativePlay=native(".playControls\
+__play");play.disabled=!nativePlay||nativePlay.disabled||nativePlay.getAttribute("aria-disabled")===
+"true";const next=native(".playControls__next");transport.querySelector(".touch-next").disabled=!next||
+next.disabled||next.getAttribute("aria-disabled")==="true";const previous=native(".playControls__pre\
+v");adjustments.querySelector("[data-action=previous]").disabled=!previous||previous.disabled||previous.
+getAttribute("aria-disabled")==="true";play.setAttribute("aria-label",state.paused?"Play":"Pause");play.
+querySelector("path").setAttribute("d",state.paused?"M8 4l12 8-12 8Z":"M8 4v16M16 4v16");const title=native(
+".playbackSoundBadge__titleLink");transport.querySelector("strong").textContent=title?.getAttribute(
+"title")||title?.textContent?.trim()||"Choose a track";transport.querySelector(".touch-caption span").
+textContent=native(".playbackSoundBadge__lightLink")?.textContent?.trim()||state.track||"";const nativeNotice=native(
+".soundcloud-tempo-pitch-notice");pitchNotice.textContent=nativeNotice?.textContent||"";pitchNotice.
+hidden=!nativeNotice||nativeNotice.hidden;const error2=root.querySelector(".error");feedback.textContent=
+error2.hidden?root.querySelector(".status").textContent:error2.title;const save=adjustments.querySelector(
+"[data-action=save]");save.textContent=root.querySelector(".memory").title||"Save tempo";save.disabled=
+!state.track;const image=native(".playbackSoundBadge__avatar .sc-artwork,.playbackSoundBadge__avatar\
+ .image")||native(".playbackSoundBadge__avatar");const background=image?window2.getComputedStyle(image).
+backgroundImage:"none";if(transport.firstElementChild.style.backgroundImage!==background)transport.firstElementChild.
+style.backgroundImage=background;if(state.audio&&root.activeElement!==volume)volume.value=String(state.
+audio.muted?0:state.audio.volume);volume.disabled=!state.audio;syncTempoRange(volume);syncFields();tickWaveform()}
+function tickWaveform(){window2.clearTimeout(timer);timer=void 0;if(!details.open||document2.hidden||
+!host.isConnected||touch&&!host.hasAttribute("data-touch-expanded")||!(details.checkVisibility?.({checkVisibilityCSS:true})??
+details.getClientRects().length>0))return;const state=readPlayback();waveform.update(overlap?{...state,
+...overlap}:state);if(!state.paused)timer=window2.setTimeout(tickWaveform,50)}function layout(){if(disposed||
+!host.isConnected)return;const geometry=touchViewport(window2.visualViewport,window2.screen.width,coarse.
+matches);touch=geometry.touch;host.toggleAttribute("data-touch-player",touch);const bar=host.closest(
+".playControls");if(hiddenBar&&(!touch||hiddenBar!==bar))restoreBar();if(touch&&bar&&hiddenBar!==bar){
+hiddenBar=bar;originalVisibility=bar.style.visibility;bar.style.visibility="hidden"}if(!touch){const bottom=`${Math.
+max(8,window2.innerHeight-(bar?.getBoundingClientRect().top??window2.innerHeight-50)+8)}px`;if(host.
+style.getPropertyValue("--waveform-bottom")!==bottom)host.style.setProperty("--waveform-bottom",bottom);
+return}for(const[name,value]of Object.entries({"touch-width":`${geometry.width}px`,"touch-inverse":1/
+geometry.scale,"touch-left":`${geometry.left}px`,"touch-top":`${geometry.top}px`,"touch-panel-height":`${Math.
+max(100,geometry.height-16)}px`})){if(host.style.getPropertyValue(`--${name}`)!==String(value))host.
+style.setProperty(`--${name}`,String(value))}const height=host.offsetHeight;const top=`${geometry.top+
+(geometry.height-height)/geometry.scale}px`;if(host.style.getPropertyValue("--touch-dock-top")!==top)
+host.style.setProperty("--touch-dock-top",top)}function scheduleLayout(){if(frame||disposed)return;frame=
+window2.requestAnimationFrame(()=>{frame=void 0;layout()})}on(details,"toggle",()=>{refresh();scheduleLayout()});
+on(window2.visualViewport,"resize",scheduleLayout);on(window2.visualViewport,"scroll",scheduleLayout);
+on(window2,"resize",scheduleLayout);on(coarse,"change",scheduleLayout);on(document2,"visibilitychang\
+e",refresh);for(const name of["play","pause","timeupdate","durationchange","volumechange","emptied"]){
+document2.addEventListener(name,refresh,{capture:true,signal:events.signal})}const observer=new window2.
+ResizeObserver(()=>{scheduleLayout();tickWaveform()});observer.observe(host);refresh();layout();return{
+refresh(){refresh();waveform.refresh();scheduleLayout()},overlap(state){overlap=state?.nextTrack?state:
+void 0;const source2=native(".soundcloud-tempo-crossfade-artwork");const artwork=transport.firstElementChild;
+let copy=artwork.firstElementChild;if(!state||!source2){copy?.remove()}else{if(!copy){copy=document2.
+createElement("span");copy.className="touch-cover";copy.append(document2.createElement("span"),document2.
+createElement("span"));artwork.append(copy)}for(const name of["--tempo-artwork-start","--tempo-artwo\
+rk-end","--tempo-artwork-progress"])copy.style.setProperty(name,source2.style.getPropertyValue(name));
+[...copy.children].forEach((child,index)=>{child.style.backgroundImage=source2.children[index].style.
+backgroundImage})}refresh()},dispose(){disposed=true;events.abort();observer.disconnect();window2.clearTimeout(
+timer);window2.cancelAnimationFrame(frame);waveform.dispose();restoreBar();host.removeAttribute("dat\
+a-touch-player");host.removeAttribute("data-touch-expanded");sheet.remove();transport.remove();adjustments.
+remove();details.remove()}}}function createMobileAvailability({document:document2,website}){const window2=document2.defaultView,
+events=new AbortController;let notice,dismissed=false;function update(){const geometry=touchViewport(
+window2.visualViewport,window2.screen.width,window2.matchMedia("(any-pointer:coarse)").matches);if(!geometry.
+touch||document2.querySelector(".playControls__elements")){notice?.remove();notice=void 0;return}if(dismissed||
+document2.readyState!=="complete"||!document2.body)return;if(!notice){notice=document2.createElement(
+"aside");notice.id="soundcloud-track-mobile-availability";notice.setAttribute("aria-label","Track Co\
+ntrol availability");notice.style.cssText="position:fixed;z-index:2147483646;box-sizing:border-box;p\
+adding:12px;border:1px solid currentColor;border-radius:4px;font:16px/1.5 Arial,sans-serif;transform\
+-origin:0 0";const text=document2.createElement("p");text.style.cssText="margin:0 0 12px";text.textContent=
+"Track Control needs SoundCloud\u2019s desktop player. Turn on Desktop site in your browser to use the to\
+uch controls.";const help=document2.createElement("a");help.href=new URL("guide/",website).href;help.
+textContent="Installation help";help.style.cssText="display:inline-flex;align-items:center;min-heigh\
+t:44px;color:inherit;text-underline-offset:3px";const close=document2.createElement("button");close.
+type="button";close.textContent="Dismiss";close.style.cssText="float:right;min-height:44px;padding:8\
+px 12px;border:1px solid currentColor;border-radius:4px;background:transparent;color:inherit;font:in\
+herit;cursor:pointer";close.addEventListener("click",()=>{dismissed=true;notice.remove();notice=void 0},
+{signal:events.signal});notice.append(text,help,close);document2.body.append(notice)}const foreground=window2.
+getComputedStyle(document2.body).color;const bright=(foreground.match(/[\d.]+/g)?.slice(0,3).reduce(
+(sum,value)=>sum+Number(value),0)||0)>450;Object.assign(notice.style,{color:foreground,background:bright?
+"#161616":"#f2f2f2",width:`${geometry.width-24}px`,left:`${geometry.left+12/geometry.scale}px`,transform:`\
+scale(${1/geometry.scale})`});notice.style.top=`${geometry.top+(geometry.height-notice.offsetHeight-
+12)/geometry.scale}px`}for(const[target,name]of[[window2,"load"],[window2,"resize"],[window2.visualViewport,
+"resize"],[window2.visualViewport,"scroll"]])target?.addEventListener(name,update,{signal:events.signal});
+return{update,dispose(){events.abort();notice?.remove()}}}var controlsStyle=`
+        :host {
+          font: inherit;
+          color: inherit;
+          --tempo-fg: #222;
+          --tempo-accent: #ff5500;
+          --tempo-accent-surface: #242424;
+          --tempo-accent-hover: #282828;
+          --tempo-track: #888;
+        }
+
+        * {
+          box-sizing: border-box;
+        }
+
+        .controls {
+          display: grid;
+          grid-template-columns: 56px 20px minmax(0, 1fr) 132px 24px 24px;
+          align-items: center;
+          gap: 4px;
+          width: 100%;
+          height: 32px;
+          color: var(--tempo-fg);
+          font-size: 12px;
+        }
+
+        .controls.hide-key { grid-template-columns: 56px 20px minmax(0, 1fr) 24px 24px; }
+
+        button,
+        input,
+        select {
+          font: inherit;
+          color: inherit;
+        }
+
+        button {
+          cursor: pointer;
+        }
+
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible {
+          outline: 2px solid var(--tempo-fg);
+          outline-offset: 2px;
+        }
+
+        .field {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 2px;
+          font-variant-numeric: tabular-nums;
+        }
+
+        .field #rate-number {
+          text-align: right;
+        }
+
+        .field #rate-number:hover {
+          background: transparent;
+        }
+
+        .unit {
+          flex: none;
+          line-height: 24px;
+        }
+
+        .slider-wrap {
+          position: relative;
+          min-width: 0;
+          height: 32px;
+        }
+        .slider-wrap[data-style='slider'] {
+          transform: translateY(var(--tempo-rail-offset, 0px));
+        }
+        .controls:has(.slider-wrap:not([data-style='slider'])) {
+          grid-template-columns: 56px 20px 36px 132px 24px 24px;
+        }
+        .controls.hide-key:has(.slider-wrap:not([data-style='slider'])) {
+          grid-template-columns: 56px 20px 36px 24px 24px;
+        }
+        .quick-key {
+          display: grid;
+          grid-template-columns: 28px 42px 12px 20px;
+          align-items: center;
+          gap: 4px;
+          margin-left: 16px;
+          font-size: 12px;
+          line-height: 24px;
+        }
+        .fader-value, .fader-reset, .fader-normal, .fader-limit, .fader-level, .fader-ticks { displa\
+y: none; }
+        #tempo-fader[popover] .fader-value {
+          display: block;
+          text-align: center;
+          font: inherit;
+          font-variant-numeric: tabular-nums;
+          line-height: 24px;
+          margin-bottom: 4px;
+        }
+        #tempo-fader[popover] .fader-reset {
+          display: block;
+          width: 100%;
+          height: 32px;
+          margin-top: 8px;
+          padding: 0;
+          border: 1px solid var(--tempo-track);
+          border-radius: 2px;
+          background: transparent;
+          font-size: 11px;
+        }
+        .fader-reset:hover { background: color-mix(in srgb, var(--tempo-fg) 8%, transparent); }
+        #tempo-fader[popover] .fader-rail { position: relative; margin: 8px 0; }
+        #tempo-fader[popover] .fader-normal {
+          display: block;
+          position: absolute;
+          top: calc(6px + (100% - 12px) * 0.8);
+          right: calc(50% + 16px);
+          transform: translateY(-50%);
+          font-size: 11px;
+          line-height: 12px;
+          pointer-events: none;
+        }
+        #tempo-fader[popover] .fader-normal::before {
+          content: '';
+          position: absolute;
+          left: calc(100% + 4px);
+          width: 6px;
+          top: 50%;
+          border-top: 1px solid var(--tempo-fg);
+        }
+        #tempo-fader[popover] .fader-limit {
+          display: block; position: absolute; right: calc(50% + 16px);
+          font-size: 11px; line-height: 12px; pointer-events: none;
+        }
+        .fader-max { top: 0; }
+        .fader-min { bottom: 0; }
+        #tempo-fader[popover] .fader-ticks {
+          display: block; position: absolute; top: 0; left: calc(50% - 16px);
+          width: 32px; height: 144px; pointer-events: none;
+          fill: none; stroke: var(--tempo-track); stroke-width: 1;
+        }
+        #tempo-fader[popover] .fader-level {
+          display: block; position: absolute; right: calc(50% + 16px);
+          top: calc(6px + (100% - 12px) * var(--position));
+          transform: translateY(-50%); font-size: 11px; line-height: 12px;
+          pointer-events: none;
+        }
+
+        .ticks {
+          position: absolute;
+          inset: 24px 6px auto;
+          width: calc(100% - 12px);
+          height: 5px;
+          overflow: visible;
+          pointer-events: none;
+        }
+
+        .ticks path {
+          fill: none;
+          stroke: var(--tempo-track);
+          stroke-width: 1px;
+          vector-effect: non-scaling-stroke;
+        }
+
+        .ticks .normal-tick {
+          stroke: var(--tempo-fg);
+        }
+
+        #rate-dial {
+          display: block;
+          position: relative;
+          width: 32px;
+          height: 32px;
+          margin: auto;
+          padding: 0;
+          border: 0;
+          border-radius: 3px;
+          background: transparent;
+          touch-action: none;
+          cursor: ns-resize;
+          user-select: none;
+        }
+        #rate-dial svg { position: absolute; inset: 0; width: 32px; height: 32px; overflow: visible;\
+ }
+        #rate-dial svg path { fill: none; stroke-width: 1.5; stroke-linecap: round; }
+        .dial-track { stroke: var(--tempo-track); }
+        #rate-dial svg .dial-ticks { stroke: var(--tempo-track); stroke-width: 1; }
+        .dial-fill { stroke: var(--tempo-accent); stroke-dasharray: 100; stroke-dashoffset: var(--di\
+al-unfilled, 50); }
+        .dial-zero { stroke: var(--tempo-fg); }
+        #rate-dial circle { fill: color-mix(in srgb, var(--tempo-fg) 10%, var(--tempo-surface)); }
+        #rate-dial:hover circle, #rate-dial:active circle { fill: color-mix(in srgb, var(--tempo-fg)\
+ 18%, var(--tempo-surface)); }
+        #rate-dial span {
+          position: absolute;
+          inset: 8px;
+          transform: rotate(var(--dial-angle, 0deg));
+        }
+        #rate-dial span::before {
+          content: '';
+          display: block;
+          width: 2px;
+          height: 6px;
+          margin: 0 auto;
+          background: var(--tempo-accent);
+        }
+        #rate-dial[hidden], #rate-slider[hidden], #vertical-toggle[hidden] { display: none; }
+        #vertical-toggle {
+          display: grid;
+          place-items: center;
+          width: 32px;
+          height: 32px;
+          margin: auto;
+          padding: 6px;
+          border: 0;
+          border-radius: 3px;
+          background: transparent;
+        }
+        #vertical-toggle:hover, #vertical-toggle[aria-expanded='true'] {
+          background: color-mix(in srgb, var(--tempo-fg) 8%, transparent);
+        }
+        #vertical-toggle svg {
+          width: 20px;
+          height: 20px;
+          fill: none;
+          stroke: currentColor;
+          stroke-width: 1.5;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+        }
+        #tempo-fader[popover] {
+          position: fixed;
+          inset: auto;
+          margin: 0;
+          padding: 8px;
+          width: 96px;
+          border: 1px solid color-mix(in srgb, var(--tempo-fg) 35%, var(--tempo-surface));
+          border-radius: 4px;
+          background: var(--tempo-surface, #f2f2f2);
+          color: var(--tempo-fg);
+          font: inherit;
+        }
+        .slider-wrap[data-style='dial'] .ticks,
+        .slider-wrap[data-style='vertical'] .ticks { display: none; }
+        .slider-wrap[data-style='vertical'] #rate-slider {
+          width: 32px;
+          height: 144px;
+          --range-thumb-opacity: 1;
+          border: 0;
+          padding: 0;
+          margin: auto;
+          writing-mode: vertical-lr;
+          direction: rtl;
+          background: linear-gradient(to top, var(--tempo-accent) var(--range-fill, 0%), var(--tempo\
+-track) var(--range-fill, 0%)) center / 2px calc(100% - 12px) no-repeat;
+        }
+        .slider-wrap[data-style='vertical'] #rate-slider::-webkit-slider-runnable-track { width: 2px\
+; height: 100%; }
+        .slider-wrap[data-style='vertical'] #rate-slider::-webkit-slider-thumb { margin-top: 0; marg\
+in-left: -5px; }
+        .slider-wrap[data-style='vertical'] #rate-slider::-moz-range-track { width: 2px; height: 100\
+%; }
+        .control-style-label, .key-shift-label { display: flex; align-items: center; gap: 12px; marg\
+in: 12px 0; flex-wrap: wrap; }
+        .key-shift-label input { width: 58px; }
+        .settings select { font: inherit; color: inherit; background: var(--tempo-surface); border: \
+1px solid var(--tempo-track); min-height: 32px; }
+
+        @media (forced-colors: active) {
+          .slider-wrap {
+            forced-color-adjust: none;
+            --tempo-accent: Highlight;
+            --tempo-track: GrayText;
+            --tempo-fg: CanvasText;
+          }
+        }
+
+        .settings {
+          display: flex;
+          flex-direction: column;
+          position: fixed;
+          inset: auto;
+          margin: 0;
+          z-index: 2147483647;
+          max-height: calc(100dvh - 80px);
+          overflow: auto;
+          padding: 12px;
+          border: 1px solid var(--tempo-track);
+          border-radius: 4px;
+          background: var(--tempo-surface, #f2f2f2);
+          color: var(--tempo-fg);
+          font-family: inherit;
+          font-size: 12px;
+          line-height: 1.5;
+        }
+
+        .settings > * {
+          flex-shrink: 0;
+        }
+
+        .settings header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 8px;
+        }
+
+        .settings-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .settings[data-choosing-style] .quick-settings,
+        .settings[data-choosing-style] #saved-filter,
+        .settings[data-choosing-style] .saved-count,
+        .settings[data-choosing-style] .saved-list,
+        .settings[data-choosing-style] .saved-more,
+        .settings[data-choosing-style] .open-editor,
+        .settings[data-choosing-style] .appearance-options,
+        .settings[data-choosing-style] .appearance-settings summary,
+        .settings[data-choosing-style] .settings-tools > details:not(.appearance-settings) {
+          display: none;
+        }
+        .settings[data-choosing-style] header {
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        .settings[data-choosing-style] .settings-tools {
+          border: 0;
+          margin: 0;
+        }
+        .settings[data-choosing-style] .close-settings {
+          min-height: 44px;
+        }
+
+        .quick-settings {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 4px 20px;
+          margin-bottom: 8px;
+        }
+
+        .advanced-audio {
+          margin: 0;
+        }
+
+        .settings summary {
+          cursor: pointer;
+          padding: 5px 0;
+        }
+
+        .crossfade-debug pre {
+          white-space: pre-wrap;
+          overflow-wrap: anywhere;
+          max-height: 180px;
+          overflow: auto;
+          font-size: 11px;
+          line-height: 1.5;
+        }
+        .settings button {
+          min-height: 28px;
+          padding: 3px 6px;
+          border: 0;
+          border-radius: 3px;
+          background: transparent;
+        }
+
+        .settings button:hover {
+          background: color-mix(in srgb, var(--tempo-fg) 10%, transparent);
+        }
+
+        .random-label {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          cursor: pointer;
+        }
+
+        .settings input[type='checkbox'] {
+          accent-color: var(--tempo-accent);
+          margin: 0;
+        }
+
+        .settings p {
+          margin: 6px 0 12px;
+        }
+        .output-label {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          margin-top: 12px;
+        }
+
+        .output-entry { display: flex; align-items: center; gap: 6px; }
+        #output-value { width: 84px; min-height: 32px; padding: 4px 8px; border: 1px solid var(--tem\
+po-track); border-radius: 2px; text-align: right; font-variant-numeric: tabular-nums; }
+
+        #output-level {
+          display: block;
+          width: 100%;
+          accent-color: var(--tempo-accent);
+        }
+
+        .settings input[type='search'] {
+          width: 100%;
+          padding: 6px;
+          border: 1px solid var(--tempo-track);
+          border-radius: 3px;
+          background: transparent;
+        }
+
+        .settings input::placeholder {
+          color: var(--tempo-fg);
+          opacity: 0.7;
+        }
+
+        .saved-row {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 132px;
+          gap: 4px 12px;
+          align-items: center;
+          padding: 4px 2px;
+          border-bottom: 1px solid color-mix(in srgb, var(--tempo-fg) 16%, transparent);
+          min-width: 0;
+        }
+
+        .saved-list {
+          flex: 1 1 auto;
+          min-height: 80px;
+          max-height: 680px;
+          overflow: auto;
+          overscroll-behavior: contain;
+          scrollbar-gutter: stable;
+          scrollbar-width: thin;
+          scrollbar-color: var(--tempo-track) transparent;
+          padding-right: 6px;
+        }
+
+        .saved-list:empty {
+          min-height: 0;
+        }
+
+        .saved-row:last-child {
+          border-bottom: 0;
+        }
+
+        .settings .saved-count {
+          margin: 6px 0;
+        }
+
+        .saved-setting {
+          display: grid;
+          grid-column: 2;
+          grid-template-columns: 28px 64px 28px;
+          gap: 6px;
+          align-items: center;
+        }
+
+        .saved-switch {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 32px;
+          cursor: pointer;
+        }
+
+        .saved-setting button {
+          min-height: 32px;
+        }
+
+        .saved-row a {
+          grid-column: 1;
+          grid-row: 1;
+          overflow: hidden;
+          color: inherit;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          text-underline-offset: 3px;
+        }
+
+        .saved-row input[type='number'] {
+          width: 46px;
+          height: 32px;
+          border: 0;
+        }
+
+        .saved-value {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid var(--tempo-track);
+          border-radius: 3px;
+          font-variant-numeric: tabular-nums;
+        }
+
+        .saved-remove svg {
+          display: block;
+          width: 12px;
+          height: 12px;
+          margin: auto;
+          fill: none;
+          stroke: currentColor;
+          stroke-width: 1.5;
+          stroke-linecap: round;
+        }
+
+        .settings-tools {
+          margin-top: 8px;
+          border-top: 1px solid color-mix(in srgb, var(--tempo-fg) 16%, transparent);
+          padding-top: 4px;
+        }
+
+        .appearance-options {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 4px 16px;
+          margin: 0 0 4px;
+          padding: 0;
+          border: 0;
+        }
+
+        .appearance-options label {
+          display: flex;
+          align-items: center;
+          min-height: 32px;
+          gap: 6px;
+          cursor: pointer;
+        }
+
+        .appearance-options input {
+          margin: 0;
+          accent-color: var(--tempo-accent);
+        }
+
+        .library-backup {
+          margin: 0;
+        }
+
+        .backup-actions {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          margin-block: 10px;
+        }
+
+        .backup-preview p {
+          margin-block: 8px;
+        }
+
+        .saved-more {
+          margin-top: 10px;
+        }
+
+        @media (max-width: 390px) {
+          .saved-row {
+            grid-template-columns: minmax(0, 1fr) 118px;
+            column-gap: 6px;
+          }
+
+          .saved-setting {
+            grid-template-columns: 24px 58px 28px;
+            gap: 4px;
+          }
+
+          .saved-row input[type='number'] {
+            width: 42px;
+          }
+        }
+
+        @media (pointer: coarse) {
+          .appearance-options label,
+          .saved-setting button,
+          .saved-switch,
+          .saved-row input[type='number'] {
+            min-height: 44px;
+          }
+        }
+
+        .settings-status:empty {
+          display: none;
+        }
+
+        input[type='number'] {
+          width: 46px;
+          min-width: 0;
+          height: 24px;
+          padding: 0;
+          border: 0;
+          border-radius: 2px;
+          background: transparent;
+          text-align: center;
+          font-variant-numeric: tabular-nums;
+          appearance: textfield;
+          -moz-appearance: textfield;
+          caret-color: var(--tempo-accent);
+        }
+
+        input[type='number']::-webkit-inner-spin-button,
+        input[type='number']::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+
+        input[type='number']:hover {
+          background: color-mix(in srgb, var(--tempo-fg) 8%, transparent);
+        }
+
+        .steppers {
+          display: grid;
+          grid-template-rows: repeat(2, 16px);
+        }
+
+        .step {
+          display: grid;
+          place-items: center;
+          width: 20px;
+          height: 16px;
+          padding: 0;
+          border: 0;
+          border-radius: 2px;
+          background: transparent;
+        }
+
+        .step:hover:not(:disabled) {
+          color: var(--tempo-accent);
+          background: color-mix(in srgb, var(--tempo-fg) 8%, transparent);
+        }
+
+        .step:disabled {
+          opacity: 0.35;
+          cursor: default;
+        }
+
+        .step svg {
+          width: 10px;
+          height: 8px;
+          fill: none;
+          stroke: currentColor;
+          stroke-width: 1.5;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+        }
+
+        @media (max-width: 960px) {
+          .controls { gap: 3px; }
+          :host {
+            flex-basis: var(--tempo-compact-width, 292px) !important;
+            min-width: var(--tempo-compact-width, 292px) !important;
+          }
+        }
+
+        input::selection {
+          background: var(--tempo-accent);
+          color: #fff;
+        }
+
+        ${tempoRangeStyle}${tempoFieldStyle}
+.quick-key .tempo-number{display:contents}
+.quick-key .tempo-number input{grid-column:2;grid-row:1;width:42px;height:32px;padding:0;border:0;ba\
+ckground:transparent;text-align:center;color:inherit;font:inherit;font-variant-numeric:tabular-nums}\
+
+.quick-key .tempo-number-arrows{grid-column:4;grid-row:1}
+.quick-key .tempo-number-arrows button{width:20px}
+.quick-key .key-unit{grid-column:3;grid-row:1}
+#tempo-settings input[type='range']{--range-thumb-opacity:1}
+.settings .tempo-choice-trigger{min-height:36px;padding:6px 10px;border:1px solid var(--tempo-track)\
+;border-radius:3px;background:var(--tempo-surface)}
+.control-style-label .tempo-choice{min-width:164px}
+.quick-key{white-space:nowrap}
+
+
+        .memory,
+        .settings-button {
+          display: grid;
+          place-items: center;
+          width: 24px;
+          height: 24px;
+          padding: 4px;
+          border: 0;
+          border-radius: 3px;
+          background: transparent;
+        }
+
+        .memory:hover,
+        .settings-button:hover {
+          background: color-mix(in srgb, var(--tempo-fg) 8%, transparent);
+        }
+
+        .memory svg,
+        .settings-button svg {
+          width: 14px;
+          height: 14px;
+          fill: none;
+          stroke: currentColor;
+          stroke-width: 1.5;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+        }
+
+        .memory[aria-pressed='true'] {
+          color: var(--tempo-accent);
+        }
+
+        .memory[data-state='saved'] .bookmark {
+          fill: currentColor;
+        }
+
+        .memory .update-dot,
+        .memory .warning,
+        .memory .check {
+          display: none;
+        }
+
+        .memory[data-state='modified'] .update-dot {
+          display: block;
+          fill: currentColor;
+          stroke: none;
+        }
+
+        .memory[data-state='error'] .warning {
+          display: block;
+        }
+
+        .memory[data-state='error'] .bookmark,
+        .memory[data-state='error'] .update-dot {
+          display: none;
+        }
+
+        .memory:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+
+        .memory[data-feedback='saved'] .check {
+          display: block;
+        }
+
+        .memory[data-feedback='saved'] .bookmark,
+        .memory[data-feedback='saved'] .update-dot {
+          display: none;
+        }
+
+        .error {
+          font-weight: 700;
+        }
+
+        .sr-only {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip-path: inset(50%);
+          white-space: nowrap;
+          border: 0;
+        }
+
+        [hidden] {
+          display: none !important;
+        }
+
+.pitch-bounds{display:grid;gap:12px;margin:12px 0}
+.pitch-bounds label,.increment-label{display:grid;grid-template-columns:minmax(0,1fr) 90px 16px;gap:\
+8px;align-items:center}
+.increment-label{margin:12px 0}
+.pitch-bounds .tempo-number,.increment-label .tempo-number{border:1px solid var(--tempo-track);borde\
+r-radius:3px;min-height:36px}
+.pitch-bounds .tempo-number input,.increment-label .tempo-number input{width:64px;text-align:center}\
+
+`;function dialTicks(){return Array.from({length:17},(_,index)=>{const angle=(index/16*270-135)*Math.PI/
+180;const inner=index%4===0?12:14;const point=radius=>`${(16+Math.sin(angle)*radius).toFixed(2)} ${(16-
+Math.cos(angle)*radius).toFixed(2)}`;return`M${point(inner)}L${point(16)}`}).join("")}function faderTicks(){
+return Array.from({length:16},(_,index)=>{const y=(6+index/15*132).toFixed(2);return`M25 ${y}h${index%
+4===0||index===15?6:3}`}).join("")}function controlsTemplate({MIN,MAX,SLIDER_MAX,SLIDER_STEP,SLIDER_STEPS,
+sliderTicks}){return`
+      <style>${controlsStyle}</style>
+      <div class="controls" role="group" aria-label="Playback tempo">
+        <div class="field"
+          ><input
+            id="rate-number"
+            type="number"
+            min="${MIN}"
+            max="4"
+            step="0.001"
+            aria-label="Exact playback speed"
+            aria-describedby="number-help"
+          /><span class="unit" aria-hidden="true">\xD7</span
+          ><span class="error" hidden aria-label="Playback error">!</span></div
+        >
+        <div class="steppers">
+          <button
+            class="step step-up"
+            type="button"
+            aria-label="Increase speed by 0.025\xD7; Shift for 0.01\xD7"
+            title="Increase tempo"
+          >
+            <svg viewBox="0 0 10 8" aria-hidden="true"><path d="m2 5 3-3 3 3" /></svg>
+          </button>
+          <button
+            class="step step-down"
+            type="button"
+            aria-label="Decrease speed by 0.025\xD7; Shift for 0.01\xD7"
+            title="Decrease tempo"
+          >
+            <svg viewBox="0 0 10 8" aria-hidden="true"><path d="m2 3 3 3 3-3" /></svg>
+          </button>
+        </div>
+        <div class="slider-wrap"
+          ><button id="rate-dial" type="button" role="slider" aria-label="Playback speed dial" aria-\
+valuemin="${MIN}" aria-valuemax="${MAX}" aria-valuenow="1" aria-describedby="dial-help" title="Drag \
+up or down \xB7 Shift for fine adjustment \xB7 Double-click to reset" hidden><svg viewBox="0 0 32 32" aria\
+-hidden="true"><path class="dial-track" d="M6.1 25.9a14 14 0 1 1 19.8 0"/><path class="dial-fill" pa\
+thLength="100" d="M6.1 25.9a14 14 0 1 1 19.8 0"/><path class="dial-ticks" d="${dialTicks()}"/><circl\
+e cx="16" cy="16" r="9"/><path class="dial-zero" d="M16 0v4"/></svg><span aria-hidden="true"></span>\
+</button>
+          <button id="vertical-toggle" type="button" popovertarget="tempo-fader" aria-label="Open ve\
+rtical tempo slider" title="Tempo slider" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path d\
+="M10 2v5m0 6v5M6 7h8v6H6Z" /></svg></button>
+          <div id="tempo-fader"><output class="fader-value" aria-hidden="true">1\xD7</output><div class\
+="fader-rail"><input
+            id="rate-slider"
+            type="range"
+            min="${MIN}"
+            max="${SLIDER_MAX}"
+            step="${SLIDER_STEP}"
+            aria-label="Playback speed"
+            aria-describedby="slider-help" />
+          <svg class="ticks" viewBox="0 0 ${SLIDER_STEPS} 5" preserveAspectRatio="none" aria-hidden=\
+"true">
+            <path d="${sliderTicks()}" />
+            <path class="normal-tick" d="M${Math.round((1-MIN)/SLIDER_STEP)} 0v5" />
+          </svg>
+          <span class="fader-normal" aria-hidden="true">1\xD7</span>
+          <svg class="fader-ticks" viewBox="0 0 32 144" aria-hidden="true"><path d="${faderTicks()}"\
+/></svg>
+          <span class="fader-level" style="--position:0.533333" aria-hidden="true">2\xD7</span>
+          <span class="fader-level" style="--position:0.266667" aria-hidden="true">3\xD7</span>
+          <span class="fader-limit fader-max" aria-hidden="true">4\xD7</span>
+          <span class="fader-limit fader-min" aria-hidden="true">.25\xD7</span>
+          </div>
+          <button class="fader-reset" type="button">Reset</button>
+          </div>
+        </div>
+        <label class="quick-key">Pitch <input id="quick-key-shift" type="number" min="-12" max="12" \
+step="0.5" value="0" aria-label="Key shift in semitones"><span class="key-unit" aria-hidden="true">s\
+t</span></label>
+        <button
+          class="memory"
+          type="button"
+          aria-label="Remember tempo for this track"
+          aria-pressed="false"
+          aria-haspopup="dialog"
+          aria-controls="tempo-settings"
+          aria-expanded="false"
+          ><svg viewBox="0 0 16 16" aria-hidden="true">
+            <path class="bookmark" d="M4 2h8v12l-4-3-4 3Z" />
+            <circle class="update-dot" cx="13" cy="3" r="2" />
+            <path class="check" d="m3 8 3 3 7-7" />
+            <path class="warning" d="M8 2 15 14H1Z M8 6v3 M8 11.5v.1" /></svg
+        ></button>
+        <button
+          class="settings-button"
+          type="button"
+          aria-label="Tempo settings"
+          title="Settings"
+          aria-haspopup="dialog"
+          aria-controls="tempo-settings"
+          aria-expanded="false"
+        >
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path
+              d="m6 1-.4 2-1.2.7-1.9-.6-2 3.4L2 8l-1.5 1.5 2 3.4 1.9-.6 1.2.7.4 2h4l.4-2 1.2-.7 1.9.\
+6 2-3.4L14 8l1.5-1.5-2-3.4-1.9.6-1.2-.7L10 1Z"
+            />
+            <circle cx="8" cy="8" r="2.3" />
+          </svg>
+        </button>
+        <span class="sr-only" id="number-help">${MIN} to ${MAX}\xD7. Double-click to reset.</span>
+        <span class="sr-only" id="slider-help">Arrow keys use your default tempo increment. Double-c\
+lick to reset.</span>
+        <span class="sr-only" id="dial-help">Drag up to speed up, down to slow down. Hold Shift for \
+fine adjustment. Double-click to reset to 1\xD7. Arrow keys use your default tempo increment.</span>
+        <span
+          class="sr-only status"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        ></span>
+      </div>
+      <section
+        id="tempo-settings"
+        class="settings"
+        role="dialog"
+        popover="manual"
+        aria-labelledby="settings-title"
+        hidden
+      >
+        <header
+          ><strong id="settings-title">Tempo settings</strong
+          ><div class="settings-actions"><button class="open-editor" type="button">Tempo editor</but\
+ton><button class="close-settings" type="button" aria-label="Close tempo settings"
+            >Close</button
+          ></div></header
+        >
+        <p class="control-setup-intro" hidden>Choose a tempo control and whether to show semitone ad\
+justment. You can change both later in Appearance.</p>
+        <div class="quick-settings">
+        <label class="random-label"
+          ><input id="apply-saved" type="checkbox" checked />Apply saved tempos</label
+        >
+        <label class="random-label"><input id="copy-tempo-links" type="checkbox" />Include tempo in \
+copied links</label>
+        </div>
+        <input
+          id="saved-filter"
+          type="search"
+          placeholder="Find a saved track\u2026"
+          aria-label="Find a saved track"
+        />
+        <p class="saved-count"></p>
+        <div class="saved-list" role="region" aria-label="Saved tracks"></div>
+        <button class="saved-more" type="button" hidden>Show 100 more</button>
+        <div class="settings-tools">
+        <details class="appearance-settings">
+          <summary>Appearance</summary>
+          <label class="random-label"><input id="show-key" type="checkbox" checked />Show semitone a\
+djustment in player</label>
+          <label class="control-style-label">Tempo control <select id="control-style"><option value=\
+"slider">Slider</option><option value="dial">Dial</option><option value="vertical">Vertical slider</\
+option></select></label>
+          <label class="increment-label">Default tempo increment <input id="tempo-increment" type="n\
+umber" min="0.001" max="1" step="0.001" value="0.025" aria-label="Default tempo increment"> \xD7</label\
+>
+          <fieldset class="appearance-options" aria-label="SoundCloud theme">
+            <label><input type="radio" name="appearance" value="native" checked>SoundCloud</label>
+            <label><input type="radio" name="appearance" value="light">Light</label>
+            <label><input type="radio" name="appearance" value="charcoal">Charcoal</label>
+            <label><input type="radio" name="appearance" value="oled">OLED</label>
+          </fieldset>
+          <label class="random-label"><input id="star-motion" type="checkbox" />Star motion</label>
+          <label class="output-label" for="star-speed">Star speed <output id="star-speed-value">1.5\xD7\
+</output></label>
+          <input id="star-speed" type="range" min="0.5" max="4" step="0.25" value="1.5" aria-label="\
+Star motion speed" />
+        </details>
+        <details class="advanced-audio">
+          <summary>Advanced audio</summary>
+          <label class="random-label"><input id="crossfade" type="checkbox" />Crossfade tracks</labe\
+l>
+          <label class="output-label" for="crossfade-seconds">Overlap <output id="crossfade-value">5\
+ seconds</output></label>
+          <input id="crossfade-seconds" type="range" min="1" max="10" step="1" value="5" aria-label=\
+"Crossfade duration in seconds" />
+          <p id="crossfade-status" role="status"></p>
+          <details class="crossfade-debug">
+            <summary>Crossfade diagnostics</summary>
+            <pre id="crossfade-debug-output" tabindex="0" aria-label="Crossfade diagnostics"></pre>
+            <button id="crossfade-debug-refresh" type="button">Refresh</button>
+            <button id="crossfade-debug-copy" type="button">Copy diagnostics</button>
+            <p id="crossfade-debug-feedback" role="status"></p>
+          </details>
+          <details class="pitch-customization"><summary>Semitone controls</summary><div class="pitch\
+-bounds"><label>Minimum <input id="pitch-min" type="number" min="-12" max="12" step="0.5" value="-12\
+"><span>st</span></label><label>Maximum <input id="pitch-max" type="number" min="-12" max="12" step=\
+"0.5" value="12"><span>st</span></label><label>Default increment <input id="pitch-step" type="number\
+" min="0.001" max="12" step="0.1" value="0.5"><span>st</span></label></div></details>
+          <label class="key-shift-label">Semitone shift <input id="key-shift" type="number" min="-12\
+" max="12" step="0.5" value="0" /> st</label>
+          <label class="random-label"
+            ><input id="preserve-key" type="checkbox" />Preserve key by default</label
+          >
+          <p id="pitch-mode-help"
+            >Timelines can use their own pitch mode.</p
+          >
+          <p id="wasm-status" role="status"></p>
+          <label class="random-label"><input id="use-wasm" type="checkbox" />Use WASM for Preserve k\
+ey</label>
+          <label class="output-label" for="output-value">Output level <span class="output-entry"><in\
+put id="output-value" type="number" min="-24" step="any" value="-6" aria-describedby="output-help" /\
+> dB</span></label>
+          <input id="output-level" type="range" min="-24" max="12" step="0.1" value="-6" aria-label=\
+"Output level in dB" aria-describedby="output-help" />
+          <p id="output-help">Above 0 dB can clip and become very loud. Start low.</p>
+          <p id="output-status" role="status"></p>
+        </details>
+        <details class="shortcuts">
+          <summary>Shortcuts</summary>
+          <p>Double-click speed or slider: reset to 1\xD7.<br>Shift-click arrows: 0.01\xD7 steps.<br>Alt+S\
+hift+Left/Right: 0.05\xD7 steps.<br>Alt+Shift+Down: reset.</p>
+        </details>
+        <details class="library-backup">
+          <summary>Backup</summary>
+          <div class="backup-actions">
+            <button class="backup-export" type="button">Export backup</button>
+            <button class="backup-import" type="button">Import backup</button>
+          </div>
+          <input class="backup-file" type="file" accept=".json,application/json" aria-label="Choose \
+a Track Control backup" hidden />
+          <div class="backup-preview" hidden>
+            <p class="backup-summary"></p>
+            <p class="backup-preferences"></p>
+            <div class="backup-actions">
+              <button class="backup-confirm" type="button">Confirm import</button>
+              <button class="backup-cancel" type="button">Cancel</button>
+            </div>
+          </div>
+        </details>
+        </div>
+        <p class="settings-status" role="status" aria-live="polite"></p>
+        <button class="saved-undo" type="button" hidden>Undo removal</button>
+      </section>
+    `}function createTempoControls({playback,settings,services,actions,limits,version,website,onCreate}){const{
+MIN,MAX,SLIDER_MAX,SLIDER_STEP,SLIDER_STEPS,sliderTicks}=limits;const STYLE_STORAGE="soundcloud.temp\
+o.controlStyle";const SHOW_KEY_STORAGE="soundcloud.tempo.showKey";const KEY_SHIFT_STORAGE="soundclou\
+d.tempo.keyShift";const WASM_STORAGE="soundcloud.tempo.useWasm";const PITCH_STORAGE="soundcloud.temp\
+o.preserveKey";const COPY_STORAGE="soundcloud.tempo.copyLinks";const SAVED_STORAGE="soundcloud.tempo\
+.applySaved";let ui;let savedRefreshFrame=0;function createView(){const host=document.createElement(
+"span");host.id="soundcloud-tempo-control";host.style.cssText=`
+      display: flex;
+      align-items: center;
+      flex: 0 0 348px;
+      min-width: 348px;
+      margin-inline: 4px;
+    `;const root=host.attachShadow({mode:"open"});root.innerHTML=controlsTemplate({MIN,MAX,SLIDER_MAX,
+SLIDER_STEP,SLIDER_STEPS,sliderTicks});const get=selector=>root.querySelector(selector);ui={host,root,
+rateNumber:get("#rate-number"),slider:get("#rate-slider"),dial:get("#rate-dial"),verticalToggle:get(
+"#vertical-toggle"),fader:get("#tempo-fader"),stepUp:get(".step-up"),stepDown:get(".step-down"),memory:get(
+".memory"),settingsButton:get(".settings-button"),error:get(".error"),unit:get(".unit"),status:get("\
+.status"),editTrack:playback.trackKey,editingNumber:false,settings:get(".settings"),savedToggle:get(
+"#apply-saved"),copyToggle:get("#copy-tempo-links"),pitchToggle:get("#preserve-key"),savedFilter:get(
+"#saved-filter"),savedList:get(".saved-list"),savedCount:get(".saved-count"),settingsStatus:get(".se\
+ttings-status"),wasmStatus:get("#wasm-status"),outputSlider:get("#output-level"),outputValue:get("#o\
+utput-value"),outputStatus:get("#output-status"),wasmToggle:get("#use-wasm")};Object.assign(ui,{render,
+syncControlStyle,closeSettings,openSettings,positionSettings,populateSavedTracks,scheduleSavedTracks});
+onCreate(ui);syncControlStyle();ui.fader.addEventListener("beforetoggle",event=>{if(event.newState!==
+"open")return;const rect=ui.verticalToggle.getBoundingClientRect();const footerTop=ui.host.closest("\
+.playControls")?.getBoundingClientRect().top??rect.top;ui.fader.style.left=`${Math.max(8,Math.min(innerWidth-
+104,rect.x+rect.width/2-48))}px`;ui.fader.style.bottom=`${innerHeight-Math.min(rect.top,footerTop)+8}\
+px`});ui.fader.addEventListener("toggle",event=>{const open=event.newState==="open";ui.verticalToggle.
+setAttribute("aria-expanded",String(open));if(open)ui.slider.focus()});window.addEventListener("resi\
+ze",()=>{if(ui.fader.matches(":popover-open"))ui.fader.hidePopover()});get(".fader-reset").addEventListener(
+"click",()=>actions.setRate(1));const starMotion=get("#star-motion");starMotion.checked=services.appearance.
+motion()==="on";starMotion.addEventListener("change",()=>services.appearance.setMotion(starMotion.checked?
+"on":"off"));const starSpeed=get("#star-speed");starSpeed.value=String(services.appearance.speed());
+starSpeed.disabled=!starMotion.checked;syncTempoRange(starSpeed);get("#star-speed-value").value=`${services.
+appearance.speed()}\xD7`;starSpeed.addEventListener("input",()=>services.appearance.setSpeed(Number(
+starSpeed.value)));get("#control-style").addEventListener("change",event=>{try{localStorage.setItem(
+STYLE_STORAGE,event.target.value)}catch{ui.settingsStatus.textContent="Control style could not be sa\
+ved."}syncControlStyle()});const shiftInput=get("#key-shift");for(const id of["#crossfade","#crossfa\
+de-seconds"])get(id).addEventListener("change",()=>{try{services.crossfade.set(get("#crossfade").checked,
+Number(get("#crossfade-seconds").value))}catch(error2){ui.settingsStatus.textContent=`Crossfade coul\
+d not be saved. ${error2.message}`;render()}});get("#crossfade-seconds").addEventListener("input",()=>{
+get("#crossfade-value").value=`${get("#crossfade-seconds").value} seconds`});const refreshCrossfadeDebug=()=>{
+const report=JSON.stringify({version,...services.crossfade.diagnostics()},null,2);get("#crossfade-de\
+bug-output").textContent=report;return report};get(".crossfade-debug").addEventListener("toggle",()=>{
+if(get(".crossfade-debug").open)refreshCrossfadeDebug()});get("#crossfade-debug-refresh").addEventListener(
+"click",refreshCrossfadeDebug);get("#crossfade-debug-copy").addEventListener("click",async()=>{try{await navigator.
+clipboard.writeText(refreshCrossfadeDebug());get("#crossfade-debug-feedback").textContent="Diagnosti\
+cs copied. No track links or account details included."}catch{get("#crossfade-debug-feedback").textContent=
+"Could not copy. Select the diagnostics above and copy them manually."}});get("#show-key").addEventListener(
+"change",event=>{try{localStorage.setItem(SHOW_KEY_STORAGE,String(event.target.checked))}catch{ui.settingsStatus.
+textContent="Key visibility could not be saved."}syncControlStyle()});shiftInput.value=String(playback.
+keyShift);for(const input of[shiftInput,get("#quick-key-shift")])input.addEventListener("change",()=>{
+const next=Number(input.value);if(input.value===""||!Number.isFinite(next)||Math.abs(next)>12){input.
+value=String(services.timeline.keyShift()??playback.keyShift);return}try{localStorage.setItem(KEY_SHIFT_STORAGE,
+String(next))}catch{input.value=String(services.timeline.keyShift()??playback.keyShift);ui.settingsStatus.
+textContent="Key shift could not be saved.";ui.status.textContent="Key shift could not be saved.";return}
+actions.keyShiftChanged(next);services.crossfade?.cancel();services.timeline.setKeyShift(next);actions.
+updateAll()});ui.syncFields=enhanceTempoFields(ui.root);get("#tempo-increment").addEventListener("ch\
+ange",event=>{const increment=Number(event.target.value);if(!validTempoIncrement(increment)){ui.settingsStatus.
+textContent="Choose a tempo increment from 0.001 to 1."}else{try{localStorage.setItem(tempoIncrementKey,
+String(increment));ui.settingsStatus.textContent=""}catch{ui.settingsStatus.textContent="Tempo incre\
+ment could not be saved."}}event.target.value=String(readTempoIncrement());render()});const syncPitchControls=()=>{
+const settings2=readPitchSettings();for(const name of["min","max","step"])get("#pitch-"+name).value=
+String(settings2[name]);for(const input of[shiftInput,get("#quick-key-shift")]){input.min=String(settings2.
+min);input.max=String(settings2.max);input.step=String(settings2.step)}ui.syncFields()};for(const name of[
+"min","max","step"])get("#pitch-"+name).addEventListener("change",()=>{const settings2=Object.fromEntries(
+["min","max","step"].map(name2=>[name2,Number(get("#pitch-"+name2).value)]));if(!validPitchSettings(
+settings2)){ui.settingsStatus.textContent="Choose a pitch range inside \u221212 to +12 and a step between\
+ 0.001 and 12.";syncPitchControls();return}try{localStorage.setItem(pitchSettingsKey,JSON.stringify(
+settings2))}catch{ui.settingsStatus.textContent="Pitch controls could not be saved."}syncPitchControls();
+render()});ui.syncPitchControls=syncPitchControls;syncPitchControls();let dialDrag;ui.dial.addEventListener(
+"pointerdown",event=>{if(event.button!==0)return;event.preventDefault();ui.dial.focus();ui.dial.setPointerCapture(
+event.pointerId);dialDrag={y:event.clientY,rate:playback.rate,track:playback.trackKey}});ui.dial.addEventListener(
+"pointermove",event=>{if(!dialDrag||dialDrag.track!==actions.currentTrackKey())return;const distance=dialDrag.
+y-event.clientY;dialDrag.y=event.clientY;dialDrag.rate=Math.max(MIN,Math.min(MAX,dialDrag.rate*2**(distance/
+(event.shiftKey?800:160))));actions.setRate(dialDrag.rate)});for(const name of["pointerup","pointerc\
+ancel","lostpointercapture"])ui.dial.addEventListener(name,()=>{dialDrag=null});const stepTempo=event=>{
+if(event.altKey||event.ctrlKey||event.metaKey)return;const limit=event.currentTarget===ui.slider?Number(
+ui.slider.max):MAX;const current=Math.min(playback.rate,limit);const changes={ArrowUp:readTempoIncrement(),
+ArrowRight:readTempoIncrement(),ArrowDown:-readTempoIncrement(),ArrowLeft:-readTempoIncrement(),PageUp:.25,
+PageDown:-.25};if(event.key==="Home"||event.key==="End"||event.key in changes){event.preventDefault();
+actions.setRate(Math.min(limit,event.key==="Home"?MIN:event.key==="End"?limit:current+changes[event.
+key]*(event.shiftKey?.2:1)))}};ui.dial.addEventListener("keydown",stepTempo);ui.slider.addEventListener(
+"keydown",stepTempo);ui.dial.addEventListener("dblclick",()=>actions.setRate(1));for(const input of root.
+querySelectorAll('[name="appearance"]')){input.checked=input.value===services.appearance.mode();input.
+addEventListener("change",()=>{if(!input.checked)return;try{services.appearance.setMode(input.value)}catch{
+for(const option of root.querySelectorAll('[name="appearance"]'))option.checked=option.value===services.
+appearance.mode();ui.settingsStatus.textContent="Theme could not be saved."}})}ui.library=createTempoLibrary(
+{root,store:services.tempoStore,edit:track=>services.timeline.open(track),changed:actions.savedTrackChanged,
+imported:()=>{actions.importSettings();shiftInput.value=String(playback.keyShift)}});ui.wasmToggle.checked=
+settings.useWasm;ui.wasmToggle.addEventListener("change",()=>{try{localStorage.setItem(WASM_STORAGE,
+String(ui.wasmToggle.checked));actions.wasmChanged(ui.wasmToggle.checked);actions.updateAll()}catch{
+ui.wasmToggle.checked=settings.useWasm;ui.settingsStatus.textContent="Audio setting could not be sav\
+ed."}});services.outputLevel.syncUI();const setOutput=event=>{try{services.outputLevel.set(event.target.
+value);ui.settingsStatus.textContent="";render()}catch(error2){ui.settingsStatus.textContent=error2.
+message;services.outputLevel.syncUI()}};ui.outputSlider.addEventListener("input",setOutput);ui.outputValue.
+addEventListener("change",setOutput);root.addEventListener("input",event=>{if(event.target.matches("\
+input[type='range']"))syncTempoRange(event.target)});ui.copyToggle.checked=actions.copyLinksEnabled();
+ui.copyToggle.addEventListener("change",()=>{try{localStorage.setItem(COPY_STORAGE,String(ui.copyToggle.
+checked))}catch{ui.copyToggle.checked=actions.copyLinksEnabled();ui.settingsStatus.textContent="Coul\
+d not save setting."}});ui.settingsButton.addEventListener("click",()=>{ui.copyToggle.checked=actions.
+copyLinksEnabled();if(ui.settings.hidden){openSettings(ui.settingsButton)}else{closeSettings(true)}});
+get(".open-editor").addEventListener("click",()=>services.timeline.open());if(website){const buildSet=document.
+createElement("button");buildSet.type="button";buildSet.className="build-set";buildSet.textContent="\
+Build a set";buildSet.addEventListener("click",()=>{const original=playback.trackKey?"https://soundc\
+loud.com"+playback.trackKey:"";const shared=services.timeline.shareLink(original,true);const destination=new URL(
+"set/",website);if(shared!==original)destination.hash=new URL(shared).hash;window.open(destination.href,
+"_blank","noopener,noreferrer")});get(".settings-actions").prepend(buildSet)}ui.pitchToggle.setAttribute(
+"aria-describedby","pitch-mode-help");ui.pitchToggle.disabled=!actions.supportsPitch();if(ui.pitchToggle.
+disabled){get("#pitch-mode-help").textContent="Pitch preservation is unavailable in this browser. Na\
+tural mode remains active."}ui.pitchToggle.addEventListener("change",()=>{try{localStorage.setItem(PITCH_STORAGE,
+String(ui.pitchToggle.checked));actions.pitchChanged(ui.pitchToggle.checked);actions.updateAll();ui.
+settingsStatus.textContent=services.timeline.pitchMode()?"Default saved. This timeline keeps its own\
+ pitch mode.":settings.preserveKey?services.wasmAudio.label():"Natural pitch restored."}catch{ui.pitchToggle.
+checked=settings.preserveKey;ui.settingsStatus.textContent="Could not save audio mode. Allow site st\
+orage and retry."}});ui.memory.addEventListener("contextmenu",event=>{event.preventDefault();event.stopPropagation();
+openSettings()});ui.memory.addEventListener("keydown",event=>{if(event.key==="ContextMenu"||event.shiftKey&&
+event.key==="F10"||event.altKey&&event.key==="Enter"){event.preventDefault();event.stopPropagation();
+openSettings()}});get(".close-settings").addEventListener("click",()=>closeSettings(true));ui.savedFilter.
+addEventListener("input",populateSavedTracks);ui.savedToggle.addEventListener("change",()=>{try{localStorage.
+setItem(SAVED_STORAGE,String(ui.savedToggle.checked));actions.savedPreferenceChanged(ui.savedToggle.
+checked);services.timeline.changeTrack("");services.timeline.changeTrack(playback.trackKey);actions.
+updateAll();ui.settingsStatus.textContent=settings.applySaved?"Saved tempos enabled.":"Saved tempos \
+off."}catch{ui.savedToggle.checked=settings.applySaved;ui.settingsStatus.textContent="Could not save\
+ this preference. Allow site storage and retry."}});document.addEventListener("pointerdown",event=>{
+if(!event.composedPath().includes(ui.settings)&&!event.composedPath().includes(ui.memory)&&!event.composedPath().
+includes(ui.settingsButton)){closeSettings()}});ui.slider.addEventListener("input",()=>actions.setRate(
+ui.slider.value));for(const[button,direction]of[[ui.stepUp,1],[ui.stepDown,-1]]){let timer;let repeated=false;
+let pressedTrack="";const stop=()=>clearTimeout(timer);button.addEventListener("pointerdown",event=>{
+if(event.button!==0){return}stop();repeated=false;button.setPointerCapture(event.pointerId);const startingTrack=actions.
+currentTrackKey();pressedTrack=startingTrack;const step=event.shiftKey?.01:readTempoIncrement();const repeat=()=>{
+if(actions.currentTrackKey()!==startingTrack||!button.isConnected||button.disabled){stop();return}repeated=
+true;actions.setRate(playback.rate+direction*step);timer=setTimeout(repeat,100)};timer=setTimeout(repeat,
+400)});for(const type of["pointerup","pointercancel","lostpointercapture"]){button.addEventListener(
+type,stop)}window.addEventListener("blur",stop);document.addEventListener("visibilitychange",stop);button.
+addEventListener("click",event=>{event.stopPropagation();if(event.detail!==0&&pressedTrack!==actions.
+currentTrackKey()){return}if(repeated&&event.detail!==0){repeated=false;return}actions.setRate(playback.
+rate+direction*(event.shiftKey?.01:readTempoIncrement()))})}ui.slider.addEventListener("dblclick",()=>actions.
+setRate(1));ui.rateNumber.addEventListener("dblclick",()=>{actions.setRate(1);ui.rateNumber.value=String(
+playback.rate)});ui.slider.addEventListener("pointerdown",()=>{if(ui.root.activeElement===ui.rateNumber){
+ui.rateNumber.blur()}if(playback.rate>Number(ui.slider.max)){actions.setRate(Number(ui.slider.max))}});
+for(const type of["pointerdown","mousedown","touchstart","click","dblclick"]){ui.slider.addEventListener(
+type,event=>event.stopPropagation())}ui.rateNumber.addEventListener("focus",()=>{ui.editTrack=playback.
+trackKey});ui.rateNumber.addEventListener("input",()=>{ui.editingNumber=true});const commitNumber=()=>{
+const draft=ui.rateNumber.value;ui.editingNumber=false;const editingTrack=ui.editTrack;const changed=actions.
+syncTrack();if(!changed&&editingTrack===playback.trackKey){actions.setRate(draft)}else{actions.updateAll()}
+ui.rateNumber.value=String(playback.rate);render()};ui.rateNumber.addEventListener("change",commitNumber);
+ui.rateNumber.addEventListener("keydown",event=>{if(event.key==="ArrowUp"||event.key==="ArrowDown"){
+commitNumber();stepTempo(event)}});ui.rateNumber.addEventListener("blur",()=>{ui.editingNumber=false;
+ui.rateNumber.value=String(playback.rate)});ui.memory.addEventListener("click",event=>playback.trackKey?
+actions.rememberTrack(event.shiftKey):openSettings());root.addEventListener("keydown",event=>{if(event.
+key==="Escape"&&ui.fader.matches(":popover-open")){event.preventDefault();event.stopPropagation();ui.
+fader.hidePopover();ui.verticalToggle.focus();return}if(event.key==="Escape"&&!ui.settings.hidden){event.
+preventDefault();event.stopPropagation();closeSettings(true);return}if(ui.settings.contains(event.target)||
+services.timeline?.contains(event.target)){event.stopPropagation();return}if(actions.handleShortcut(
+event)){ui.rateNumber.value=String(playback.rate);return}if(event.target===ui.rateNumber&&event.key===
+"Enter"){event.preventDefault();commitNumber()}if(event.key==="Escape"){event.preventDefault();ui.rateNumber.
+value=String(playback.rate);ui.root.activeElement?.blur()}event.stopPropagation()});render();return ui}
+function readControlStyle(){try{const value=localStorage.getItem(STYLE_STORAGE);return["slider","dia\
+l","vertical"].includes(value)?value:"slider"}catch{return"slider"}}function syncControlStyle(){if(!ui)
+return;const style2=readControlStyle();let showKey=true;try{showKey=localStorage.getItem(SHOW_KEY_STORAGE)!==
+"false"}catch{}ui.root.querySelector(".quick-key").hidden=!showKey;ui.root.querySelector("#show-key").
+checked=showKey;ui.root.querySelector(".controls").classList.toggle("hide-key",!showKey);const keySpace=showKey?
+0:136;ui.host.style.flexBasis=`${(style2==="slider"?416:312)-keySpace}px`;ui.host.style.minWidth=`${(style2===
+"slider"?320:312)-keySpace}px`;ui.host.style.setProperty("--tempo-compact-width",`${308-keySpace}px`);
+ui.root.querySelector(".slider-wrap").dataset.style=style2;ui.root.querySelector("#control-style").value=
+style2;ui.slider.hidden=style2==="dial";ui.slider.max=String(style2==="vertical"?MAX:SLIDER_MAX);ui.
+dial.hidden=style2!=="dial";ui.verticalToggle.hidden=style2!=="vertical";if(style2==="vertical")ui.fader.
+setAttribute("popover","auto");else{if(ui.fader.matches(":popover-open"))ui.fader.hidePopover();ui.fader.
+removeAttribute("popover")}ui.slider.setAttribute("aria-orientation",style2==="vertical"?"vertical":
+"horizontal");render()}function closeSettings(restoreFocus=false){if(!ui){return}if(ui.settings.hasAttribute(
+"data-choosing-style")){try{localStorage.setItem(STYLE_STORAGE,ui.root.querySelector("#control-style").
+value)}catch{actions.announce("Control style could not be saved. Allow site storage to remember your\
+ choice.")}ui.settings.removeAttribute("data-choosing-style");ui.root.querySelector(".control-setup-\
+intro").hidden=true;ui.root.querySelector("#settings-title").textContent="Tempo settings";const close=ui.
+root.querySelector(".close-settings");close.textContent="Close";close.setAttribute("aria-label","Clo\
+se tempo settings")}ui.settings.hidden=true;ui.settings.hidePopover?.();ui.memory.setAttribute("aria\
+-expanded","false");ui.settingsButton.setAttribute("aria-expanded","false");if(restoreFocus){(ui.settingsTrigger||
+ui.settingsButton).focus()}}function positionSettings(){if(!ui||ui.settings.hidden){return}const width=Math.
+min(600,Math.max(0,innerWidth-24));ui.settings.style.width=`${width}px`;ui.settings.style.left=`${(innerWidth-
+width)/2}px`;ui.settings.style.top="50%";ui.settings.style.bottom="auto";ui.settings.style.transform=
+"translateY(-50%)"}function openSettings(trigger=ui.memory){ui.settingsTrigger=trigger;ui.settings.hidden=
+false;ui.memory.setAttribute("aria-expanded","true");ui.settingsButton.setAttribute("aria-expanded",
+"true");ui.savedToggle.checked=settings.applySaved;ui.pitchToggle.checked=settings.preserveKey;ui.settingsStatus.
+textContent="";ui.savedFilter.value="";ui.library.clearPreview();populateSavedTracks();positionSettings();
+if(ui.settings.showPopover&&!ui.settings.matches(":popover-open")){ui.settings.showPopover()}ui.savedToggle.
+focus()}function populateSavedTracks(){ui.library.render()}function scheduleSavedTracks(){if(!ui||ui.
+settings.hidden||savedRefreshFrame)return;savedRefreshFrame=requestAnimationFrame(()=>{savedRefreshFrame=
+0;if(!ui.settings.hidden)populateSavedTracks()})}function render(){if(!ui){return}ui.wasmStatus.textContent=
+services.bufferedAudio?.label()||services.wasmAudio.label();const increment=readTempoIncrement();const incrementInput=ui.
+root.querySelector("#tempo-increment");if(ui.root.activeElement!==incrementInput)incrementInput.value=
+String(increment);ui.stepUp.setAttribute("aria-label",`Increase speed by ${increment}\xD7; Shift for 0.\
+01\xD7`);ui.stepDown.setAttribute("aria-label",`Decrease speed by ${increment}\xD7; Shift for 0.01\xD7`);
+ui.root.querySelector("#crossfade").checked=services.crossfade?.enabled()??false;ui.root.querySelector(
+"#crossfade-seconds").value=String(services.crossfade?.seconds()??5);ui.root.querySelector("#crossfa\
+de-seconds").disabled=!services.crossfade?.enabled();syncTempoRange(ui.root.querySelector("#crossfad\
+e-seconds"));ui.root.querySelector("#crossfade-value").value=`${services.crossfade?.seconds()??5} se\
+conds`;ui.root.querySelector("#crossfade-status").textContent=services.crossfade?.label()??"";ui.outputStatus.
+textContent=services.outputLevel.value()>0&&![...services.references].some(ref=>{const audio=ref.deref();
+return audio&&services.wasmAudio.hasGraph(audio)})?"Boost needs the player\u2019s audio connection. Start\
+ playback; reload SoundCloud if it stays unavailable.":"";const text=actions.formatRate(playback.rate);
+const shift=services.timeline.keyShift()??playback.keyShift;services.trackVisuals.pitch(playback.trackKey&&
+!playback.failure?shift:0);const pitch=12*Math.log2(playback.rate)+shift;const pitchText=`${pitch>0?
+"+":""}${pitch.toFixed(2)} st`;const description=actions.preservesKey()?`${text} \xB7 Preserve key${shift?
+` \xB7 key shift ${shift>0?"+":""}${shift} st`:""}`:`${text} \xB7 natural pitch ${pitchText}`;const sliderRate=actions.
+clamp(Math.round(Math.min(playback.rate,Number(ui.slider.max))/.025)*.025);ui.stepUp.disabled=playback.
+rate>=MAX;ui.stepDown.disabled=playback.rate<=MIN;if(ui.slider.valueAsNumber!==sliderRate){ui.slider.
+value=String(sliderRate)}syncTempoRange(ui.slider);ui.dial.setAttribute("aria-valuenow",String(playback.
 rate));const shiftField=ui.root.querySelector("#key-shift");if(ui.root.activeElement!==shiftField)shiftField.
-value=String(timeline.keyShift()??keyShift);const quickShift=ui.root.querySelector("#quick-key-shift");
-if(ui.root.activeElement!==quickShift)quickShift.value=String(Math.round(shift*1e3)/1e3);ui.syncFields?.();
-ui.dial.setAttribute("aria-valuetext",description);ui.dial.style.setProperty("--dial-angle",`${Math.
-log2(rate)*67.5}deg`);ui.dial.style.setProperty("--dial-unfilled",String(50-Math.log2(rate)*25));ui.
-root.querySelector(".fader-value").textContent=formatRate(rate);const sliderDescription=rate>Number(
-ui.slider.max)?`Slider limit ${formatRate(SLIDER_MAX)}; current speed ${description}. Use the number\
- field for speeds above 2\xD7`:`${description} \xB7 slider steps 0.025\xD7`;ui.slider.setAttribute("\
-aria-valuetext",sliderDescription);ui.slider.title="Tempo \xB7 double-click to reset";if(ui.root.activeElement!==
-ui.rateNumber||!ui.editingNumber){ui.rateNumber.value=String(rate)}ui.rateNumber.title=failure2||"Ex\
-act tempo \xB7 double-click to reset";ui.rateNumber.setAttribute("aria-invalid",String(Boolean(failure2)));
-ui.unit.hidden=Boolean(failure2);ui.error.hidden=!failure2;ui.error.title=failure2;const state=savedRate===
-null?"unsaved":savedRate===rate?"saved":"modified";ui.memory.dataset.state=storageFailure?"error":state;
-ui.memory.setAttribute("aria-pressed",String(savedRate!==null));let label=!trackKey?"Settings":state===
-"saved"?"Forget saved tempo":state==="modified"?"Update saved tempo":"Save tempo";if(storageFailure){
-label=storageFailure}ui.memory.title=label;ui.memory.setAttribute("aria-label",label);syncArtworkIndicator(
-`${text} \xB7 ${preservesKey()?"Preserve key":pitchText}`);schedulePageArtwork()}function scheduleRefresh(){
-if(mountQueued)return;mountQueued=true;queueMicrotask(()=>{mountQueued=false;mount();updateAll()})}timeline=
-createTempoEditor({pitchControlsChanged:()=>ui?.syncPitchControls?.(),get applySaved(){return applySaved},
-get keyShift(){return timeline.keyShift()??keyShift},get copyLinks(){return copyLinksEnabled()},get pitchMode(){
-return preservesKey()?"preserve":"natural"},get defaultPitchMode(){return preserveKey?"preserve":"na\
-tural"},get ready(){return Boolean(ui)},get rate(){return rate},get root(){return ui.root},get host(){
-return ui.host},parseTrack:parseTrackKey,refresh:updateAll,normal:()=>setRate(1),closeSettings,message:text=>{
-ui.settingsStatus.textContent=text}});const tempoStore=createTempoStore({storage:()=>localStorage,parseTrack:parseTrackKey,
-validateTimeline:timeline.validate});appearance=createTempoAppearance({onChange(){if(!ui)return;for(const input of ui.
-root.querySelectorAll('[name="appearance"]'))input.checked=input.value===appearance.mode();const moving=appearance.
-motion()==="on";ui.root.querySelector("#star-motion").checked=moving;ui.root.querySelector("#star-sp\
-eed").value=String(appearance.speed());ui.root.querySelector("#star-speed").disabled=!moving;syncTempoRange(
-ui.root.querySelector("#star-speed"));ui.root.querySelector("#star-speed-value").value=`${appearance.
-speed()}\xD7`;ui.settingsStatus.textContent="";syncTheme()},onError(){if(ui)ui.settingsStatus.textContent=
-"Theme applied for this tab. Could not save it."}});embeddedPages=createTempoEmbeddedPages({parseTrack:parseTrackKey,
+value=String(services.timeline.keyShift()??playback.keyShift);const quickShift=ui.root.querySelector(
+"#quick-key-shift");if(ui.root.activeElement!==quickShift)quickShift.value=String(Math.round(shift*1e3)/
+1e3);ui.syncFields?.();ui.dial.setAttribute("aria-valuetext",description);ui.dial.style.setProperty(
+"--dial-angle",`${Math.log2(playback.rate)*67.5}deg`);ui.dial.style.setProperty("--dial-unfilled",String(
+50-Math.log2(playback.rate)*25));ui.root.querySelector(".fader-value").textContent=actions.formatRate(
+playback.rate);const sliderDescription=playback.rate>Number(ui.slider.max)?`Slider limit ${actions.formatRate(
+SLIDER_MAX)}; current speed ${description}. Use the number field for speeds above 2\xD7`:`${description}\
+ \xB7 slider steps 0.025\xD7`;ui.slider.setAttribute("aria-valuetext",sliderDescription);ui.slider.title=
+"Tempo \xB7 double-click to reset";if(ui.root.activeElement!==ui.rateNumber||!ui.editingNumber){ui.rateNumber.
+value=String(playback.rate)}ui.rateNumber.title=playback.failure||"Exact tempo \xB7 double-click to res\
+et";ui.rateNumber.setAttribute("aria-invalid",String(Boolean(playback.failure)));ui.unit.hidden=Boolean(
+playback.failure);ui.error.hidden=!playback.failure;ui.error.title=playback.failure;const state=playback.
+savedRate===null?"unsaved":playback.savedRate===playback.rate?"saved":"modified";ui.memory.dataset.state=
+playback.storageFailure?"error":state;ui.memory.setAttribute("aria-pressed",String(playback.savedRate!==
+null));let label=!playback.trackKey?"Settings":state==="saved"?"Forget saved tempo":state==="modifie\
+d"?"Update saved tempo":"Save tempo";if(playback.storageFailure){label=playback.storageFailure}ui.memory.
+title=label;ui.memory.setAttribute("aria-label",label);actions.afterRender(`${text} \xB7 ${actions.preservesKey()?
+"Preserve key":pitchText}`)}return createView()}function createFooterVisuals({readUI,readPlayback,themeChanged}){let lastHost;let lastTheme;function tempoLogo(){
+return`
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <g fill="currentColor">
+          <rect x="5" y="36" width="3" height="10" rx="1.5" />
+          <rect x="10" y="31" width="3" height="18" rx="1.5" />
+          <rect x="15" y="26" width="3" height="23" rx="1.5" />
+          <rect x="20" y="21" width="3" height="28" rx="1.5" />
+          <path d="M26 20C33 9 49 14 49 29C62 27 66 49 51 49H30Q26 49 26 45Z" />
+        </g>
+        <path d="M31 40H54" stroke="var(--logo-cutout)" stroke-width="3" stroke-linecap="round" />
+        <circle cx="45" cy="40" r="4" fill="currentColor" stroke="var(--logo-cutout)" stroke-width="\
+2" />
+      </svg>
+    `}function syncTheme(){const ui=readUI();if(!ui?.host.isConnected){return}const bar=ui.host.closest(
+".playControls");const reference=bar?.querySelector(".volume__button")||bar||document.body;const foreground=getComputedStyle(
+reference).color;const values=foreground.match(/[\d.]+/g)?.map(Number)||[34,34,34];const dark=values.
+slice(0,3).reduce((a,b)=>a+b,0)>450;ui.host.style.setProperty("--tempo-fg",foreground);const progress=bar?.
+querySelector(".playbackTimeline__progressBar");const accent=progress&&getComputedStyle(progress).backgroundColor;
+const nativeRail=progress?.getBoundingClientRect();const controls=ui.root.querySelector(".controls").
+getBoundingClientRect();const offset=nativeRail?.height?nativeRail.y+nativeRail.height/2-controls.y-
+controls.height/2:0;ui.host.style.setProperty("--tempo-rail-offset",`${Math.abs(offset)<=8?offset:0}\
+px`);ui.host.style.setProperty("--tempo-accent",accent&&accent!=="rgba(0, 0, 0, 0)"?accent:"#ff5500");
+ui.host.style.setProperty("--tempo-track",dark?"#888":"#777");const surface=getComputedStyle(document.
+documentElement).getPropertyValue("--tempo-page-surface").trim();ui.host.style.setProperty("--tempo-\
+surface",surface||(dark?"#303030":"#f2f2f2"));ui.host.style.setProperty("--tempo-accent-surface",surface||
+"#242424");ui.host.style.colorScheme=dark?"dark":"light";ui.host.style.fontFamily=getComputedStyle(reference).
+fontFamily;const nextTheme=[foreground,accent,dark,surface,ui.host.style.fontFamily].join("|");if(lastHost!==
+ui.host||lastTheme!==nextTheme){lastHost=ui.host;lastTheme=nextTheme;themeChanged()}}function syncArtworkIndicator(description){
+const ui=readUI();if(!ui)return;const{rate,trackKey,failure:failure2}=readPlayback();const artwork=document.
+querySelector(".playControls__soundBadge .playbackSoundBadge__avatar");if(ui.artwork!==artwork){ui.artwork?.
+classList.remove("soundcloud-tempo-artwork");ui.artworkIndicator?.remove();ui.artwork=artwork;ui.artworkIndicator=
+null}if(!artwork){return}if(!ui.artworkIndicator?.isConnected){artwork.querySelectorAll("#soundcloud\
+-tempo-artwork-indicator").forEach(node=>{node.remove()});const indicator2=document.createElement("s\
+pan");indicator2.id="soundcloud-tempo-artwork-indicator";indicator2.setAttribute("role","img");indicator2.
+attachShadow({mode:"open"}).innerHTML=`
+        <style>
+          :host {
+            position: absolute;
+            inset: auto 1px 1px auto;
+            display: grid;
+            place-items: center;
+            width: 18px;
+            height: 18px;
+            box-sizing: border-box;
+            border: 1px solid #161616;
+            border-radius: 3px;
+            background: #ff5500;
+            color: #fff;
+            --logo-cutout: #ff5500;
+            z-index: 1;
+            line-height: 0;
+          }
+          :host([hidden]) {
+            display: none;
+          }
+          svg {
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+          }
+          @media (forced-colors: active) {
+            :host {
+              background: Canvas;
+              color: CanvasText;
+              border-color: CanvasText;
+            }
+          }
+        </style>
+        ${tempoLogo()}
+      `;artwork.classList.add("soundcloud-tempo-artwork");artwork.append(indicator2);ui.artworkIndicator=
+indicator2}const label=description;const indicator=ui.artworkIndicator;const hidden=rate===1||!trackKey||
+Boolean(failure2);if(indicator.hidden!==hidden){indicator.hidden=hidden}if(indicator.title!==label){
+indicator.title=label;indicator.setAttribute("aria-label",label)}}return{tempoLogo,syncTheme,syncArtworkIndicator}}function installClipboardSharing({copyLinksEnabled,shareLink}){let contextLink=null;if(navigator.clipboard?.
+writeText){const writeText=navigator.clipboard.writeText.bind(navigator.clipboard);try{navigator.clipboard.
+writeText=text=>writeText(shareLink(text))}catch{}}function restoreContextLink(){if(!contextLink)return;
+const{anchor,original,shared}=contextLink;if(anchor.getAttribute("href")===shared)anchor.setAttribute(
+"href",original);contextLink=null}document.addEventListener("contextmenu",event=>{restoreContextLink();
+if(!copyLinksEnabled())return;const anchor=event.composedPath().find(node=>node instanceof HTMLAnchorElement);
+if(!anchor)return;const original=anchor.getAttribute("href");if(original===null)return;const shared=shareLink(
+anchor.href);if(shared===anchor.href)return;contextLink={anchor,original,shared};anchor.setAttribute(
+"href",shared)},true);document.addEventListener("pointerdown",restoreContextLink,true);document.addEventListener(
+"keydown",restoreContextLink,true);window.addEventListener("pagehide",restoreContextLink);window.addEventListener(
+"copy",event=>{if(!copyLinksEnabled()||!event.clipboardData)return;const target=document.activeElement;
+const selected=target instanceof HTMLInputElement||target instanceof HTMLTextAreaElement?target.value.
+slice(target.selectionStart??0,target.selectionEnd??0):String(window.getSelection());const original=event.
+clipboardData.getData("text/plain")||selected;const shared=shareLink(original);if(shared!==original){
+event.clipboardData.setData("text/plain",shared);event.clipboardData.clearData("text/html");event.preventDefault()}});
+return{originalLink(anchor){return contextLink?.anchor===anchor&&anchor?.getAttribute("href")===contextLink.
+shared?contextLink.original:null}}}(()=>{"use strict";const KEY="__soundCloudTempoControlV1";if(window[KEY]){return}window[KEY]=true;const VERSION="\
+1.2.4";const WEBSITE="https://itslush.github.io/soundcloud-track-control/";const COPY_STORAGE="sound\
+cloud.tempo.copyLinks";function copyLinksEnabled(){try{return localStorage.getItem(COPY_STORAGE)==="\
+true"}catch{return false}}const PITCH_STORAGE="soundcloud.tempo.preserveKey";const WASM_STORAGE="sou\
+ndcloud.tempo.useWasm";let timeline=null;let clipboardSharing=null;let bufferedAudio=null;let crossfade=null;
+const trackVisuals=createTrackVisuals({document,readTrack:()=>currentTrackKey()});let badgeAnimations=[];
+let appearance=null;const MIN=.25;const MAX=4;const SLIDER_MAX=2;const SLIDER_STEP=.025;const SLIDER_STEPS=Math.
+round((SLIDER_MAX-MIN)/SLIDER_STEP);const TRACK_STORAGE="soundcloud.tempo.track.";migrateTrackStorage();
+function migrateTrackStorage(){try{for(const key of Object.keys(localStorage)){const match=key.match(
+/^[^.]+\.(soundcloud\.tempo\.track\..+)$/);if(!match)continue;const destination=match[1];if(localStorage.
+getItem(destination)===null){localStorage.setItem(destination,localStorage.getItem(key))}localStorage.
+removeItem(key)}}catch{}}const SAVED_STORAGE="soundcloud.tempo.applySaved";const STYLE_STORAGE="soun\
+dcloud.tempo.controlStyle";const SHOW_KEY_STORAGE="soundcloud.tempo.showKey";const KEY_SHIFT_STORAGE="\
+soundcloud.tempo.keyShift";const TRACK_LINK=".playControls__soundBadge .playbackSoundBadge__titleLin\
+k";const{references,discover,isAudio,applyNative,installGuards,supportsPitch}=createMediaGuards({apply,
+handleShortcut,readUI:()=>ui,readServices:()=>({outputLevel,wasmAudio,bufferedAudio,crossfade}),readPlayback:()=>({
+preserve:preservesKey(),useWasm,keyShift:timeline.keyShift()??keyShift,rate})});let ui;let mobilePlayer;
+const mobileAvailability=createMobileAvailability({document,website:WEBSITE});let controlSetupShown=false;
+let mountQueued=false;let failure2="";let storageFailure="";let rate=1;let savedRate=null;let trackKey="";
+let lastTrackKey="";let applySaved=readSavedSetting();let keyShift=readKeyShift();let preserveKey=readPitchSetting();
+let useWasm=readWasmSetting();function readWasmSetting(){try{return localStorage.getItem(WASM_STORAGE)!==
+"false"}catch{return true}}function preservesKey(){const mode=timeline?.pitchMode();return mode?mode===
+"preserve":preserveKey}let embeddedPages;const pageArtwork=createPageArtwork({parseTrackKey,readSavedRate,
+formatRate,tempoLogo,readTrack:()=>({trackKey,rate,failure:failure2}),readEmbeddedPages:()=>embeddedPages});
+function readSavedSetting(){try{return localStorage.getItem(SAVED_STORAGE)!=="false"}catch{return true}}
+function readKeyShift(){try{const value=Number(localStorage.getItem(KEY_SHIFT_STORAGE));return Number.
+isFinite(value)&&Math.abs(value)<=12?value:0}catch{return 0}}function syncControlStyle(){ui?.syncControlStyle()}
+function readPitchSetting(){try{return supportsPitch()&&localStorage.getItem(PITCH_STORAGE)==="true"}catch{
+return false}}function clamp2(value){return Math.round(Math.max(MIN,Math.min(MAX,value))*1e3)/1e3}function formatRate(value){
+return`${value.toFixed(3).replace(/(\.\d{2})0$/,"$1")}\xD7`}function sliderTicks(){return Array.from(
+{length:SLIDER_STEPS+1},(_,index)=>{const units=Math.round(MIN/SLIDER_STEP)+index;const height=units%
+10===0?5:units%2===0?3:1.5;return`M${index} 0v${height}`}).join("")}const footerVisuals=createFooterVisuals(
+{readUI:()=>ui,readPlayback:()=>({rate,trackKey,failure:failure2}),themeChanged:()=>mobilePlayer?.refresh()});
+function tempoLogo(){return footerVisuals.tempoLogo()}function currentTrackKey(){const anchor=document.
+querySelector(TRACK_LINK);const href=anchor?.getAttribute("href");return parseTrackKey(clipboardSharing?.
+originalLink(anchor)??href)}function parseTrackKey(href){if(!href){return""}try{const url=new URL(href,
+"https://soundcloud.com");if(!["soundcloud.com","www.soundcloud.com","m.soundcloud.com"].includes(url.
+hostname)||url.protocol!=="https:"){return""}const parts=url.pathname.split("/").filter(Boolean);if(parts.
+length<2||parts.length>3||parts.length===3&&!/^s-[\w-]+$/.test(parts[2])){return""}if(["sets","track\
+s","albums","likes","reposts","followers","following"].includes(parts[1])){return""}return`/${parts[0]}\
+/${parts[1]}`}catch{return""}}function storageKey(key){return TRACK_STORAGE+encodeURIComponent(key)}
+function readSavedRate(key){try{const saved=tempoStore.speed(key);return saved?.enabled?saved.rate:null}catch{
+storageFailure="Track memory is unavailable. Allow site storage and reload.";return null}}function announce(message){
+if(ui&&ui.status.textContent!==message){ui.status.textContent=message}}function syncTrack(){const next=currentTrackKey();
+if(next===trackKey){return false}bufferedAudio?.changeTrack(trackKey,next);for(const animation of badgeAnimations)
+animation.cancel();badgeAnimations=[];if(trackKey&&next&&crossfade?.diagnostics().stage!=="buffered-\
+overlap"&&!matchMedia("(prefers-reduced-motion: reduce)").matches){badgeAnimations=[...document.querySelectorAll(
+".playControls__soundBadge .playbackSoundBadge__avatar, .playControls__soundBadge .playbackSoundBadg\
+e__titleContextContainer")].map(element=>element.animate([{opacity:.25},{opacity:1}],{duration:240,easing:"\
+ease-out"}))}trackKey=next;timeline?.changeTrack(next);if(!next){savedRate=null;render();return false}
+storageFailure="";savedRate=readSavedRate(next);if(next===lastTrackKey){render();return false}lastTrackKey=
+next;rate=applySaved?clamp2(savedRate??1):1;if(ui){delete ui.memory.dataset.feedback;ui.editTrack=next;
+ui.rateNumber.value=String(rate)}announce(savedRate===null?"New track. Normal speed.":`Playback spee\
+d: ${formatRate(rate)}.`);render();return true}function rememberTrack(forget=false){if(ui){delete ui.
+memory.dataset.feedback}if(syncTrack()){updateAll();return}if(!trackKey){return}const remove=savedRate!==
+null&&(forget||savedRate===rate);try{if(remove){localStorage.removeItem(storageKey(trackKey))}else{localStorage.
+setItem(storageKey(trackKey),String(rate))}savedRate=remove?null:rate;pageArtwork.refreshSaved(trackKey);
+clearTimeout(ui.feedbackTimer);ui.memory.dataset.feedback=remove?"":"saved";ui.feedbackTimer=setTimeout(
+()=>delete ui.memory.dataset.feedback,1e3);storageFailure="";announce(remove?"Saved tempo removed. P\
+layback is unchanged; next visit starts at 1\xD7.":`Remembered ${formatRate(rate)} for this track.`)}catch(error2){
+console.warn("[SoundCloud Tempo] Could not save track tempo.",error2);storageFailure="Could not save\
+ track tempo. Allow site storage or free space, then click to retry.";announce(storageFailure)}render()}
+function closeSettings(restoreFocus=false){ui?.closeSettings(restoreFocus)}function positionSettings(){
+ui?.positionSettings()}function openSettings(trigger){ui?.openSettings(trigger)}function scheduleSavedTracks(){
+ui?.scheduleSavedTracks()}function apply(audio){if(!isAudio(audio)){return}syncTrack();discover(audio);
+timeline?.observe(audio);const automated=timeline?.value();if(automated!==null&&automated!==void 0){
+rate=automated}try{if(!bufferedAudio?.sync(audio))applyNative(audio)}catch(error2){if(!failure2){console.
+warn("[SoundCloud Tempo]",error2)}failure2="Could not change playback rate. Reload SoundCloud and re\
+try.";announce(failure2);render()}}function updateAll(){syncTrack();for(const reference of references){
+const audio=reference.deref();if(!audio)references.delete(reference);else apply(audio)}render();timeline?.
+wake()}function setRate(value){crossfade?.cancel();if(syncTrack()){updateAll();return}if(String(value).
+trim()===""){return}const number=Number(value);if(!Number.isFinite(number)){return}rate=clamp2(number);
+timeline?.suspend();failure2="";updateAll();if(!failure2)announce(`Playback speed ${formatRate(rate)}\
+.`)}function handleShortcut(event){if(!event.altKey||!event.shiftKey||event.ctrlKey||event.metaKey||
+event.isComposing){return false}if(!["ArrowLeft","ArrowRight","ArrowDown"].includes(event.key)){return false}
+event.preventDefault();event.stopPropagation();setRate(event.key==="ArrowDown"?1:rate+(event.key==="\
+ArrowLeft"?-.05:.05));return true}function createUi(){ui=createTempoControls({playback:{get rate(){return rate},
+get trackKey(){return trackKey},get keyShift(){return keyShift},get savedRate(){return savedRate},get failure(){
+return failure2},get storageFailure(){return storageFailure}},settings:{get applySaved(){return applySaved},
+get preserveKey(){return preserveKey},get useWasm(){return useWasm}},services:{appearance,crossfade,
+timeline,outputLevel,wasmAudio,bufferedAudio,tempoStore,references,trackVisuals},limits:{MIN,MAX,SLIDER_MAX,
+SLIDER_STEP,SLIDER_STEPS,sliderTicks},version:VERSION,website:WEBSITE,onCreate(view){ui=view},actions:{
+setRate,currentTrackKey,updateAll,handleShortcut,rememberTrack,syncTrack,copyLinksEnabled,preservesKey,
+formatRate,clamp:clamp2,announce,supportsPitch,keyShiftChanged(value){keyShift=value},wasmChanged(value){
+useWasm=value},pitchChanged(value){preserveKey=value},savedPreferenceChanged(value){applySaved=value;
+rate=applySaved?clamp2(savedRate??1):1},savedTrackChanged(track,type){pageArtwork.refreshSaved(track);
+if(type==="timeline")timeline.refreshSaved(track);if(track===trackKey){savedRate=readSavedRate(trackKey);
+if(type==="speed"&&applySaved)rate=clamp2(savedRate??1)}updateAll()},importSettings(){pageArtwork.refreshSaved();
+ui.syncPitchControls?.();applySaved=readSavedSetting();keyShift=readKeyShift();syncControlStyle();preserveKey=
+readPitchSetting();useWasm=readWasmSetting();savedRate=readSavedRate(trackKey);ui.savedToggle.checked=
+applySaved;ui.pitchToggle.checked=preserveKey;ui.wasmToggle.checked=useWasm;ui.copyToggle.checked=copyLinksEnabled();
+outputLevel.reload();crossfade.reload();timeline.refreshSaved(trackKey);rate=applySaved?clamp2(savedRate??
+1):1;updateAll()},afterRender(description){syncArtworkIndicator(description);pageArtwork.schedule();
+mobilePlayer?.refresh()}}})}function syncTheme(){footerVisuals.syncTheme()}function syncArtworkIndicator(description){
+footerVisuals.syncArtworkIndicator(description)}function mount(){mobileAvailability.update();const bar=document.
+querySelector(".playControls__elements");if(!bar){return}installFooterStyle();if(!ui){createUi();mobilePlayer=
+createMobilePlayer({host:ui.host,root:ui.root,document,media:references,changeRate:setRate,openSettings,
+cancelTransition:()=>crossfade?.cancel("manual transport"),readTrack:currentTrackKey,canSeek:()=>!["\
+buffered-overlap","handing-off"].includes(crossfade?.diagnostics().stage)})}bar.classList.add("sound\
+cloud-tempo-footer");if(ui.host.parentNode!==bar){closeSettings();bar.querySelectorAll("#soundcloud-\
+tempo-control").forEach(node=>{if(node!==ui.host){node.remove()}});const volume=bar.querySelector(".\
+playControls__volume");bar.insertBefore(ui.host,volume||bar.querySelector(".playControls__soundBadge"));
+syncTheme();showReleaseNotice(ui,VERSION,WEBSITE)}if(!controlSetupShown){controlSetupShown=true;try{
+if(localStorage.getItem(STYLE_STORAGE))return}catch{return}if(new URLSearchParams(location.search).has(
+"sct")||location.hash.startsWith("#sct="))return;ui.settings.setAttribute("data-choosing-style","");
+ui.root.querySelector(".control-setup-intro").hidden=false;ui.root.querySelector("#settings-title").
+textContent="Choose your tempo control";ui.root.querySelector(".appearance-settings").open=true;const close=ui.
+root.querySelector(".close-settings");close.textContent="Use this style";close.setAttribute("aria-la\
+bel","Use this style");openSettings(ui.settingsButton);ui.root.querySelector("#control-style").nextElementSibling?.
+focus()}}function render(){ui?.render()}function scheduleRefresh(){if(mountQueued)return;mountQueued=
+true;queueMicrotask(()=>{mountQueued=false;mount();updateAll()})}timeline=createTempoEditor({pitchControlsChanged:()=>ui?.
+syncPitchControls?.(),get applySaved(){return applySaved},get keyShift(){return timeline.keyShift()??
+keyShift},get copyLinks(){return copyLinksEnabled()},get pitchMode(){return preservesKey()?"preserve":
+"natural"},get defaultPitchMode(){return preserveKey?"preserve":"natural"},get ready(){return Boolean(
+ui)},get rate(){return rate},get root(){return ui.root},get host(){return ui.host},parseTrack:parseTrackKey,
+refresh:updateAll,normal:()=>setRate(1),closeSettings,message:text=>{ui.settingsStatus.textContent=text}});
+const tempoStore=createTempoStore({storage:()=>localStorage,parseTrack:parseTrackKey,validateTimeline:timeline.
+validate});appearance=createTempoAppearance({onChange(){if(!ui)return;for(const input of ui.root.querySelectorAll(
+'[name="appearance"]'))input.checked=input.value===appearance.mode();const moving=appearance.motion()===
+"on";ui.root.querySelector("#star-motion").checked=moving;ui.root.querySelector("#star-speed").value=
+String(appearance.speed());ui.root.querySelector("#star-speed").disabled=!moving;syncTempoRange(ui.root.
+querySelector("#star-speed"));ui.root.querySelector("#star-speed-value").value=`${appearance.speed()}\
+\xD7`;ui.settingsStatus.textContent="";syncTheme()},onError(){if(ui)ui.settingsStatus.textContent="T\
+heme applied for this tab. Could not save it."}});embeddedPages=createTempoEmbeddedPages({parseTrack:parseTrackKey,
 currentTrack:()=>trackKey,copyLinks:copyLinksEnabled,shareLink:text=>timeline.shareLink(text),appearance(doc){
 try{return appearance.attachDocument(doc)}catch{if(ui&&appearance.mode()!=="native")ui.settingsStatus.
-textContent="Theme unavailable in this track view."}},changed:()=>{artworkDirty=true;schedulePageArtwork()}});
-const outputLevel=createOutputLevel({references,readUI:()=>ui});const wasmAudio=createWasmAudio({audioModules:audio_exports,
-outputLevel,createStretchNode,preservesKey,readKeyShift:()=>timeline.keyShift()??keyShift,readUseWasm:()=>useWasm,
-references,updateAll,apply,discover,onGraphReady:audio=>{bufferedAudio?.graphReady(audio);if(!audio.
-paused)crossfade?.select(audio)}});bufferedAudio=createBufferedPlayback({modules:audio_exports,graph:wasmAudio,
-readSettings:audio=>({track:trackKey,rate,mode:preservesKey()?"preserve":"natural",wasm:useWasm,schedule:timeline.
-playbackSchedule(audio)}),media:function*(){for(const reference of references){const audio=reference.
-deref();if(audio)yield audio}},applyNative,onState:render,recoverNative(audio){timeline?.suspend();rate=
-.25;applyNative(audio)},onFailure(message){failure2=message;announce(message)}});crossfade=createCrossfade(
-{modules:audio_exports,graph:wasmAudio,sourceFor:audio=>bufferedAudio.sourceFor(audio),resolveSource:(audio,options)=>bufferedAudio.
-resolveSource(audio,options),sourceStats:()=>bufferedAudio.sourceStats(),preloadNext:(audio,options)=>bufferedAudio.
-preloadNext(audio,options),readNextSettings:url=>{const key=parseTrackKey(url);if(!key)throw new Error(
-"The next track identity is unavailable.");return{rate:applySaved?readSavedRate(key)??1:1,preserve:preserveKey,
-shift:keyShift,variable:Boolean(tempoStore.timeline(key)?.enabled)}},readNextRate:url=>{const key=parseTrackKey(
-url);if(!key)return 4;const savedTimeline=tempoStore.timeline(key);if(savedTimeline?.enabled)return Math.
-max(...savedTimeline.data.points.map(point=>Math.max(.25,point.r)));return applySaved?readSavedRate(
-key)??1:1},readTrack:()=>currentTrackKey(),readSettings:audio=>({rate,preserve:preservesKey(),shift:timeline.
-keyShift()??keyShift,variable:timeline.playbackSchedule(audio)?.isConstantFrom(audio.currentTime)===
-false}),nextButton:()=>{const button=document.querySelector(".playControls__next");const repeatOne=document.
-querySelector(".playControls__repeat.m-one");return button&&!button.disabled&&button.getAttribute("a\
-ria-disabled")!=="true"&&!repeatOne?button:null},onState:render,onVisual:trackVisuals.overlap});crossfade.
-reload();document.addEventListener("click",event=>{if(event.isTrusted&&event.target instanceof Element&&
-event.target.closest(".playControls__play,.playControls__next,.playControls__prev,.playControls__rep\
-eat,.playbackTimeline"))crossfade.cancel()},true);document.addEventListener("keydown",event=>{if(event.
-isTrusted&&[" ","ArrowLeft","ArrowRight"].includes(event.key))crossfade.cancel()},true);window.addEventListener(
-"pagehide",()=>crossfade.dispose());installGuards();if(navigator.clipboard?.writeText){const writeText=navigator.
-clipboard.writeText.bind(navigator.clipboard);try{navigator.clipboard.writeText=text=>writeText(timeline.
-shareLink(text))}catch{}}function restoreContextLink(){if(!contextLink)return;const{anchor,original,
-shared}=contextLink;if(anchor.getAttribute("href")===shared)anchor.setAttribute("href",original);contextLink=
-null}document.addEventListener("contextmenu",event=>{restoreContextLink();if(!copyLinksEnabled())return;
-const anchor=event.composedPath().find(node=>node instanceof HTMLAnchorElement);if(!anchor)return;const original=anchor.
-getAttribute("href");if(original===null)return;const shared=timeline.shareLink(anchor.href);if(shared===
-anchor.href)return;contextLink={anchor,original,shared};anchor.setAttribute("href",shared)},true);document.
-addEventListener("pointerdown",restoreContextLink,true);document.addEventListener("keydown",restoreContextLink,
-true);window.addEventListener("pagehide",restoreContextLink);window.addEventListener("copy",event=>{
-if(!copyLinksEnabled()||!event.clipboardData)return;const target=document.activeElement;const selected=target instanceof
-HTMLInputElement||target instanceof HTMLTextAreaElement?target.value.slice(target.selectionStart??0,
-target.selectionEnd??0):String(window.getSelection());const original=event.clipboardData.getData("te\
-xt/plain")||selected;const shared=timeline.shareLink(original);if(shared!==original){event.clipboardData.
-setData("text/plain",shared);event.clipboardData.clearData("text/html");event.preventDefault()}});const relevantNodes="\
-a[href], audio, .image, .playControls, .playControls__elements, .playableTile, .sound, .queueItemVie\
-w, .soundBadge, .trackItem";const ownedNodes="#soundcloud-tempo-control, #soundcloud-tempo-artwork-i\
-ndicator, .soundcloud-tempo-page-indicator";function relevantMutation(mutation){if(mutation.type==="\
-attributes")return true;for(const node of[...mutation.addedNodes,...mutation.removedNodes]){if(!(node instanceof
-Element))continue;if(node===ui?.host){if(!node.isConnected)return true;continue}if(node.matches(ownedNodes)){
-if(!node.isConnected&&mutation.target.isConnected)return true;continue}if(node.matches(relevantNodes)||
-node.querySelector(relevantNodes))return true}return false}new MutationObserver(mutations=>{if(!mutations.
-some(relevantMutation))return;for(const mutation of mutations){for(const node of mutation.addedNodes){
-if(!(node instanceof Element))continue;if(isAudio(node))apply(node);else node.querySelectorAll("audi\
-o").forEach(apply)}}artworkDirty=true;scheduleRefresh()}).observe(document,{childList:true,subtree:true,
-attributes:true,attributeFilter:["href"]});window.addEventListener("storage",event=>{if(event.key===
-null||["soundcloud.tempo.crossfade","soundcloud.tempo.crossfadeSeconds"].includes(event.key))crossfade.
+textContent="Theme unavailable in this track view."}},changed:()=>{pageArtwork.markDirty();pageArtwork.
+schedule()}});const outputLevel=createOutputLevel({references,readUI:()=>ui});const wasmAudio=createWasmAudio(
+{audioModules:audio_exports,outputLevel,createStretchNode,preservesKey,readKeyShift:()=>timeline.keyShift()??
+keyShift,readUseWasm:()=>useWasm,references,updateAll,apply,discover,onGraphReady:audio=>{bufferedAudio?.
+graphReady(audio);if(!audio.paused)crossfade?.select(audio)}});bufferedAudio=createBufferedPlayback(
+{modules:audio_exports,graph:wasmAudio,readSettings:audio=>({track:trackKey,rate,mode:preservesKey()?
+"preserve":"natural",wasm:useWasm,schedule:timeline.playbackSchedule(audio)}),media:function*(){for(const reference of references){
+const audio=reference.deref();if(audio)yield audio}},applyNative,onState:render,recoverNative(audio){
+timeline?.suspend();rate=.25;applyNative(audio)},onFailure(message){failure2=message;announce(message)}});
+crossfade=createCrossfade({modules:audio_exports,graph:wasmAudio,sourceFor:audio=>bufferedAudio.sourceFor(
+audio),resolveSource:(audio,options)=>bufferedAudio.resolveSource(audio,options),sourceStats:()=>bufferedAudio.
+sourceStats(),preloadNext:(audio,options)=>bufferedAudio.preloadNext(audio,options),readNextSettings:url=>{
+const key=parseTrackKey(url);if(!key)throw new Error("The next track identity is unavailable.");return{
+rate:applySaved?readSavedRate(key)??1:1,preserve:preserveKey,shift:keyShift,variable:Boolean(tempoStore.
+timeline(key)?.enabled)}},readNextRate:url=>{const key=parseTrackKey(url);if(!key)return 4;const savedTimeline=tempoStore.
+timeline(key);if(savedTimeline?.enabled)return Math.max(...savedTimeline.data.points.map(point=>Math.
+max(.25,point.r)));return applySaved?readSavedRate(key)??1:1},readTrack:()=>currentTrackKey(),readSettings:audio=>({
+rate,preserve:preservesKey(),shift:timeline.keyShift()??keyShift,variable:timeline.playbackSchedule(
+audio)?.isConstantFrom(audio.currentTime)===false}),nextButton:()=>{const button=document.querySelector(
+".playControls__next");const repeatOne=document.querySelector(".playControls__repeat.m-one");return button&&
+!button.disabled&&button.getAttribute("aria-disabled")!=="true"&&!repeatOne?button:null},onState:render,
+onVisual(state){trackVisuals.overlap(state);mobilePlayer?.overlap(state)}});crossfade.reload();document.
+addEventListener("click",event=>{if(event.isTrusted&&event.target instanceof Element&&event.target.closest(
+".playControls__play,.playControls__next,.playControls__prev,.playControls__repeat,.playbackTimeline"))
+crossfade.cancel()},true);document.addEventListener("keydown",event=>{if(event.isTrusted&&[" ","Arro\
+wLeft","ArrowRight"].includes(event.key))crossfade.cancel()},true);window.addEventListener("pagehide",
+()=>crossfade.dispose());installGuards();clipboardSharing=installClipboardSharing({copyLinksEnabled,
+shareLink:timeline.shareLink});const relevantNodes="a[href], audio, .image, .playControls, .playCont\
+rols__elements, .playableTile, .sound, .queueItemView, .soundBadge, .trackItem";const ownedNodes="#s\
+oundcloud-tempo-control, #soundcloud-tempo-artwork-indicator, .soundcloud-tempo-page-indicator";function relevantMutation(mutation){
+if(mutation.type==="attributes")return true;for(const node of[...mutation.addedNodes,...mutation.removedNodes]){
+if(!(node instanceof Element))continue;if(node===ui?.host){if(!node.isConnected)return true;continue}
+if(node.matches(ownedNodes)){if(!node.isConnected&&mutation.target.isConnected)return true;continue}
+if(node.matches(relevantNodes)||node.querySelector(relevantNodes))return true}return false}new MutationObserver(
+mutations=>{if(!mutations.some(relevantMutation))return;for(const mutation of mutations){for(const node of mutation.
+addedNodes){if(!(node instanceof Element))continue;if(isAudio(node))apply(node);else node.querySelectorAll(
+"audio").forEach(apply)}}pageArtwork.markDirty();scheduleRefresh()}).observe(document,{childList:true,
+subtree:true,attributes:true,attributeFilter:["href"]});window.addEventListener("storage",event=>{if(event.
+key===null||["soundcloud.tempo.crossfade","soundcloud.tempo.crossfadeSeconds"].includes(event.key))crossfade.
 reload();if(event.key===null||event.key?.startsWith(TRACK_STORAGE)||event.key?.startsWith("soundclou\
 d.tempo.timeline."))scheduleSavedTracks();if(event.key===null||event.key===WASM_STORAGE){useWasm=readWasmSetting();
 if(ui)ui.wasmToggle.checked=useWasm;updateAll()}if(event.key===null||event.key===PITCH_STORAGE){preserveKey=
 readPitchSetting();if(ui){ui.pitchToggle.checked=preserveKey}updateAll()}if(event.key===null||event.
-key?.startsWith(TRACK_STORAGE)){schedulePageArtwork()}if(event.key===null||event.key===SAVED_STORAGE){
+key?.startsWith(TRACK_STORAGE)){pageArtwork.schedule()}if(event.key===null||event.key===SAVED_STORAGE){
 applySaved=readSavedSetting();if(ui){ui.savedToggle.checked=applySaved}timeline.changeTrack("");timeline.
 changeTrack(trackKey);rate=applySaved?clamp2(savedRate??1):1;updateAll()}if(event.key===null||event.
 key===pitchSettingsKey)ui?.syncPitchControls?.();if(event.key===null||event.key===tempoIncrementKey)
@@ -10472,7 +10956,7 @@ if(ui)ui.root.querySelector("#key-shift").value=String(keyShift);updateAll()}if(
 key===storageKey(trackKey)){storageFailure="";savedRate=trackKey?readSavedRate(trackKey):null;if(applySaved)
 rate=clamp2(savedRate??1);updateAll()}});window.addEventListener("resize",syncTheme);window.addEventListener(
 "resize",positionSettings);document.addEventListener("visibilitychange",()=>{if(document.hidden)return;
-artworkDirty=true;scheduleRefresh();syncTheme()});const themeObserver=new MutationObserver(syncTheme);
+pageArtwork.markDirty();scheduleRefresh();syncTheme()});const themeObserver=new MutationObserver(syncTheme);
 function observeTheme(){for(const element of[document.documentElement,document.body]){if(element)themeObserver.
 observe(element,{attributes:true,attributeFilter:["class","style","data-theme"]})}}document.addEventListener(
 "DOMContentLoaded",observeTheme,{once:true});observeTheme();window.matchMedia?.("(prefers-color-sche\

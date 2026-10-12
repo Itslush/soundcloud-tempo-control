@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          SoundCloud Track Control (Natural Pitch)
 // @namespace     soundcloud-tempo-control
-// @version       1.2.2
+// @version       1.2.3
 // @description   Playback speed, optional key preservation, saved tempos and shareable timelines.
 // @license       MIT
 // @match         https://soundcloud.com/*
@@ -5592,15 +5592,18 @@ rate changed")};const stats=()=>{const time=now();let scheduledAheadSeconds=0;fo
 scheduledAheadSeconds=Math.max(scheduledAheadSeconds,entry.outputEndFrame/outputRate-time);return Object.
 freeze({generation,disposed,nodes:entries.size*2,sourceNodes:entries.size,gainNodes:entries.size,bufferBytes,
 lastOutputEndFrame,cleanupErrors,scheduledAheadSeconds})};function release(entry,stop){if(!entries.delete(
-entry))return[];bufferBytes-=entry.bufferBytes;const errors=[];const attempt=action=>{try{action()}catch(error2){
-cleanupErrors++;errors.push(error2)}};const node=entry.node;attempt(()=>node.removeEventListener("en\
-ded",entry.onEnded));if(stop&&entry.started)attempt(()=>node.stop());attempt(()=>node.disconnect());
-if(entry.gain){attempt(()=>entry.gain.gain.cancelScheduledValues(0));attempt(()=>{entry.gain.gain.value=
-0});attempt(()=>entry.gain.disconnect())}attempt(()=>{node.buffer=null});entry.node=null;entry.gain=
-null;entry.onEnded=null;return errors}function own3(node,plan){const entry={node,gain:null,bufferBytes:plan.
-bufferBytes,outputStartFrame:plan.outputStartFrame,outputEndFrame:plan.outputEndFrame,generation,started:false};
-entry.onEnded=()=>{if(entry.generation===generation)release(entry,false)};entries.add(entry);bufferBytes+=
-entry.bufferBytes;return entry}function clear(){generation++;lastOutputEndFrame=null;const errors=[...entries].
+entry))return[];clearTimeout(entry.cleanupTimer);bufferBytes-=entry.bufferBytes;const errors=[];const attempt=action=>{
+try{action()}catch(error2){cleanupErrors++;errors.push(error2)}};const node=entry.node;attempt(()=>node.
+removeEventListener("ended",entry.onEnded));if(stop&&entry.started)attempt(()=>node.stop());attempt(
+()=>node.disconnect());if(entry.gain){attempt(()=>entry.gain.gain.cancelScheduledValues(0));attempt(
+()=>{entry.gain.gain.value=0});attempt(()=>entry.gain.disconnect())}attempt(()=>{node.buffer=null});
+entry.node=null;entry.gain=null;entry.onEnded=null;return errors}function own3(node,plan){const entry={
+node,gain:null,bufferBytes:plan.bufferBytes,outputStartFrame:plan.outputStartFrame,outputEndFrame:plan.
+outputEndFrame,generation,started:false,cleanupTimer:null};entry.onEnded=()=>{if(entry.generation!==
+generation||!entries.has(entry))return;const remaining=entry.outputEndFrame/outputRate-now();if(context.
+state!=="closed"&&remaining>0){clearTimeout(entry.cleanupTimer);entry.cleanupTimer=setTimeout(entry.
+onEnded,Math.max(1,remaining*1e3));return}release(entry,false)};entries.add(entry);bufferBytes+=entry.
+bufferBytes;return entry}function clear(){generation++;lastOutputEndFrame=null;const errors=[...entries].
 flatMap(entry=>release(entry,true));if(errors.length)throw new AggregateError(errors,"Natural output\
  cleanup failed");return stats()}function reset(){return disposed?stats():clear()}function truncate(outputFrame){
 available();if(!Number.isSafeInteger(outputFrame)||outputFrame<0||outputFrame%QUANTUM2)throw new RangeError(
@@ -9748,7 +9751,7 @@ tice";const style=document.createElement("style");style.textContent=`
 rel="noopener noreferrer";notice.append(link)}const dismiss=document.createElement("button");dismiss.
 type="button";dismiss.textContent="Dismiss";dismiss.addEventListener("click",()=>{notice.remove();style.
 remove();ui.settingsButton.focus()},{once:true});notice.append(dismiss);ui.root.append(style,notice)}(()=>{"use strict";const KEY="__soundCloudTempoControlV1";if(window[KEY]){return}window[KEY]=true;const VERSION="\
-1.2.2";const WEBSITE="https://itslush.github.io/soundcloud-track-control/";const COPY_STORAGE="sound\
+1.2.3";const WEBSITE="https://itslush.github.io/soundcloud-track-control/";const COPY_STORAGE="sound\
 cloud.tempo.copyLinks";function copyLinksEnabled(){try{return localStorage.getItem(COPY_STORAGE)==="\
 true"}catch{return false}}const PITCH_STORAGE="soundcloud.tempo.preserveKey";const WASM_STORAGE="sou\
 ndcloud.tempo.useWasm";let timeline=null;let contextLink=null;let bufferedAudio=null;let crossfade=null;

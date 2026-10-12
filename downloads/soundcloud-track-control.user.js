@@ -1,0 +1,10480 @@
+// ==UserScript==
+// @name          SoundCloud Track Control (Natural Pitch)
+// @namespace     soundcloud-tempo-control
+// @version       1.2.3
+// @description   Playback speed, optional key preservation, saved tempos and shareable timelines.
+// @license       MIT
+// @match         https://soundcloud.com/*
+// @match         https://m.soundcloud.com/*
+// @run-at        document-start
+// @grant         none
+// @inject-into   page
+// @noframes
+// @homepageURL   https://itslush.github.io/soundcloud-track-control/
+// @supportURL    https://github.com/Itslush/soundcloud-track-control
+// @downloadURL   https://itslush.github.io/soundcloud-track-control/downloads/soundcloud-track-control.user.js
+// @updateURL     https://itslush.github.io/soundcloud-track-control/downloads/soundcloud-track-control.meta.js
+// ==/UserScript==
+"use strict";(()=>{var __create=Object.create;var __defProp=Object.defineProperty;var __getOwnPropDesc=Object.getOwnPropertyDescriptor;var __getOwnPropNames=Object.getOwnPropertyNames;var __getProtoOf=Object.getPrototypeOf;var __hasOwnProp=Object.prototype.hasOwnProperty;var __esm=(fn,res,err)=>function __init(){if(err)throw err[0];try{return fn&&(res=(0,fn[__getOwnPropNames(
+fn)[0]])(fn=0)),res}catch(e){throw err=[e],e}};var __commonJS=(cb,mod)=>function __require(){try{return mod||(0,cb[__getOwnPropNames(cb)[0]])((mod=
+{exports:{}}).exports,mod),mod.exports}catch(e){throw mod=0,e}};var __export=(target,all)=>{for(var name in all)__defProp(target,name,{get:all[name],enumerable:true})};
+var __copyProps=(to,from,except,desc2)=>{if(from&&typeof from==="object"||typeof from==="function"){
+for(let key of __getOwnPropNames(from))if(!__hasOwnProp.call(to,key)&&key!==except)__defProp(to,key,
+{get:()=>from[key],enumerable:!(desc2=__getOwnPropDesc(from,key))||desc2.enumerable})}return to};var __toESM=(mod,isNodeMode,target)=>(target=mod!=null?__create(__getProtoOf(mod)):{},__copyProps(isNodeMode||
+!mod||!mod.__esModule?__defProp(target,"default",{value:mod,enumerable:true}):target,mod));function assert2(x){if(!x){throw new Error("Assertion failed.")}}var normalizeRotation,last,readExpGolomb,
+readSignedExpGolomb,toUint8Array,toDataView,textDecoder,invertObject,COLOR_PRIMARIES_MAP,COLOR_PRIMARIES_MAP_INVERSE,
+TRANSFER_CHARACTERISTICS_MAP,TRANSFER_CHARACTERISTICS_MAP_INVERSE,MATRIX_COEFFICIENTS_MAP,MATRIX_COEFFICIENTS_MAP_INVERSE,
+colorSpaceIsComplete,EMPTY_COLOR_SPACE,AsyncMutex,HEX_STRING_REGEX,bytesToHexString,hexStringToBytes,
+reverseBitsU32,binarySearchExact,binarySearchLessOrEqual,promiseWithResolvers,removeItem,findLastIndex,
+assertNever,getUint24,clamp,UNDETERMINED_LANGUAGE,roundIfAlmostInteger,roundToMultiple,roundToDivisor,
+floorToMultiple,popcount,ISO_639_2_REGEX,isIso639Dash2LanguageCode,SECOND_TO_MICROSECOND_FACTOR,isChromiumCache,
+isChromium,NativePromiseConstructor,isThenable,coalesceIndex,base64ToBytes,uint8ArraysAreEqual,polyfillSymbolDispose,
+isNumber,joinPaths,arrayCount,arrayArgmin,simplifyRational,wait,EventEmitter;var init_misc=__esm({"n\
+ode_modules/mediabunny/dist/modules/src/misc.js"(){normalizeRotation=rotation=>{const mappedRotation=(rotation%
+360+360)%360;if(mappedRotation===0||mappedRotation===90||mappedRotation===180||mappedRotation===270){
+return mappedRotation}else{throw new Error(`Invalid rotation ${rotation}.`)}};last=arr=>{return arr&&
+arr[arr.length-1]};readExpGolomb=bitstream=>{let leadingZeroBits=0;while(bitstream.readBits(1)===0&&
+leadingZeroBits<32){leadingZeroBits++}if(leadingZeroBits>=32){throw new Error("Invalid exponential-G\
+olomb code.")}const result=(1<<leadingZeroBits)-1+bitstream.readBits(leadingZeroBits);return result};
+readSignedExpGolomb=bitstream=>{const codeNum=readExpGolomb(bitstream);return(codeNum&1)===0?-(codeNum>>
+1):codeNum+1>>1};toUint8Array=source2=>{if(source2.constructor===Uint8Array){return source2}else if(ArrayBuffer.
+isView(source2)){return new Uint8Array(source2.buffer,source2.byteOffset,source2.byteLength)}else{return new Uint8Array(
+source2)}};toDataView=source2=>{if(source2.constructor===DataView){return source2}else if(ArrayBuffer.
+isView(source2)){return new DataView(source2.buffer,source2.byteOffset,source2.byteLength)}else{return new DataView(
+source2)}};textDecoder=new TextDecoder;invertObject=object2=>{return Object.fromEntries(Object.entries(
+object2).map(([key,value])=>[value,key]))};COLOR_PRIMARIES_MAP={bt709:1,bt470bg:5,smpte170m:6,bt2020:9,
+smpte432:12};COLOR_PRIMARIES_MAP_INVERSE=invertObject(COLOR_PRIMARIES_MAP);TRANSFER_CHARACTERISTICS_MAP=
+{"bt709":1,"smpte170m":6,"linear":8,"iec61966-2-1":13,"pq":16,"hlg":18};TRANSFER_CHARACTERISTICS_MAP_INVERSE=
+invertObject(TRANSFER_CHARACTERISTICS_MAP);MATRIX_COEFFICIENTS_MAP={"rgb":0,"bt709":1,"bt470bg":5,"s\
+mpte170m":6,"bt2020-ncl":9};MATRIX_COEFFICIENTS_MAP_INVERSE=invertObject(MATRIX_COEFFICIENTS_MAP);colorSpaceIsComplete=
+colorSpace=>{return!!colorSpace&&!!colorSpace.primaries&&!!colorSpace.transfer&&!!colorSpace.matrix&&
+colorSpace.fullRange!==void 0};EMPTY_COLOR_SPACE={primaries:void 0,transfer:void 0,matrix:void 0,fullRange:void 0};
+AsyncMutex=class{constructor(){this.currentPromise=Promise.resolve();this.pending=0}async acquire(){
+let resolver;const nextPromise=new Promise(resolve=>{let resolved=false;resolver=()=>{if(resolved){return}
+resolve();this.pending--;resolved=true}});const currentPromiseAlias=this.currentPromise;this.currentPromise=
+nextPromise;this.pending++;await currentPromiseAlias;return resolver}};HEX_STRING_REGEX=/^[0-9a-fA-F]+$/;
+bytesToHexString=bytes=>{return[...bytes].map(x=>x.toString(16).padStart(2,"0")).join("")};hexStringToBytes=
+hexString=>{assert2(hexString.length%2===0);const bytes=new Uint8Array(hexString.length/2);for(let i=0;i<
+hexString.length;i+=2){bytes[i/2]=parseInt(hexString.slice(i,i+2),16)}return bytes};reverseBitsU32=x=>{
+x=x>>1&1431655765|(x&1431655765)<<1;x=x>>2&858993459|(x&858993459)<<2;x=x>>4&252645135|(x&252645135)<<
+4;x=x>>8&16711935|(x&16711935)<<8;x=x>>16&65535|(x&65535)<<16;return x>>>0};binarySearchExact=(arr,key,valueGetter)=>{
+let low=0;let high=arr.length-1;let ans=-1;while(low<=high){const mid=low+high>>1;const midVal=valueGetter(
+arr[mid]);if(midVal===key){ans=mid;high=mid-1}else if(midVal<key){low=mid+1}else{high=mid-1}}return ans};
+binarySearchLessOrEqual=(arr,key,valueGetter)=>{let low=0;let high=arr.length-1;let ans=-1;while(low<=
+high){const mid=low+(high-low+1)/2|0;const midVal=valueGetter(arr[mid]);if(midVal<=key){ans=mid;low=
+mid+1}else{high=mid-1}}return ans};promiseWithResolvers=()=>{let resolve;let reject;const promise=new Promise(
+(res,rej)=>{resolve=res;reject=rej});return{promise,resolve,reject}};removeItem=(arr,item)=>{const index=arr.
+indexOf(item);if(index!==-1){arr.splice(index,1)}};findLastIndex=(arr,predicate)=>{for(let i=arr.length-
+1;i>=0;i--){if(predicate(arr[i])){return i}}return-1};assertNever=x=>{throw new Error(`Unexpected va\
+lue: ${x}`)};getUint24=(view,byteOffset,littleEndian)=>{const byte1=view.getUint8(byteOffset);const byte2=view.
+getUint8(byteOffset+1);const byte3=view.getUint8(byteOffset+2);if(littleEndian){return byte1|byte2<<
+8|byte3<<16}else{return byte1<<16|byte2<<8|byte3}};clamp=(value,min,max)=>{return Math.max(min,Math.
+min(max,value))};UNDETERMINED_LANGUAGE="und";roundIfAlmostInteger=value=>{const rounded=Math.round(value);
+if(Math.abs(value/rounded-1)<10*Number.EPSILON){return rounded}else{return value}};roundToMultiple=(value,multiple)=>{
+return Math.round(value/multiple)*multiple};roundToDivisor=(value,multiple)=>{return Math.round(value*
+multiple)/multiple};floorToMultiple=(value,multiple)=>{return Math.floor(value/multiple)*multiple};popcount=
+value=>{let count=0;while(value!==0){value&=value-1;count++}return count};ISO_639_2_REGEX=/^[a-z]{3}$/;
+isIso639Dash2LanguageCode=x=>{return ISO_639_2_REGEX.test(x)};SECOND_TO_MICROSECOND_FACTOR=1e6*(1+Number.
+EPSILON);isChromiumCache=null;isChromium=()=>{if(isChromiumCache!==null){return isChromiumCache}return isChromiumCache=
+!!(typeof navigator!=="undefined"&&(navigator.vendor?.includes("Google Inc")||/Chrome/.test(navigator.
+userAgent)))};NativePromiseConstructor=(async()=>{})().constructor;isThenable=value=>{if(value instanceof
+NativePromiseConstructor||value instanceof Promise){return true}return typeof value?.then==="functio\
+n"};coalesceIndex=(a,b)=>{return a!==-1?a:b};base64ToBytes=base64=>{const decoded=atob(base64);const bytes=new Uint8Array(
+decoded.length);for(let i=0;i<decoded.length;i++){bytes[i]=decoded.charCodeAt(i)}return bytes};uint8ArraysAreEqual=
+(a,b)=>{if(a.length!==b.length){return false}for(let i=0;i<a.length;i++){if(a[i]!==b[i]){return false}}
+return true};polyfillSymbolDispose=()=>{Symbol.dispose??=Symbol("Symbol.dispose")};isNumber=x=>{return typeof x===
+"number"&&!Number.isNaN(x)};joinPaths=(basePath,relativePath)=>{if(relativePath.includes("://")){return relativePath}
+if(basePath.includes("://")){const queryIndex=basePath.indexOf("?");if(queryIndex!==-1){basePath=basePath.
+slice(0,queryIndex)}}let result;if(relativePath.startsWith("/")){const protocolIndex2=basePath.indexOf(
+"://");if(protocolIndex2===-1){result=relativePath}else{const pathStart=basePath.indexOf("/",protocolIndex2+
+3);if(pathStart===-1){result=basePath+relativePath}else{result=basePath.slice(0,pathStart)+relativePath}}}else{
+const lastSlash=basePath.lastIndexOf("/");if(lastSlash===-1){result=relativePath}else{result=basePath.
+slice(0,lastSlash+1)+relativePath}}let prefix="";const protocolIndex=result.indexOf("://");if(protocolIndex!==
+-1){const pathStart=result.indexOf("/",protocolIndex+3);if(pathStart!==-1){prefix=result.slice(0,pathStart);
+result=result.slice(pathStart)}}const segments=result.split("/");const normalized=[];for(const segment of segments){
+if(segment===".."){normalized.pop()}else if(segment!=="."){normalized.push(segment)}}return prefix+normalized.
+join("/")};arrayCount=(array,predicate)=>{let count=0;for(let i=0;i<array.length;i++){if(predicate(array[i])){
+count++}}return count};arrayArgmin=(array,getValue)=>{let minIndex=-1;let minValue=Infinity;for(let i=0;i<
+array.length;i++){const value=getValue(array[i]);if(value<minValue){minValue=value;minIndex=i}}return minIndex};
+simplifyRational=rational=>{assert2(Number.isInteger(rational.num));assert2(Number.isInteger(rational.
+den));assert2(rational.den!==0);let a=Math.abs(rational.num);let b=Math.abs(rational.den);while(b!==
+0){const t=a%b;a=b;b=t}const gcd=a||1;return{num:rational.num/gcd,den:rational.den/gcd}};wait=ms=>{return new Promise(
+resolve=>setTimeout(resolve,ms))};EventEmitter=class{constructor(){this._listeners=new Map}on(event,listener,options){
+if(!this._listeners.has(event)){this._listeners.set(event,new Set)}const entry={fn:listener,once:options?.
+once??false};this._listeners.get(event).add(entry);return()=>{this._listeners.get(event)?.delete(entry)}}_emit(...args){
+const[event,data2]=args;const listeners=this._listeners.get(event);if(!listeners){return}for(const entry of listeners){
+try{entry.fn(data2)}catch(error2){console.error(error2)}if(entry.once){listeners.delete(entry)}}}}}});var LogLevel,Logging;var init_logging=__esm({"node_modules/mediabunny/dist/modules/src/logging.js"(){
+init_misc();(function(LogLevel2){LogLevel2[LogLevel2["Silent"]=0]="Silent";LogLevel2[LogLevel2["Erro\
+rs"]=1]="Errors";LogLevel2[LogLevel2["Warnings"]=2]="Warnings";LogLevel2[LogLevel2["Info"]=3]="Info"})(
+LogLevel||(LogLevel={}));Logging=class _Logging{constructor(){}static get level(){return _Logging._level}static set level(value){
+if(value!==LogLevel.Silent&&value!==LogLevel.Errors&&value!==LogLevel.Warnings&&value!==LogLevel.Info){
+throw new TypeError("Invalid log level. Use one of the values of the LogLevel enum.")}_Logging._level=
+value}static get _emitter(){return _Logging._emitterInstance??=new EventEmitter}static on(event,listener,options){
+return _Logging._emitter.on(event,listener,options)}static _error(...args){_Logging._emitter._emit("\
+error",args);if(_Logging._level>=LogLevel.Errors){console.error(...args)}}static _warn(...args){_Logging.
+_emitter._emit("warn",args);if(_Logging._level>=LogLevel.Warnings){console.warn(...args)}}static _info(...args){
+_Logging._emitter._emit("info",args);if(_Logging._level>=LogLevel.Info){console.info(...args)}}};Logging.
+_level=LogLevel.Info;Logging._emitterInstance=null}});var RichImageData,DEFAULT_TRACK_DISPOSITION;var init_metadata=__esm({"node_modules/mediabunny/dist/m\
+odules/src/metadata.js"(){RichImageData=class{constructor(data2,mimeType){this.data=data2;this.mimeType=
+mimeType;if(!(data2 instanceof Uint8Array)){throw new TypeError("data must be a Uint8Array.")}if(typeof mimeType!==
+"string"){throw new TypeError("mimeType must be a string.")}}};DEFAULT_TRACK_DISPOSITION={default:true,
+primary:true,forced:false,original:false,commentary:false,hearingImpaired:false,visuallyImpaired:false}}});var Bitstream;var init_bitstream=__esm({"node_modules/mediabunny/dist/modules/shared/bitstream.js"(){
+Bitstream=class _Bitstream{constructor(bytes){this.bytes=bytes;this.pos=0}seekToByte(byteOffset){this.
+pos=8*byteOffset}readBit(){const byteIndex=Math.floor(this.pos/8);const byte=this.bytes[byteIndex]??
+0;const bitIndex=7-(this.pos&7);const bit=(byte&1<<bitIndex)>>bitIndex;this.pos++;return bit}readBits(n){
+if(n===1){return this.readBit()}let result=0;for(let i=0;i<n;i++){result<<=1;result|=this.readBit()}
+return result}writeBits(n,value){const end=this.pos+n;for(let i=this.pos;i<end;i++){const byteIndex=Math.
+floor(i/8);let byte=this.bytes[byteIndex];const bitIndex=7-(i&7);byte&=~(1<<bitIndex);byte|=(value&1<<
+end-i-1)>>end-i-1<<bitIndex;this.bytes[byteIndex]=byte}this.pos=end}readAlignedByte(){if(this.pos%8!==
+0){throw new Error("Bitstream is not byte-aligned.")}const byteIndex=this.pos/8;const byte=this.bytes[byteIndex]??
+0;this.pos+=8;return byte}skipBits(n){this.pos+=n}getBitsLeft(){return this.bytes.length*8-this.pos}clone(){
+const clone=new _Bitstream(this.bytes);clone.pos=this.pos;return clone}}}});var aacFrequencyTable,aacChannelMap,parseAacAudioSpecificConfig,readAacObjectType,readAacSamplingFrequency;
+var init_aac_misc=__esm({"node_modules/mediabunny/dist/modules/shared/aac-misc.js"(){init_bitstream();
+aacFrequencyTable=[96e3,88200,64e3,48e3,44100,32e3,24e3,22050,16e3,12e3,11025,8e3,7350];aacChannelMap=
+[-1,1,2,3,4,5,6,8];parseAacAudioSpecificConfig=bytes=>{if(!bytes||bytes.byteLength<2){throw new TypeError(
+"AAC description must be at least 2 bytes long.")}const bitstream=new Bitstream(bytes);const objectType=readAacObjectType(
+bitstream);const{frequencyIndex,sampleRate:sampleRate3}=readAacSamplingFrequency(bitstream);const channelConfiguration=bitstream.
+readBits(4);let numberOfChannels=null;if(channelConfiguration>=1&&channelConfiguration<=7){numberOfChannels=
+aacChannelMap[channelConfiguration]}let coreObjectType=objectType;let psPresent=false;let outputSampleRate=sampleRate3;
+if(objectType===5||objectType===29){psPresent=objectType===29;outputSampleRate=readAacSamplingFrequency(
+bitstream).sampleRate;coreObjectType=readAacObjectType(bitstream);if(coreObjectType===22){bitstream.
+skipBits(4)}}else{while(bitstream.getBitsLeft()>15){const searchStart=bitstream.pos;if(bitstream.readBits(
+11)!==695){bitstream.pos=searchStart+1;continue}if(readAacObjectType(bitstream)===5&&bitstream.readBits(
+1)){outputSampleRate=readAacSamplingFrequency(bitstream).sampleRate;if(bitstream.getBitsLeft()>11&&bitstream.
+readBits(11)===1352){psPresent=!!bitstream.readBits(1)}}break}}if(numberOfChannels!==null&&numberOfChannels>
+1){psPresent=false}return{objectType,coreObjectType,frequencyIndex,channelConfiguration,outputSampleRate,
+outputNumberOfChannels:psPresent&&numberOfChannels===1?2:numberOfChannels}};readAacObjectType=bitstream=>{
+const objectType=bitstream.readBits(5);return objectType===31?32+bitstream.readBits(6):objectType};readAacSamplingFrequency=
+bitstream=>{const frequencyIndex=bitstream.readBits(4);if(frequencyIndex===15){return{frequencyIndex,
+sampleRate:bitstream.readBits(24)}}return{frequencyIndex,sampleRate:frequencyIndex<aacFrequencyTable.
+length?aacFrequencyTable[frequencyIndex]:null}}}});var AC3_SAMPLE_RATES,EAC3_REDUCED_SAMPLE_RATES;var init_ac3_misc=__esm({"node_modules/mediabunny/dis\
+t/modules/shared/ac3-misc.js"(){AC3_SAMPLE_RATES=[48e3,44100,32e3];EAC3_REDUCED_SAMPLE_RATES=[24e3,22050,
+16e3]}});var AvcNalUnitType,HevcNalUnitType,iterateNalUnitsInAnnexB,iterateNalUnitsInLengthPrefixed,iterateAvcNalUnits,
+extractNalUnitTypeForAvc,removeEmulationPreventionBytes,ANNEX_B_START_CODE,extractAvcDecoderConfigurationRecord,
+deserializeAvcDecoderConfigurationRecord,AVC_HEVC_ASPECT_RATIO_IDC_TABLE,parseAvcSps,skipAvcHrdParameters,
+iterateHevcNalUnits,extractNalUnitTypeForHevc,parseHevcSps,extractHevcDecoderConfigurationRecord,parseProfileTierLevel,
+skipScalingListData,skipAllStRefPicSets,skipStRefPicSet,parseHevcVui,skipHevcHrdParameters,skipSubLayerHrdParameters,
+deserializeHevcDecoderConfigurationRecord,HevcNaluOrderState,VP9_COLOR_SPACE_TABLE,extractVp9CodecInfoFromPacket,
+vp9CodecInfoHasColorInfo,iterateAv1PacketObus,extractAv1CodecInfoFromPacket,av1CodecInfoHasColorInfo,
+extractProresCodecInfoFromPacket,determineVideoPacketType,FlacBlockType,AC3_ACMOD_CHANNEL_COUNTS,parseAc3SyncFrame,
+AC3_FRAME_SIZES,AC3_SAMPLES_PER_FRAME,AC3_REGISTRATION_DESCRIPTOR,EAC3_REGISTRATION_DESCRIPTOR,EAC3_NUMBLKS_TABLE,
+parseEac3SyncFrame,parseEac3Config,getEac3SampleRate,getEac3ChannelCount,DTS_EXSS_SYNC_WORD,DTS_CORE_FRAME_HEADER_SIZE,
+DTS_EXSS_HEADER_PREFIX_SIZE,DTS_EXSS_MAX_HEADER_SIZE,DTS_PCM_BLOCK_SAMPLES,DTS_SPECIFIC_BOX_SIZE,DTS_SUBBAND_SAMPLES,
+DTS_CORE_SAMPLE_RATES,DTS_CORE_BIT_RATES,DTS_PCM_RESOLUTIONS,DTS_AMODE_CHANNEL_COUNTS,DTS_AMODE_CHANNEL_LAYOUTS,
+DTS_CHANNEL_LAYOUT_LFE1,DTS_CHANNEL_LAYOUT_PAIR_MASK,DTS_EXSS_REF_CLOCKS,DTS_EXSS_SAMPLE_RATES,DTS_SPECIFIC_BOX_FRAME_DURATIONS,
+parseDtsFrame,extractDtsFourCcFromPacket,parseDtsCoreFrameHeader,parseDtsExssHeader,parseDtsSpecificBox,
+getDtsChannelCount;var init_codec_data=__esm({"node_modules/mediabunny/dist/modules/src/codec-data.j\
+s"(){init_codec();init_misc();init_logging();init_ac3_misc();init_bitstream();(function(AvcNalUnitType2){
+AvcNalUnitType2[AvcNalUnitType2["NON_IDR_SLICE"]=1]="NON_IDR_SLICE";AvcNalUnitType2[AvcNalUnitType2["\
+SLICE_DPA"]=2]="SLICE_DPA";AvcNalUnitType2[AvcNalUnitType2["SLICE_DPB"]=3]="SLICE_DPB";AvcNalUnitType2[AvcNalUnitType2["\
+SLICE_DPC"]=4]="SLICE_DPC";AvcNalUnitType2[AvcNalUnitType2["IDR"]=5]="IDR";AvcNalUnitType2[AvcNalUnitType2["\
+SEI"]=6]="SEI";AvcNalUnitType2[AvcNalUnitType2["SPS"]=7]="SPS";AvcNalUnitType2[AvcNalUnitType2["PPS"]=
+8]="PPS";AvcNalUnitType2[AvcNalUnitType2["AUD"]=9]="AUD";AvcNalUnitType2[AvcNalUnitType2["SPS_EXT"]=
+13]="SPS_EXT"})(AvcNalUnitType||(AvcNalUnitType={}));(function(HevcNalUnitType2){HevcNalUnitType2[HevcNalUnitType2["\
+RASL_N"]=8]="RASL_N";HevcNalUnitType2[HevcNalUnitType2["RASL_R"]=9]="RASL_R";HevcNalUnitType2[HevcNalUnitType2["\
+BLA_W_LP"]=16]="BLA_W_LP";HevcNalUnitType2[HevcNalUnitType2["RSV_IRAP_VCL23"]=23]="RSV_IRAP_VCL23";HevcNalUnitType2[HevcNalUnitType2["\
+VPS_NUT"]=32]="VPS_NUT";HevcNalUnitType2[HevcNalUnitType2["SPS_NUT"]=33]="SPS_NUT";HevcNalUnitType2[HevcNalUnitType2["\
+PPS_NUT"]=34]="PPS_NUT";HevcNalUnitType2[HevcNalUnitType2["AUD_NUT"]=35]="AUD_NUT";HevcNalUnitType2[HevcNalUnitType2["\
+PREFIX_SEI_NUT"]=39]="PREFIX_SEI_NUT";HevcNalUnitType2[HevcNalUnitType2["SUFFIX_SEI_NUT"]=40]="SUFFI\
+X_SEI_NUT"})(HevcNalUnitType||(HevcNalUnitType={}));iterateNalUnitsInAnnexB=function*(packetData){let i=0;
+let nalStart=-1;while(i<packetData.length-2){const zeroIndex=packetData.indexOf(0,i);if(zeroIndex===
+-1||zeroIndex>=packetData.length-2){break}i=zeroIndex;let startCodeLength=0;if(i+3<packetData.length&&
+packetData[i+1]===0&&packetData[i+2]===0&&packetData[i+3]===1){startCodeLength=4}else if(packetData[i+
+1]===0&&packetData[i+2]===1){startCodeLength=3}if(startCodeLength===0){i++;continue}if(nalStart!==-1&&
+i>nalStart){yield{offset:nalStart,length:i-nalStart}}nalStart=i+startCodeLength;i=nalStart}if(nalStart!==
+-1&&nalStart<packetData.length){yield{offset:nalStart,length:packetData.length-nalStart}}};iterateNalUnitsInLengthPrefixed=
+function*(packetData,lengthSize){let offset=0;const dataView=new DataView(packetData.buffer,packetData.
+byteOffset,packetData.byteLength);while(offset+lengthSize<=packetData.length){let nalUnitLength;if(lengthSize===
+1){nalUnitLength=dataView.getUint8(offset)}else if(lengthSize===2){nalUnitLength=dataView.getUint16(
+offset,false)}else if(lengthSize===3){nalUnitLength=getUint24(dataView,offset,false)}else{assert2(lengthSize===
+4);nalUnitLength=dataView.getUint32(offset,false)}offset+=lengthSize;yield{offset,length:nalUnitLength};
+offset+=nalUnitLength}};iterateAvcNalUnits=(packetData,decoderConfig)=>{if(decoderConfig.description){
+const bytes=toUint8Array(decoderConfig.description);const lengthSizeMinusOne=bytes[4]&3;const lengthSize=lengthSizeMinusOne+
+1;return iterateNalUnitsInLengthPrefixed(packetData,lengthSize)}else{return iterateNalUnitsInAnnexB(
+packetData)}};extractNalUnitTypeForAvc=byte=>{return byte&31};removeEmulationPreventionBytes=data2=>{
+const result=[];const len=data2.length;for(let i=0;i<len;i++){if(i+2<len&&data2[i]===0&&data2[i+1]===
+0&&data2[i+2]===3){result.push(0,0);i+=2}else{result.push(data2[i])}}return new Uint8Array(result)};
+ANNEX_B_START_CODE=new Uint8Array([0,0,0,1]);extractAvcDecoderConfigurationRecord=packetData=>{try{const spsUnits=[];
+const ppsUnits=[];const spsExtUnits=[];for(const loc of iterateNalUnitsInAnnexB(packetData)){const nalUnit=packetData.
+subarray(loc.offset,loc.offset+loc.length);const type=extractNalUnitTypeForAvc(nalUnit[0]);if(type===
+AvcNalUnitType.SPS){spsUnits.push(nalUnit)}else if(type===AvcNalUnitType.PPS){ppsUnits.push(nalUnit)}else if(type===
+AvcNalUnitType.SPS_EXT){spsExtUnits.push(nalUnit)}}if(spsUnits.length===0){return null}if(ppsUnits.length===
+0){return null}const spsData=spsUnits[0];const spsInfo=parseAvcSps(spsData);assert2(spsInfo!==null);
+const hasExtendedData=spsInfo.profileIdc===100||spsInfo.profileIdc===110||spsInfo.profileIdc===122||
+spsInfo.profileIdc===144;return{configurationVersion:1,avcProfileIndication:spsInfo.profileIdc,profileCompatibility:spsInfo.
+constraintFlags,avcLevelIndication:spsInfo.levelIdc,lengthSizeMinusOne:3,sequenceParameterSets:spsUnits,
+pictureParameterSets:ppsUnits,chromaFormat:hasExtendedData?spsInfo.chromaFormatIdc:null,bitDepthLumaMinus8:hasExtendedData?
+spsInfo.bitDepthLumaMinus8:null,bitDepthChromaMinus8:hasExtendedData?spsInfo.bitDepthChromaMinus8:null,
+sequenceParameterSetExt:hasExtendedData?spsExtUnits:null}}catch(error2){Logging._error("Error buildi\
+ng AVC Decoder Configuration Record:",error2);return null}};deserializeAvcDecoderConfigurationRecord=
+data2=>{try{const view=toDataView(data2);let offset=0;const configurationVersion=view.getUint8(offset++);
+const avcProfileIndication=view.getUint8(offset++);const profileCompatibility=view.getUint8(offset++);
+const avcLevelIndication=view.getUint8(offset++);const lengthSizeMinusOne=view.getUint8(offset++)&3;
+const numOfSequenceParameterSets=view.getUint8(offset++)&31;const sequenceParameterSets=[];for(let i=0;i<
+numOfSequenceParameterSets;i++){const length=view.getUint16(offset,false);offset+=2;sequenceParameterSets.
+push(data2.subarray(offset,offset+length));offset+=length}const numOfPictureParameterSets=view.getUint8(
+offset++);const pictureParameterSets=[];for(let i=0;i<numOfPictureParameterSets;i++){const length=view.
+getUint16(offset,false);offset+=2;pictureParameterSets.push(data2.subarray(offset,offset+length));offset+=
+length}const record={configurationVersion,avcProfileIndication,profileCompatibility,avcLevelIndication,
+lengthSizeMinusOne,sequenceParameterSets,pictureParameterSets,chromaFormat:null,bitDepthLumaMinus8:null,
+bitDepthChromaMinus8:null,sequenceParameterSetExt:null};if((avcProfileIndication===100||avcProfileIndication===
+110||avcProfileIndication===122||avcProfileIndication===144)&&offset+4<=data2.length){const chromaFormat=view.
+getUint8(offset++)&3;const bitDepthLumaMinus8=view.getUint8(offset++)&7;const bitDepthChromaMinus8=view.
+getUint8(offset++)&7;const numOfSequenceParameterSetExt=view.getUint8(offset++);record.chromaFormat=
+chromaFormat;record.bitDepthLumaMinus8=bitDepthLumaMinus8;record.bitDepthChromaMinus8=bitDepthChromaMinus8;
+const sequenceParameterSetExt=[];for(let i=0;i<numOfSequenceParameterSetExt;i++){const length=view.getUint16(
+offset,false);offset+=2;sequenceParameterSetExt.push(data2.subarray(offset,offset+length));offset+=length}
+record.sequenceParameterSetExt=sequenceParameterSetExt}return record}catch(error2){Logging._error("E\
+rror deserializing AVC Decoder Configuration Record:",error2);return null}};AVC_HEVC_ASPECT_RATIO_IDC_TABLE=
+{1:{num:1,den:1},2:{num:12,den:11},3:{num:10,den:11},4:{num:16,den:11},5:{num:40,den:33},6:{num:24,den:11},
+7:{num:20,den:11},8:{num:32,den:11},9:{num:80,den:33},10:{num:18,den:11},11:{num:15,den:11},12:{num:64,
+den:33},13:{num:160,den:99},14:{num:4,den:3},15:{num:3,den:2},16:{num:2,den:1}};parseAvcSps=sps=>{try{
+const bitstream=new Bitstream(removeEmulationPreventionBytes(sps));bitstream.skipBits(1);bitstream.skipBits(
+2);const nalUnitType=bitstream.readBits(5);if(nalUnitType!==7){return null}const profileIdc=bitstream.
+readAlignedByte();const constraintFlags=bitstream.readAlignedByte();const levelIdc=bitstream.readAlignedByte();
+readExpGolomb(bitstream);let chromaFormatIdc=1;let bitDepthLumaMinus8=0;let bitDepthChromaMinus8=0;let separateColourPlaneFlag=0;
+if(profileIdc===100||profileIdc===110||profileIdc===122||profileIdc===244||profileIdc===44||profileIdc===
+83||profileIdc===86||profileIdc===118||profileIdc===128){chromaFormatIdc=readExpGolomb(bitstream);if(chromaFormatIdc===
+3){separateColourPlaneFlag=bitstream.readBits(1)}bitDepthLumaMinus8=readExpGolomb(bitstream);bitDepthChromaMinus8=
+readExpGolomb(bitstream);bitstream.skipBits(1);const seqScalingMatrixPresentFlag=bitstream.readBits(
+1);if(seqScalingMatrixPresentFlag){for(let i=0;i<(chromaFormatIdc!==3?8:12);i++){const seqScalingListPresentFlag=bitstream.
+readBits(1);if(seqScalingListPresentFlag){const sizeOfScalingList=i<6?16:64;let lastScale=8;let nextScale=8;
+for(let j=0;j<sizeOfScalingList;j++){if(nextScale!==0){const deltaScale=readSignedExpGolomb(bitstream);
+nextScale=(lastScale+deltaScale+256)%256}lastScale=nextScale===0?lastScale:nextScale}}}}}readExpGolomb(
+bitstream);const picOrderCntType=readExpGolomb(bitstream);if(picOrderCntType===0){readExpGolomb(bitstream)}else if(picOrderCntType===
+1){bitstream.skipBits(1);readSignedExpGolomb(bitstream);readSignedExpGolomb(bitstream);const numRefFramesInPicOrderCntCycle=readExpGolomb(
+bitstream);for(let i=0;i<numRefFramesInPicOrderCntCycle;i++){readSignedExpGolomb(bitstream)}}readExpGolomb(
+bitstream);bitstream.skipBits(1);const picWidthInMbsMinus1=readExpGolomb(bitstream);const picHeightInMapUnitsMinus1=readExpGolomb(
+bitstream);const codedWidth=16*(picWidthInMbsMinus1+1);const codedHeight=16*(picHeightInMapUnitsMinus1+
+1);let displayWidth=codedWidth;let displayHeight=codedHeight;const frameMbsOnlyFlag=bitstream.readBits(
+1);if(!frameMbsOnlyFlag){bitstream.skipBits(1)}bitstream.skipBits(1);const frameCroppingFlag=bitstream.
+readBits(1);if(frameCroppingFlag){const frameCropLeftOffset=readExpGolomb(bitstream);const frameCropRightOffset=readExpGolomb(
+bitstream);const frameCropTopOffset=readExpGolomb(bitstream);const frameCropBottomOffset=readExpGolomb(
+bitstream);let cropUnitX;let cropUnitY;const chromaArrayType=separateColourPlaneFlag===0?chromaFormatIdc:
+0;if(chromaArrayType===0){cropUnitX=1;cropUnitY=2-frameMbsOnlyFlag}else{const subWidthC=chromaFormatIdc===
+3?1:2;const subHeightC=chromaFormatIdc===1?2:1;cropUnitX=subWidthC;cropUnitY=subHeightC*(2-frameMbsOnlyFlag)}
+displayWidth-=cropUnitX*(frameCropLeftOffset+frameCropRightOffset);displayHeight-=cropUnitY*(frameCropTopOffset+
+frameCropBottomOffset)}let colourPrimaries=2;let transferCharacteristics=2;let matrixCoefficients=2;
+let fullRangeFlag=0;let pixelAspectRatio={num:1,den:1};let numReorderFrames=null;let maxDecFrameBuffering=null;
+const vuiParametersPresentFlag=bitstream.readBits(1);if(vuiParametersPresentFlag){const aspectRatioInfoPresentFlag=bitstream.
+readBits(1);if(aspectRatioInfoPresentFlag){const aspectRatioIdc=bitstream.readBits(8);if(aspectRatioIdc===
+255){pixelAspectRatio={num:bitstream.readBits(16),den:bitstream.readBits(16)}}else{const aspectRatio=AVC_HEVC_ASPECT_RATIO_IDC_TABLE[aspectRatioIdc];
+if(aspectRatio){pixelAspectRatio=aspectRatio}}}const overscanInfoPresentFlag=bitstream.readBits(1);if(overscanInfoPresentFlag){
+bitstream.skipBits(1)}const videoSignalTypePresentFlag=bitstream.readBits(1);if(videoSignalTypePresentFlag){
+bitstream.skipBits(3);fullRangeFlag=bitstream.readBits(1);const colourDescriptionPresentFlag=bitstream.
+readBits(1);if(colourDescriptionPresentFlag){colourPrimaries=bitstream.readBits(8);transferCharacteristics=
+bitstream.readBits(8);matrixCoefficients=bitstream.readBits(8)}}const chromaLocInfoPresentFlag=bitstream.
+readBits(1);if(chromaLocInfoPresentFlag){readExpGolomb(bitstream);readExpGolomb(bitstream)}const timingInfoPresentFlag=bitstream.
+readBits(1);if(timingInfoPresentFlag){bitstream.skipBits(32);bitstream.skipBits(32);bitstream.skipBits(
+1)}const nalHrdParametersPresentFlag=bitstream.readBits(1);if(nalHrdParametersPresentFlag){skipAvcHrdParameters(
+bitstream)}const vclHrdParametersPresentFlag=bitstream.readBits(1);if(vclHrdParametersPresentFlag){skipAvcHrdParameters(
+bitstream)}if(nalHrdParametersPresentFlag||vclHrdParametersPresentFlag){bitstream.skipBits(1)}bitstream.
+skipBits(1);const bitstreamRestrictionFlag=bitstream.readBits(1);if(bitstreamRestrictionFlag){bitstream.
+skipBits(1);readExpGolomb(bitstream);readExpGolomb(bitstream);readExpGolomb(bitstream);readExpGolomb(
+bitstream);numReorderFrames=readExpGolomb(bitstream);maxDecFrameBuffering=readExpGolomb(bitstream)}}
+if(numReorderFrames===null){assert2(maxDecFrameBuffering===null);const constraintSet3Flag=constraintFlags&
+16;if((profileIdc===44||profileIdc===86||profileIdc===100||profileIdc===110||profileIdc===122||profileIdc===
+244)&&constraintSet3Flag){numReorderFrames=0;maxDecFrameBuffering=0}else{const picWidthInMbs=picWidthInMbsMinus1+
+1;const picHeightInMapUnits=picHeightInMapUnitsMinus1+1;const frameHeightInMbs=(2-frameMbsOnlyFlag)*
+picHeightInMapUnits;const levelInfo=AVC_LEVEL_TABLE.find(x=>x.level>=levelIdc)??last(AVC_LEVEL_TABLE);
+const maxDpbFrames=Math.min(Math.floor(levelInfo.maxDpbMbs/(picWidthInMbs*frameHeightInMbs)),16);numReorderFrames=
+maxDpbFrames;maxDecFrameBuffering=maxDpbFrames}}assert2(maxDecFrameBuffering!==null);return{profileIdc,
+constraintFlags,levelIdc,frameMbsOnlyFlag,chromaFormatIdc,bitDepthLumaMinus8,bitDepthChromaMinus8,codedWidth,
+codedHeight,displayWidth,displayHeight,pixelAspectRatio,colourPrimaries,matrixCoefficients,transferCharacteristics,
+fullRangeFlag,numReorderFrames,maxDecFrameBuffering}}catch(error2){Logging._error("Error parsing AVC\
+ SPS:",error2);return null}};skipAvcHrdParameters=bitstream=>{const cpb_cnt_minus1=readExpGolomb(bitstream);
+bitstream.skipBits(4);bitstream.skipBits(4);for(let i=0;i<=cpb_cnt_minus1;i++){readExpGolomb(bitstream);
+readExpGolomb(bitstream);bitstream.skipBits(1)}bitstream.skipBits(5);bitstream.skipBits(5);bitstream.
+skipBits(5);bitstream.skipBits(5)};iterateHevcNalUnits=(packetData,decoderConfig)=>{if(decoderConfig.
+description){const bytes=toUint8Array(decoderConfig.description);const lengthSizeMinusOne=bytes[21]&
+3;const lengthSize=lengthSizeMinusOne+1;return iterateNalUnitsInLengthPrefixed(packetData,lengthSize)}else{
+return iterateNalUnitsInAnnexB(packetData)}};extractNalUnitTypeForHevc=byte=>{return byte>>1&63};parseHevcSps=
+sps=>{try{const bitstream=new Bitstream(removeEmulationPreventionBytes(sps));bitstream.skipBits(16);
+bitstream.readBits(4);const spsMaxSubLayersMinus1=bitstream.readBits(3);const spsTemporalIdNestingFlag=bitstream.
+readBits(1);const{general_profile_space,general_tier_flag,general_profile_idc,general_profile_compatibility_flags,
+general_constraint_indicator_flags,general_level_idc}=parseProfileTierLevel(bitstream,spsMaxSubLayersMinus1);
+readExpGolomb(bitstream);const chromaFormatIdc=readExpGolomb(bitstream);let separateColourPlaneFlag=0;
+if(chromaFormatIdc===3){separateColourPlaneFlag=bitstream.readBits(1)}const picWidthInLumaSamples=readExpGolomb(
+bitstream);const picHeightInLumaSamples=readExpGolomb(bitstream);let displayWidth=picWidthInLumaSamples;
+let displayHeight=picHeightInLumaSamples;if(bitstream.readBits(1)){const confWinLeftOffset=readExpGolomb(
+bitstream);const confWinRightOffset=readExpGolomb(bitstream);const confWinTopOffset=readExpGolomb(bitstream);
+const confWinBottomOffset=readExpGolomb(bitstream);let subWidthC=1;let subHeightC=1;const chromaArrayType=separateColourPlaneFlag===
+0?chromaFormatIdc:0;if(chromaArrayType===1){subWidthC=2;subHeightC=2}else if(chromaArrayType===2){subWidthC=
+2;subHeightC=1}displayWidth-=(confWinLeftOffset+confWinRightOffset)*subWidthC;displayHeight-=(confWinTopOffset+
+confWinBottomOffset)*subHeightC}const bitDepthLumaMinus8=readExpGolomb(bitstream);const bitDepthChromaMinus8=readExpGolomb(
+bitstream);readExpGolomb(bitstream);const spsSubLayerOrderingInfoPresentFlag=bitstream.readBits(1);const startI=spsSubLayerOrderingInfoPresentFlag?
+0:spsMaxSubLayersMinus1;let spsMaxNumReorderPics=0;for(let i=startI;i<=spsMaxSubLayersMinus1;i++){readExpGolomb(
+bitstream);spsMaxNumReorderPics=readExpGolomb(bitstream);readExpGolomb(bitstream)}readExpGolomb(bitstream);
+readExpGolomb(bitstream);readExpGolomb(bitstream);readExpGolomb(bitstream);readExpGolomb(bitstream);
+readExpGolomb(bitstream);if(bitstream.readBits(1)){if(bitstream.readBits(1)){skipScalingListData(bitstream)}}
+bitstream.skipBits(1);bitstream.skipBits(1);if(bitstream.readBits(1)){bitstream.skipBits(4);bitstream.
+skipBits(4);readExpGolomb(bitstream);readExpGolomb(bitstream);bitstream.skipBits(1)}const numShortTermRefPicSets=readExpGolomb(
+bitstream);skipAllStRefPicSets(bitstream,numShortTermRefPicSets);if(bitstream.readBits(1)){const numLongTermRefPicsSps=readExpGolomb(
+bitstream);for(let i=0;i<numLongTermRefPicsSps;i++){readExpGolomb(bitstream);bitstream.skipBits(1)}}
+bitstream.skipBits(1);bitstream.skipBits(1);let colourPrimaries=2;let transferCharacteristics=2;let matrixCoefficients=2;
+let fullRangeFlag=0;let minSpatialSegmentationIdc=0;let pixelAspectRatio={num:1,den:1};if(bitstream.
+readBits(1)){const vui=parseHevcVui(bitstream,spsMaxSubLayersMinus1);pixelAspectRatio=vui.pixelAspectRatio;
+colourPrimaries=vui.colourPrimaries;transferCharacteristics=vui.transferCharacteristics;matrixCoefficients=
+vui.matrixCoefficients;fullRangeFlag=vui.fullRangeFlag;minSpatialSegmentationIdc=vui.minSpatialSegmentationIdc}
+return{displayWidth,displayHeight,pixelAspectRatio,colourPrimaries,transferCharacteristics,matrixCoefficients,
+fullRangeFlag,maxDecFrameBuffering:spsMaxNumReorderPics+1,spsMaxSubLayersMinus1,spsTemporalIdNestingFlag,
+generalProfileSpace:general_profile_space,generalTierFlag:general_tier_flag,generalProfileIdc:general_profile_idc,
+generalProfileCompatibilityFlags:general_profile_compatibility_flags,generalConstraintIndicatorFlags:general_constraint_indicator_flags,
+generalLevelIdc:general_level_idc,chromaFormatIdc,bitDepthLumaMinus8,bitDepthChromaMinus8,minSpatialSegmentationIdc}}catch(error2){
+Logging._error("Error parsing HEVC SPS:",error2);return null}};extractHevcDecoderConfigurationRecord=
+packetData=>{try{const vpsUnits=[];const spsUnits=[];const ppsUnits=[];const seiUnits=[];for(const loc of iterateNalUnitsInAnnexB(
+packetData)){const nalUnit=packetData.subarray(loc.offset,loc.offset+loc.length);const type=extractNalUnitTypeForHevc(
+nalUnit[0]);if(type===HevcNalUnitType.VPS_NUT){vpsUnits.push(nalUnit)}else if(type===HevcNalUnitType.
+SPS_NUT){spsUnits.push(nalUnit)}else if(type===HevcNalUnitType.PPS_NUT){ppsUnits.push(nalUnit)}else if(type===
+HevcNalUnitType.PREFIX_SEI_NUT||type===HevcNalUnitType.SUFFIX_SEI_NUT){seiUnits.push(nalUnit)}}if(spsUnits.
+length===0||ppsUnits.length===0)return null;const spsInfo=parseHevcSps(spsUnits[0]);if(!spsInfo)return null;
+let parallelismType=0;if(ppsUnits.length>0){const pps=ppsUnits[0];const ppsBitstream=new Bitstream(removeEmulationPreventionBytes(
+pps));ppsBitstream.skipBits(16);readExpGolomb(ppsBitstream);readExpGolomb(ppsBitstream);ppsBitstream.
+skipBits(1);ppsBitstream.skipBits(1);ppsBitstream.skipBits(3);ppsBitstream.skipBits(1);ppsBitstream.
+skipBits(1);readExpGolomb(ppsBitstream);readExpGolomb(ppsBitstream);readSignedExpGolomb(ppsBitstream);
+ppsBitstream.skipBits(1);ppsBitstream.skipBits(1);if(ppsBitstream.readBits(1)){readExpGolomb(ppsBitstream)}
+readSignedExpGolomb(ppsBitstream);readSignedExpGolomb(ppsBitstream);ppsBitstream.skipBits(1);ppsBitstream.
+skipBits(1);ppsBitstream.skipBits(1);ppsBitstream.skipBits(1);const tiles_enabled_flag=ppsBitstream.
+readBits(1);const entropy_coding_sync_enabled_flag=ppsBitstream.readBits(1);if(!tiles_enabled_flag&&
+!entropy_coding_sync_enabled_flag)parallelismType=0;else if(tiles_enabled_flag&&!entropy_coding_sync_enabled_flag)
+parallelismType=2;else if(!tiles_enabled_flag&&entropy_coding_sync_enabled_flag)parallelismType=3;else
+parallelismType=0}const arrays=[...vpsUnits.length?[{arrayCompleteness:1,nalUnitType:HevcNalUnitType.
+VPS_NUT,nalUnits:vpsUnits}]:[],...spsUnits.length?[{arrayCompleteness:1,nalUnitType:HevcNalUnitType.
+SPS_NUT,nalUnits:spsUnits}]:[],...ppsUnits.length?[{arrayCompleteness:1,nalUnitType:HevcNalUnitType.
+PPS_NUT,nalUnits:ppsUnits}]:[],...seiUnits.length?[{arrayCompleteness:1,nalUnitType:extractNalUnitTypeForHevc(
+seiUnits[0][0]),nalUnits:seiUnits}]:[]];const record={configurationVersion:1,generalProfileSpace:spsInfo.
+generalProfileSpace,generalTierFlag:spsInfo.generalTierFlag,generalProfileIdc:spsInfo.generalProfileIdc,
+generalProfileCompatibilityFlags:spsInfo.generalProfileCompatibilityFlags,generalConstraintIndicatorFlags:spsInfo.
+generalConstraintIndicatorFlags,generalLevelIdc:spsInfo.generalLevelIdc,minSpatialSegmentationIdc:spsInfo.
+minSpatialSegmentationIdc,parallelismType,chromaFormatIdc:spsInfo.chromaFormatIdc,bitDepthLumaMinus8:spsInfo.
+bitDepthLumaMinus8,bitDepthChromaMinus8:spsInfo.bitDepthChromaMinus8,avgFrameRate:0,constantFrameRate:0,
+numTemporalLayers:spsInfo.spsMaxSubLayersMinus1+1,temporalIdNested:spsInfo.spsTemporalIdNestingFlag,
+lengthSizeMinusOne:3,arrays};return record}catch(error2){Logging._error("Error building HEVC Decoder\
+ Configuration Record:",error2);return null}};parseProfileTierLevel=(bitstream,maxNumSubLayersMinus1)=>{
+const general_profile_space=bitstream.readBits(2);const general_tier_flag=bitstream.readBits(1);const general_profile_idc=bitstream.
+readBits(5);let general_profile_compatibility_flags=0;for(let i=0;i<32;i++){general_profile_compatibility_flags=
+general_profile_compatibility_flags<<1|bitstream.readBits(1)}const general_constraint_indicator_flags=new Uint8Array(
+6);for(let i=0;i<6;i++){general_constraint_indicator_flags[i]=bitstream.readBits(8)}const general_level_idc=bitstream.
+readBits(8);const sub_layer_profile_present_flag=[];const sub_layer_level_present_flag=[];for(let i=0;i<
+maxNumSubLayersMinus1;i++){sub_layer_profile_present_flag.push(bitstream.readBits(1));sub_layer_level_present_flag.
+push(bitstream.readBits(1))}if(maxNumSubLayersMinus1>0){for(let i=maxNumSubLayersMinus1;i<8;i++){bitstream.
+skipBits(2)}}for(let i=0;i<maxNumSubLayersMinus1;i++){if(sub_layer_profile_present_flag[i])bitstream.
+skipBits(88);if(sub_layer_level_present_flag[i])bitstream.skipBits(8)}return{general_profile_space,general_tier_flag,
+general_profile_idc,general_profile_compatibility_flags,general_constraint_indicator_flags,general_level_idc}};
+skipScalingListData=bitstream=>{for(let sizeId=0;sizeId<4;sizeId++){for(let matrixId=0;matrixId<(sizeId===
+3?2:6);matrixId++){const scaling_list_pred_mode_flag=bitstream.readBits(1);if(!scaling_list_pred_mode_flag){
+readExpGolomb(bitstream)}else{const coefNum=Math.min(64,1<<4+(sizeId<<1));if(sizeId>1){readSignedExpGolomb(
+bitstream)}for(let i=0;i<coefNum;i++){readSignedExpGolomb(bitstream)}}}}};skipAllStRefPicSets=(bitstream,num_short_term_ref_pic_sets)=>{
+const NumDeltaPocs=[];for(let stRpsIdx=0;stRpsIdx<num_short_term_ref_pic_sets;stRpsIdx++){NumDeltaPocs[stRpsIdx]=
+skipStRefPicSet(bitstream,stRpsIdx,num_short_term_ref_pic_sets,NumDeltaPocs)}};skipStRefPicSet=(bitstream,stRpsIdx,num_short_term_ref_pic_sets,NumDeltaPocs)=>{
+let NumDeltaPocsThis=0;let inter_ref_pic_set_prediction_flag=0;let RefRpsIdx=0;if(stRpsIdx!==0){inter_ref_pic_set_prediction_flag=
+bitstream.readBits(1)}if(inter_ref_pic_set_prediction_flag){if(stRpsIdx===num_short_term_ref_pic_sets){
+const delta_idx_minus1=readExpGolomb(bitstream);RefRpsIdx=stRpsIdx-(delta_idx_minus1+1)}else{RefRpsIdx=
+stRpsIdx-1}bitstream.readBits(1);readExpGolomb(bitstream);const numDelta=NumDeltaPocs[RefRpsIdx]??0;
+for(let j=0;j<=numDelta;j++){const used_by_curr_pic_flag=bitstream.readBits(1);if(!used_by_curr_pic_flag){
+bitstream.readBits(1)}}NumDeltaPocsThis=NumDeltaPocs[RefRpsIdx]}else{const num_negative_pics=readExpGolomb(
+bitstream);const num_positive_pics=readExpGolomb(bitstream);for(let i=0;i<num_negative_pics;i++){readExpGolomb(
+bitstream);bitstream.readBits(1)}for(let i=0;i<num_positive_pics;i++){readExpGolomb(bitstream);bitstream.
+readBits(1)}NumDeltaPocsThis=num_negative_pics+num_positive_pics}return NumDeltaPocsThis};parseHevcVui=
+(bitstream,sps_max_sub_layers_minus1)=>{let colourPrimaries=2;let transferCharacteristics=2;let matrixCoefficients=2;
+let fullRangeFlag=0;let minSpatialSegmentationIdc=0;let pixelAspectRatio={num:1,den:1};if(bitstream.
+readBits(1)){const aspect_ratio_idc=bitstream.readBits(8);if(aspect_ratio_idc===255){pixelAspectRatio=
+{num:bitstream.readBits(16),den:bitstream.readBits(16)}}else{const aspectRatio=AVC_HEVC_ASPECT_RATIO_IDC_TABLE[aspect_ratio_idc];
+if(aspectRatio){pixelAspectRatio=aspectRatio}}}if(bitstream.readBits(1)){bitstream.readBits(1)}if(bitstream.
+readBits(1)){bitstream.readBits(3);fullRangeFlag=bitstream.readBits(1);if(bitstream.readBits(1)){colourPrimaries=
+bitstream.readBits(8);transferCharacteristics=bitstream.readBits(8);matrixCoefficients=bitstream.readBits(
+8)}}if(bitstream.readBits(1)){readExpGolomb(bitstream);readExpGolomb(bitstream)}bitstream.readBits(1);
+bitstream.readBits(1);bitstream.readBits(1);if(bitstream.readBits(1)){readExpGolomb(bitstream);readExpGolomb(
+bitstream);readExpGolomb(bitstream);readExpGolomb(bitstream)}if(bitstream.readBits(1)){bitstream.readBits(
+32);bitstream.readBits(32);if(bitstream.readBits(1)){readExpGolomb(bitstream)}if(bitstream.readBits(
+1)){skipHevcHrdParameters(bitstream,true,sps_max_sub_layers_minus1)}}if(bitstream.readBits(1)){bitstream.
+readBits(1);bitstream.readBits(1);bitstream.readBits(1);minSpatialSegmentationIdc=readExpGolomb(bitstream);
+readExpGolomb(bitstream);readExpGolomb(bitstream);readExpGolomb(bitstream);readExpGolomb(bitstream)}
+return{pixelAspectRatio,colourPrimaries,transferCharacteristics,matrixCoefficients,fullRangeFlag,minSpatialSegmentationIdc}};
+skipHevcHrdParameters=(bitstream,commonInfPresentFlag,maxNumSubLayersMinus1)=>{let nal_hrd_parameters_present_flag=false;
+let vcl_hrd_parameters_present_flag=false;let sub_pic_hrd_params_present_flag=false;if(commonInfPresentFlag){
+nal_hrd_parameters_present_flag=bitstream.readBits(1)===1;vcl_hrd_parameters_present_flag=bitstream.
+readBits(1)===1;if(nal_hrd_parameters_present_flag||vcl_hrd_parameters_present_flag){sub_pic_hrd_params_present_flag=
+bitstream.readBits(1)===1;if(sub_pic_hrd_params_present_flag){bitstream.readBits(8);bitstream.readBits(
+5);bitstream.readBits(1);bitstream.readBits(5)}bitstream.readBits(4);bitstream.readBits(4);if(sub_pic_hrd_params_present_flag){
+bitstream.readBits(4)}bitstream.readBits(5);bitstream.readBits(5);bitstream.readBits(5)}}for(let i=0;i<=
+maxNumSubLayersMinus1;i++){const fixed_pic_rate_general_flag=bitstream.readBits(1)===1;let fixed_pic_rate_within_cvs_flag=true;
+if(!fixed_pic_rate_general_flag){fixed_pic_rate_within_cvs_flag=bitstream.readBits(1)===1}let low_delay_hrd_flag=false;
+if(fixed_pic_rate_within_cvs_flag){readExpGolomb(bitstream)}else{low_delay_hrd_flag=bitstream.readBits(
+1)===1}let CpbCnt=1;if(!low_delay_hrd_flag){const cpb_cnt_minus1=readExpGolomb(bitstream);CpbCnt=cpb_cnt_minus1+
+1}if(nal_hrd_parameters_present_flag){skipSubLayerHrdParameters(bitstream,CpbCnt,sub_pic_hrd_params_present_flag)}
+if(vcl_hrd_parameters_present_flag){skipSubLayerHrdParameters(bitstream,CpbCnt,sub_pic_hrd_params_present_flag)}}};
+skipSubLayerHrdParameters=(bitstream,CpbCnt,sub_pic_hrd_params_present_flag)=>{for(let i=0;i<CpbCnt;i++){
+readExpGolomb(bitstream);readExpGolomb(bitstream);if(sub_pic_hrd_params_present_flag){readExpGolomb(
+bitstream);readExpGolomb(bitstream)}bitstream.readBits(1)}};deserializeHevcDecoderConfigurationRecord=
+data2=>{try{const view=toDataView(data2);let offset=0;const configurationVersion=view.getUint8(offset++);
+const byte1=view.getUint8(offset++);const generalProfileSpace=byte1>>6&3;const generalTierFlag=byte1>>
+5&1;const generalProfileIdc=byte1&31;const generalProfileCompatibilityFlags=view.getUint32(offset,false);
+offset+=4;const generalConstraintIndicatorFlags=data2.subarray(offset,offset+6);offset+=6;const generalLevelIdc=view.
+getUint8(offset++);const minSpatialSegmentationIdc=(view.getUint8(offset++)&15)<<8|view.getUint8(offset++);
+const parallelismType=view.getUint8(offset++)&3;const chromaFormatIdc=view.getUint8(offset++)&3;const bitDepthLumaMinus8=view.
+getUint8(offset++)&7;const bitDepthChromaMinus8=view.getUint8(offset++)&7;const avgFrameRate=view.getUint16(
+offset,false);offset+=2;const byte21=view.getUint8(offset++);const constantFrameRate=byte21>>6&3;const numTemporalLayers=byte21>>
+3&7;const temporalIdNested=byte21>>2&1;const lengthSizeMinusOne=byte21&3;const numOfArrays=view.getUint8(
+offset++);const arrays=[];for(let i=0;i<numOfArrays;i++){const arrByte=view.getUint8(offset++);const arrayCompleteness=arrByte>>
+7&1;const nalUnitType=arrByte&63;const numNalus=view.getUint16(offset,false);offset+=2;const nalUnits=[];
+for(let j=0;j<numNalus;j++){const nalUnitLength=view.getUint16(offset,false);offset+=2;nalUnits.push(
+data2.subarray(offset,offset+nalUnitLength));offset+=nalUnitLength}arrays.push({arrayCompleteness,nalUnitType,
+nalUnits})}return{configurationVersion,generalProfileSpace,generalTierFlag,generalProfileIdc,generalProfileCompatibilityFlags,
+generalConstraintIndicatorFlags,generalLevelIdc,minSpatialSegmentationIdc,parallelismType,chromaFormatIdc,
+bitDepthLumaMinus8,bitDepthChromaMinus8,avgFrameRate,constantFrameRate,numTemporalLayers,temporalIdNested,
+lengthSizeMinusOne,arrays}}catch(error2){Logging._error("Error deserializing HEVC Decoder Configurat\
+ion Record:",error2);return null}};(function(HevcNaluOrderState2){HevcNaluOrderState2[HevcNaluOrderState2["\
+audAllowed"]=0]="audAllowed";HevcNaluOrderState2[HevcNaluOrderState2["beforeFirstVcl"]=1]="beforeFir\
+stVcl";HevcNaluOrderState2[HevcNaluOrderState2["afterFirstVcl"]=2]="afterFirstVcl";HevcNaluOrderState2[HevcNaluOrderState2["\
+eoBitstreamAllowed"]=3]="eoBitstreamAllowed";HevcNaluOrderState2[HevcNaluOrderState2["noMoreDataAllo\
+wed"]=4]="noMoreDataAllowed"})(HevcNaluOrderState||(HevcNaluOrderState={}));VP9_COLOR_SPACE_TABLE={1:{
+colourPrimaries:5,transferCharacteristics:6,matrixCoefficients:5},2:{colourPrimaries:1,transferCharacteristics:1,
+matrixCoefficients:1},3:{colourPrimaries:6,transferCharacteristics:6,matrixCoefficients:6},4:{colourPrimaries:7,
+transferCharacteristics:7,matrixCoefficients:7},5:{colourPrimaries:9,transferCharacteristics:14,matrixCoefficients:9},
+7:{colourPrimaries:1,transferCharacteristics:13,matrixCoefficients:0}};extractVp9CodecInfoFromPacket=
+packet=>{const bitstream=new Bitstream(packet);const frameMarker=bitstream.readBits(2);if(frameMarker!==
+2){return null}const profileLowBit=bitstream.readBits(1);const profileHighBit=bitstream.readBits(1);
+const profile=(profileHighBit<<1)+profileLowBit;if(profile===3){bitstream.skipBits(1)}const showExistingFrame=bitstream.
+readBits(1);if(showExistingFrame===1){return null}const frameType=bitstream.readBits(1);if(frameType!==
+0){return null}bitstream.skipBits(2);const syncCode=bitstream.readBits(24);if(syncCode!==4817730){return null}
+let bitDepth=8;if(profile>=2){const tenOrTwelveBit=bitstream.readBits(1);bitDepth=tenOrTwelveBit?12:
+10}const colorSpace=bitstream.readBits(3);let chromaSubsampling=0;let videoFullRangeFlag=0;if(colorSpace!==
+7){const colorRange=bitstream.readBits(1);videoFullRangeFlag=colorRange;if(profile===1||profile===3){
+const subsamplingX=bitstream.readBits(1);const subsamplingY=bitstream.readBits(1);chromaSubsampling=
+!subsamplingX&&!subsamplingY?3:subsamplingX&&!subsamplingY?2:1;bitstream.skipBits(1)}else{chromaSubsampling=
+1}}else{chromaSubsampling=3;videoFullRangeFlag=1}const widthMinusOne=bitstream.readBits(16);const heightMinusOne=bitstream.
+readBits(16);const width=widthMinusOne+1;const height=heightMinusOne+1;const pictureSize=width*height;
+let level=last(VP9_LEVEL_TABLE).level;for(const entry of VP9_LEVEL_TABLE){if(pictureSize<=entry.maxPictureSize){
+level=entry.level;break}}const colorSpaceValues=VP9_COLOR_SPACE_TABLE[colorSpace];const colourPrimaries=colorSpaceValues?.
+colourPrimaries??2;const transferCharacteristics=colorSpaceValues?.transferCharacteristics??2;const matrixCoefficients=colorSpaceValues?.
+matrixCoefficients??2;return{profile,level,bitDepth,chromaSubsampling,videoFullRangeFlag,colourPrimaries,
+transferCharacteristics,matrixCoefficients}};vp9CodecInfoHasColorInfo=info=>{return info.colourPrimaries!==
+2||info.transferCharacteristics!==2||info.matrixCoefficients!==2};iterateAv1PacketObus=function*(packet){
+const bitstream=new Bitstream(packet);const readLeb128=()=>{let value=0;for(let i=0;i<8;i++){const byte=bitstream.
+readAlignedByte();value+=(byte&127)*2**(i*7);if(!(byte&128)){break}if(i===7&&byte&128){return null}}
+if(value>2**32-1){return null}return value};while(bitstream.getBitsLeft()>=8){bitstream.skipBits(1);
+const obuType=bitstream.readBits(4);const obuExtension=bitstream.readBits(1);const obuHasSizeField=bitstream.
+readBits(1);bitstream.skipBits(1);if(obuExtension){bitstream.skipBits(8)}let obuSize;if(obuHasSizeField){
+const obuSizeValue=readLeb128();if(obuSizeValue===null)return;obuSize=obuSizeValue}else{obuSize=Math.
+floor(bitstream.getBitsLeft()/8)}assert2(bitstream.pos%8===0);yield{type:obuType,data:packet.subarray(
+bitstream.pos/8,bitstream.pos/8+obuSize)};bitstream.skipBits(obuSize*8)}};extractAv1CodecInfoFromPacket=
+packet=>{for(const{type,data:data2}of iterateAv1PacketObus(packet)){if(type!==1){continue}const bitstream=new Bitstream(
+data2);const seqProfile=bitstream.readBits(3);const stillPicture=bitstream.readBits(1);const reducedStillPictureHeader=bitstream.
+readBits(1);let seqLevel=0;let seqTier=0;let bufferDelayLengthMinus1=0;if(reducedStillPictureHeader){
+seqLevel=bitstream.readBits(5)}else{const timingInfoPresentFlag=bitstream.readBits(1);let decoderModelInfoPresentFlag=0;
+if(timingInfoPresentFlag){bitstream.skipBits(32);bitstream.skipBits(32);const equalPictureInterval=bitstream.
+readBits(1);if(equalPictureInterval){let leadingZeros=0;while(leadingZeros<32&&!bitstream.readBits(1)){
+leadingZeros++}if(leadingZeros<32){bitstream.skipBits(leadingZeros)}}decoderModelInfoPresentFlag=bitstream.
+readBits(1);if(decoderModelInfoPresentFlag){bufferDelayLengthMinus1=bitstream.readBits(5);bitstream.
+skipBits(32);bitstream.skipBits(5);bitstream.skipBits(5)}}const initialDisplayDelayPresentFlag=bitstream.
+readBits(1);const operatingPointsCntMinus1=bitstream.readBits(5);for(let i=0;i<=operatingPointsCntMinus1;i++){
+bitstream.skipBits(12);const seqLevelIdx=bitstream.readBits(5);if(i===0){seqLevel=seqLevelIdx}if(seqLevelIdx>
+7){const seqTierTemp=bitstream.readBits(1);if(i===0){seqTier=seqTierTemp}}if(decoderModelInfoPresentFlag){
+const decoderModelPresentForThisOp=bitstream.readBits(1);if(decoderModelPresentForThisOp){const n=bufferDelayLengthMinus1+
+1;bitstream.skipBits(n);bitstream.skipBits(n);bitstream.skipBits(1)}}if(initialDisplayDelayPresentFlag){
+const initialDisplayDelayPresentForThisOp=bitstream.readBits(1);if(initialDisplayDelayPresentForThisOp){
+bitstream.skipBits(4)}}}}const frameWidthBitsMinus1=bitstream.readBits(4);const frameHeightBitsMinus1=bitstream.
+readBits(4);const n1=frameWidthBitsMinus1+1;bitstream.skipBits(n1);const n2=frameHeightBitsMinus1+1;
+bitstream.skipBits(n2);let frameIdNumbersPresentFlag=0;if(reducedStillPictureHeader){frameIdNumbersPresentFlag=
+0}else{frameIdNumbersPresentFlag=bitstream.readBits(1)}if(frameIdNumbersPresentFlag){bitstream.skipBits(
+4);bitstream.skipBits(3)}bitstream.skipBits(1);bitstream.skipBits(1);bitstream.skipBits(1);if(!reducedStillPictureHeader){
+bitstream.skipBits(1);bitstream.skipBits(1);bitstream.skipBits(1);bitstream.skipBits(1);const enableOrderHint=bitstream.
+readBits(1);if(enableOrderHint){bitstream.skipBits(1);bitstream.skipBits(1)}const seqChooseScreenContentTools=bitstream.
+readBits(1);let seqForceScreenContentTools=0;if(seqChooseScreenContentTools){seqForceScreenContentTools=
+2}else{seqForceScreenContentTools=bitstream.readBits(1)}if(seqForceScreenContentTools>0){const seqChooseIntegerMv=bitstream.
+readBits(1);if(!seqChooseIntegerMv){bitstream.skipBits(1)}}if(enableOrderHint){bitstream.skipBits(3)}}
+bitstream.skipBits(1);bitstream.skipBits(1);bitstream.skipBits(1);const highBitdepth=bitstream.readBits(
+1);let bitDepth=8;if(seqProfile===2&&highBitdepth){const twelveBit=bitstream.readBits(1);bitDepth=twelveBit?
+12:10}else if(seqProfile<=2){bitDepth=highBitdepth?10:8}let monochrome=0;if(seqProfile!==1){monochrome=
+bitstream.readBits(1)}let colourPrimaries=2;let transferCharacteristics=2;let matrixCoefficients=2;const colorDescriptionPresentFlag=bitstream.
+readBits(1);if(colorDescriptionPresentFlag){colourPrimaries=bitstream.readBits(8);transferCharacteristics=
+bitstream.readBits(8);matrixCoefficients=bitstream.readBits(8)}let videoFullRangeFlag=0;let chromaSubsamplingX=1;
+let chromaSubsamplingY=1;let chromaSamplePosition=0;if(monochrome){videoFullRangeFlag=bitstream.readBits(
+1)}else if(colourPrimaries===1&&transferCharacteristics===13&&matrixCoefficients===0){videoFullRangeFlag=
+1;chromaSubsamplingX=0;chromaSubsamplingY=0}else{videoFullRangeFlag=bitstream.readBits(1);if(seqProfile===
+0){chromaSubsamplingX=1;chromaSubsamplingY=1}else if(seqProfile===1){chromaSubsamplingX=0;chromaSubsamplingY=
+0}else{if(bitDepth===12){chromaSubsamplingX=bitstream.readBits(1);chromaSubsamplingY=chromaSubsamplingX?
+bitstream.readBits(1):0}else{chromaSubsamplingX=1;chromaSubsamplingY=0}}if(chromaSubsamplingX&&chromaSubsamplingY){
+chromaSamplePosition=bitstream.readBits(2)}}return{profile:seqProfile,level:seqLevel,tier:seqTier,bitDepth,
+monochrome,chromaSubsamplingX,chromaSubsamplingY,chromaSamplePosition,videoFullRangeFlag,colourPrimaries,
+transferCharacteristics,matrixCoefficients}}return null};av1CodecInfoHasColorInfo=info=>{return info.
+colourPrimaries!==2||info.transferCharacteristics!==2||info.matrixCoefficients!==2};extractProresCodecInfoFromPacket=
+packet=>{const frameHeaderStart=8;if(packet.length<frameHeaderStart+28){return null}const view=toDataView(
+packet);if(view.getUint32(4)!==1768124518){return null}const headerSize=view.getUint16(frameHeaderStart);
+if(headerSize<28){return null}return{fullRange:false,colourPrimaries:view.getUint8(frameHeaderStart+
+14),transferCharacteristics:view.getUint8(frameHeaderStart+15),matrixCoefficients:view.getUint8(frameHeaderStart+
+16)}};determineVideoPacketType=(codec,decoderConfig,packetData)=>{switch(codec){case"avc":{for(const loc of iterateAvcNalUnits(
+packetData,decoderConfig)){const nalTypeByte=packetData[loc.offset];const type=extractNalUnitTypeForAvc(
+nalTypeByte);if(type>=AvcNalUnitType.NON_IDR_SLICE&&type<=AvcNalUnitType.SLICE_DPC){return"delta"}if(type===
+AvcNalUnitType.IDR){return"key"}if(type===AvcNalUnitType.SEI&&!isChromium()){const nalUnit=packetData.
+subarray(loc.offset,loc.offset+loc.length);const bytes=removeEmulationPreventionBytes(nalUnit);let pos=1;
+do{let payloadType=0;while(true){const nextByte=bytes[pos++];if(nextByte===void 0)break;payloadType+=
+nextByte;if(nextByte<255){break}}let payloadSize=0;while(true){const nextByte=bytes[pos++];if(nextByte===
+void 0)break;payloadSize+=nextByte;if(nextByte<255){break}}const PAYLOAD_TYPE_RECOVERY_POINT=6;if(payloadType===
+PAYLOAD_TYPE_RECOVERY_POINT){const bitstream=new Bitstream(bytes);bitstream.pos=8*pos;const recoveryFrameCount=readExpGolomb(
+bitstream);const exactMatchFlag=bitstream.readBits(1);if(recoveryFrameCount===0&&exactMatchFlag===1){
+return"key"}}pos+=payloadSize}while(pos<bytes.length-1)}}return"delta"};case"hevc":{for(const loc of iterateHevcNalUnits(
+packetData,decoderConfig)){const type=extractNalUnitTypeForHevc(packetData[loc.offset]);if(type<HevcNalUnitType.
+BLA_W_LP){return"delta"}if(type<=HevcNalUnitType.RSV_IRAP_VCL23){return"key"}}return"delta"};case"vp\
+8":{const frameType=packetData[0]&1;return frameType===0?"key":"delta"};case"vp9":{const bitstream=new Bitstream(
+packetData);if(bitstream.readBits(2)!==2){return null};const profileLowBit=bitstream.readBits(1);const profileHighBit=bitstream.
+readBits(1);const profile=(profileHighBit<<1)+profileLowBit;if(profile===3){bitstream.skipBits(1)}const showExistingFrame=bitstream.
+readBits(1);if(showExistingFrame){return null}const frameType=bitstream.readBits(1);return frameType===
+0?"key":"delta"};case"av1":{let reducedStillPictureHeader=false;for(const{type,data:data2}of iterateAv1PacketObus(
+packetData)){if(type===1){const bitstream=new Bitstream(data2);bitstream.skipBits(4);reducedStillPictureHeader=
+!!bitstream.readBits(1)}else if(type===3||type===6||type===7){if(reducedStillPictureHeader){return"k\
+ey"}const bitstream=new Bitstream(data2);const showExistingFrame=bitstream.readBits(1);if(showExistingFrame){
+return null}const frameType=bitstream.readBits(2);return frameType===0?"key":"delta"}}return null};case"\
+prores":{return"key"};default:{assertNever(codec);assert2(false)};}};(function(FlacBlockType2){FlacBlockType2[FlacBlockType2["\
+STREAMINFO"]=0]="STREAMINFO";FlacBlockType2[FlacBlockType2["VORBIS_COMMENT"]=4]="VORBIS_COMMENT";FlacBlockType2[FlacBlockType2["\
+PICTURE"]=6]="PICTURE"})(FlacBlockType||(FlacBlockType={}));AC3_ACMOD_CHANNEL_COUNTS=[2,1,2,3,3,4,4,
+5];parseAc3SyncFrame=data2=>{if(data2.length<7){return null}if(data2[0]!==11||data2[1]!==119){return null}
+const bitstream=new Bitstream(data2);bitstream.skipBits(16);bitstream.skipBits(16);const fscod=bitstream.
+readBits(2);if(fscod===3){return null}const frmsizecod=bitstream.readBits(6);const bsid=bitstream.readBits(
+5);if(bsid>8){return null}const bsmod=bitstream.readBits(3);const acmod=bitstream.readBits(3);if((acmod&
+1)!==0&&acmod!==1){bitstream.skipBits(2)}if((acmod&4)!==0){bitstream.skipBits(2)}if(acmod===2){bitstream.
+skipBits(2)}const lfeon=bitstream.readBits(1);const bitRateCode=Math.floor(frmsizecod/2);return{fscod,
+bsid,bsmod,acmod,lfeon,bitRateCode}};AC3_FRAME_SIZES=[64*2,69*2,96*2,64*2,70*2,96*2,80*2,87*2,120*2,
+80*2,88*2,120*2,96*2,104*2,144*2,96*2,105*2,144*2,112*2,121*2,168*2,112*2,122*2,168*2,128*2,139*2,192*
+2,128*2,140*2,192*2,160*2,174*2,240*2,160*2,175*2,240*2,192*2,208*2,288*2,192*2,209*2,288*2,224*2,243*
+2,336*2,224*2,244*2,336*2,256*2,278*2,384*2,256*2,279*2,384*2,320*2,348*2,480*2,320*2,349*2,480*2,384*
+2,417*2,576*2,384*2,418*2,576*2,448*2,487*2,672*2,448*2,488*2,672*2,512*2,557*2,768*2,512*2,558*2,768*
+2,640*2,696*2,960*2,640*2,697*2,960*2,768*2,835*2,1152*2,768*2,836*2,1152*2,896*2,975*2,1344*2,896*2,
+976*2,1344*2,1024*2,1114*2,1536*2,1024*2,1115*2,1536*2,1152*2,1253*2,1728*2,1152*2,1254*2,1728*2,1280*
+2,1393*2,1920*2,1280*2,1394*2,1920*2];AC3_SAMPLES_PER_FRAME=1536;AC3_REGISTRATION_DESCRIPTOR=new Uint8Array(
+[5,4,65,67,45,51]);EAC3_REGISTRATION_DESCRIPTOR=new Uint8Array([5,4,69,65,67,51]);EAC3_NUMBLKS_TABLE=
+[1,2,3,6];parseEac3SyncFrame=data2=>{if(data2.length<6){return null}if(data2[0]!==11||data2[1]!==119){
+return null}const bitstream=new Bitstream(data2);bitstream.skipBits(16);const strmtyp=bitstream.readBits(
+2);bitstream.skipBits(3);if(strmtyp!==0&&strmtyp!==2){return null}const frmsiz=bitstream.readBits(11);
+const fscod=bitstream.readBits(2);let fscod2=0;let numblkscod;if(fscod===3){fscod2=bitstream.readBits(
+2);numblkscod=3}else{numblkscod=bitstream.readBits(2)}const acmod=bitstream.readBits(3);const lfeon=bitstream.
+readBits(1);const bsid=bitstream.readBits(5);if(bsid<11||bsid>16){return null}const numblks=EAC3_NUMBLKS_TABLE[numblkscod];
+let fs;if(fscod<3){fs=AC3_SAMPLE_RATES[fscod]/1e3}else{fs=EAC3_REDUCED_SAMPLE_RATES[fscod2]/1e3}const dataRate=Math.
+round((frmsiz+1)*fs/(numblks*16));const bsmod=0;const numDepSub=0;const chanLoc=0;const substream={fscod,
+fscod2,bsid,bsmod,acmod,lfeon,numDepSub,chanLoc};return{dataRate,substreams:[substream]}};parseEac3Config=
+data2=>{if(data2.length<2){return null}const bitstream=new Bitstream(data2);const dataRate=bitstream.
+readBits(13);const numIndSub=bitstream.readBits(3);const substreams=[];for(let i=0;i<=numIndSub;i++){
+if(Math.ceil(bitstream.pos/8)+3>data2.length){break}const fscod=bitstream.readBits(2);const bsid=bitstream.
+readBits(5);bitstream.skipBits(1);bitstream.skipBits(1);const bsmod=bitstream.readBits(3);const acmod=bitstream.
+readBits(3);const lfeon=bitstream.readBits(1);bitstream.skipBits(3);const numDepSub=bitstream.readBits(
+4);let chanLoc=0;if(numDepSub>0){chanLoc=bitstream.readBits(9)}else{bitstream.skipBits(1)}substreams.
+push({fscod,fscod2:null,bsid,bsmod,acmod,lfeon,numDepSub,chanLoc})}if(substreams.length===0){return null}
+return{dataRate,substreams}};getEac3SampleRate=config=>{const sub=config.substreams[0];assert2(sub);
+if(sub.fscod<3){return AC3_SAMPLE_RATES[sub.fscod]}else if(sub.fscod2!==null&&sub.fscod2<3){return EAC3_REDUCED_SAMPLE_RATES[sub.
+fscod2]}return null};getEac3ChannelCount=config=>{const sub=config.substreams[0];assert2(sub);let channels=AC3_ACMOD_CHANNEL_COUNTS[sub.
+acmod]+sub.lfeon;if(sub.numDepSub>0){const CHAN_LOC_COUNTS=[2,2,1,1,2,2,2,1,1];for(let bit=0;bit<9;bit++){
+if(sub.chanLoc&1<<8-bit){channels+=CHAN_LOC_COUNTS[bit]}}}return channels};DTS_EXSS_SYNC_WORD=1683496997;
+DTS_CORE_FRAME_HEADER_SIZE=18;DTS_EXSS_HEADER_PREFIX_SIZE=10;DTS_EXSS_MAX_HEADER_SIZE=4096;DTS_PCM_BLOCK_SAMPLES=
+32;DTS_SPECIFIC_BOX_SIZE=20;DTS_SUBBAND_SAMPLES=8;DTS_CORE_SAMPLE_RATES=[0,8e3,16e3,32e3,0,0,11025,22050,
+44100,0,0,12e3,24e3,48e3,96e3,192e3];DTS_CORE_BIT_RATES=[32e3,56e3,64e3,96e3,112e3,128e3,192e3,224e3,
+256e3,32e4,384e3,448e3,512e3,576e3,64e4,768e3,96e4,1024e3,1152e3,128e4,1344e3,1408e3,1411200,1472e3,
+1536e3,192e4,2048e3,3072e3,384e4,0,0,0];DTS_PCM_RESOLUTIONS=[16,16,20,20,0,24,24,0];DTS_AMODE_CHANNEL_COUNTS=
+[1,2,2,2,2,3,3,4,4,5,6,6,6,7,8,8];DTS_AMODE_CHANNEL_LAYOUTS=[1,2,2,2,2,3,18,19,6,7,518,323,83,519,582,
+535];DTS_CHANNEL_LAYOUT_LFE1=8;DTS_CHANNEL_LAYOUT_PAIR_MASK=44646;DTS_EXSS_REF_CLOCKS=[32e3,44100,48e3,
+0];DTS_EXSS_SAMPLE_RATES=[8e3,16e3,32e3,64e3,128e3,22050,44100,88200,176400,352800,12e3,24e3,48e3,96e3,
+192e3,384e3];DTS_SPECIFIC_BOX_FRAME_DURATIONS=[512,1024,2048,4096];parseDtsFrame=data2=>{const core=parseDtsCoreFrameHeader(
+data2);const view=toDataView(data2);let offset=core?Math.ceil(core.frameSize/4)*4:0;let firstExss=null;
+while(offset+4<=data2.length&&view.getUint32(offset)===DTS_EXSS_SYNC_WORD){const exss=parseDtsExssHeader(
+data2.subarray(offset));if(!exss){break}firstExss??=exss;offset+=exss.frameSize}if(core){return{frameSize:firstExss?
+offset:core.frameSize,sampleRate:core.sampleRate,numberOfChannels:core.numberOfChannels,sampleCount:core.
+sampleCount,channelLayout:core.channelLayout,pcmResolution:core.pcmResolution,bitRate:core.bitRate,core,
+hasExtensions:firstExss!==null}}if(!firstExss?.asset){return null}const{asset}=firstExss;return{frameSize:offset,
+sampleRate:asset.sampleRate,numberOfChannels:asset.numberOfChannels,sampleCount:asset.sampleCount,channelLayout:asset.
+channelLayout,pcmResolution:asset.pcmResolution,bitRate:0,core:null,hasExtensions:true}};extractDtsFourCcFromPacket=
+data2=>{const frameInfo=parseDtsFrame(data2);if(!frameInfo?.core){return null}return frameInfo.hasExtensions?
+"dtsh":"dtsc"};parseDtsCoreFrameHeader=data2=>{if(data2.length<DTS_CORE_FRAME_HEADER_SIZE){return null}
+if(data2[0]!==127||data2[1]!==254||data2[2]!==128||data2[3]!==1){return null}const bitstream=new Bitstream(
+data2);bitstream.skipBits(32);bitstream.skipBits(1);if(bitstream.readBits(5)!==DTS_PCM_BLOCK_SAMPLES-
+1){return null}const cpf=bitstream.readBits(1);const npcmblocks=bitstream.readBits(7)+1;if(npcmblocks%
+DTS_SUBBAND_SAMPLES!==0){return null}const frameSize=bitstream.readBits(14)+1;if(frameSize<96){return null}
+const amode=bitstream.readBits(6);if(amode>=DTS_AMODE_CHANNEL_COUNTS.length){return null}const sampleRate3=DTS_CORE_SAMPLE_RATES[bitstream.
+readBits(4)];if(sampleRate3===0){return null}const bitRate=DTS_CORE_BIT_RATES[bitstream.readBits(5)];
+if(bitstream.readBits(1)!==0){return null}bitstream.skipBits(1+1+1+1);bitstream.skipBits(3+1+1);const lff=bitstream.
+readBits(2);if(lff===3){return null}bitstream.skipBits(1);if(cpf){bitstream.skipBits(16)}bitstream.skipBits(
+1+4+2);const pcmResolution=DTS_PCM_RESOLUTIONS[bitstream.readBits(3)];if(pcmResolution===0){return null}
+const lfePresent=lff!==0;return{frameSize,sampleRate:sampleRate3,numberOfChannels:DTS_AMODE_CHANNEL_COUNTS[amode]+
+(lfePresent?1:0),sampleCount:npcmblocks*DTS_PCM_BLOCK_SAMPLES,channelLayout:DTS_AMODE_CHANNEL_LAYOUTS[amode]|
+(lfePresent?DTS_CHANNEL_LAYOUT_LFE1:0),amode,lfePresent,bitRate,pcmResolution}};parseDtsExssHeader=data2=>{
+if(data2.length<DTS_EXSS_HEADER_PREFIX_SIZE){return null}if(data2[0]!==100||data2[1]!==88||data2[2]!==
+32||data2[3]!==37){return null}const bitstream=new Bitstream(data2);bitstream.skipBits(32);bitstream.
+skipBits(8);const extSsIndex=bitstream.readBits(2);const wideHeader=bitstream.readBits(1);const headerSizeBits=8+
+4*wideHeader;const frameSizeBits=16+4*wideHeader;bitstream.skipBits(headerSizeBits);const frameSize=bitstream.
+readBits(frameSizeBits)+1;const incomplete={frameSize,asset:null};if(!bitstream.readBits(1)){return incomplete}
+const refClock=DTS_EXSS_REF_CLOCKS[bitstream.readBits(2)];const frameDurationCycles=512*(bitstream.readBits(
+3)+1);if(bitstream.readBits(1)){bitstream.skipBits(32+4)}const numAudioPresentations=bitstream.readBits(
+3)+1;const numAssets=bitstream.readBits(3)+1;const activeExssMasks=[];for(let i=0;i<numAudioPresentations;i++){
+activeExssMasks.push(bitstream.readBits(extSsIndex+1))}for(const mask of activeExssMasks){bitstream.
+skipBits(8*popcount(mask))}if(bitstream.readBits(1)){bitstream.skipBits(2);const spkrMaskBits=bitstream.
+readBits(2)+1<<2;const numMixOutConfigs=bitstream.readBits(2)+1;bitstream.skipBits(numMixOutConfigs*
+spkrMaskBits)}for(let i=0;i<numAssets;i++){bitstream.skipBits(frameSizeBits)}bitstream.skipBits(9);bitstream.
+skipBits(3);if(bitstream.readBits(1)){bitstream.skipBits(4)}if(bitstream.readBits(1)){bitstream.skipBits(
+24)}if(bitstream.readBits(1)){bitstream.skipBits(8*(bitstream.readBits(10)+1))}const pcmResolution=bitstream.
+readBits(5)+1;const sampleRate3=DTS_EXSS_SAMPLE_RATES[bitstream.readBits(4)];const numberOfChannels=bitstream.
+readBits(8)+1;let channelLayout=0;if(bitstream.readBits(1)){if(numberOfChannels>2){bitstream.skipBits(
+1)}if(numberOfChannels>6){bitstream.skipBits(1)}if(bitstream.readBits(1)){const spkrMaskBits=bitstream.
+readBits(2)+1<<2;channelLayout=bitstream.readBits(spkrMaskBits)}}if(refClock===0||bitstream.getBitsLeft()<
+0){return incomplete}return{frameSize,asset:{sampleRate:sampleRate3,numberOfChannels,sampleCount:Math.
+round(frameDurationCycles*sampleRate3/refClock),channelLayout,pcmResolution}}};parseDtsSpecificBox=data2=>{
+if(data2.length<DTS_SPECIFIC_BOX_SIZE){return null}const view=toDataView(data2);const sampleRate3=view.
+getUint32(0);if(sampleRate3===0){return null}const bitstream=new Bitstream(data2);bitstream.seekToByte(
+13);const frameDuration=bitstream.readBits(2);bitstream.skipBits(5);const coreLfePresent=bitstream.readBits(
+1);const coreLayout=bitstream.readBits(6);bitstream.skipBits(14);bitstream.skipBits(1);bitstream.skipBits(
+3);const channelLayout=bitstream.readBits(16);let numberOfChannels=null;if(channelLayout!==0){numberOfChannels=
+getDtsChannelCount(channelLayout)}else if(coreLayout<DTS_AMODE_CHANNEL_COUNTS.length){numberOfChannels=
+DTS_AMODE_CHANNEL_COUNTS[coreLayout]+coreLfePresent}return{sampleRate:sampleRate3,maxBitrate:view.getUint32(
+4),avgBitrate:view.getUint32(8),pcmSampleDepth:data2[12],sampleCount:DTS_SPECIFIC_BOX_FRAME_DURATIONS[frameDuration],
+channelLayout,numberOfChannels}};getDtsChannelCount=channelLayout=>{return popcount(channelLayout)+popcount(
+channelLayout&DTS_CHANNEL_LAYOUT_PAIR_MASK)}}});var VIDEO_CODECS,PCM_AUDIO_CODECS,NON_PCM_AUDIO_CODECS,AUDIO_CODECS,AVC_LEVEL_TABLE,VP9_LEVEL_TABLE,
+VP9_DEFAULT_SUFFIX,AV1_DEFAULT_SUFFIX,PRORES_FOURCCS,DTS_FOURCCS,extractVideoCodecString,extractColorSpace,
+extractAudioCodecString,OPUS_SAMPLE_RATE,PCM_CODEC_REGEX,parsePcmCodec,inferCodecFromCodecString,VALID_VIDEO_CODEC_STRING_PREFIXES;
+var init_codec=__esm({"node_modules/mediabunny/dist/modules/src/codec.js"(){init_aac_misc();init_codec_data();
+init_misc();VIDEO_CODECS=["avc","hevc","vp9","av1","vp8","prores"];PCM_AUDIO_CODECS=["pcm-s16","pcm-\
+s16be","pcm-s24","pcm-s24be","pcm-s32","pcm-s32be","pcm-f32","pcm-f32be","pcm-f64","pcm-f64be","pcm-\
+u8","pcm-s8","ulaw","alaw"];NON_PCM_AUDIO_CODECS=["aac","opus","mp3","vorbis","flac","ac3","eac3","d\
+ts"];AUDIO_CODECS=[...NON_PCM_AUDIO_CODECS,...PCM_AUDIO_CODECS];AVC_LEVEL_TABLE=[{maxMacroblocks:99,
+maxBitrate:64e3,maxDpbMbs:396,level:10},{maxMacroblocks:396,maxBitrate:192e3,maxDpbMbs:900,level:11},
+{maxMacroblocks:396,maxBitrate:384e3,maxDpbMbs:2376,level:12},{maxMacroblocks:396,maxBitrate:768e3,maxDpbMbs:2376,
+level:13},{maxMacroblocks:396,maxBitrate:2e6,maxDpbMbs:2376,level:20},{maxMacroblocks:792,maxBitrate:4e6,
+maxDpbMbs:4752,level:21},{maxMacroblocks:1620,maxBitrate:4e6,maxDpbMbs:8100,level:22},{maxMacroblocks:1620,
+maxBitrate:1e7,maxDpbMbs:8100,level:30},{maxMacroblocks:3600,maxBitrate:14e6,maxDpbMbs:18e3,level:31},
+{maxMacroblocks:5120,maxBitrate:2e7,maxDpbMbs:20480,level:32},{maxMacroblocks:8192,maxBitrate:2e7,maxDpbMbs:32768,
+level:40},{maxMacroblocks:8192,maxBitrate:5e7,maxDpbMbs:32768,level:41},{maxMacroblocks:8704,maxBitrate:5e7,
+maxDpbMbs:34816,level:42},{maxMacroblocks:22080,maxBitrate:135e6,maxDpbMbs:110400,level:50},{maxMacroblocks:36864,
+maxBitrate:24e7,maxDpbMbs:184320,level:51},{maxMacroblocks:36864,maxBitrate:24e7,maxDpbMbs:184320,level:52},
+{maxMacroblocks:139264,maxBitrate:24e7,maxDpbMbs:696320,level:60},{maxMacroblocks:139264,maxBitrate:48e7,
+maxDpbMbs:696320,level:61},{maxMacroblocks:139264,maxBitrate:8e8,maxDpbMbs:696320,level:62}];VP9_LEVEL_TABLE=
+[{maxPictureSize:36864,maxBitrate:2e5,level:10},{maxPictureSize:73728,maxBitrate:8e5,level:11},{maxPictureSize:122880,
+maxBitrate:18e5,level:20},{maxPictureSize:245760,maxBitrate:36e5,level:21},{maxPictureSize:552960,maxBitrate:72e5,
+level:30},{maxPictureSize:983040,maxBitrate:12e6,level:31},{maxPictureSize:2228224,maxBitrate:18e6,level:40},
+{maxPictureSize:2228224,maxBitrate:3e7,level:41},{maxPictureSize:8912896,maxBitrate:6e7,level:50},{maxPictureSize:8912896,
+maxBitrate:12e7,level:51},{maxPictureSize:8912896,maxBitrate:18e7,level:52},{maxPictureSize:35651584,
+maxBitrate:18e7,level:60},{maxPictureSize:35651584,maxBitrate:24e7,level:61},{maxPictureSize:35651584,
+maxBitrate:48e7,level:62}];VP9_DEFAULT_SUFFIX=".01.01.01.01.00";AV1_DEFAULT_SUFFIX=".0.110.01.01.01.\
+0";PRORES_FOURCCS=["ap4x","ap4h","apch","apcn","apcs","apco"];DTS_FOURCCS=["dtsc","dtsh","dtsl","dts\
+e"];extractVideoCodecString=trackInfo=>{const{codec,codecDescription,colorSpace,avcCodecInfo,hevcCodecInfo,
+vp9CodecInfo,av1CodecInfo,proresFormat}=trackInfo;if(codec==="avc"){assert2(trackInfo.avcType!==null);
+if(avcCodecInfo){const bytes=new Uint8Array([avcCodecInfo.avcProfileIndication,avcCodecInfo.profileCompatibility,
+avcCodecInfo.avcLevelIndication]);return`avc${trackInfo.avcType}.${bytesToHexString(bytes)}`}if(!codecDescription||
+codecDescription.byteLength<4){throw new TypeError("AVC decoder description is not provided or is no\
+t at least 4 bytes long.")}return`avc${trackInfo.avcType}.${bytesToHexString(codecDescription.subarray(
+1,4))}`}else if(codec==="hevc"){let generalProfileSpace;let generalProfileIdc;let compatibilityFlags;
+let generalTierFlag;let generalLevelIdc;let constraintFlags;if(hevcCodecInfo){generalProfileSpace=hevcCodecInfo.
+generalProfileSpace;generalProfileIdc=hevcCodecInfo.generalProfileIdc;compatibilityFlags=reverseBitsU32(
+hevcCodecInfo.generalProfileCompatibilityFlags);generalTierFlag=hevcCodecInfo.generalTierFlag;generalLevelIdc=
+hevcCodecInfo.generalLevelIdc;constraintFlags=[...hevcCodecInfo.generalConstraintIndicatorFlags]}else{
+if(!codecDescription||codecDescription.byteLength<23){throw new TypeError("HEVC decoder description \
+is not provided or is not at least 23 bytes long.")}const view=toDataView(codecDescription);const profileByte=view.
+getUint8(1);generalProfileSpace=profileByte>>6&3;generalProfileIdc=profileByte&31;compatibilityFlags=
+reverseBitsU32(view.getUint32(2));generalTierFlag=profileByte>>5&1;generalLevelIdc=view.getUint8(12);
+constraintFlags=[];for(let i=0;i<6;i++){constraintFlags.push(view.getUint8(6+i))}}let codecString="h\
+ev1.";codecString+=["","A","B","C"][generalProfileSpace]+generalProfileIdc;codecString+=".";codecString+=
+compatibilityFlags.toString(16).toUpperCase();codecString+=".";codecString+=generalTierFlag===0?"L":
+"H";codecString+=generalLevelIdc;while(constraintFlags.length>0&&constraintFlags[constraintFlags.length-
+1]===0){constraintFlags.pop()}if(constraintFlags.length>0){codecString+=".";codecString+=constraintFlags.
+map(x=>x.toString(16).toUpperCase()).join(".")}return codecString}else if(codec==="vp8"){return"vp8"}else if(codec===
+"vp9"){if(!vp9CodecInfo){const pictureSize=trackInfo.width*trackInfo.height;let level2=last(VP9_LEVEL_TABLE).
+level;for(const entry of VP9_LEVEL_TABLE){if(pictureSize<=entry.maxPictureSize){level2=entry.level;break}}
+return`vp09.00.${level2.toString().padStart(2,"0")}.08`}const profile=vp9CodecInfo.profile.toString().
+padStart(2,"0");const level=vp9CodecInfo.level.toString().padStart(2,"0");const bitDepth=vp9CodecInfo.
+bitDepth.toString().padStart(2,"0");const chromaSubsampling=vp9CodecInfo.chromaSubsampling.toString().
+padStart(2,"0");const colourPrimaries=vp9CodecInfo.colourPrimaries.toString().padStart(2,"0");const transferCharacteristics=vp9CodecInfo.
+transferCharacteristics.toString().padStart(2,"0");const matrixCoefficients=vp9CodecInfo.matrixCoefficients.
+toString().padStart(2,"0");const videoFullRangeFlag=vp9CodecInfo.videoFullRangeFlag.toString().padStart(
+2,"0");let string=`vp09.${profile}.${level}.${bitDepth}.${chromaSubsampling}`;string+=`.${colourPrimaries}\
+.${transferCharacteristics}.${matrixCoefficients}.${videoFullRangeFlag}`;if(string.endsWith(VP9_DEFAULT_SUFFIX)){
+string=string.slice(0,-VP9_DEFAULT_SUFFIX.length)}return string}else if(codec==="av1"){if(!av1CodecInfo){
+const pictureSize=trackInfo.width*trackInfo.height;let level2=last(VP9_LEVEL_TABLE).level;for(const entry of VP9_LEVEL_TABLE){
+if(pictureSize<=entry.maxPictureSize){level2=entry.level;break}}return`av01.0.${level2.toString().padStart(
+2,"0")}M.08`}const profile=av1CodecInfo.profile;const level=av1CodecInfo.level.toString().padStart(2,
+"0");const tier=av1CodecInfo.tier?"H":"M";const bitDepth=av1CodecInfo.bitDepth.toString().padStart(2,
+"0");const monochrome=av1CodecInfo.monochrome?"1":"0";const chromaSubsampling=100*av1CodecInfo.chromaSubsamplingX+
+10*av1CodecInfo.chromaSubsamplingY+1*(av1CodecInfo.chromaSubsamplingX&&av1CodecInfo.chromaSubsamplingY?
+av1CodecInfo.chromaSamplePosition:0);const colorPrimaries=colorSpace?.primaries?COLOR_PRIMARIES_MAP[colorSpace.
+primaries]:1;const transferCharacteristics=colorSpace?.transfer?TRANSFER_CHARACTERISTICS_MAP[colorSpace.
+transfer]:1;const matrixCoefficients=colorSpace?.matrix?MATRIX_COEFFICIENTS_MAP[colorSpace.matrix]:1;
+const videoFullRangeFlag=colorSpace?.fullRange?1:0;let string=`av01.${profile}.${level}${tier}.${bitDepth}`;
+string+=`.${monochrome}.${chromaSubsampling.toString().padStart(3,"0")}`;string+=`.${colorPrimaries.
+toString().padStart(2,"0")}`;string+=`.${transferCharacteristics.toString().padStart(2,"0")}`;string+=
+`.${matrixCoefficients.toString().padStart(2,"0")}`;string+=`.${videoFullRangeFlag}`;if(string.endsWith(
+AV1_DEFAULT_SUFFIX)){string=string.slice(0,-AV1_DEFAULT_SUFFIX.length)}return string}else if(codec===
+"prores"){return proresFormat??"apch"}else if(codec!==null){assertNever(codec)}throw new TypeError(`\
+Unhandled codec '${codec}'.`)};extractColorSpace=info=>{switch(info.codec){case"avc":{let spsData=info.
+avcCodecInfo?.sequenceParameterSets[0];if(!spsData&&info.codecDescription){spsData=deserializeAvcDecoderConfigurationRecord(
+info.codecDescription)?.sequenceParameterSets[0]}if(spsData){const spsInfo=parseAvcSps(spsData);if(spsInfo){
+return{primaries:COLOR_PRIMARIES_MAP_INVERSE[spsInfo.colourPrimaries],transfer:TRANSFER_CHARACTERISTICS_MAP_INVERSE[spsInfo.
+transferCharacteristics],matrix:MATRIX_COEFFICIENTS_MAP_INVERSE[spsInfo.matrixCoefficients],fullRange:!!spsInfo.
+fullRangeFlag}}}};break;case"hevc":{let spsData=info.hevcCodecInfo?.arrays.find(x=>x.nalUnitType===HevcNalUnitType.
+SPS_NUT)?.nalUnits[0];if(!spsData&&info.codecDescription){spsData=deserializeHevcDecoderConfigurationRecord(
+info.codecDescription)?.arrays.find(x=>x.nalUnitType===HevcNalUnitType.SPS_NUT)?.nalUnits[0]}if(spsData){
+const spsInfo=parseHevcSps(spsData);if(spsInfo){return{primaries:COLOR_PRIMARIES_MAP_INVERSE[spsInfo.
+colourPrimaries],transfer:TRANSFER_CHARACTERISTICS_MAP_INVERSE[spsInfo.transferCharacteristics],matrix:MATRIX_COEFFICIENTS_MAP_INVERSE[spsInfo.
+matrixCoefficients],fullRange:!!spsInfo.fullRangeFlag}}}};break;case"vp8":{};break;case"vp9":{if(info.
+vp9CodecInfo){return{primaries:COLOR_PRIMARIES_MAP_INVERSE[info.vp9CodecInfo.colourPrimaries],transfer:TRANSFER_CHARACTERISTICS_MAP_INVERSE[info.
+vp9CodecInfo.transferCharacteristics],matrix:MATRIX_COEFFICIENTS_MAP_INVERSE[info.vp9CodecInfo.matrixCoefficients],
+fullRange:!!info.vp9CodecInfo.videoFullRangeFlag}}};break;case"av1":{if(info.av1CodecInfo){return{primaries:COLOR_PRIMARIES_MAP_INVERSE[info.
+av1CodecInfo.colourPrimaries],transfer:TRANSFER_CHARACTERISTICS_MAP_INVERSE[info.av1CodecInfo.transferCharacteristics],
+matrix:MATRIX_COEFFICIENTS_MAP_INVERSE[info.av1CodecInfo.matrixCoefficients],fullRange:!!info.av1CodecInfo.
+videoFullRangeFlag}}};break;case"prores":{if(info.proresCodecInfo){return{primaries:COLOR_PRIMARIES_MAP_INVERSE[info.
+proresCodecInfo.colourPrimaries],transfer:TRANSFER_CHARACTERISTICS_MAP_INVERSE[info.proresCodecInfo.
+transferCharacteristics],matrix:MATRIX_COEFFICIENTS_MAP_INVERSE[info.proresCodecInfo.matrixCoefficients],
+fullRange:info.proresCodecInfo.fullRange}}};break}return{primaries:void 0,transfer:void 0,matrix:void 0,
+fullRange:void 0}};extractAudioCodecString=trackInfo=>{const{codec,codecDescription,aacCodecInfo,dtsFormat}=trackInfo;
+if(codec==="aac"){if(!aacCodecInfo){throw new TypeError("AAC codec info must be provided.")}if(aacCodecInfo.
+isMpeg2){return"mp4a.67"}else{let objectType;if(aacCodecInfo.objectType!==null){objectType=aacCodecInfo.
+objectType}else{const audioSpecificConfig=parseAacAudioSpecificConfig(codecDescription);objectType=audioSpecificConfig.
+objectType}return`mp4a.40.${objectType}`}}else if(codec==="mp3"){return"mp3"}else if(codec==="opus"){
+return"opus"}else if(codec==="vorbis"){return"vorbis"}else if(codec==="flac"){return"flac"}else if(codec===
+"ac3"){return"ac-3"}else if(codec==="eac3"){return"ec-3"}else if(codec==="dts"){return dtsFormat??"d\
+tsc"}else if(codec&&PCM_AUDIO_CODECS.includes(codec)){return codec}throw new TypeError(`Unhandled co\
+dec '${codec}'.`)};OPUS_SAMPLE_RATE=48e3;PCM_CODEC_REGEX=/^pcm-([usf])(\d+)(be)?$/;parsePcmCodec=codec=>{
+assert2(PCM_AUDIO_CODECS.includes(codec));if(codec==="ulaw"){return{dataType:"ulaw",sampleSize:1,littleEndian:true,
+silentValue:255}}else if(codec==="alaw"){return{dataType:"alaw",sampleSize:1,littleEndian:true,silentValue:213}}
+const match=PCM_CODEC_REGEX.exec(codec);assert2(match);let dataType;if(match[1]==="u"){dataType="uns\
+igned"}else if(match[1]==="s"){dataType="signed"}else{dataType="float"}const sampleSize=Number(match[2])/
+8;const littleEndian=match[3]!=="be";const silentValue=codec==="pcm-u8"?2**7:0;return{dataType,sampleSize,
+littleEndian,silentValue}};inferCodecFromCodecString=codecString=>{if(codecString.startsWith("avc1")||
+codecString.startsWith("avc3")){return"avc"}else if(codecString.startsWith("hev1")||codecString.startsWith(
+"hvc1")){return"hevc"}else if(codecString==="vp8"){return"vp8"}else if(codecString.startsWith("vp09")){
+return"vp9"}else if(codecString.startsWith("av01")){return"av1"}else if(PRORES_FOURCCS.includes(codecString)){
+return"prores"}if(codecString==="mp3"||codecString==="mp4a.69"||codecString==="mp4a.6B"||codecString===
+"mp4a.6b"||codecString==="mp4a.40.34"){return"mp3"}else if(codecString.startsWith("mp4a.40.")||codecString===
+"mp4a.67"){return"aac"}else if(codecString==="opus"){return"opus"}else if(codecString==="vorbis"){return"\
+vorbis"}else if(codecString==="flac"){return"flac"}else if(codecString==="ac-3"||codecString==="ac3"){
+return"ac3"}else if(codecString==="ec-3"||codecString==="eac3"){return"eac3"}else if(DTS_FOURCCS.includes(
+codecString)){return"dts"}else if(codecString==="ulaw"){return"ulaw"}else if(codecString==="alaw"){return"\
+alaw"}else if(PCM_CODEC_REGEX.test(codecString)){return codecString}if(codecString==="webvtt"){return"\
+webvtt"}return null};VALID_VIDEO_CODEC_STRING_PREFIXES=["avc1","avc3","hev1","hvc1","vp8","vp09","av\
+01",...PRORES_FOURCCS]}});var MP3_FRAME_HEADER_SIZE,SAMPLING_RATES,KILOBIT_RATES,computeMp3FrameSize,readMp3FrameHeader,decodeSynchsafe,
+XingFlags,getMp3ChannelCount;var init_mp3_misc=__esm({"node_modules/mediabunny/dist/modules/shared/m\
+p3-misc.js"(){MP3_FRAME_HEADER_SIZE=4;SAMPLING_RATES=[44100,48e3,32e3];KILOBIT_RATES=[-1,-1,-1,-1,-1,
+-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,32,40,48,56,64,80,96,112,128,160,192,224,256,320,-1,-1,32,48,56,
+64,80,96,112,128,160,192,224,256,320,384,-1,-1,32,64,96,128,160,192,224,256,288,320,352,384,416,448,
+-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,8,16,24,32,40,48,56,64,80,96,112,128,144,160,-1,
+-1,8,16,24,32,40,48,56,64,80,96,112,128,144,160,-1,-1,32,48,56,64,80,96,112,128,144,160,176,192,224,
+256,-1];computeMp3FrameSize=(lowSamplingFrequency,layer,bitrate,sampleRate3,padding)=>{if(layer===0){
+return 0}else if(layer===1){return Math.floor(144*bitrate/(sampleRate3<<lowSamplingFrequency))+padding}else if(layer===
+2){return Math.floor(144*bitrate/sampleRate3)+padding}else{return(Math.floor(12*bitrate/sampleRate3)+
+padding)*4}};readMp3FrameHeader=(word,remainingBytes)=>{const firstByte=word>>>24;const secondByte=word>>>
+16&255;const thirdByte=word>>>8&255;const fourthByte=word&255;if(firstByte!==255&&secondByte!==255&&
+thirdByte!==255&&fourthByte!==255){return{header:null,bytesAdvanced:4}}if(firstByte!==255){return{header:null,
+bytesAdvanced:1}}if((secondByte&224)!==224){return{header:null,bytesAdvanced:1}}let lowSamplingFrequency=0;
+let mpeg25=0;if(secondByte&1<<4){lowSamplingFrequency=secondByte&1<<3?0:1}else{lowSamplingFrequency=
+1;mpeg25=1}const mpegVersionId=secondByte>>3&3;const layer=secondByte>>1&3;const bitrateIndex=thirdByte>>
+4&15;const frequencyIndex=(thirdByte>>2&3)%3;const padding=thirdByte>>1&1;const channel=fourthByte>>
+6&3;const modeExtension=fourthByte>>4&3;const copyright=fourthByte>>3&1;const original=fourthByte>>2&
+1;const emphasis=fourthByte&3;const kilobitRate=KILOBIT_RATES[lowSamplingFrequency*16*4+layer*16+bitrateIndex];
+if(kilobitRate===-1){return{header:null,bytesAdvanced:1}}const bitrate=kilobitRate*1e3;const sampleRate3=SAMPLING_RATES[frequencyIndex]>>
+lowSamplingFrequency+mpeg25;const frameLength=computeMp3FrameSize(lowSamplingFrequency,layer,bitrate,
+sampleRate3,padding);if(remainingBytes!==null&&remainingBytes<frameLength){return{header:null,bytesAdvanced:1}}
+let audioSamplesInFrame;if(mpegVersionId===3){audioSamplesInFrame=layer===3?384:1152}else{if(layer===
+3){audioSamplesInFrame=384}else if(layer===2){audioSamplesInFrame=1152}else{audioSamplesInFrame=576}}
+return{header:{totalSize:frameLength,mpegVersionId,lowSamplingFrequency,layer,bitrate,frequencyIndex,
+sampleRate:sampleRate3,channel,modeExtension,copyright,original,emphasis,audioSamplesInFrame},bytesAdvanced:1}};
+decodeSynchsafe=synchsafed=>{let mask=2130706432;let unsynchsafed=0;while(mask!==0){unsynchsafed>>=1;
+unsynchsafed|=synchsafed&mask;mask>>=8}return unsynchsafed};(function(XingFlags2){XingFlags2[XingFlags2["\
+FrameCount"]=1]="FrameCount";XingFlags2[XingFlags2["FileSize"]=2]="FileSize";XingFlags2[XingFlags2["\
+Toc"]=4]="Toc"})(XingFlags||(XingFlags={}));getMp3ChannelCount=channel=>{return channel===3?1:2}}});var Demuxer;var init_demuxer=__esm({"node_modules/mediabunny/dist/modules/src/demuxer.js"(){Demuxer=
+class{constructor(input){this.input=input}dispose(){}}}});var PLACEHOLDER_DATA,EncodedPacket;var init_packet=__esm({"node_modules/mediabunny/dist/modules/src/\
+packet.js"(){init_misc();PLACEHOLDER_DATA=new Uint8Array(0);EncodedPacket=class _EncodedPacket{constructor(data2,type,timestamp,duration,sequenceNumber=-1,byteLength,sideData){
+this.data=data2;this.type=type;this.timestamp=timestamp;this.duration=duration;this.sequenceNumber=sequenceNumber;
+if(data2===PLACEHOLDER_DATA&&byteLength===void 0){throw new Error("Internal error: byteLength must b\
+e explicitly provided when constructing metadata-only packets.")}if(byteLength===void 0){byteLength=
+data2.byteLength}if(!(data2 instanceof Uint8Array)){throw new TypeError("data must be a Uint8Array.")}
+if(type!=="key"&&type!=="delta"){throw new TypeError('type must be either "key" or "delta".')}if(!Number.
+isFinite(timestamp)){throw new TypeError("timestamp must be a number.")}if(!Number.isFinite(duration)||
+duration<0){throw new TypeError("duration must be a non-negative number.")}if(!Number.isFinite(sequenceNumber)){
+throw new TypeError("sequenceNumber must be a number.")}if(!Number.isInteger(byteLength)||byteLength<
+0){throw new TypeError("byteLength must be a non-negative integer.")}if(sideData!==void 0&&(typeof sideData!==
+"object"||!sideData)){throw new TypeError("sideData, when provided, must be an object.")}if(sideData?.
+alpha!==void 0&&!(sideData.alpha instanceof Uint8Array)){throw new TypeError("sideData.alpha, when p\
+rovided, must be a Uint8Array.")}if(sideData?.alphaByteLength!==void 0&&(!Number.isInteger(sideData.
+alphaByteLength)||sideData.alphaByteLength<0)){throw new TypeError("sideData.alphaByteLength, when p\
+rovided, must be a non-negative integer.")}this.byteLength=byteLength;this.sideData=sideData??{};if(this.
+sideData.alpha&&this.sideData.alphaByteLength===void 0){this.sideData.alphaByteLength=this.sideData.
+alpha.byteLength}}get isMetadataOnly(){return this.data===PLACEHOLDER_DATA}get microsecondTimestamp(){
+return Math.trunc(SECOND_TO_MICROSECOND_FACTOR*this.timestamp)}get microsecondDuration(){return Math.
+trunc(SECOND_TO_MICROSECOND_FACTOR*this.duration)}toEncodedVideoChunk(){if(this.isMetadataOnly){throw new TypeError(
+"Metadata-only packets cannot be converted to a video chunk.")}if(typeof EncodedVideoChunk==="undefi\
+ned"){throw new Error("EncodedVideoChunk is not available in this environment.")}return new EncodedVideoChunk(
+{data:this.data,type:this.type,timestamp:this.microsecondTimestamp,duration:this.microsecondDuration})}alphaToEncodedVideoChunk(type=this.
+type){if(!this.sideData.alpha){throw new TypeError("This packet does not contain alpha side data.")}
+if(this.isMetadataOnly){throw new TypeError("Metadata-only packets cannot be converted to a video ch\
+unk.")}if(typeof EncodedVideoChunk==="undefined"){throw new Error("EncodedVideoChunk is not availabl\
+e in this environment.")}return new EncodedVideoChunk({data:this.sideData.alpha,type,timestamp:this.
+microsecondTimestamp,duration:this.microsecondDuration})}toEncodedAudioChunk(){if(this.isMetadataOnly){
+throw new TypeError("Metadata-only packets cannot be converted to an audio chunk.")}if(typeof EncodedAudioChunk===
+"undefined"){throw new Error("EncodedAudioChunk is not available in this environment.")}return new EncodedAudioChunk(
+{data:this.data,type:this.type,timestamp:this.microsecondTimestamp,duration:this.microsecondDuration})}static fromEncodedChunk(chunk,sideData){
+if(!(chunk instanceof EncodedVideoChunk||chunk instanceof EncodedAudioChunk)){throw new TypeError("c\
+hunk must be an EncodedVideoChunk or EncodedAudioChunk.")}const data2=new Uint8Array(chunk.byteLength);
+chunk.copyTo(data2);return new _EncodedPacket(data2,chunk.type,chunk.timestamp/1e6,(chunk.duration??
+0)/1e6,void 0,void 0,sideData)}clone(options){if(options!==void 0&&(typeof options!=="object"||options===
+null)){throw new TypeError("options, when provided, must be an object.")}if(options?.data!==void 0&&
+!(options.data instanceof Uint8Array)){throw new TypeError("options.data, when provided, must be a U\
+int8Array.")}if(options?.type!==void 0&&options.type!=="key"&&options.type!=="delta"){throw new TypeError(
+'options.type, when provided, must be either "key" or "delta".')}if(options?.timestamp!==void 0&&!Number.
+isFinite(options.timestamp)){throw new TypeError("options.timestamp, when provided, must be a number\
+.")}if(options?.duration!==void 0&&!Number.isFinite(options.duration)){throw new TypeError("options.\
+duration, when provided, must be a number.")}if(options?.sequenceNumber!==void 0&&!Number.isFinite(options.
+sequenceNumber)){throw new TypeError("options.sequenceNumber, when provided, must be a number.")}if(options?.
+sideData!==void 0&&(typeof options.sideData!=="object"||options.sideData===null)){throw new TypeError(
+"options.sideData, when provided, must be an object.")}return new _EncodedPacket(options?.data??this.
+data,options?.type??this.type,options?.timestamp??this.timestamp,options?.duration??this.duration,options?.
+sequenceNumber??this.sequenceNumber,this.byteLength,options?.sideData??this.sideData)}}}});var buildIsobmffMimeType,parsePsshBoxContents,psshBoxesAreEqual;var init_isobmff_misc=__esm({"node_m\
+odules/mediabunny/dist/modules/src/isobmff/isobmff-misc.js"(){init_misc();buildIsobmffMimeType=info=>{
+const base=info.hasVideo?"video/":info.hasAudio?"audio/":"application/";let string=base+(info.isQuickTime?
+"quicktime":"mp4");if(info.codecStrings.length>0){const uniqueCodecMimeTypes=[...new Set(info.codecStrings)];
+string+=`; codecs="${uniqueCodecMimeTypes.join(", ")}"`}return string};parsePsshBoxContents=contents=>{
+const view=toDataView(contents);let pos=0;const version=view.getUint8(pos);pos+=1;pos+=3;const systemId=bytesToHexString(
+contents.subarray(pos,pos+16));pos+=16;let keyIds=null;if(version>0){const kidCount=view.getUint32(pos);
+pos+=4;if(kidCount>0){keyIds=[];for(let i=0;i<kidCount;i++){keyIds.push(bytesToHexString(contents.subarray(
+pos,pos+16)));pos+=16}}}const dataSize=view.getUint32(pos);pos+=4;return{systemId,keyIds,data:contents.
+slice(pos,pos+dataSize)}};psshBoxesAreEqual=(a,b)=>a.systemId===b.systemId&&uint8ArraysAreEqual(a.data,
+b.data)}});var MIN_BOX_HEADER_SIZE,MAX_BOX_HEADER_SIZE,readBoxHeader,readFixed_16_16,readFixed_2_30,readIsomVariableInteger,
+readMetadataStringShort,readDataBox;var init_isobmff_reader=__esm({"node_modules/mediabunny/dist/mod\
+ules/src/isobmff/isobmff-reader.js"(){init_metadata();init_misc();init_reader();MIN_BOX_HEADER_SIZE=
+8;MAX_BOX_HEADER_SIZE=16;readBoxHeader=slice=>{let totalSize=readU32Be(slice);const name=readAscii(slice,
+4);let headerSize=8;const hasLargeSize=totalSize===1;if(hasLargeSize){totalSize=readU64Be(slice);headerSize=
+16}const contentSize=totalSize-headerSize;if(contentSize<0){return null}return{name,totalSize,headerSize,
+contentSize}};readFixed_16_16=slice=>{return readI32Be(slice)/65536};readFixed_2_30=slice=>{return readI32Be(
+slice)/1073741824};readIsomVariableInteger=slice=>{let result=0;for(let i=0;i<4;i++){result<<=7;const nextByte=readU8(
+slice);result|=nextByte&127;if((nextByte&128)===0){break}}return result};readMetadataStringShort=slice=>{
+let stringLength=readU16Be(slice);slice.skip(2);stringLength=Math.min(stringLength,slice.remainingLength);
+return textDecoder.decode(readBytes(slice,stringLength))};readDataBox=slice=>{const header=readBoxHeader(
+slice);if(!header||header.name!=="data"){return null}if(slice.remainingLength<8){return null}const typeIndicator=readU32Be(
+slice);slice.skip(4);const data2=readBytes(slice,header.contentSize-8);switch(typeIndicator){case 1:
+return textDecoder.decode(data2);case 2:return new TextDecoder("utf-16be").decode(data2);case 13:return new RichImageData(
+data2,"image/jpeg");case 14:return new RichImageData(data2,"image/png");case 27:return new RichImageData(
+data2,"image/bmp");default:return data2}}}});var AES_128_BLOCK_SIZE,Te4,Td0,Td1,Td2,Td3,Td4,rcon,tablesGenerated,generateAesTables,Aes128CbcContext,
+createAes128CbcDecryptStream;var init_aes=__esm({"node_modules/mediabunny/dist/modules/src/aes.js"(){
+init_misc();init_reader();AES_128_BLOCK_SIZE=16;Te4=new Uint32Array(256);Td0=new Uint32Array(256);Td1=
+new Uint32Array(256);Td2=new Uint32Array(256);Td3=new Uint32Array(256);Td4=new Uint32Array(256);rcon=
+new Uint32Array(10);tablesGenerated=false;generateAesTables=()=>{const sbox=new Uint8Array(256);const log=new Uint8Array(
+256);const pow=new Uint8Array(256);for(let i=0,p=1;i<256;i++){pow[i]=p;log[p]=i;p=p^p<<1^(p&128?283:
+0)}const mul=(a,b)=>a&&b?pow[(log[a]+log[b])%255]:0;sbox[0]=99;for(let i=1;i<256;i++){const x=pow[255-
+log[i]];let s=x^x<<1^x<<2^x<<3^x<<4;s=s>>>8^s&255^99;sbox[i]=s}for(let i=0;i<256;i++){const s=sbox[i];
+const is=sbox.indexOf(i);Te4[i]=s<<24|s<<16|s<<8|s;Td4[i]=is<<24|is<<16|is<<8|is;const b0=mul(is,14);
+const b1=mul(is,9);const b2=mul(is,13);const b3=mul(is,11);const w=b0<<24|b1<<16|b2<<8|b3;Td0[i]=w;Td1[i]=
+w>>>8|w<<24;Td2[i]=w>>>16|w<<16;Td3[i]=w>>>24|w<<8}let r=1;for(let i=0;i<10;i++){rcon[i]=r<<24;r=r<<
+1^(r&128?283:0)}tablesGenerated=true};Aes128CbcContext=class{constructor(){this.roundkey=new Uint32Array(
+44);this.iv=new Uint32Array(AES_128_BLOCK_SIZE/Uint32Array.BYTES_PER_ELEMENT);this.in=new Uint8Array(
+AES_128_BLOCK_SIZE);this.out=new Uint8Array(AES_128_BLOCK_SIZE);this.inView=new DataView(this.in.buffer);
+this.outView=new DataView(this.out.buffer)}init({key,iv}){assert2(key.byteLength===16);assert2(iv.byteLength===
+16);if(!tablesGenerated){generateAesTables()}const keyView=new DataView(key.buffer,key.byteOffset,key.
+byteLength);const ivView=new DataView(iv.buffer,iv.byteOffset,iv.byteLength);this.roundkey[0]=keyView.
+getUint32(0,false);this.roundkey[1]=keyView.getUint32(4,false);this.roundkey[2]=keyView.getUint32(8,
+false);this.roundkey[3]=keyView.getUint32(12,false);this.iv[0]=ivView.getUint32(0,false);this.iv[1]=
+ivView.getUint32(4,false);this.iv[2]=ivView.getUint32(8,false);this.iv[3]=ivView.getUint32(12,false);
+for(let index=4;index<44;index+=4){const temp=this.roundkey[index-1];this.roundkey[index]=this.roundkey[index-
+4]^Te4[temp>>>16&255]&4278190080^Te4[temp>>>8&255]&16711680^Te4[temp>>>0&255]&65280^Te4[temp>>>24&255]&
+255^rcon[index/4-1];this.roundkey[index+1]=this.roundkey[index-3]^this.roundkey[index];this.roundkey[index+
+2]=this.roundkey[index-2]^this.roundkey[index+1];this.roundkey[index+3]=this.roundkey[index-1]^this.
+roundkey[index+2]}for(let i=0,j=40;i<j;i+=4,j-=4){for(let k=0;k<4;k++){const temp=this.roundkey[i+k];
+this.roundkey[i+k]=this.roundkey[j+k];this.roundkey[j+k]=temp}}for(let index=4;index<40;index+=4){for(let k=0;k<
+4;k++){const rk=this.roundkey[index+k];this.roundkey[index+k]=Td0[Te4[rk>>>24&255]&255]^Td1[Te4[rk>>>
+16&255]&255]^Td2[Te4[rk>>>8&255]&255]^Td3[Te4[rk>>>0&255]&255]}}}decrypt(){let s0=this.inView.getUint32(
+0,false)^this.roundkey[0];let s1=this.inView.getUint32(4,false)^this.roundkey[1];let s2=this.inView.
+getUint32(8,false)^this.roundkey[2];let s3=this.inView.getUint32(12,false)^this.roundkey[3];const temp0=this.
+inView.getUint32(0,false);const temp1=this.inView.getUint32(4,false);const temp2=this.inView.getUint32(
+8,false);const temp3=this.inView.getUint32(12,false);let t0,t1,t2,t3;for(let round2=1;round2<10;round2++){
+const offset=round2*4;t0=Td0[s0>>>24]^Td1[s3>>>16&255]^Td2[s2>>>8&255]^Td3[s1&255]^this.roundkey[offset];
+t1=Td0[s1>>>24]^Td1[s0>>>16&255]^Td2[s3>>>8&255]^Td3[s2&255]^this.roundkey[offset+1];t2=Td0[s2>>>24]^
+Td1[s1>>>16&255]^Td2[s0>>>8&255]^Td3[s3&255]^this.roundkey[offset+2];t3=Td0[s3>>>24]^Td1[s2>>>16&255]^
+Td2[s1>>>8&255]^Td3[s0&255]^this.roundkey[offset+3];s0=t0;s1=t1;s2=t2;s3=t3}const f0=Td4[s0>>>24&255]&
+4278190080^Td4[s3>>>16&255]&16711680^Td4[s2>>>8&255]&65280^Td4[s1>>>0&255]&255^this.roundkey[40];const f1=Td4[s1>>>
+24&255]&4278190080^Td4[s0>>>16&255]&16711680^Td4[s3>>>8&255]&65280^Td4[s2>>>0&255]&255^this.roundkey[41];
+const f2=Td4[s2>>>24&255]&4278190080^Td4[s1>>>16&255]&16711680^Td4[s0>>>8&255]&65280^Td4[s3>>>0&255]&
+255^this.roundkey[42];const f3=Td4[s3>>>24&255]&4278190080^Td4[s2>>>16&255]&16711680^Td4[s1>>>8&255]&
+65280^Td4[s0>>>0&255]&255^this.roundkey[43];this.outView.setUint32(0,f0^this.iv[0],false);this.outView.
+setUint32(4,f1^this.iv[1],false);this.outView.setUint32(8,f2^this.iv[2],false);this.outView.setUint32(
+12,f3^this.iv[3],false);this.iv[0]=temp0;this.iv[1]=temp1;this.iv[2]=temp2;this.iv[3]=temp3}};createAes128CbcDecryptStream=
+(reader,getInit,close)=>{let initted=false;let pos=0;const CHUNK_SIZE=2**16;const BLOCK_SIZE=16;const aesContext=new Aes128CbcContext;
+return new ReadableStream({pull:async controller=>{if(!initted){aesContext.init(await getInit());initted=
+true}const requestedLength=CHUNK_SIZE+BLOCK_SIZE;let nextSlice=reader.requestSliceRange(pos,0,requestedLength);
+if(isThenable(nextSlice))nextSlice=await nextSlice;if(!nextSlice||nextSlice.length===0){throw new Error(
+"Invalid ciphertext.")}const sliceLength=nextSlice.length;if(sliceLength%16!==0){throw new Error("In\
+valid ciphertext.")}const bytesToRead=sliceLength===requestedLength?sliceLength-BLOCK_SIZE:sliceLength;
+const input=readBytes(nextSlice,bytesToRead);const output=new Uint8Array(bytesToRead);for(let i=0;i<
+bytesToRead;i+=16){aesContext.in.set(input.subarray(i,i+16));aesContext.decrypt();output.set(aesContext.
+out,i)}if(bytesToRead<sliceLength){controller.enqueue(output);pos+=bytesToRead}else{const paddingLength=output[bytesToRead-
+1];if(paddingLength===0||paddingLength>16){throw new Error("Invalid PKCS#7 padding. Incorrect key or\
+ corrupted data.")}const trimmedOutput=output.subarray(0,bytesToRead-paddingLength);controller.enqueue(
+trimmedOutput);controller.close();close()}},cancel:()=>{close()}})}}});var IsobmffDemuxer,IsobmffTrackBacking,IsobmffVideoTrackBacking,IsobmffAudioTrackBacking,getSampleIndexForTimestamp,
+getKeyframeSampleIndexForTimestamp,getSampleInfo,getNextKeyframeIndexForSample,offsetFragmentTrackDataByTimestamp,
+extractRotationFromMatrix,sampleTableIsEmpty,getOrCreateEncryptionAuxInfo,resolveEncryptionAuxInfo,getDefaultSampleEncryption,
+decryptSample,decryptCtr,decryptCbcs,collectCryptRanges;var init_isobmff_demuxer=__esm({"node_module\
+s/mediabunny/dist/modules/src/isobmff/isobmff-demuxer.js"(){init_aac_misc();init_codec();init_codec_data();
+init_demuxer();init_misc();init_packet();init_isobmff_misc();init_isobmff_reader();init_reader();init_metadata();
+init_ac3_misc();init_bitstream();init_aes();init_logging();IsobmffDemuxer=class _IsobmffDemuxer extends Demuxer{constructor(input){
+super(input);this.moovSlice=null;this.currentTrack=null;this.tracks=[];this.metadataPromise=null;this.
+movieTimescale=-1;this.movieDurationInTimescale=-1;this.isQuickTime=false;this.metadataTags={};this.
+currentMetadataKeys=null;this.isFragmented=false;this.fragmentTrackDefaults=[];this.psshBoxes=[];this.
+currentFragment=null;this.lastReadFragment=null;this.decryptionKeyCache=new Map;this.reader=input._reader}async getTrackBackings(){
+await this.readMetadata();return this.tracks.map(track=>track.trackBacking)}async getMimeType(){await this.
+readMetadata();const backings=await this.getTrackBackings();const codecStrings=await Promise.all(backings.
+map(x=>x.getDecoderConfig().then(c=>c?.codec??null)));return buildIsobmffMimeType({isQuickTime:this.
+isQuickTime,hasVideo:this.tracks.some(x=>x.info?.type==="video"),hasAudio:this.tracks.some(x=>x.info?.
+type==="audio"),codecStrings:codecStrings.filter(Boolean)})}async getMetadataTags(){await this.readMetadata();
+return this.metadataTags}readMetadata(){return this.metadataPromise??=(async()=>{let currentPos=0;let lookForMfraBox=false;
+let foundMovieBoxes=false;while(true){let slice=this.reader.requestSliceRange(currentPos,MIN_BOX_HEADER_SIZE,
+MAX_BOX_HEADER_SIZE);if(isThenable(slice))slice=await slice;if(!slice)break;const startPos=currentPos;
+const boxInfo=readBoxHeader(slice);if(!boxInfo){break}if(boxInfo.name==="ftyp"||boxInfo.name==="styp"){
+const majorBrand=readAscii(slice,4);this.isQuickTime=majorBrand==="qt  "}else if(boxInfo.name==="moo\
+v"){let moovSlice=this.reader.requestSlice(slice.filePos,boxInfo.contentSize);if(isThenable(moovSlice))
+moovSlice=await moovSlice;if(!moovSlice)break;this.moovSlice=moovSlice;this.readContiguousBoxes(this.
+moovSlice);for(const track of this.tracks){const previousSegmentDurationsInSeconds=track.editListPreviousSegmentDurations/
+this.movieTimescale;track.editListOffset-=Math.round(previousSegmentDurationsInSeconds*track.timescale)}
+lookForMfraBox=this.isFragmented&&this.reader.fileSize!==null&&this.reader.fileSize>startPos+boxInfo.
+totalSize;foundMovieBoxes=true;break}else if(boxInfo.name==="moof"){if(!this.input._initInput){throw new Error(
+'"moof" box encountered with no "moov" box present; this file is likely a Segment as described in IS\
+O/IEC 14496-12 Section 8.16. A separate init file that contains a "moov" box is required to read thi\
+s file, please provide it using InputOptions.initInput.')}await this.copyMetadataFromInitInput(this.
+input._initInput);lookForMfraBox=false;foundMovieBoxes=true;break}currentPos=startPos+boxInfo.totalSize}
+if(!foundMovieBoxes&&this.input._initInput){await this.copyMetadataFromInitInput(this.input._initInput)}
+if(lookForMfraBox){assert2(this.reader.fileSize!==null);let lastWordSlice=this.reader.requestSlice(this.
+reader.fileSize-4,4);if(isThenable(lastWordSlice))lastWordSlice=await lastWordSlice;assert2(lastWordSlice);
+const lastWord=readU32Be(lastWordSlice);const potentialMfraPos=this.reader.fileSize-lastWord;if(potentialMfraPos>=
+0&&potentialMfraPos<=this.reader.fileSize-MAX_BOX_HEADER_SIZE){let mfraHeaderSlice=this.reader.requestSliceRange(
+potentialMfraPos,MIN_BOX_HEADER_SIZE,MAX_BOX_HEADER_SIZE);if(isThenable(mfraHeaderSlice))mfraHeaderSlice=
+await mfraHeaderSlice;if(mfraHeaderSlice){const boxInfo=readBoxHeader(mfraHeaderSlice);if(boxInfo&&boxInfo.
+name==="mfra"){let mfraSlice=this.reader.requestSlice(mfraHeaderSlice.filePos,boxInfo.contentSize);if(isThenable(
+mfraSlice))mfraSlice=await mfraSlice;if(mfraSlice){this.readContiguousBoxes(mfraSlice)}}}}}})()}async copyMetadataFromInitInput(initInput){
+const initDemuxer=await initInput._getDemuxer();if(initDemuxer.constructor!==_IsobmffDemuxer){throw new Error(
+"Init input must match the input's format.")}await initDemuxer.readMetadata();this.movieTimescale=initDemuxer.
+movieTimescale;this.movieDurationInTimescale=initDemuxer.movieDurationInTimescale;this.metadataTags=
+initDemuxer.metadataTags;this.isFragmented=true;this.fragmentTrackDefaults=initDemuxer.fragmentTrackDefaults;
+this.psshBoxes=initDemuxer.psshBoxes;for(const foreignTrack of initDemuxer.tracks){const track={id:foreignTrack.
+id,demuxer:this,trackBacking:null,disposition:foreignTrack.disposition,timescale:foreignTrack.timescale,
+durationInMediaTimescale:foreignTrack.durationInMediaTimescale,durationInMovieTimescale:foreignTrack.
+durationInMovieTimescale,rotation:foreignTrack.rotation,internalCodecId:foreignTrack.internalCodecId,
+name:foreignTrack.name,languageCode:foreignTrack.languageCode,sampleTableByteOffset:null,sampleTable:null,
+fragmentLookupTable:[],currentFragmentState:null,fragmentPositionCache:[],editListPreviousSegmentDurations:foreignTrack.
+editListPreviousSegmentDurations,editListOffset:foreignTrack.editListOffset,encryptionInfo:foreignTrack.
+encryptionInfo,encryptionAuxInfo:null,frmaCodecString:null,info:foreignTrack.info};if(foreignTrack.trackBacking){
+assert2(track.info);if(track.info.type==="video"&&track.info.width!==-1){const videoTrack=track;track.
+trackBacking=new IsobmffVideoTrackBacking(videoTrack);this.tracks.push(track)}else if(track.info.type===
+"audio"&&track.info.numberOfChannels!==-1){const audioTrack=track;track.trackBacking=new IsobmffAudioTrackBacking(
+audioTrack);this.tracks.push(track)}}else{}}}getSampleTableForTrack(internalTrack){if(internalTrack.
+sampleTable){return internalTrack.sampleTable}const sampleTable={sampleTimingEntries:[],sampleCompositionTimeOffsets:[],
+sampleSizes:[],keySampleIndices:null,chunkOffsets:[],sampleToChunk:[],presentationTimestamps:null,presentationTimestampIndexMap:null};
+internalTrack.sampleTable=sampleTable;if(internalTrack.sampleTableByteOffset===null){return sampleTable}
+assert2(this.moovSlice);const stblContainerSlice=this.moovSlice.slice(internalTrack.sampleTableByteOffset);
+this.currentTrack=internalTrack;this.traverseBox(stblContainerSlice);this.currentTrack=null;const isPcmCodec=internalTrack.
+info?.type==="audio"&&internalTrack.info.codec&&PCM_AUDIO_CODECS.includes(internalTrack.info.codec);
+if(isPcmCodec&&sampleTable.sampleCompositionTimeOffsets.length===0){assert2(internalTrack.info?.type===
+"audio");const pcmInfo=parsePcmCodec(internalTrack.info.codec);const newSampleTimingEntries=[];const newSampleSizes=[];
+for(let i=0;i<sampleTable.sampleToChunk.length;i++){const chunkEntry=sampleTable.sampleToChunk[i];const nextEntry=sampleTable.
+sampleToChunk[i+1];const chunkCount=(nextEntry?nextEntry.startChunkIndex:sampleTable.chunkOffsets.length)-
+chunkEntry.startChunkIndex;for(let j=0;j<chunkCount;j++){const startSampleIndex=chunkEntry.startSampleIndex+
+j*chunkEntry.samplesPerChunk;const endSampleIndex=startSampleIndex+chunkEntry.samplesPerChunk;const startTimingEntryIndex=binarySearchLessOrEqual(
+sampleTable.sampleTimingEntries,startSampleIndex,x=>x.startIndex);const startTimingEntry=sampleTable.
+sampleTimingEntries[startTimingEntryIndex];const endTimingEntryIndex=binarySearchLessOrEqual(sampleTable.
+sampleTimingEntries,endSampleIndex,x=>x.startIndex);const endTimingEntry=sampleTable.sampleTimingEntries[endTimingEntryIndex];
+const firstSampleTimestamp=startTimingEntry.startDecodeTimestamp+(startSampleIndex-startTimingEntry.
+startIndex)*startTimingEntry.delta;const lastSampleTimestamp=endTimingEntry.startDecodeTimestamp+(endSampleIndex-
+endTimingEntry.startIndex)*endTimingEntry.delta;const delta=lastSampleTimestamp-firstSampleTimestamp;
+const lastSampleTimingEntry=last(newSampleTimingEntries);if(lastSampleTimingEntry&&lastSampleTimingEntry.
+delta===delta){lastSampleTimingEntry.count++}else{newSampleTimingEntries.push({startIndex:chunkEntry.
+startChunkIndex+j,startDecodeTimestamp:firstSampleTimestamp,count:1,delta})}const chunkSize=chunkEntry.
+samplesPerChunk*pcmInfo.sampleSize*internalTrack.info.numberOfChannels;newSampleSizes.push(chunkSize)}
+chunkEntry.startSampleIndex=chunkEntry.startChunkIndex;chunkEntry.samplesPerChunk=1}sampleTable.sampleTimingEntries=
+newSampleTimingEntries;sampleTable.sampleSizes=newSampleSizes}if(sampleTable.sampleCompositionTimeOffsets.
+length>0){sampleTable.presentationTimestamps=[];for(const entry of sampleTable.sampleTimingEntries){
+for(let i=0;i<entry.count;i++){sampleTable.presentationTimestamps.push({presentationTimestamp:entry.
+startDecodeTimestamp+i*entry.delta,sampleIndex:entry.startIndex+i})}}for(const entry of sampleTable.
+sampleCompositionTimeOffsets){for(let i=0;i<entry.count;i++){const sampleIndex=entry.startIndex+i;const sample=sampleTable.
+presentationTimestamps[sampleIndex];if(!sample){continue}sample.presentationTimestamp+=entry.offset}}
+sampleTable.presentationTimestamps.sort((a,b)=>a.presentationTimestamp-b.presentationTimestamp);sampleTable.
+presentationTimestampIndexMap=Array(sampleTable.presentationTimestamps.length).fill(-1);for(let i=0;i<
+sampleTable.presentationTimestamps.length;i++){sampleTable.presentationTimestampIndexMap[sampleTable.
+presentationTimestamps[i].sampleIndex]=i}}else{}return sampleTable}async readFragment(startPos){if(this.
+lastReadFragment?.moofOffset===startPos){return this.lastReadFragment}let headerSlice=this.reader.requestSliceRange(
+startPos,MIN_BOX_HEADER_SIZE,MAX_BOX_HEADER_SIZE);if(isThenable(headerSlice))headerSlice=await headerSlice;
+assert2(headerSlice);const moofBoxInfo=readBoxHeader(headerSlice);assert2(moofBoxInfo?.name==="moof");
+let entireSlice=this.reader.requestSlice(startPos,moofBoxInfo.totalSize);if(isThenable(entireSlice))
+entireSlice=await entireSlice;assert2(entireSlice);this.traverseBox(entireSlice);const fragment=this.
+lastReadFragment;assert2(fragment&&fragment.moofOffset===startPos);for(const[,trackData]of fragment.
+trackData){const track=trackData.track;const{fragmentPositionCache}=track;if(!trackData.startTimestampIsFinal){
+const lookupEntry=track.fragmentLookupTable.find(x=>x.moofOffset===fragment.moofOffset);if(lookupEntry){
+offsetFragmentTrackDataByTimestamp(trackData,lookupEntry.timestamp)}else{const lastCacheIndex=binarySearchLessOrEqual(
+fragmentPositionCache,fragment.moofOffset-1,x=>x.moofOffset);if(lastCacheIndex!==-1){const lastCache=fragmentPositionCache[lastCacheIndex];
+offsetFragmentTrackDataByTimestamp(trackData,lastCache.endTimestamp)}else{}}trackData.startTimestampIsFinal=
+true}const insertionIndex=binarySearchLessOrEqual(fragmentPositionCache,trackData.startTimestamp,x=>x.
+startTimestamp);if(insertionIndex===-1||fragmentPositionCache[insertionIndex].moofOffset!==fragment.
+moofOffset){fragmentPositionCache.splice(insertionIndex+1,0,{moofOffset:fragment.moofOffset,startTimestamp:trackData.
+startTimestamp,endTimestamp:trackData.endTimestamp})}if(trackData.encryptionAuxInfo&&track.encryptionInfo){
+const entries=await resolveEncryptionAuxInfo(this.reader,track.encryptionInfo,trackData.encryptionAuxInfo);
+for(let i=0;i<Math.min(trackData.samples.length,entries.length);i++){const entry=entries[i];trackData.
+samples[i].encryption=entry}}}return fragment}readContiguousBoxes(slice){const startIndex=slice.filePos;
+while(slice.filePos-startIndex<=slice.length-MIN_BOX_HEADER_SIZE){const foundBox=this.traverseBox(slice);
+if(!foundBox){break}}}*iterateContiguousBoxes(slice){const startIndex=slice.filePos;while(slice.filePos-
+startIndex<=slice.length-MIN_BOX_HEADER_SIZE){const startPos=slice.filePos;const boxInfo=readBoxHeader(
+slice);if(!boxInfo){break}yield{boxInfo,slice};slice.filePos=startPos+boxInfo.totalSize}}traverseBox(slice){
+const startPos=slice.filePos;const boxInfo=readBoxHeader(slice);if(!boxInfo){return false}const contentStartPos=slice.
+filePos;const boxEndPos=startPos+boxInfo.totalSize;switch(boxInfo.name){case"mdia":case"minf":case"d\
+inf":case"mfra":case"edts":case"sinf":case"schi":{this.readContiguousBoxes(slice.slice(contentStartPos,
+boxInfo.contentSize))};break;case"mvhd":{const version=readU8(slice);slice.skip(3);if(version===1){slice.
+skip(8+8);this.movieTimescale=readU32Be(slice);this.movieDurationInTimescale=readU64Be(slice)}else{slice.
+skip(4+4);this.movieTimescale=readU32Be(slice);this.movieDurationInTimescale=readU32Be(slice)}};break;case"\
+trak":{const track={id:-1,demuxer:this,trackBacking:null,disposition:{...DEFAULT_TRACK_DISPOSITION,primary:false},
+info:null,timescale:-1,durationInMovieTimescale:-1,durationInMediaTimescale:-1,rotation:0,internalCodecId:null,
+name:null,languageCode:UNDETERMINED_LANGUAGE,sampleTableByteOffset:-1,sampleTable:null,fragmentLookupTable:[],
+currentFragmentState:null,fragmentPositionCache:[],editListPreviousSegmentDurations:0,editListOffset:0,
+encryptionInfo:null,encryptionAuxInfo:null,frmaCodecString:null};this.currentTrack=track;this.readContiguousBoxes(
+slice.slice(contentStartPos,boxInfo.contentSize));if(track.id!==-1&&track.timescale!==-1&&track.info!==
+null){if(track.info.type==="video"&&track.info.width!==-1){const videoTrack=track;track.trackBacking=
+new IsobmffVideoTrackBacking(videoTrack);this.tracks.push(track)}else if(track.info.type==="audio"&&
+track.info.numberOfChannels!==-1){const audioTrack=track;track.trackBacking=new IsobmffAudioTrackBacking(
+audioTrack);this.tracks.push(track)}}this.currentTrack=null};break;case"tkhd":{const track=this.currentTrack;
+if(!track){break}const version=readU8(slice);const flags=readU24Be(slice);const trackEnabled=!!(flags&
+1);track.disposition.default=trackEnabled;if(version===0){slice.skip(8);track.id=readU32Be(slice);slice.
+skip(4);track.durationInMovieTimescale=readU32Be(slice)}else if(version===1){slice.skip(16);track.id=
+readU32Be(slice);slice.skip(4);track.durationInMovieTimescale=readU64Be(slice)}else{throw new Error(
+`Incorrect track header version ${version}.`)}slice.skip(2*4+2+2+2+2);const matrix=[readFixed_16_16(
+slice),readFixed_16_16(slice),readFixed_2_30(slice),readFixed_16_16(slice),readFixed_16_16(slice),readFixed_2_30(
+slice),readFixed_16_16(slice),readFixed_16_16(slice),readFixed_2_30(slice)];const rotation=normalizeRotation(
+roundToMultiple(extractRotationFromMatrix(matrix),90));assert2(rotation===0||rotation===90||rotation===
+180||rotation===270);track.rotation=rotation};break;case"elst":{const track=this.currentTrack;if(!track){
+break}const version=readU8(slice);slice.skip(3);let relevantEntryFound=false;let previousSegmentDurations=0;
+const entryCount=readU32Be(slice);for(let i=0;i<entryCount;i++){const segmentDuration=version===1?readU64Be(
+slice):readU32Be(slice);const mediaTime=version===1?readI64Be(slice):readI32Be(slice);const mediaRate=readFixed_16_16(
+slice);if(segmentDuration===0){continue}if(relevantEntryFound){Logging._warn("Unsupported edit list:\
+ multiple edits are not currently supported. Only using first edit.");break}if(mediaTime===-1){previousSegmentDurations+=
+segmentDuration;continue}if(mediaRate!==1){Logging._warn("Unsupported edit list entry: media rate mu\
+st be 1.");break}track.editListPreviousSegmentDurations=previousSegmentDurations;track.editListOffset=
+mediaTime;relevantEntryFound=true}};break;case"mdhd":{const track=this.currentTrack;if(!track){break}
+const version=readU8(slice);slice.skip(3);if(version===0){slice.skip(8);track.timescale=readU32Be(slice);
+track.durationInMediaTimescale=readU32Be(slice)}else if(version===1){slice.skip(16);track.timescale=
+readU32Be(slice);track.durationInMediaTimescale=readU64Be(slice)}let language=readU16Be(slice);if(language>
+0){track.languageCode="";for(let i=0;i<3;i++){track.languageCode=String.fromCharCode(96+(language&31))+
+track.languageCode;language>>=5}if(!isIso639Dash2LanguageCode(track.languageCode)){track.languageCode=
+UNDETERMINED_LANGUAGE}}};break;case"hdlr":{const track=this.currentTrack;if(!track){break}slice.skip(
+8);const handlerType=readAscii(slice,4);if(handlerType==="vide"){track.info={type:"video",width:-1,height:-1,
+squarePixelWidth:-1,squarePixelHeight:-1,codec:null,codecDescription:null,colorSpace:{...EMPTY_COLOR_SPACE},
+avcType:null,avcCodecInfo:null,hevcCodecInfo:null,vp9CodecInfo:null,av1CodecInfo:null,proresCodecInfo:null,
+proresFormat:null}}else if(handlerType==="soun"){track.info={type:"audio",numberOfChannels:-1,sampleRate:-1,
+codec:null,codecDescription:null,aacCodecInfo:null,dtsFormat:null,pcmLittleEndian:false,pcmSampleSize:null}}}
+;break;case"stbl":{const track=this.currentTrack;if(!track){break}track.sampleTableByteOffset=startPos;
+this.readContiguousBoxes(slice.slice(contentStartPos,boxInfo.contentSize))};break;case"stsd":{const track=this.
+currentTrack;if(!track){break}if(track.info===null||track.sampleTable){break}const stsdVersion=readU8(
+slice);slice.skip(3);const entries=readU32Be(slice);for(let i=0;i<entries;i++){const sampleBoxStartPos=slice.
+filePos;const sampleBoxInfo=readBoxHeader(slice);if(!sampleBoxInfo){break}track.internalCodecId=sampleBoxInfo.
+name;const lowercaseBoxName=sampleBoxInfo.name.toLowerCase();if(track.info.type==="video"){slice.skip(
+6*1+2+2+2+3*4);track.info.width=readU16Be(slice);track.info.height=readU16Be(slice);track.info.squarePixelWidth=
+track.info.width;track.info.squarePixelHeight=track.info.height;slice.skip(4+4+4+2+32+2+2);track.frmaCodecString=
+null;this.readContiguousBoxes(slice.slice(slice.filePos,sampleBoxStartPos+sampleBoxInfo.totalSize-slice.
+filePos));const codecName=lowercaseBoxName==="encv"?track.frmaCodecString:lowercaseBoxName;track.frmaCodecString=
+null;if(codecName==="avc1"||codecName==="avc3"){track.info.codec="avc";track.info.avcType=codecName===
+"avc1"?1:3}else if(codecName==="hvc1"||codecName==="hev1"){track.info.codec="hevc"}else if(codecName===
+"vp08"){track.info.codec="vp8"}else if(codecName==="vp09"){track.info.codec="vp9"}else if(codecName===
+"av01"){track.info.codec="av1"}else if(PRORES_FOURCCS.includes(lowercaseBoxName)){track.info.codec="\
+prores";track.info.proresFormat=lowercaseBoxName}else if(codecName===null){Logging._warn(`Unknown en\
+crypted video codec due to missing frma box.`)}else{Logging._warn(`Unsupported video codec (sample e\
+ntry type '${sampleBoxInfo.name}').`)}}else{slice.skip(6*1+2);const version=readU16Be(slice);slice.skip(
+3*2);let channelCount=readU16Be(slice);let sampleSize=readU16Be(slice);slice.skip(2*2);let sampleRate3=readU32Be(
+slice)/65536;let lpcmFlags=null;if(stsdVersion===0&&version>0){if(version===1){slice.skip(4);sampleSize=
+8*readU32Be(slice);slice.skip(2*4)}else if(version===2){slice.skip(4);sampleRate3=readF64Be(slice);channelCount=
+readU32Be(slice);slice.skip(4);sampleSize=readU32Be(slice);lpcmFlags=readU32Be(slice);slice.skip(2*4)}}
+track.info.numberOfChannels=channelCount;track.info.sampleRate=sampleRate3;track.frmaCodecString=null;
+this.readContiguousBoxes(slice.slice(slice.filePos,sampleBoxStartPos+sampleBoxInfo.totalSize-slice.filePos));
+const codecName=lowercaseBoxName==="enca"?track.frmaCodecString:lowercaseBoxName;track.frmaCodecString=
+null;if(codecName==="mp4a"){}else if(codecName==="opus"){track.info.codec="opus";track.info.sampleRate=
+OPUS_SAMPLE_RATE}else if(codecName==="flac"){track.info.codec="flac"}else if(codecName==="ulaw"){track.
+info.codec="ulaw"}else if(codecName==="alaw"){track.info.codec="alaw"}else if(codecName==="ac-3"){track.
+info.codec="ac3"}else if(codecName==="ec-3"){track.info.codec="eac3"}else if(DTS_FOURCCS.includes(codecName)){
+track.info.codec="dts";track.info.dtsFormat=codecName}else if(codecName==="twos"){if(sampleSize===8){
+track.info.codec="pcm-s8"}else if(sampleSize===16){track.info.codec=track.info.pcmLittleEndian?"pcm-\
+s16":"pcm-s16be"}else{Logging._warn(`Unsupported sample size ${sampleSize} for codec 'twos'.`);track.
+info.codec=null}}else if(codecName==="sowt"){if(sampleSize===8){track.info.codec="pcm-s8"}else if(sampleSize===
+16){track.info.codec="pcm-s16"}else{Logging._warn(`Unsupported sample size ${sampleSize} for codec '\
+sowt'.`);track.info.codec=null}}else if(codecName==="raw "){track.info.codec="pcm-u8"}else if(codecName===
+"in24"){track.info.codec=track.info.pcmLittleEndian?"pcm-s24":"pcm-s24be"}else if(codecName==="in32"){
+track.info.codec=track.info.pcmLittleEndian?"pcm-s32":"pcm-s32be"}else if(codecName==="fl32"){track.
+info.codec=track.info.pcmLittleEndian?"pcm-f32":"pcm-f32be"}else if(codecName==="fl64"){track.info.codec=
+track.info.pcmLittleEndian?"pcm-f64":"pcm-f64be"}else if(codecName==="ipcm"){const pcmSampleSize=track.
+info.pcmSampleSize;if(track.info.pcmLittleEndian){if(pcmSampleSize===16){track.info.codec="pcm-s16"}else if(pcmSampleSize===
+24){track.info.codec="pcm-s24"}else if(pcmSampleSize===32){track.info.codec="pcm-s32"}else{Logging._warn(
+`Invalid ipcm sample size ${pcmSampleSize}.`);track.info.codec=null}}else{if(pcmSampleSize===16){track.
+info.codec="pcm-s16be"}else if(pcmSampleSize===24){track.info.codec="pcm-s24be"}else if(pcmSampleSize===
+32){track.info.codec="pcm-s32be"}else{Logging._warn(`Invalid ipcm sample size ${pcmSampleSize}.`);track.
+info.codec=null}}}else if(codecName==="fpcm"){const pcmSampleSize=track.info.pcmSampleSize;if(track.
+info.pcmLittleEndian){if(pcmSampleSize===32){track.info.codec="pcm-f32"}else if(pcmSampleSize===64){
+track.info.codec="pcm-f64"}else{Logging._warn(`Invalid fpcm sample size ${pcmSampleSize}.`);track.info.
+codec=null}}else{if(pcmSampleSize===32){track.info.codec="pcm-f32be"}else if(pcmSampleSize===64){track.
+info.codec="pcm-f64be"}else{Logging._warn(`Invalid fpcm sample size ${pcmSampleSize}.`);track.info.codec=
+null}}}else if(codecName==="lpcm"&&lpcmFlags!==null){const bytesPerSample=sampleSize+7>>3;const isFloat=Boolean(
+lpcmFlags&1);const isBigEndian=Boolean(lpcmFlags&2);const sFlags=lpcmFlags&4?-1:0;if(sampleSize>0&&sampleSize<=
+64){if(isFloat){if(sampleSize===32){track.info.codec=isBigEndian?"pcm-f32be":"pcm-f32"}}else{if(sFlags&
+1<<bytesPerSample-1){if(bytesPerSample===1){track.info.codec="pcm-s8"}else if(bytesPerSample===2){track.
+info.codec=isBigEndian?"pcm-s16be":"pcm-s16"}else if(bytesPerSample===3){track.info.codec=isBigEndian?
+"pcm-s24be":"pcm-s24"}else if(bytesPerSample===4){track.info.codec=isBigEndian?"pcm-s32be":"pcm-s32"}}else{
+if(bytesPerSample===1){track.info.codec="pcm-u8"}}}}if(track.info.codec===null){Logging._warn("Unsup\
+ported PCM format.")}}else if(codecName===null){Logging._warn(`Unknown encrypted audio codec due to \
+missing frma box.`)}else{Logging._warn(`Unsupported audio codec (sample entry type '${sampleBoxInfo.
+name}').`)}}slice.filePos=sampleBoxStartPos+sampleBoxInfo.totalSize}};break;case"frma":{const track=this.
+currentTrack;if(!track){break}const format=readAscii(slice,4);const lowercase=format.toLowerCase();track.
+frmaCodecString=lowercase};break;case"schm":{const track=this.currentTrack;if(!track){break}slice.skip(
+4);const schemeType=readAscii(slice,4);if(schemeType==="cenc"||schemeType==="cens"||schemeType==="cb\
+cs"){track.encryptionInfo={scheme:schemeType,defaultKid:null,defaultIsProtected:null,defaultPerSampleIvSize:null,
+defaultConstantIv:null,defaultCryptByteBlock:null,defaultSkipByteBlock:null}}else{Logging._warn(`Uns\
+upported encryption scheme '${schemeType}'.`)}};break;case"tenc":{const track=this.currentTrack;if(!track||
+!track.encryptionInfo){break}const version=readU8(slice);slice.skip(3);slice.skip(1);const patternByte=readU8(
+slice);if(version>0){track.encryptionInfo.defaultCryptByteBlock=patternByte>>4;track.encryptionInfo.
+defaultSkipByteBlock=patternByte&15}else{track.encryptionInfo.defaultCryptByteBlock=0;track.encryptionInfo.
+defaultSkipByteBlock=0}track.encryptionInfo.defaultIsProtected=readU8(slice)!==0;track.encryptionInfo.
+defaultPerSampleIvSize=readU8(slice);track.encryptionInfo.defaultKid=bytesToHexString(readBytes(slice,
+16));if(track.encryptionInfo.defaultIsProtected&&track.encryptionInfo.defaultPerSampleIvSize===0){const constantIvSize=readU8(
+slice);const constantIv=new Uint8Array(16);constantIv.set(readBytes(slice,constantIvSize),0);track.encryptionInfo.
+defaultConstantIv=constantIv}};break;case"avcC":{const track=this.currentTrack;if(!track){break}assert2(
+track.info);if(boxInfo.contentSize===0){break}track.info.codecDescription=readBytes(slice,boxInfo.contentSize)}
+;break;case"hvcC":{const track=this.currentTrack;if(!track){break}assert2(track.info);if(boxInfo.contentSize===
+0){break}track.info.codecDescription=readBytes(slice,boxInfo.contentSize)};break;case"vpcC":{const track=this.
+currentTrack;if(!track){break}assert2(track.info?.type==="video");slice.skip(4);const profile=readU8(
+slice);const level=readU8(slice);const thirdByte=readU8(slice);const bitDepth=thirdByte>>4;const chromaSubsampling=thirdByte>>
+1&7;const videoFullRangeFlag=thirdByte&1;const colourPrimaries=readU8(slice);const transferCharacteristics=readU8(
+slice);const matrixCoefficients=readU8(slice);track.info.vp9CodecInfo={profile,level,bitDepth,chromaSubsampling,
+videoFullRangeFlag,colourPrimaries,transferCharacteristics,matrixCoefficients}};break;case"av1C":{const track=this.
+currentTrack;if(!track){break}assert2(track.info?.type==="video");slice.skip(1);const secondByte=readU8(
+slice);const profile=secondByte>>5;const level=secondByte&31;const thirdByte=readU8(slice);const tier=thirdByte>>
+7;const highBitDepth=thirdByte>>6&1;const twelveBit=thirdByte>>5&1;const monochrome=thirdByte>>4&1;const chromaSubsamplingX=thirdByte>>
+3&1;const chromaSubsamplingY=thirdByte>>2&1;const chromaSamplePosition=thirdByte&3;const bitDepth=profile===
+2&&highBitDepth?twelveBit?12:10:highBitDepth?10:8;slice.skip(1);const configObus=readBytes(slice,boxInfo.
+contentSize-4);const configObuInfo=extractAv1CodecInfoFromPacket(configObus);track.info.av1CodecInfo=
+{profile,level,tier,bitDepth,monochrome,chromaSubsamplingX,chromaSubsamplingY,chromaSamplePosition,videoFullRangeFlag:configObuInfo?.
+videoFullRangeFlag??0,colourPrimaries:configObuInfo?.colourPrimaries??2,transferCharacteristics:configObuInfo?.
+transferCharacteristics??2,matrixCoefficients:configObuInfo?.matrixCoefficients??2}};break;case"colr":
+{const track=this.currentTrack;if(!track){break}assert2(track.info?.type==="video");const colourType=readAscii(
+slice,4);if(colourType!=="nclx"&&colourType!=="nclc"){break}const colourPrimaries=readU16Be(slice);const transferCharacteristics=readU16Be(
+slice);const matrixCoefficients=readU16Be(slice);let fullRange=void 0;if(colourType==="nclx"){fullRange=
+Boolean(readU8(slice)&128)}track.info.colorSpace={primaries:COLOR_PRIMARIES_MAP_INVERSE[colourPrimaries],
+transfer:TRANSFER_CHARACTERISTICS_MAP_INVERSE[transferCharacteristics],matrix:MATRIX_COEFFICIENTS_MAP_INVERSE[matrixCoefficients],
+fullRange}};break;case"pasp":{const track=this.currentTrack;if(!track){break}assert2(track.info?.type===
+"video");const num=readU32Be(slice);const den=readU32Be(slice);if(num>0&&den>0){if(num>den){track.info.
+squarePixelWidth=Math.round(track.info.width*num/den)}else{track.info.squarePixelHeight=Math.round(track.
+info.height*den/num)}}};break;case"wave":{this.readContiguousBoxes(slice.slice(contentStartPos,boxInfo.
+contentSize))};break;case"esds":{const track=this.currentTrack;if(!track||track.info?.type!=="audio"){
+break}slice.skip(4);const tag=readU8(slice);assert2(tag===3);readIsomVariableInteger(slice);slice.skip(
+2);const mixed=readU8(slice);const streamDependenceFlag=(mixed&128)!==0;const urlFlag=(mixed&64)!==0;
+const ocrStreamFlag=(mixed&32)!==0;if(streamDependenceFlag){slice.skip(2)}if(urlFlag){const urlLength=readU8(
+slice);slice.skip(urlLength)}if(ocrStreamFlag){slice.skip(2)}const decoderConfigTag=readU8(slice);assert2(
+decoderConfigTag===4);const decoderConfigDescriptorLength=readIsomVariableInteger(slice);const payloadStart=slice.
+filePos;const objectTypeIndication=readU8(slice);if(objectTypeIndication===64||objectTypeIndication===
+103){track.info.codec="aac";track.info.aacCodecInfo={isMpeg2:objectTypeIndication===103,objectType:null}}else if(objectTypeIndication===
+105||objectTypeIndication===107){track.info.codec="mp3"}else if(objectTypeIndication===221){track.info.
+codec="vorbis"}else if(objectTypeIndication===169){track.info.codec="dts"}else{Logging._warn(`Unsupp\
+orted audio codec (objectTypeIndication ${objectTypeIndication}) - discarding track.`)}slice.skip(1+
+3+4+4);if(decoderConfigDescriptorLength>slice.filePos-payloadStart){const decoderSpecificInfoTag=readU8(
+slice);assert2(decoderSpecificInfoTag===5);const decoderSpecificInfoLength=readIsomVariableInteger(slice);
+track.info.codecDescription=readBytes(slice,decoderSpecificInfoLength);if(track.info.codec==="aac"){
+const audioSpecificConfig=parseAacAudioSpecificConfig(track.info.codecDescription);if(audioSpecificConfig.
+outputNumberOfChannels!==null){track.info.numberOfChannels=audioSpecificConfig.outputNumberOfChannels}
+if(audioSpecificConfig.outputSampleRate!==null){track.info.sampleRate=audioSpecificConfig.outputSampleRate}}}}
+;break;case"enda":{const track=this.currentTrack;if(!track){break}assert2(track.info?.type==="audio");
+track.info.pcmLittleEndian=!!(readU16Be(slice)&255)};break;case"pcmC":{const track=this.currentTrack;
+if(!track){break}assert2(track.info?.type==="audio");slice.skip(1+3);const formatFlags=readU8(slice);
+track.info.pcmLittleEndian=Boolean(formatFlags&1);track.info.pcmSampleSize=readU8(slice)};break;case"\
+dOps":{const track=this.currentTrack;if(!track){break}assert2(track.info?.type==="audio");slice.skip(
+1);const outputChannelCount=readU8(slice);const preSkip=readU16Be(slice);const inputSampleRate=readU32Be(
+slice);const outputGain=readI16Be(slice);const channelMappingFamily=readU8(slice);let channelMappingTable;
+if(channelMappingFamily!==0){channelMappingTable=readBytes(slice,2+outputChannelCount)}else{channelMappingTable=
+new Uint8Array(0)}const description=new Uint8Array(8+1+1+2+4+2+1+channelMappingTable.byteLength);const view=new DataView(
+description.buffer);view.setUint32(0,1332770163,false);view.setUint32(4,1214603620,false);view.setUint8(
+8,1);view.setUint8(9,outputChannelCount);view.setUint16(10,preSkip,true);view.setUint32(12,inputSampleRate,
+true);view.setInt16(16,outputGain,true);view.setUint8(18,channelMappingFamily);description.set(channelMappingTable,
+19);track.info.codecDescription=description;track.info.numberOfChannels=outputChannelCount};break;case"\
+dfLa":{const track=this.currentTrack;if(!track){break}assert2(track.info?.type==="audio");slice.skip(
+4);const BLOCK_TYPE_MASK=127;const LAST_METADATA_BLOCK_FLAG_MASK=128;const startPos2=slice.filePos;while(slice.
+filePos<boxEndPos){const flagAndType=readU8(slice);const metadataBlockLength=readU24Be(slice);const type=flagAndType&
+BLOCK_TYPE_MASK;if(type===FlacBlockType.STREAMINFO){slice.skip(10);const word=readU32Be(slice);const sampleRate3=word>>>
+12;const numberOfChannels=(word>>9&7)+1;track.info.sampleRate=sampleRate3;track.info.numberOfChannels=
+numberOfChannels;slice.skip(20)}else{slice.skip(metadataBlockLength)}if(flagAndType&LAST_METADATA_BLOCK_FLAG_MASK){
+break}}const endPos=slice.filePos;slice.filePos=startPos2;const bytes=readBytes(slice,endPos-startPos2);
+const description=new Uint8Array(4+bytes.byteLength);const view=new DataView(description.buffer);view.
+setUint32(0,1716281667,false);description.set(bytes,4);track.info.codecDescription=description};break;case"\
+dac3":{const track=this.currentTrack;if(!track){break}assert2(track.info?.type==="audio");const bytes=readBytes(
+slice,3);const bitstream=new Bitstream(bytes);const fscod=bitstream.readBits(2);bitstream.skipBits(5+
+3);const acmod=bitstream.readBits(3);const lfeon=bitstream.readBits(1);if(fscod<3){track.info.sampleRate=
+AC3_SAMPLE_RATES[fscod]}track.info.numberOfChannels=AC3_ACMOD_CHANNEL_COUNTS[acmod]+lfeon};break;case"\
+dec3":{const track=this.currentTrack;if(!track){break}assert2(track.info?.type==="audio");const bytes=readBytes(
+slice,boxInfo.contentSize);const config=parseEac3Config(bytes);if(!config){Logging._warn("Invalid de\
+c3 box contents, ignoring.");break}const sampleRate3=getEac3SampleRate(config);if(sampleRate3!==null){
+track.info.sampleRate=sampleRate3}track.info.numberOfChannels=getEac3ChannelCount(config)};break;case"\
+ddts":{const track=this.currentTrack;if(!track){break}assert2(track.info?.type==="audio");const bytes=readBytes(
+slice,Math.min(boxInfo.contentSize,DTS_SPECIFIC_BOX_SIZE));const config=parseDtsSpecificBox(bytes);if(!config){
+Logging._warn("Invalid ddts box contents, ignoring.");break}track.info.sampleRate=config.sampleRate;
+if(config.numberOfChannels!==null){track.info.numberOfChannels=config.numberOfChannels}};break;case"\
+stts":{const track=this.currentTrack;if(!track){break}if(!track.sampleTable){break}slice.skip(4);const entryCount=readU32Be(
+slice);let currentIndex=0;let currentTimestamp=0;for(let i=0;i<entryCount;i++){const sampleCount=readU32Be(
+slice);const sampleDelta=readU32Be(slice);track.sampleTable.sampleTimingEntries.push({startIndex:currentIndex,
+startDecodeTimestamp:currentTimestamp,count:sampleCount,delta:sampleDelta});currentIndex+=sampleCount;
+currentTimestamp+=sampleCount*sampleDelta}};break;case"ctts":{const track=this.currentTrack;if(!track){
+break}if(!track.sampleTable){break}slice.skip(1+3);const entryCount=readU32Be(slice);let sampleIndex=0;
+for(let i=0;i<entryCount;i++){const sampleCount=readU32Be(slice);const sampleOffset=readI32Be(slice);
+track.sampleTable.sampleCompositionTimeOffsets.push({startIndex:sampleIndex,count:sampleCount,offset:sampleOffset});
+sampleIndex+=sampleCount}};break;case"stsz":{const track=this.currentTrack;if(!track){break}if(!track.
+sampleTable){break}slice.skip(4);const sampleSize=readU32Be(slice);const sampleCount=readU32Be(slice);
+if(sampleSize===0){for(let i=0;i<sampleCount;i++){const sampleSize2=readU32Be(slice);track.sampleTable.
+sampleSizes.push(sampleSize2)}}else{track.sampleTable.sampleSizes.push(sampleSize)}};break;case"stz2":
+{const track=this.currentTrack;if(!track){break}if(!track.sampleTable){break}slice.skip(4);slice.skip(
+3);const fieldSize=readU8(slice);const sampleCount=readU32Be(slice);const bytes=readBytes(slice,Math.
+ceil(sampleCount*fieldSize/8));const bitstream=new Bitstream(bytes);for(let i=0;i<sampleCount;i++){const sampleSize=bitstream.
+readBits(fieldSize);track.sampleTable.sampleSizes.push(sampleSize)}};break;case"stss":{const track=this.
+currentTrack;if(!track){break}if(!track.sampleTable){break}slice.skip(4);track.sampleTable.keySampleIndices=
+[];const entryCount=readU32Be(slice);for(let i=0;i<entryCount;i++){const sampleIndex=readU32Be(slice)-
+1;track.sampleTable.keySampleIndices.push(sampleIndex)}if(track.sampleTable.keySampleIndices[0]!==0){
+track.sampleTable.keySampleIndices.unshift(0)}};break;case"stsc":{const track=this.currentTrack;if(!track){
+break}if(!track.sampleTable){break}slice.skip(4);const entryCount=readU32Be(slice);for(let i=0;i<entryCount;i++){
+const startChunkIndex=readU32Be(slice)-1;const samplesPerChunk=readU32Be(slice);const sampleDescriptionIndex=readU32Be(
+slice);track.sampleTable.sampleToChunk.push({startSampleIndex:-1,startChunkIndex,samplesPerChunk,sampleDescriptionIndex})}
+let startSampleIndex=0;for(let i=0;i<track.sampleTable.sampleToChunk.length;i++){track.sampleTable.sampleToChunk[i].
+startSampleIndex=startSampleIndex;if(i<track.sampleTable.sampleToChunk.length-1){const nextChunk=track.
+sampleTable.sampleToChunk[i+1];const chunkCount=nextChunk.startChunkIndex-track.sampleTable.sampleToChunk[i].
+startChunkIndex;startSampleIndex+=chunkCount*track.sampleTable.sampleToChunk[i].samplesPerChunk}}};break;case"\
+stco":{const track=this.currentTrack;if(!track){break}if(!track.sampleTable){break}slice.skip(4);const entryCount=readU32Be(
+slice);for(let i=0;i<entryCount;i++){const chunkOffset=readU32Be(slice);track.sampleTable.chunkOffsets.
+push(chunkOffset)}};break;case"co64":{const track=this.currentTrack;if(!track){break}if(!track.sampleTable){
+break}slice.skip(4);const entryCount=readU32Be(slice);for(let i=0;i<entryCount;i++){const chunkOffset=readU64Be(
+slice);track.sampleTable.chunkOffsets.push(chunkOffset)}};break;case"mvex":{this.isFragmented=true;this.
+readContiguousBoxes(slice.slice(contentStartPos,boxInfo.contentSize))};break;case"mehd":{const version=readU8(
+slice);slice.skip(3);const fragmentDuration=version===1?readU64Be(slice):readU32Be(slice);this.movieDurationInTimescale=
+fragmentDuration};break;case"trex":{slice.skip(4);const trackId=readU32Be(slice);const defaultSampleDescriptionIndex=readU32Be(
+slice);const defaultSampleDuration=readU32Be(slice);const defaultSampleSize=readU32Be(slice);const defaultSampleFlags=readU32Be(
+slice);this.fragmentTrackDefaults.push({trackId,defaultSampleDescriptionIndex,defaultSampleDuration,
+defaultSampleSize,defaultSampleFlags})};break;case"tfra":{const version=readU8(slice);slice.skip(3);
+const trackId=readU32Be(slice);const track=this.tracks.find(x=>x.id===trackId);if(!track){break}const word=readU32Be(
+slice);const lengthSizeOfTrafNum=(word&48)>>4;const lengthSizeOfTrunNum=(word&12)>>2;const lengthSizeOfSampleNum=word&
+3;const functions=[readU8,readU16Be,readU24Be,readU32Be];const readTrafNum=functions[lengthSizeOfTrafNum];
+const readTrunNum=functions[lengthSizeOfTrunNum];const readSampleNum=functions[lengthSizeOfSampleNum];
+const numberOfEntries=readU32Be(slice);for(let i=0;i<numberOfEntries;i++){const time=version===1?readU64Be(
+slice):readU32Be(slice);const moofOffset=version===1?readU64Be(slice):readU32Be(slice);readTrafNum(slice);
+readTrunNum(slice);readSampleNum(slice);track.fragmentLookupTable.push({timestamp:time,moofOffset})}
+track.fragmentLookupTable.sort((a,b)=>a.timestamp-b.timestamp);for(let i=0;i<track.fragmentLookupTable.
+length-1;i++){const entry1=track.fragmentLookupTable[i];const entry2=track.fragmentLookupTable[i+1];
+if(entry1.timestamp===entry2.timestamp){track.fragmentLookupTable.splice(i+1,1);i--}}};break;case"mo\
+of":{this.currentFragment={moofOffset:startPos,moofSize:boxInfo.totalSize,implicitBaseDataOffset:startPos,
+trackData:new Map,psshBoxes:[]};this.readContiguousBoxes(slice.slice(contentStartPos,boxInfo.contentSize));
+this.lastReadFragment=this.currentFragment;this.currentFragment=null};break;case"traf":{assert2(this.
+currentFragment);this.readContiguousBoxes(slice.slice(contentStartPos,boxInfo.contentSize));if(this.
+currentTrack){const trackData=this.currentFragment.trackData.get(this.currentTrack.id);cond:if(trackData){
+if(trackData.samples.length===0){this.currentFragment.trackData.delete(this.currentTrack.id);break cond}
+trackData.presentationTimestamps=trackData.samples.map((x,i)=>({presentationTimestamp:x.presentationTimestamp,
+sampleIndex:i})).sort((a,b)=>a.presentationTimestamp-b.presentationTimestamp);for(let i=0;i<trackData.
+presentationTimestamps.length;i++){const currentEntry=trackData.presentationTimestamps[i];const currentSample=trackData.
+samples[currentEntry.sampleIndex];if(trackData.firstKeyFrameTimestamp===null&&currentSample.isKeyFrame){
+trackData.firstKeyFrameTimestamp=currentSample.presentationTimestamp}if(i<trackData.presentationTimestamps.
+length-1){const nextEntry=trackData.presentationTimestamps[i+1];const duration=nextEntry.presentationTimestamp-
+currentEntry.presentationTimestamp;currentSample.duration=duration}}const firstSample=trackData.samples[trackData.
+presentationTimestamps[0].sampleIndex];const lastSample=trackData.samples[last(trackData.presentationTimestamps).
+sampleIndex];trackData.startTimestamp=firstSample.presentationTimestamp;trackData.endTimestamp=lastSample.
+presentationTimestamp+lastSample.duration;const{currentFragmentState}=this.currentTrack;assert2(currentFragmentState);
+if(currentFragmentState.startTimestamp!==null){offsetFragmentTrackDataByTimestamp(trackData,currentFragmentState.
+startTimestamp);trackData.startTimestampIsFinal=true}if(currentFragmentState.encryptionAuxInfo&&!trackData.
+samples[0].encryption){trackData.encryptionAuxInfo=currentFragmentState.encryptionAuxInfo}}this.currentTrack.
+currentFragmentState=null;this.currentTrack=null}};break;case"pssh":{if(this.input._formatOptions.isobmff?.
+_suppressPsshParsing){break}const psshBox=parsePsshBoxContents(readBytes(slice,boxInfo.contentSize));
+if(this.currentFragment){this.currentFragment.psshBoxes.push(psshBox)}else if(!this.currentTrack){this.
+psshBoxes.push(psshBox)}};break;case"tfhd":{assert2(this.currentFragment);slice.skip(1);const flags=readU24Be(
+slice);const baseDataOffsetPresent=Boolean(flags&1);const sampleDescriptionIndexPresent=Boolean(flags&
+2);const defaultSampleDurationPresent=Boolean(flags&8);const defaultSampleSizePresent=Boolean(flags&
+16);const defaultSampleFlagsPresent=Boolean(flags&32);const durationIsEmpty=Boolean(flags&65536);const defaultBaseIsMoof=Boolean(
+flags&131072);const trackId=readU32Be(slice);const track=this.tracks.find(x=>x.id===trackId);if(!track){
+break}const defaults=this.fragmentTrackDefaults.find(x=>x.trackId===trackId);this.currentTrack=track;
+track.currentFragmentState={baseDataOffset:this.currentFragment.implicitBaseDataOffset,sampleDescriptionIndex:defaults?.
+defaultSampleDescriptionIndex??null,defaultSampleDuration:defaults?.defaultSampleDuration??null,defaultSampleSize:defaults?.
+defaultSampleSize??null,defaultSampleFlags:defaults?.defaultSampleFlags??null,startTimestamp:null,encryptionAuxInfo:null};
+if(baseDataOffsetPresent){track.currentFragmentState.baseDataOffset=readU64Be(slice)}else if(defaultBaseIsMoof){
+track.currentFragmentState.baseDataOffset=this.currentFragment.moofOffset}if(sampleDescriptionIndexPresent){
+track.currentFragmentState.sampleDescriptionIndex=readU32Be(slice)}if(defaultSampleDurationPresent){
+track.currentFragmentState.defaultSampleDuration=readU32Be(slice)}if(defaultSampleSizePresent){track.
+currentFragmentState.defaultSampleSize=readU32Be(slice)}if(defaultSampleFlagsPresent){track.currentFragmentState.
+defaultSampleFlags=readU32Be(slice)}if(durationIsEmpty){track.currentFragmentState.defaultSampleDuration=
+0}};break;case"tfdt":{const track=this.currentTrack;if(!track){break}assert2(track.currentFragmentState);
+const version=readU8(slice);slice.skip(3);const baseMediaDecodeTime=version===0?readU32Be(slice):readU64Be(
+slice);track.currentFragmentState.startTimestamp=baseMediaDecodeTime};break;case"trun":{const track=this.
+currentTrack;if(!track){break}assert2(this.currentFragment);assert2(track.currentFragmentState);const version=readU8(
+slice);const flags=readU24Be(slice);const dataOffsetPresent=Boolean(flags&1);const firstSampleFlagsPresent=Boolean(
+flags&4);const sampleDurationPresent=Boolean(flags&256);const sampleSizePresent=Boolean(flags&512);const sampleFlagsPresent=Boolean(
+flags&1024);const sampleCompositionTimeOffsetsPresent=Boolean(flags&2048);const sampleCount=readU32Be(
+slice);let dataOffset=null;if(dataOffsetPresent){dataOffset=readI32Be(slice)}let firstSampleFlags=null;
+if(firstSampleFlagsPresent){firstSampleFlags=readU32Be(slice)}let trackData;if(this.currentFragment.
+trackData.has(track.id)){trackData=this.currentFragment.trackData.get(track.id);if(dataOffset!==null){
+trackData.currentOffset=track.currentFragmentState.baseDataOffset+dataOffset}else{}}else{trackData={
+track,currentTimestamp:0,currentOffset:track.currentFragmentState.baseDataOffset+(dataOffset??0),startTimestamp:0,
+endTimestamp:0,firstKeyFrameTimestamp:null,samples:[],presentationTimestamps:[],startTimestampIsFinal:false,
+encryptionAuxInfo:null};this.currentFragment.trackData.set(track.id,trackData)}for(let i=0;i<sampleCount;i++){
+let sampleDuration;if(sampleDurationPresent){sampleDuration=readU32Be(slice)}else{assert2(track.currentFragmentState.
+defaultSampleDuration!==null);sampleDuration=track.currentFragmentState.defaultSampleDuration}let sampleSize;
+if(sampleSizePresent){sampleSize=readU32Be(slice)}else{assert2(track.currentFragmentState.defaultSampleSize!==
+null);sampleSize=track.currentFragmentState.defaultSampleSize}let sampleFlags;if(sampleFlagsPresent){
+sampleFlags=readU32Be(slice)}else{assert2(track.currentFragmentState.defaultSampleFlags!==null);sampleFlags=
+track.currentFragmentState.defaultSampleFlags}if(i===0&&firstSampleFlags!==null){sampleFlags=firstSampleFlags}
+let sampleCompositionTimeOffset=0;if(sampleCompositionTimeOffsetsPresent){if(version===0){sampleCompositionTimeOffset=
+readU32Be(slice)}else{sampleCompositionTimeOffset=readI32Be(slice)}}const isKeyFrame=!(sampleFlags&65536);
+trackData.samples.push({presentationTimestamp:trackData.currentTimestamp+sampleCompositionTimeOffset,
+duration:sampleDuration,byteOffset:trackData.currentOffset,byteSize:sampleSize,isKeyFrame,encryption:null});
+trackData.currentOffset+=sampleSize;trackData.currentTimestamp+=sampleDuration}this.currentFragment.
+implicitBaseDataOffset=trackData.currentOffset};break;case"saiz":{const track=this.currentTrack;if(!track||
+!track.encryptionInfo){break}slice.skip(1);const flags=readU24Be(slice);if(flags&1){const auxInfoType=readAscii(
+slice,4);const auxInfoTypeParam=readU32Be(slice);if(auxInfoType!==track.encryptionInfo.scheme||auxInfoTypeParam!==
+0){break}}const defaultSampleInfoSize=readU8(slice);const sampleCount=readU32Be(slice);let sampleSizes=null;
+if(defaultSampleInfoSize===0&&sampleCount>0){sampleSizes=readBytes(slice,sampleCount)}const aux=getOrCreateEncryptionAuxInfo(
+track);aux.defaultSampleInfoSize=defaultSampleInfoSize;aux.sampleSizes=sampleSizes;aux.sampleCount=sampleCount}
+;break;case"saio":{const track=this.currentTrack;if(!track||!track.encryptionInfo){break}const version=readU8(
+slice);const flags=readU24Be(slice);if(flags&1){const auxInfoType=readAscii(slice,4);const auxInfoTypeParam=readU32Be(
+slice);if(auxInfoType!==track.encryptionInfo.scheme||auxInfoTypeParam!==0){break}}const entryCount=readU32Be(
+slice);if(entryCount===0){break}if(entryCount>1){Logging._warn("Multiple saio entries are not suppor\
+ted; using the first offset only.")}let offset=version===0?readU32Be(slice):Number(readU64Be(slice));
+if(this.currentFragment){offset+=this.currentFragment.moofOffset}const aux=getOrCreateEncryptionAuxInfo(
+track);aux.offset=offset};break;case"senc":{const track=this.currentTrack;if(!track||!track.encryptionInfo){
+break}assert2(this.currentFragment);const trackData=this.currentFragment.trackData.get(track.id);if(!trackData){
+break}slice.skip(1);const flags=readU24Be(slice);const useSubsamples=Boolean(flags&2);const sampleCount=readU32Be(
+slice);const ivSize=track.encryptionInfo.defaultPerSampleIvSize;assert2(ivSize!==null);for(let i=0;i<
+Math.min(sampleCount,trackData.samples.length);i++){const iv=new Uint8Array(16);if(ivSize>0){iv.set(
+readBytes(slice,ivSize),0)}else{iv.set(track.encryptionInfo.defaultConstantIv,0)}let subsamples=null;
+if(useSubsamples){const subsampleCount=readU16Be(slice);subsamples=[];for(let j=0;j<subsampleCount;j++){
+const clearLen=readU16Be(slice);const protectedLen=readU32Be(slice);subsamples.push({clearLen,protectedLen})}}
+const sample=trackData.samples[i];sample.encryption={iv,subsamples}}};break;case"udta":{const iterator=this.
+iterateContiguousBoxes(slice.slice(contentStartPos,boxInfo.contentSize));for(const{boxInfo:boxInfo2,
+slice:slice2}of iterator){if(boxInfo2.name!=="meta"&&!this.currentTrack){const startPos2=slice2.filePos;
+this.metadataTags.raw??={};if(boxInfo2.name[0]==="\xA9"){this.metadataTags.raw[boxInfo2.name]??=readMetadataStringShort(
+slice2)}else{this.metadataTags.raw[boxInfo2.name]??=readBytes(slice2,boxInfo2.contentSize)}slice2.filePos=
+startPos2}switch(boxInfo2.name){case"meta":{slice2.skip(-boxInfo2.headerSize);this.traverseBox(slice2)}
+;break;case"\xA9nam":case"name":{if(this.currentTrack){this.currentTrack.name=textDecoder.decode(readBytes(
+slice2,boxInfo2.contentSize))}else{this.metadataTags.title??=readMetadataStringShort(slice2)}};break;case"\
+\xA9des":{if(!this.currentTrack){this.metadataTags.description??=readMetadataStringShort(slice2)}};break;case"\
+\xA9ART":{if(!this.currentTrack){this.metadataTags.artist??=readMetadataStringShort(slice2)}};break;case"\
+\xA9alb":{if(!this.currentTrack){this.metadataTags.album??=readMetadataStringShort(slice2)}};break;case"\
+albr":{if(!this.currentTrack){this.metadataTags.albumArtist??=readMetadataStringShort(slice2)}};break;case"\
+\xA9gen":{if(!this.currentTrack){this.metadataTags.genre??=readMetadataStringShort(slice2)}};break;case"\
+\xA9day":{if(!this.currentTrack){const date=new Date(readMetadataStringShort(slice2));if(!Number.isNaN(
+date.getTime())){this.metadataTags.date??=date}}};break;case"\xA9cmt":{if(!this.currentTrack){this.metadataTags.
+comment??=readMetadataStringShort(slice2)}};break;case"\xA9lyr":{if(!this.currentTrack){this.metadataTags.
+lyrics??=readMetadataStringShort(slice2)}};break}}};break;case"meta":{if(this.currentTrack){break}const word=readU32Be(
+slice);const isQuickTime=word!==0;this.currentMetadataKeys=new Map;if(isQuickTime){this.readContiguousBoxes(
+slice.slice(contentStartPos,boxInfo.contentSize))}else{this.readContiguousBoxes(slice.slice(contentStartPos+
+4,boxInfo.contentSize-4))}this.currentMetadataKeys=null};break;case"keys":{if(!this.currentMetadataKeys){
+break}slice.skip(4);const entryCount=readU32Be(slice);for(let i=0;i<entryCount;i++){const keySize=readU32Be(
+slice);slice.skip(4);const keyName=textDecoder.decode(readBytes(slice,keySize-8));this.currentMetadataKeys.
+set(i+1,keyName)}};break;case"ilst":{if(!this.currentMetadataKeys){break}const iterator=this.iterateContiguousBoxes(
+slice.slice(contentStartPos,boxInfo.contentSize));for(const{boxInfo:boxInfo2,slice:slice2}of iterator){
+let metadataKey=boxInfo2.name;const nameAsNumber=(metadataKey.charCodeAt(0)<<24)+(metadataKey.charCodeAt(
+1)<<16)+(metadataKey.charCodeAt(2)<<8)+metadataKey.charCodeAt(3);if(this.currentMetadataKeys.has(nameAsNumber)){
+metadataKey=this.currentMetadataKeys.get(nameAsNumber)}const data2=readDataBox(slice2);this.metadataTags.
+raw??={};this.metadataTags.raw[metadataKey]??=data2;switch(metadataKey){case"\xA9nam":case"titl":case"\
+com.apple.quicktime.title":case"title":{if(typeof data2==="string"){this.metadataTags.title??=data2}}
+;break;case"\xA9des":case"desc":case"dscp":case"com.apple.quicktime.description":case"description":{
+if(typeof data2==="string"){this.metadataTags.description??=data2}};break;case"\xA9ART":case"com.app\
+le.quicktime.artist":case"artist":{if(typeof data2==="string"){this.metadataTags.artist??=data2}};break;case"\
+\xA9alb":case"albm":case"com.apple.quicktime.album":case"album":{if(typeof data2==="string"){this.metadataTags.
+album??=data2}};break;case"aART":case"album_artist":{if(typeof data2==="string"){this.metadataTags.albumArtist??=
+data2}};break;case"\xA9cmt":case"com.apple.quicktime.comment":case"comment":{if(typeof data2==="stri\
+ng"){this.metadataTags.comment??=data2}};break;case"\xA9gen":case"gnre":case"com.apple.quicktime.gen\
+re":case"genre":{if(typeof data2==="string"){this.metadataTags.genre??=data2}};break;case"\xA9lyr":case"\
+lyrics":{if(typeof data2==="string"){this.metadataTags.lyrics??=data2}};break;case"\xA9day":case"rld\
+t":case"com.apple.quicktime.creationdate":case"date":{if(typeof data2==="string"){const date=new Date(
+data2);if(!Number.isNaN(date.getTime())){this.metadataTags.date??=date}}};break;case"covr":case"com.\
+apple.quicktime.artwork":{if(data2 instanceof RichImageData){this.metadataTags.images??=[];this.metadataTags.
+images.push({data:data2.data,kind:"coverFront",mimeType:data2.mimeType})}else if(data2 instanceof Uint8Array){
+this.metadataTags.images??=[];this.metadataTags.images.push({data:data2,kind:"coverFront",mimeType:"\
+image/*"})}};break;case"track":{if(typeof data2==="string"){const parts=data2.split("/");const trackNum=Number.
+parseInt(parts[0],10);const tracksTotal=parts[1]&&Number.parseInt(parts[1],10);if(Number.isInteger(trackNum)&&
+trackNum>0){this.metadataTags.trackNumber??=trackNum}if(tracksTotal&&Number.isInteger(tracksTotal)&&
+tracksTotal>0){this.metadataTags.tracksTotal??=tracksTotal}}};break;case"trkn":{if(data2 instanceof Uint8Array&&
+data2.length>=6){const view=toDataView(data2);const trackNumber=view.getUint16(2,false);const tracksTotal=view.
+getUint16(4,false);if(trackNumber>0){this.metadataTags.trackNumber??=trackNumber}if(tracksTotal>0){this.
+metadataTags.tracksTotal??=tracksTotal}}};break;case"disc":case"disk":{if(data2 instanceof Uint8Array&&
+data2.length>=6){const view=toDataView(data2);const discNumber=view.getUint16(2,false);const discNumberMax=view.
+getUint16(4,false);if(discNumber>0){this.metadataTags.discNumber??=discNumber}if(discNumberMax>0){this.
+metadataTags.discsTotal??=discNumberMax}}};break}}};break}slice.filePos=boxEndPos;return true}};IsobmffTrackBacking=
+class{constructor(internalTrack){this.internalTrack=internalTrack;this.packetToSampleIndex=new WeakMap;
+this.packetToFragmentLocation=new WeakMap}getId(){return this.internalTrack.id}getNumber(){const demuxer=this.
+internalTrack.demuxer;const trackType=this.internalTrack.trackBacking.getType();let number=0;for(const track of demuxer.
+tracks){if(track.trackBacking.getType()===trackType){number++}if(track===this.internalTrack){break}}
+return number}getCodec(){throw new Error("Not implemented on base class.")}getInternalCodecId(){return this.
+internalTrack.internalCodecId}getName(){return this.internalTrack.name}getLanguageCode(){return this.
+internalTrack.languageCode}getTimeResolution(){return this.internalTrack.timescale}isRelativeToUnixEpoch(){
+return false}getUnixTimeForTimestamp(){return null}getDisposition(){return this.internalTrack.disposition}getPairingMask(){
+return 1n}getBitrate(){return null}getAverageBitrate(){return null}async getDurationFromMetadata(){const track=this.
+internalTrack;if(track.durationInMediaTimescale<=0){return null}assert2(track.trackBacking);const firstPacket=await track.
+trackBacking.getFirstPacket({metadataOnly:true});return(firstPacket?.timestamp??0)+track.durationInMediaTimescale/
+track.timescale}async getLiveRefreshInterval(){return null}async getFirstPacket(options){const regularPacket=await this.
+fetchPacketForSampleIndex(0,options);if(regularPacket||!this.internalTrack.demuxer.isFragmented){return regularPacket}
+return this.performFragmentedLookup(null,fragment=>{const trackData=fragment.trackData.get(this.internalTrack.
+id);if(trackData){return{sampleIndex:0,correctSampleFound:true}}return{sampleIndex:-1,correctSampleFound:false}},
+-Infinity,Infinity,options)}mapTimestampIntoTimescale(timestamp){return roundIfAlmostInteger(timestamp*
+this.internalTrack.timescale)+this.internalTrack.editListOffset}async getPacket(timestamp,options){const timestampInTimescale=this.
+mapTimestampIntoTimescale(timestamp);const sampleTable=this.internalTrack.demuxer.getSampleTableForTrack(
+this.internalTrack);const sampleIndex=getSampleIndexForTimestamp(sampleTable,timestampInTimescale);const regularPacket=await this.
+fetchPacketForSampleIndex(sampleIndex,options);if(!sampleTableIsEmpty(sampleTable)||!this.internalTrack.
+demuxer.isFragmented){return regularPacket}return this.performFragmentedLookup(null,fragment=>{const trackData=fragment.
+trackData.get(this.internalTrack.id);if(!trackData){return{sampleIndex:-1,correctSampleFound:false}}
+const index=binarySearchLessOrEqual(trackData.presentationTimestamps,timestampInTimescale,x=>x.presentationTimestamp);
+const sampleIndex2=index!==-1?trackData.presentationTimestamps[index].sampleIndex:-1;const correctSampleFound=index!==
+-1&&timestampInTimescale<trackData.endTimestamp;return{sampleIndex:sampleIndex2,correctSampleFound}},
+timestampInTimescale,timestampInTimescale,options)}async getNextPacket(packet,options){const regularSampleIndex=this.
+packetToSampleIndex.get(packet);if(regularSampleIndex!==void 0){return this.fetchPacketForSampleIndex(
+regularSampleIndex+1,options)}const locationInFragment=this.packetToFragmentLocation.get(packet);if(locationInFragment===
+void 0){throw new Error("Packet was not created from this track.")}return this.performFragmentedLookup(
+locationInFragment.fragment,fragment=>{if(fragment===locationInFragment.fragment){const trackData=fragment.
+trackData.get(this.internalTrack.id);if(locationInFragment.sampleIndex+1<trackData.samples.length){return{
+sampleIndex:locationInFragment.sampleIndex+1,correctSampleFound:true}}}else{const trackData=fragment.
+trackData.get(this.internalTrack.id);if(trackData){return{sampleIndex:0,correctSampleFound:true}}}return{
+sampleIndex:-1,correctSampleFound:false}},-Infinity,Infinity,options)}async getKeyPacket(timestamp,options){
+const timestampInTimescale=this.mapTimestampIntoTimescale(timestamp);const sampleTable=this.internalTrack.
+demuxer.getSampleTableForTrack(this.internalTrack);const sampleIndex=getKeyframeSampleIndexForTimestamp(
+sampleTable,timestampInTimescale);const regularPacket=await this.fetchPacketForSampleIndex(sampleIndex,
+options);if(!sampleTableIsEmpty(sampleTable)||!this.internalTrack.demuxer.isFragmented){return regularPacket}
+return this.performFragmentedLookup(null,fragment=>{const trackData=fragment.trackData.get(this.internalTrack.
+id);if(!trackData){return{sampleIndex:-1,correctSampleFound:false}}const index=findLastIndex(trackData.
+presentationTimestamps,x=>{const sample=trackData.samples[x.sampleIndex];return sample.isKeyFrame&&x.
+presentationTimestamp<=timestampInTimescale});const sampleIndex2=index!==-1?trackData.presentationTimestamps[index].
+sampleIndex:-1;const correctSampleFound=index!==-1&&timestampInTimescale<trackData.endTimestamp;return{
+sampleIndex:sampleIndex2,correctSampleFound}},timestampInTimescale,timestampInTimescale,options)}async getNextKeyPacket(packet,options){
+const regularSampleIndex=this.packetToSampleIndex.get(packet);if(regularSampleIndex!==void 0){const sampleTable=this.
+internalTrack.demuxer.getSampleTableForTrack(this.internalTrack);const nextKeyFrameSampleIndex=getNextKeyframeIndexForSample(
+sampleTable,regularSampleIndex);return this.fetchPacketForSampleIndex(nextKeyFrameSampleIndex,options)}
+const locationInFragment=this.packetToFragmentLocation.get(packet);if(locationInFragment===void 0){throw new Error(
+"Packet was not created from this track.")}return this.performFragmentedLookup(locationInFragment.fragment,
+fragment=>{if(fragment===locationInFragment.fragment){const trackData=fragment.trackData.get(this.internalTrack.
+id);const nextKeyFrameIndex=trackData.samples.findIndex((x,i)=>x.isKeyFrame&&i>locationInFragment.sampleIndex);
+if(nextKeyFrameIndex!==-1){return{sampleIndex:nextKeyFrameIndex,correctSampleFound:true}}}else{const trackData=fragment.
+trackData.get(this.internalTrack.id);if(trackData&&trackData.firstKeyFrameTimestamp!==null){const keyFrameIndex=trackData.
+samples.findIndex(x=>x.isKeyFrame);assert2(keyFrameIndex!==-1);return{sampleIndex:keyFrameIndex,correctSampleFound:true}}}
+return{sampleIndex:-1,correctSampleFound:false}},-Infinity,Infinity,options)}async fetchPacketForSampleIndex(sampleIndex,options){
+if(sampleIndex===-1){return null}const sampleTable=this.internalTrack.demuxer.getSampleTableForTrack(
+this.internalTrack);const sampleInfo=getSampleInfo(sampleTable,sampleIndex);if(!sampleInfo){return null}
+let data2;if(options.metadataOnly){data2=PLACEHOLDER_DATA}else{let slice=this.internalTrack.demuxer.
+reader.requestSlice(sampleInfo.sampleOffset,sampleInfo.sampleSize);if(isThenable(slice))slice=await slice;
+if(!slice){return null}data2=readBytes(slice,sampleInfo.sampleSize);if(this.internalTrack.encryptionInfo){
+let sampleEncryption=null;if(this.internalTrack.encryptionAuxInfo){const entries=await resolveEncryptionAuxInfo(
+this.internalTrack.demuxer.reader,this.internalTrack.encryptionInfo,this.internalTrack.encryptionAuxInfo);
+if(sampleIndex<entries.length){sampleEncryption=entries[sampleIndex]}}sampleEncryption??=getDefaultSampleEncryption(
+this.internalTrack.encryptionInfo);if(sampleEncryption){data2=await decryptSample(this.internalTrack,
+sampleEncryption,data2,null)}}}const timestamp=(sampleInfo.presentationTimestamp-this.internalTrack.
+editListOffset)/this.internalTrack.timescale;const duration=sampleInfo.duration/this.internalTrack.timescale;
+const packet=new EncodedPacket(data2,sampleInfo.isKeyFrame?"key":"delta",timestamp,duration,sampleIndex,
+sampleInfo.sampleSize);this.packetToSampleIndex.set(packet,sampleIndex);return packet}async fetchPacketInFragment(fragment,sampleIndex,options){
+if(sampleIndex===-1){return null}const trackData=fragment.trackData.get(this.internalTrack.id);const fragmentSample=trackData.
+samples[sampleIndex];assert2(fragmentSample);let data2;if(options.metadataOnly){data2=PLACEHOLDER_DATA}else{
+let slice=this.internalTrack.demuxer.reader.requestSlice(fragmentSample.byteOffset,fragmentSample.byteSize);
+if(isThenable(slice))slice=await slice;if(!slice){return null}data2=readBytes(slice,fragmentSample.byteSize);
+if(this.internalTrack.encryptionInfo){const sampleEncryption=fragmentSample.encryption??getDefaultSampleEncryption(
+this.internalTrack.encryptionInfo);if(sampleEncryption){data2=await decryptSample(this.internalTrack,
+sampleEncryption,data2,fragment)}}}const timestamp=(fragmentSample.presentationTimestamp-this.internalTrack.
+editListOffset)/this.internalTrack.timescale;const duration=fragmentSample.duration/this.internalTrack.
+timescale;const packet=new EncodedPacket(data2,fragmentSample.isKeyFrame?"key":"delta",timestamp,duration,
+fragment.moofOffset+sampleIndex,fragmentSample.byteSize);this.packetToFragmentLocation.set(packet,{fragment,
+sampleIndex});return packet}async performFragmentedLookup(startFragment,getMatchInFragment,searchTimestamp,latestTimestamp,options){
+const demuxer=this.internalTrack.demuxer;let currentFragment=null;let bestFragment=null;let bestSampleIndex=-1;
+if(startFragment){const{sampleIndex,correctSampleFound}=getMatchInFragment(startFragment);if(correctSampleFound){
+return this.fetchPacketInFragment(startFragment,sampleIndex,options)}if(sampleIndex!==-1){bestFragment=
+startFragment;bestSampleIndex=sampleIndex}}const lookupEntryIndex=binarySearchLessOrEqual(this.internalTrack.
+fragmentLookupTable,searchTimestamp,x=>x.timestamp);const lookupEntry=lookupEntryIndex!==-1?this.internalTrack.
+fragmentLookupTable[lookupEntryIndex]:null;const positionCacheIndex=binarySearchLessOrEqual(this.internalTrack.
+fragmentPositionCache,searchTimestamp,x=>x.startTimestamp);const positionCacheEntry=positionCacheIndex!==
+-1?this.internalTrack.fragmentPositionCache[positionCacheIndex]:null;const lookupEntryPosition=Math.
+max(lookupEntry?.moofOffset??0,positionCacheEntry?.moofOffset??0)||null;let currentPos;if(!startFragment){
+currentPos=lookupEntryPosition??0}else{if(lookupEntryPosition===null||startFragment.moofOffset>=lookupEntryPosition){
+currentPos=startFragment.moofOffset+startFragment.moofSize;currentFragment=startFragment}else{currentPos=
+lookupEntryPosition}}while(true){if(currentFragment){const trackData=currentFragment.trackData.get(this.
+internalTrack.id);if(trackData&&trackData.startTimestamp>latestTimestamp){break}}let slice=demuxer.reader.
+requestSliceRange(currentPos,MIN_BOX_HEADER_SIZE,MAX_BOX_HEADER_SIZE);if(isThenable(slice))slice=await slice;
+if(!slice)break;const boxStartPos=currentPos;const boxInfo=readBoxHeader(slice);if(!boxInfo){break}if(boxInfo.
+name==="moof"){currentFragment=await demuxer.readFragment(boxStartPos);const{sampleIndex,correctSampleFound}=getMatchInFragment(
+currentFragment);if(correctSampleFound){return this.fetchPacketInFragment(currentFragment,sampleIndex,
+options)}if(sampleIndex!==-1){bestFragment=currentFragment;bestSampleIndex=sampleIndex}}currentPos=boxStartPos+
+boxInfo.totalSize}if(lookupEntry&&(!bestFragment||bestFragment.moofOffset<lookupEntry.moofOffset)){const previousLookupEntry=this.
+internalTrack.fragmentLookupTable[lookupEntryIndex-1];assert2(!previousLookupEntry||previousLookupEntry.
+timestamp<lookupEntry.timestamp);const newSearchTimestamp=previousLookupEntry?.timestamp??-Infinity;
+return this.performFragmentedLookup(null,getMatchInFragment,newSearchTimestamp,latestTimestamp,options)}
+if(bestFragment){return this.fetchPacketInFragment(bestFragment,bestSampleIndex,options)}return null}};
+IsobmffVideoTrackBacking=class extends IsobmffTrackBacking{constructor(internalTrack){super(internalTrack);
+this.decoderConfigPromise=null;this.internalTrack=internalTrack}getType(){return"video"}getCodec(){return this.
+internalTrack.info.codec}getCodedWidth(){return this.internalTrack.info.width}getCodedHeight(){return this.
+internalTrack.info.height}getSquarePixelWidth(){return this.internalTrack.info.squarePixelWidth}getSquarePixelHeight(){
+return this.internalTrack.info.squarePixelHeight}getRotation(){return this.internalTrack.rotation}async getColorSpace(){
+const decoderConfig=await this.getDecoderConfig();if(!decoderConfig){return this.internalTrack.info.
+colorSpace}return{primaries:decoderConfig.colorSpace?.primaries,transfer:decoderConfig.colorSpace?.transfer,
+matrix:decoderConfig.colorSpace?.matrix,fullRange:decoderConfig.colorSpace?.fullRange}}async canBeTransparent(){
+return this.internalTrack.info.codec==="prores"&&(this.internalTrack.info.proresFormat==="ap4h"||this.
+internalTrack.info.proresFormat==="ap4x")}async getDecoderConfig(){if(!this.internalTrack.info.codec){
+return null}return this.decoderConfigPromise??=(async()=>{if(this.internalTrack.info.codec==="avc"&&
+!this.internalTrack.info.codecDescription){const firstPacket=await this.getFirstPacket({});this.internalTrack.
+info.avcCodecInfo=firstPacket&&extractAvcDecoderConfigurationRecord(firstPacket.data)}else if(this.internalTrack.
+info.codec==="hevc"&&!this.internalTrack.info.codecDescription){const firstPacket=await this.getFirstPacket(
+{});this.internalTrack.info.hevcCodecInfo=firstPacket&&extractHevcDecoderConfigurationRecord(firstPacket.
+data)}else if(this.internalTrack.info.codec==="vp9"&&(!this.internalTrack.info.vp9CodecInfo||!vp9CodecInfoHasColorInfo(
+this.internalTrack.info.vp9CodecInfo))){const firstPacket=await this.getFirstPacket({});const packetInfo=firstPacket&&
+extractVp9CodecInfoFromPacket(firstPacket.data);if(packetInfo){this.internalTrack.info.vp9CodecInfo=
+{...this.internalTrack.info.vp9CodecInfo??packetInfo,videoFullRangeFlag:packetInfo.videoFullRangeFlag,
+colourPrimaries:packetInfo.colourPrimaries,transferCharacteristics:packetInfo.transferCharacteristics,
+matrixCoefficients:packetInfo.matrixCoefficients}}}else if(this.internalTrack.info.codec==="av1"&&(!this.
+internalTrack.info.av1CodecInfo||!av1CodecInfoHasColorInfo(this.internalTrack.info.av1CodecInfo))){const firstPacket=await this.
+getFirstPacket({});const packetInfo=firstPacket&&extractAv1CodecInfoFromPacket(firstPacket.data);if(packetInfo){
+this.internalTrack.info.av1CodecInfo=packetInfo}}else if(this.internalTrack.info.codec==="prores"&&!this.
+internalTrack.info.proresCodecInfo){const firstPacket=await this.getFirstPacket({});this.internalTrack.
+info.proresCodecInfo=firstPacket&&extractProresCodecInfoFromPacket(firstPacket.data)}if(!colorSpaceIsComplete(
+this.internalTrack.info.colorSpace)){const colorSpace=extractColorSpace(this.internalTrack.info);this.
+internalTrack.info.colorSpace.primaries??=colorSpace.primaries;this.internalTrack.info.colorSpace.transfer??=
+colorSpace.transfer;this.internalTrack.info.colorSpace.matrix??=colorSpace.matrix;this.internalTrack.
+info.colorSpace.fullRange??=colorSpace.fullRange}const config={codec:extractVideoCodecString(this.internalTrack.
+info),codedWidth:this.internalTrack.info.width,codedHeight:this.internalTrack.info.height,description:this.
+internalTrack.info.codecDescription??void 0,colorSpace:this.internalTrack.info.colorSpace};if(this.internalTrack.
+info.width!==this.internalTrack.info.squarePixelWidth||this.internalTrack.info.height!==this.internalTrack.
+info.squarePixelHeight){config.displayAspectWidth=this.internalTrack.info.squarePixelWidth;config.displayAspectHeight=
+this.internalTrack.info.squarePixelHeight}return config})()}};IsobmffAudioTrackBacking=class extends IsobmffTrackBacking{constructor(internalTrack){
+super(internalTrack);this.decoderConfigPromise=null;this.internalTrack=internalTrack}getType(){return"\
+audio"}getCodec(){return this.internalTrack.info.codec}getNumberOfChannels(){return this.internalTrack.
+info.numberOfChannels}getSampleRate(){return this.internalTrack.info.sampleRate}async getDecoderConfig(){
+if(!this.internalTrack.info.codec){return null}return this.decoderConfigPromise??=(async()=>{if(this.
+internalTrack.info.codec==="dts"&&!this.internalTrack.info.dtsFormat){const firstPacket=await this.getFirstPacket(
+{});this.internalTrack.info.dtsFormat=firstPacket&&extractDtsFourCcFromPacket(firstPacket.data)}return{
+codec:extractAudioCodecString(this.internalTrack.info),numberOfChannels:this.internalTrack.info.numberOfChannels,
+sampleRate:this.internalTrack.info.sampleRate,description:this.internalTrack.info.codecDescription??
+void 0}})()}};getSampleIndexForTimestamp=(sampleTable,timescaleUnits)=>{if(sampleTable.presentationTimestamps){
+const index=binarySearchLessOrEqual(sampleTable.presentationTimestamps,timescaleUnits,x=>x.presentationTimestamp);
+if(index===-1){return-1}return sampleTable.presentationTimestamps[index].sampleIndex}else{const index=binarySearchLessOrEqual(
+sampleTable.sampleTimingEntries,timescaleUnits,x=>x.startDecodeTimestamp);if(index===-1){return-1}const entry=sampleTable.
+sampleTimingEntries[index];return entry.startIndex+Math.min(Math.floor((timescaleUnits-entry.startDecodeTimestamp)/
+entry.delta),entry.count-1)}};getKeyframeSampleIndexForTimestamp=(sampleTable,timescaleUnits)=>{if(!sampleTable.
+keySampleIndices){return getSampleIndexForTimestamp(sampleTable,timescaleUnits)}if(sampleTable.presentationTimestamps){
+const index=binarySearchLessOrEqual(sampleTable.presentationTimestamps,timescaleUnits,x=>x.presentationTimestamp);
+if(index===-1){return-1}for(let i=index;i>=0;i--){const sampleIndex=sampleTable.presentationTimestamps[i].
+sampleIndex;const isKeyFrame=binarySearchExact(sampleTable.keySampleIndices,sampleIndex,x=>x)!==-1;if(isKeyFrame){
+return sampleIndex}}return-1}else{const sampleIndex=getSampleIndexForTimestamp(sampleTable,timescaleUnits);
+const index=binarySearchLessOrEqual(sampleTable.keySampleIndices,sampleIndex,x=>x);return sampleTable.
+keySampleIndices[index]??-1}};getSampleInfo=(sampleTable,sampleIndex)=>{const timingEntryIndex=binarySearchLessOrEqual(
+sampleTable.sampleTimingEntries,sampleIndex,x=>x.startIndex);const timingEntry=sampleTable.sampleTimingEntries[timingEntryIndex];
+if(!timingEntry||timingEntry.startIndex+timingEntry.count<=sampleIndex){return null}const decodeTimestamp=timingEntry.
+startDecodeTimestamp+(sampleIndex-timingEntry.startIndex)*timingEntry.delta;let presentationTimestamp=decodeTimestamp;
+const offsetEntryIndex=binarySearchLessOrEqual(sampleTable.sampleCompositionTimeOffsets,sampleIndex,
+x=>x.startIndex);const offsetEntry=sampleTable.sampleCompositionTimeOffsets[offsetEntryIndex];if(offsetEntry&&
+sampleIndex-offsetEntry.startIndex<offsetEntry.count){presentationTimestamp+=offsetEntry.offset}const sampleSize=sampleTable.
+sampleSizes[Math.min(sampleIndex,sampleTable.sampleSizes.length-1)];const chunkEntryIndex=binarySearchLessOrEqual(
+sampleTable.sampleToChunk,sampleIndex,x=>x.startSampleIndex);const chunkEntry=sampleTable.sampleToChunk[chunkEntryIndex];
+assert2(chunkEntry);const chunkIndex=chunkEntry.startChunkIndex+Math.floor((sampleIndex-chunkEntry.startSampleIndex)/
+chunkEntry.samplesPerChunk);const chunkOffset=sampleTable.chunkOffsets[chunkIndex];const startSampleIndexOfChunk=chunkEntry.
+startSampleIndex+(chunkIndex-chunkEntry.startChunkIndex)*chunkEntry.samplesPerChunk;let chunkSize=0;
+let sampleOffset=chunkOffset;if(sampleTable.sampleSizes.length===1){sampleOffset+=sampleSize*(sampleIndex-
+startSampleIndexOfChunk);chunkSize+=sampleSize*chunkEntry.samplesPerChunk}else{for(let i=startSampleIndexOfChunk;i<
+startSampleIndexOfChunk+chunkEntry.samplesPerChunk;i++){const sampleSize2=sampleTable.sampleSizes[i];
+if(i<sampleIndex){sampleOffset+=sampleSize2}chunkSize+=sampleSize2}}let duration=timingEntry.delta;if(sampleTable.
+presentationTimestamps){const presentationIndex=sampleTable.presentationTimestampIndexMap[sampleIndex];
+assert2(presentationIndex!==void 0);if(presentationIndex<sampleTable.presentationTimestamps.length-1){
+const nextEntry=sampleTable.presentationTimestamps[presentationIndex+1];const nextPresentationTimestamp=nextEntry.
+presentationTimestamp;duration=nextPresentationTimestamp-presentationTimestamp}}return{presentationTimestamp,
+duration,sampleOffset,sampleSize,chunkOffset,chunkSize,isKeyFrame:sampleTable.keySampleIndices?binarySearchExact(
+sampleTable.keySampleIndices,sampleIndex,x=>x)!==-1:true}};getNextKeyframeIndexForSample=(sampleTable,sampleIndex)=>{
+if(!sampleTable.keySampleIndices){return sampleIndex+1}const index=binarySearchLessOrEqual(sampleTable.
+keySampleIndices,sampleIndex,x=>x);return sampleTable.keySampleIndices[index+1]??-1};offsetFragmentTrackDataByTimestamp=
+(trackData,timestamp)=>{trackData.startTimestamp+=timestamp;trackData.endTimestamp+=timestamp;for(const sample of trackData.
+samples){sample.presentationTimestamp+=timestamp}for(const entry of trackData.presentationTimestamps){
+entry.presentationTimestamp+=timestamp}};extractRotationFromMatrix=matrix=>{const[a,b]=matrix;const radians=Math.
+atan2(b,a);if(!Number.isFinite(radians)){return 0}return radians*(180/Math.PI)};sampleTableIsEmpty=sampleTable=>{
+return sampleTable.sampleSizes.length===0};getOrCreateEncryptionAuxInfo=track=>{if(track.currentFragmentState){
+return track.currentFragmentState.encryptionAuxInfo??={defaultSampleInfoSize:0,sampleSizes:null,sampleCount:0,
+offset:null,resolved:null}}else{return track.encryptionAuxInfo??={defaultSampleInfoSize:0,sampleSizes:null,
+sampleCount:0,offset:null,resolved:null}}};resolveEncryptionAuxInfo=async(reader,encryptionInfo,aux)=>{
+if(aux.resolved){return aux.resolved}if(aux.offset===null||aux.sampleCount===0){throw new Error("Inc\
+omplete saiz/saio info; cannot resolve encryption data.")}let totalSize=0;if(aux.defaultSampleInfoSize>
+0){totalSize=aux.defaultSampleInfoSize*aux.sampleCount}else{assert2(aux.sampleSizes);for(let i=0;i<aux.
+sampleCount;i++){totalSize+=aux.sampleSizes[i]}}let slice=reader.requestSlice(aux.offset,totalSize);
+if(isThenable(slice))slice=await slice;if(!slice){throw new Error("Failed to read auxiliary encrypti\
+on info.")}const ivSize=encryptionInfo.defaultPerSampleIvSize;assert2(ivSize!==null);const entries=[];
+for(let i=0;i<aux.sampleCount;i++){const entrySize=aux.defaultSampleInfoSize>0?aux.defaultSampleInfoSize:
+aux.sampleSizes[i];const iv=new Uint8Array(16);if(ivSize>0){iv.set(readBytes(slice,ivSize),0)}else{iv.
+set(encryptionInfo.defaultConstantIv,0)}let subsamples=null;if(entrySize>ivSize){const subsampleCount=readU16Be(
+slice);subsamples=[];for(let j=0;j<subsampleCount;j++){const clearLen=readU16Be(slice);const protectedLen=readU32Be(
+slice);subsamples.push({clearLen,protectedLen})}}entries.push({iv,subsamples})}aux.resolved=entries;
+return entries};getDefaultSampleEncryption=encryptionInfo=>{if(!encryptionInfo.defaultConstantIv){return null}
+return{iv:encryptionInfo.defaultConstantIv,subsamples:null}};decryptSample=async(track,sampleEncryption,data2,fragment)=>{
+assert2(track.encryptionInfo);const encryptionInfo=track.encryptionInfo;assert2(encryptionInfo.defaultKid!==
+null);const keyId=encryptionInfo.defaultKid;let keyBytes;const cacheEntry=track.demuxer.decryptionKeyCache.
+get(keyId);if(cacheEntry){keyBytes=await cacheEntry}else{if(!track.demuxer.input._formatOptions.isobmff?.
+resolveKeyId){throw new Error("Encrypted media samples encountered. To decrypt them, please provide \
+a callback for InputOptions.formatOptions.isobmff.resolveKeyId.")}const promise=(async()=>{let psshBoxes=track.
+demuxer.psshBoxes;if(fragment){psshBoxes=[...psshBoxes,...fragment.psshBoxes].filter(x=>x.keyIds===null||
+x.keyIds.includes(keyId));for(let i=0;i<psshBoxes.length-1;i++){for(let j=i+1;j<psshBoxes.length;j++){
+if(psshBoxesAreEqual(psshBoxes[i],psshBoxes[j])){psshBoxes.splice(j,1);j--}}}}const keyResult=await track.
+demuxer.input._formatOptions.isobmff.resolveKeyId({keyId,psshBoxes});if(!(typeof keyResult==="string"&&
+keyResult.length===32&&HEX_STRING_REGEX.test(keyResult)||keyResult instanceof Uint8Array&&keyResult.
+byteLength===16)){throw new TypeError("resolveKeyId must return a 32-character hex string or a 16-by\
+te Uint8Array containing the decryption key.")}return keyResult instanceof Uint8Array?keyResult:hexStringToBytes(
+keyResult)})();track.demuxer.decryptionKeyCache.set(keyId,promise);keyBytes=await promise}if(encryptionInfo.
+scheme==="cenc"||encryptionInfo.scheme==="cens"){return decryptCtr(keyBytes,encryptionInfo,sampleEncryption,
+data2)}else{return decryptCbcs(keyBytes,encryptionInfo,sampleEncryption,data2)}};decryptCtr=async(key,encryptionInfo,sampleEncryption,data2)=>{
+const counter=new Uint8Array(16);counter.set(sampleEncryption.iv,0);const cryptoKey=await crypto.subtle.
+importKey("raw",key,{name:"AES-CTR"},false,["decrypt"]);const cryptApply=async input=>{const plaintext=await crypto.
+subtle.decrypt({name:"AES-CTR",counter,length:64},cryptoKey,input);return new Uint8Array(plaintext)};
+if(!sampleEncryption.subsamples){return cryptApply(data2)}assert2(encryptionInfo.defaultCryptByteBlock!==
+null&&encryptionInfo.defaultSkipByteBlock!==null);const cryptRanges=collectCryptRanges(sampleEncryption.
+subsamples,encryptionInfo.defaultCryptByteBlock,encryptionInfo.defaultSkipByteBlock);let totalCryptLen=0;
+for(const range of cryptRanges){for(const seg of range.perSubsample){totalCryptLen+=seg.length}}const cryptBuffer=new Uint8Array(
+totalCryptLen);let writePos=0;for(const range of cryptRanges){for(const seg of range.perSubsample){cryptBuffer.
+set(data2.subarray(seg.offset,seg.offset+seg.length),writePos);writePos+=seg.length}}const plain=await cryptApply(
+cryptBuffer);const output=new Uint8Array(data2);let readPos=0;for(const range of cryptRanges){for(const seg of range.
+perSubsample){output.set(plain.subarray(readPos,readPos+seg.length),seg.offset);readPos+=seg.length}}
+return output};decryptCbcs=(key,encryptionInfo,sampleEncryption,data2)=>{const ctx=new Aes128CbcContext;
+ctx.init({key,iv:sampleEncryption.iv});const cryptByteBlock=encryptionInfo.defaultCryptByteBlock;const skipByteBlock=encryptionInfo.
+defaultSkipByteBlock;assert2(cryptByteBlock!==null&&skipByteBlock!==null);if(!sampleEncryption.subsamples){
+const output2=new Uint8Array(data2);const numBlocks=Math.floor(data2.length/16);for(let b=0;b<numBlocks;b++){
+const off=b*16;ctx.in.set(data2.subarray(off,off+16));ctx.decrypt();output2.set(ctx.out,off)}return output2}
+if(cryptByteBlock===0&&skipByteBlock===0){throw new Error("cbcs with subsamples requires pattern enc\
+ryption.")}const output=new Uint8Array(data2);const cryptRanges=collectCryptRanges(sampleEncryption.
+subsamples,cryptByteBlock,skipByteBlock);const ivView=new DataView(sampleEncryption.iv.buffer,sampleEncryption.
+iv.byteOffset,16);for(const range of cryptRanges){ctx.iv[0]=ivView.getUint32(0,false);ctx.iv[1]=ivView.
+getUint32(4,false);ctx.iv[2]=ivView.getUint32(8,false);ctx.iv[3]=ivView.getUint32(12,false);for(const seg of range.
+perSubsample){const numBlocks=seg.length/16;for(let b=0;b<numBlocks;b++){const offset=seg.offset+b*16;
+ctx.in.set(data2.subarray(offset,offset+16));ctx.decrypt();output.set(ctx.out,offset)}}}return output};
+collectCryptRanges=(subsamples,cryptByteBlock,skipByteBlock)=>{const ranges=[];const hasPattern=cryptByteBlock!==
+0||skipByteBlock!==0;let cursor=0;for(const subsample of subsamples){cursor+=subsample.clearLen;const perSubsample=[];
+if(!hasPattern){if(subsample.protectedLen>0){perSubsample.push({offset:cursor,length:subsample.protectedLen})}
+cursor+=subsample.protectedLen}else{let remaining=subsample.protectedLen;let pos=cursor;while(remaining>
+0){if(remaining<16*cryptByteBlock){break}const cryptBytes=16*cryptByteBlock;perSubsample.push({offset:pos,
+length:cryptBytes});pos+=cryptBytes;remaining-=cryptBytes;const skipBytes=Math.min(16*skipByteBlock,
+remaining);pos+=skipBytes;remaining-=skipBytes}cursor+=subsample.protectedLen}ranges.push({perSubsample})}
+return ranges}}});var MIN_ADTS_FRAME_HEADER_SIZE,MAX_ADTS_FRAME_HEADER_SIZE,readAdtsFrameHeader;var init_adts_reader=__esm(
+{"node_modules/mediabunny/dist/modules/src/adts/adts-reader.js"(){init_bitstream();init_reader();MIN_ADTS_FRAME_HEADER_SIZE=
+7;MAX_ADTS_FRAME_HEADER_SIZE=9;readAdtsFrameHeader=slice=>{const startPos=slice.filePos;const bytes=readBytes(
+slice,9);const bitstream=new Bitstream(bytes);const syncword=bitstream.readBits(12);if(syncword!==4095){
+return null}bitstream.skipBits(1);const layer=bitstream.readBits(2);if(layer!==0){return null}const protectionAbsence=bitstream.
+readBits(1);const objectType=bitstream.readBits(2)+1;const samplingFrequencyIndex=bitstream.readBits(
+4);if(samplingFrequencyIndex===15){return null}bitstream.skipBits(1);const channelConfiguration=bitstream.
+readBits(3);if(channelConfiguration===0){throw new Error("ADTS frames with channel configuration 0 a\
+re not supported.")}bitstream.skipBits(1);bitstream.skipBits(1);bitstream.skipBits(1);bitstream.skipBits(
+1);const frameLength=bitstream.readBits(13);bitstream.skipBits(11);const numberOfAacFrames=bitstream.
+readBits(2)+1;if(numberOfAacFrames!==1){throw new Error("ADTS frames with more than one AAC frame ar\
+e not supported.")}let crcCheck=null;if(protectionAbsence===1){slice.filePos-=2}else{crcCheck=bitstream.
+readBits(16)}return{objectType,samplingFrequencyIndex,channelConfiguration,frameLength,numberOfAacFrames,
+crcCheck,startPos}}}});var SAMPLES_PER_AAC_FRAME,AdtsDemuxer,AdtsAudioTrackBacking;var init_adts_demuxer=__esm({"node_modul\
+es/mediabunny/dist/modules/src/adts/adts-demuxer.js"(){init_aac_misc();init_demuxer();init_id3();init_metadata();
+init_misc();init_packet();init_reader();init_adts_reader();SAMPLES_PER_AAC_FRAME=1024;AdtsDemuxer=class extends Demuxer{constructor(input){
+super(input);this.metadataPromise=null;this.firstFrameHeader=null;this.loadedSamples=[];this.metadataTags=
+null;this.trackBackings=[];this.readingMutex=new AsyncMutex;this.lastSampleLoaded=false;this.lastLoadedPos=
+0;this.nextTimestampInSamples=0;this.reader=input._reader}async readMetadata(){return this.metadataPromise??=
+(async()=>{while(!this.firstFrameHeader&&!this.lastSampleLoaded){await this.advanceReader()}assert2(
+this.firstFrameHeader);this.trackBackings=[new AdtsAudioTrackBacking(this)]})()}async advanceReader(){
+if(this.lastLoadedPos===0){while(true){let slice2=this.reader.requestSlice(this.lastLoadedPos,ID3_V2_HEADER_SIZE);
+if(isThenable(slice2))slice2=await slice2;if(!slice2){this.lastSampleLoaded=true;return}const id3V2Header=readId3V2Header(
+slice2);if(!id3V2Header){break}this.lastLoadedPos=slice2.filePos+id3V2Header.size}}let slice=this.reader.
+requestSliceRange(this.lastLoadedPos,MIN_ADTS_FRAME_HEADER_SIZE,MAX_ADTS_FRAME_HEADER_SIZE);if(isThenable(
+slice))slice=await slice;if(!slice){this.lastSampleLoaded=true;return}const header=readAdtsFrameHeader(
+slice);if(!header){this.lastSampleLoaded=true;return}if(this.reader.fileSize!==null&&header.startPos+
+header.frameLength>this.reader.fileSize){this.lastSampleLoaded=true;return}if(!this.firstFrameHeader){
+this.firstFrameHeader=header}const sampleRate3=aacFrequencyTable[header.samplingFrequencyIndex];assert2(
+sampleRate3!==void 0);const sampleDuration=SAMPLES_PER_AAC_FRAME/sampleRate3;const sample={timestamp:this.
+nextTimestampInSamples/sampleRate3,duration:sampleDuration,dataStart:header.startPos,dataSize:header.
+frameLength};this.loadedSamples.push(sample);this.nextTimestampInSamples+=SAMPLES_PER_AAC_FRAME;this.
+lastLoadedPos=header.startPos+header.frameLength}async getMimeType(){return"audio/aac"}async getTrackBackings(){
+await this.readMetadata();return this.trackBackings}async getMetadataTags(){const release=await this.
+readingMutex.acquire();try{await this.readMetadata();if(this.metadataTags){return this.metadataTags}
+this.metadataTags={};let currentPos=0;while(true){let headerSlice=this.reader.requestSlice(currentPos,
+ID3_V2_HEADER_SIZE);if(isThenable(headerSlice))headerSlice=await headerSlice;if(!headerSlice)break;const id3V2Header=readId3V2Header(
+headerSlice);if(!id3V2Header){break}let contentSlice=this.reader.requestSlice(headerSlice.filePos,id3V2Header.
+size);if(isThenable(contentSlice))contentSlice=await contentSlice;if(!contentSlice)break;parseId3V2Tag(
+contentSlice,id3V2Header,this.metadataTags);currentPos=headerSlice.filePos+id3V2Header.size}return this.
+metadataTags}finally{release()}}};AdtsAudioTrackBacking=class{constructor(demuxer){this.demuxer=demuxer}getType(){
+return"audio"}getId(){return 1}getNumber(){return 1}getTimeResolution(){const sampleRate3=this.getSampleRate();
+return sampleRate3/SAMPLES_PER_AAC_FRAME}isRelativeToUnixEpoch(){return false}getUnixTimeForTimestamp(){
+return null}getPairingMask(){return 1n}getBitrate(){return null}getAverageBitrate(){return null}async getDurationFromMetadata(){
+return null}async getLiveRefreshInterval(){return null}getName(){return null}getLanguageCode(){return UNDETERMINED_LANGUAGE}getCodec(){
+return"aac"}getInternalCodecId(){assert2(this.demuxer.firstFrameHeader);return this.demuxer.firstFrameHeader.
+objectType}getNumberOfChannels(){assert2(this.demuxer.firstFrameHeader);const numberOfChannels=aacChannelMap[this.
+demuxer.firstFrameHeader.channelConfiguration];assert2(numberOfChannels!==void 0);return numberOfChannels}getSampleRate(){
+assert2(this.demuxer.firstFrameHeader);const sampleRate3=aacFrequencyTable[this.demuxer.firstFrameHeader.
+samplingFrequencyIndex];assert2(sampleRate3!==void 0);return sampleRate3}getDisposition(){return{...DEFAULT_TRACK_DISPOSITION}}async getDecoderConfig(){
+assert2(this.demuxer.firstFrameHeader);return{codec:`mp4a.40.${this.demuxer.firstFrameHeader.objectType}`,
+numberOfChannels:this.getNumberOfChannels(),sampleRate:this.getSampleRate()}}async getPacketAtIndex(sampleIndex,options){
+if(sampleIndex===-1){return null}const rawSample=this.demuxer.loadedSamples[sampleIndex];if(!rawSample){
+return null}let data2;if(options.metadataOnly){data2=PLACEHOLDER_DATA}else{let slice=this.demuxer.reader.
+requestSlice(rawSample.dataStart,rawSample.dataSize);if(isThenable(slice))slice=await slice;if(!slice){
+return null}data2=readBytes(slice,rawSample.dataSize)}return new EncodedPacket(data2,"key",rawSample.
+timestamp,rawSample.duration,sampleIndex,rawSample.dataSize)}getFirstPacket(options){return this.getPacketAtIndex(
+0,options)}async getNextPacket(packet,options){const release=await this.demuxer.readingMutex.acquire();
+try{const sampleIndex=binarySearchExact(this.demuxer.loadedSamples,packet.timestamp,x=>x.timestamp);
+if(sampleIndex===-1){throw new Error("Packet was not created from this track.")}const nextIndex=sampleIndex+
+1;while(nextIndex>=this.demuxer.loadedSamples.length&&!this.demuxer.lastSampleLoaded){await this.demuxer.
+advanceReader()}return this.getPacketAtIndex(nextIndex,options)}finally{release()}}async getPacket(timestamp,options){
+const release=await this.demuxer.readingMutex.acquire();try{while(true){const index=binarySearchLessOrEqual(
+this.demuxer.loadedSamples,timestamp,x=>x.timestamp);if(index===-1&&this.demuxer.loadedSamples.length>
+0){return null}if(this.demuxer.lastSampleLoaded){return this.getPacketAtIndex(index,options)}if(index>=
+0&&index+1<this.demuxer.loadedSamples.length){return this.getPacketAtIndex(index,options)}await this.
+demuxer.advanceReader()}}finally{release()}}getKeyPacket(timestamp,options){return this.getPacket(timestamp,
+options)}getNextKeyPacket(packet,options){return this.getNextPacket(packet,options)}}}});var TIMESCALE,TS_PACKET_SIZE,buildMpegTsMimeType;var init_mpeg_ts_misc=__esm({"node_modules/mediabun\
+ny/dist/modules/src/mpeg-ts/mpeg-ts-misc.js"(){TIMESCALE=9e4;TS_PACKET_SIZE=188;buildMpegTsMimeType=
+codecStrings=>{let string="video/MP2T";const uniqueCodecStrings=[...new Set(codecStrings.filter(Boolean))];
+if(uniqueCodecStrings.length>0){string+=`; codecs="${uniqueCodecStrings.join(", ")}"`}return string}}});var MISSING_PTS_ERROR_MESSAGE,REGISTRATION_DESCRIPTOR_TAG,HDMV_FORMAT_IDENTIFIER,HDPR_FORMAT_IDENTIFIER,
+DTS_FORMAT_IDENTIFIER_PREFIX,BLU_RAY_DTS_STREAM_TYPES,ignoredStreamTypes,MpegTsDemuxer,readPesPacketHeader,
+readPesPacket,MpegTsTrackBacking,MpegTsVideoTrackBacking,MpegTsAudioTrackBacking,maybeInsertReferencePacket,
+PacketReadingContext,PacketBuffer;var init_mpeg_ts_demuxer=__esm({"node_modules/mediabunny/dist/modu\
+les/src/mpeg-ts/mpeg-ts-demuxer.js"(){init_adts_demuxer();init_adts_reader();init_aac_misc();init_codec();
+init_codec_data();init_demuxer();init_logging();init_metadata();init_misc();init_mp3_misc();init_packet();
+init_reader();init_mpeg_ts_misc();init_ac3_misc();init_bitstream();MISSING_PTS_ERROR_MESSAGE="PES pa\
+cket is missing PTS where it was expected. PES packets without PTS are not currently supported. If y\
+ou think this file should be supported, please report it.";REGISTRATION_DESCRIPTOR_TAG=5;HDMV_FORMAT_IDENTIFIER=
+1212435798;HDPR_FORMAT_IDENTIFIER=1212436562;DTS_FORMAT_IDENTIFIER_PREFIX=1146376960;BLU_RAY_DTS_STREAM_TYPES=
+new Set([133,134,162]);ignoredStreamTypes=new Set;MpegTsDemuxer=class extends Demuxer{constructor(input){
+super(input);this.metadataPromise=null;this.elementaryStreams=[];this.trackBackingEntries=[];this.packetOffset=
+0;this.packetStride=-1;this.sectionEndPositions=[];this.seekChunkSize=5*1024*1024;this.minReferencePointByteDistance=
+-1;this.reader=input._reader}async readMetadata(){return this.metadataPromise??=(async()=>{const lengthToCheck=TS_PACKET_SIZE+
+16+1;let startingSlice=this.reader.requestSlice(0,lengthToCheck);if(isThenable(startingSlice))startingSlice=
+await startingSlice;assert2(startingSlice);const startingBytes=readBytes(startingSlice,lengthToCheck);
+if(startingBytes[0]===71&&startingBytes[TS_PACKET_SIZE]===71){this.packetOffset=0;this.packetStride=
+TS_PACKET_SIZE}else if(startingBytes[0]===71&&startingBytes[TS_PACKET_SIZE+16]===71){this.packetOffset=
+0;this.packetStride=TS_PACKET_SIZE+16}else if(startingBytes[4]===71&&startingBytes[4+TS_PACKET_SIZE+
+4]===71){this.packetOffset=4;this.packetStride=TS_PACKET_SIZE+4}else{throw new Error("Unreachable.")}
+const MIN_REFERENCE_POINT_PACKET_DISTANCE=256;this.minReferencePointByteDistance=MIN_REFERENCE_POINT_PACKET_DISTANCE*
+this.packetStride;let currentPos=this.packetOffset;let programMapPid=null;let hasProgramAssociationTable=false;
+let hasProgramMap=false;while(true){const packetHeader=await this.readPacketHeader(currentPos);if(!packetHeader){
+break}if(packetHeader.payloadUnitStartIndicator===0){currentPos+=this.packetStride;continue}if(hasProgramMap&&
+!this.elementaryStreams.some(x=>x.pid===packetHeader.pid)){currentPos+=this.packetStride;continue}const section=await this.
+readSection(currentPos,true,!hasProgramMap);if(!section){break}const BYTES_BEFORE_SECTION_LENGTH=3;const BITS_IN_CRC_32=32;
+let isProbablyProgramMap=false;if(!hasProgramMap&&section.pid!==0){const isPesPacket=section.payload[0]===
+0&&section.payload[1]===0&&section.payload[2]===1;if(!isPesPacket){const bitstream=new Bitstream(section.
+payload);const pointerField=bitstream.readAlignedByte();bitstream.skipBits(8*pointerField);const tableId=bitstream.
+readBits(8);isProbablyProgramMap=tableId===2}}if(section.pid===0&&!hasProgramAssociationTable){const bitstream=new Bitstream(
+section.payload);const pointerField=bitstream.readAlignedByte();bitstream.skipBits(8*pointerField);bitstream.
+skipBits(14);const sectionLength=bitstream.readBits(10);bitstream.skipBits(40);while(8*(sectionLength+
+BYTES_BEFORE_SECTION_LENGTH)-bitstream.pos>BITS_IN_CRC_32){const programNumber=bitstream.readBits(16);
+bitstream.skipBits(3);const id=bitstream.readBits(13);if(programNumber!==0){if(programMapPid!==null){
+throw new Error("Only files with a single program are supported.")}else{programMapPid=id}}}if(programMapPid===
+null){throw new Error("Program Association Table must link to a Program Map Table.")}hasProgramAssociationTable=
+true}else if((section.pid===programMapPid||isProbablyProgramMap)&&!hasProgramMap){const bitstream=new Bitstream(
+section.payload);const pointerField=bitstream.readAlignedByte();bitstream.skipBits(8*pointerField);bitstream.
+skipBits(12);const sectionLength=bitstream.readBits(12);bitstream.skipBits(43);const pcrPid=bitstream.
+readBits(13);bitstream.skipBits(6);const programInfoLength=bitstream.readBits(10);const programInfoEndPos=bitstream.
+pos+8*programInfoLength;let isBluRayProgram=false;while(bitstream.pos<programInfoEndPos){const descriptorTag=bitstream.
+readBits(8);const descriptorLength=bitstream.readBits(8);const descriptorEndPos=bitstream.pos+8*descriptorLength;
+if(descriptorTag===REGISTRATION_DESCRIPTOR_TAG&&descriptorLength>=4){const formatIdentifier=bitstream.
+readBits(32);isBluRayProgram||=formatIdentifier===HDMV_FORMAT_IDENTIFIER||formatIdentifier===HDPR_FORMAT_IDENTIFIER}
+bitstream.pos=descriptorEndPos}bitstream.pos=programInfoEndPos;while(8*(sectionLength+BYTES_BEFORE_SECTION_LENGTH)-
+bitstream.pos>BITS_IN_CRC_32){const streamType=bitstream.readBits(8);bitstream.skipBits(3);const elementaryPid=bitstream.
+readBits(13);bitstream.skipBits(6);const esInfoLength=bitstream.readBits(10);const esInfoEndPos=bitstream.
+pos+8*esInfoLength;let hasAc3Descriptor=false;let hasEac3Descriptor=false;let hasDtsDescriptor=false;
+while(bitstream.pos<esInfoEndPos){const descriptorTag=bitstream.readBits(8);const descriptorLength=bitstream.
+readBits(8);const descriptorEndPos=bitstream.pos+8*descriptorLength;if(descriptorTag===106){hasAc3Descriptor=
+true}else if(descriptorTag===122||descriptorTag===204){hasEac3Descriptor=true}else if(descriptorTag===
+123){hasDtsDescriptor=true}else if(descriptorTag===REGISTRATION_DESCRIPTOR_TAG&&descriptorLength>=4){
+const formatIdentifier=bitstream.readBits(32);hasDtsDescriptor||=(formatIdentifier&4294967040)===DTS_FORMAT_IDENTIFIER_PREFIX}
+bitstream.pos=descriptorEndPos}let info=null;const effectiveStreamType=isBluRayProgram&&BLU_RAY_DTS_STREAM_TYPES.
+has(streamType)?130:streamType;switch(effectiveStreamType){case 27:case 36:{const codec=streamType===
+27?"avc":"hevc";info={type:"video",codec,decoderConfig:null,avcCodecInfo:null,hevcCodecInfo:null,colorSpace:{
+primaries:null,transfer:null,matrix:null,fullRange:null},width:-1,height:-1,squarePixelWidth:-1,squarePixelHeight:-1,
+reorderSize:-1}};break;case 3:case 4:case 15:case 129:case 135:case 130:case 138:{let codec;if(effectiveStreamType===
+3||effectiveStreamType===4){codec="mp3"}else if(effectiveStreamType===15){codec="aac"}else if(effectiveStreamType===
+129){codec="ac3"}else if(effectiveStreamType===135){codec="eac3"}else{codec="dts"}info={type:"audio",
+codec,decoderConfig:null,aacCodecInfo:null,dtsFormat:null,numberOfChannels:-1,sampleRate:-1}};break;case 6:
+{if(hasEac3Descriptor){info={type:"audio",codec:"eac3",decoderConfig:null,aacCodecInfo:null,dtsFormat:null,
+numberOfChannels:-1,sampleRate:-1}}else if(hasAc3Descriptor){info={type:"audio",codec:"ac3",decoderConfig:null,
+aacCodecInfo:null,dtsFormat:null,numberOfChannels:-1,sampleRate:-1}}else if(hasDtsDescriptor){info={
+type:"audio",codec:"dts",decoderConfig:null,aacCodecInfo:null,dtsFormat:null,numberOfChannels:-1,sampleRate:-1}}}
+;break;default:{if(!ignoredStreamTypes.has(streamType)){Logging._warn(`Note: MPEG-TS streams with st\
+ream_type 0x${streamType.toString(16)} are not currently supported.`);ignoredStreamTypes.add(streamType)}}}
+if(info){this.elementaryStreams.push({demuxer:this,pid:elementaryPid,streamType,initialized:false,firstSection:null,
+canBeTrustedWithKeyPackets:false,info,referencePesPackets:[]})}}hasProgramMap=true}else{const elementaryStream=this.
+elementaryStreams.find(x=>x.pid===section.pid);outer:if(elementaryStream&&!elementaryStream.initialized){
+const pesPacket=readPesPacket(section,true);if(!pesPacket){throw new Error(`Couldn't read first PES \
+packet for Elementary Stream with PID ${elementaryStream.pid}`)}elementaryStream.firstSection=section;
+elementaryStream.canBeTrustedWithKeyPackets=section.randomAccessIndicator===1;if(this.input._initInput){
+const initDemuxer=await this.input._initInput._getDemuxer();const matchingStream=initDemuxer.elementaryStreams.
+find(x=>x.pid===section.pid&&x.info.codec===elementaryStream.info.codec);if(matchingStream){elementaryStream.
+info=matchingStream.info;elementaryStream.initialized=true;break outer}}const context=new PacketReadingContext(
+elementaryStream,pesPacket);if(elementaryStream.info.type==="video"){while(true){const contextAlias=context;
+contextAlias.suppliedPacket=null;await context.markNextPacket();if(elementaryStream.info.codec==="av\
+c"){if(!context.suppliedPacket){throw new Error("Invalid AVC video stream; could not extract AVCDeco\
+derConfigurationRecord from any packet.")}elementaryStream.info.avcCodecInfo=extractAvcDecoderConfigurationRecord(
+context.suppliedPacket.data);if(!elementaryStream.info.avcCodecInfo){continue}const spsUnit=elementaryStream.
+info.avcCodecInfo.sequenceParameterSets[0];assert2(spsUnit);const spsInfo=parseAvcSps(spsUnit);elementaryStream.
+info.width=spsInfo.displayWidth;elementaryStream.info.height=spsInfo.displayHeight;const num=spsInfo.
+pixelAspectRatio.num;const den=spsInfo.pixelAspectRatio.den;if(num>0&&den>0){if(num>den){elementaryStream.
+info.squarePixelWidth=Math.round(elementaryStream.info.width*num/den);elementaryStream.info.squarePixelHeight=
+elementaryStream.info.height}else{elementaryStream.info.squarePixelWidth=elementaryStream.info.width;
+elementaryStream.info.squarePixelHeight=Math.round(elementaryStream.info.height*den/num)}}elementaryStream.
+info.colorSpace={primaries:COLOR_PRIMARIES_MAP_INVERSE[spsInfo.colourPrimaries],transfer:TRANSFER_CHARACTERISTICS_MAP_INVERSE[spsInfo.
+transferCharacteristics],matrix:MATRIX_COEFFICIENTS_MAP_INVERSE[spsInfo.matrixCoefficients],fullRange:!!spsInfo.
+fullRangeFlag};elementaryStream.info.reorderSize=spsInfo.maxDecFrameBuffering;break}else if(elementaryStream.
+info.codec==="hevc"){if(!context.suppliedPacket){throw new Error("Invalid HEVC video stream; could n\
+ot extract HVCDecoderConfigurationRecord from first packet.")}elementaryStream.info.hevcCodecInfo=extractHevcDecoderConfigurationRecord(
+context.suppliedPacket.data);if(!elementaryStream.info.hevcCodecInfo){continue}const spsArray=elementaryStream.
+info.hevcCodecInfo.arrays.find(a=>a.nalUnitType===HevcNalUnitType.SPS_NUT);const spsUnit=spsArray.nalUnits[0];
+assert2(spsUnit);const spsInfo=parseHevcSps(spsUnit);elementaryStream.info.width=spsInfo.displayWidth;
+elementaryStream.info.height=spsInfo.displayHeight;if(spsInfo.pixelAspectRatio.num>spsInfo.pixelAspectRatio.
+den){elementaryStream.info.squarePixelWidth=Math.round(elementaryStream.info.width*spsInfo.pixelAspectRatio.
+num/spsInfo.pixelAspectRatio.den);elementaryStream.info.squarePixelHeight=elementaryStream.info.height}else{
+elementaryStream.info.squarePixelWidth=elementaryStream.info.width;elementaryStream.info.squarePixelHeight=
+Math.round(elementaryStream.info.height*spsInfo.pixelAspectRatio.den/spsInfo.pixelAspectRatio.num)}elementaryStream.
+info.colorSpace={primaries:COLOR_PRIMARIES_MAP_INVERSE[spsInfo.colourPrimaries],transfer:TRANSFER_CHARACTERISTICS_MAP_INVERSE[spsInfo.
+transferCharacteristics],matrix:MATRIX_COEFFICIENTS_MAP_INVERSE[spsInfo.matrixCoefficients],fullRange:!!spsInfo.
+fullRangeFlag};elementaryStream.info.reorderSize=spsInfo.maxDecFrameBuffering;break}else{throw new Error(
+"Unhandled.")}}elementaryStream.info.decoderConfig={codec:extractVideoCodecString({width:elementaryStream.
+info.width,height:elementaryStream.info.height,codec:elementaryStream.info.codec,codecDescription:null,
+colorSpace:elementaryStream.info.colorSpace,avcType:1,avcCodecInfo:elementaryStream.info.avcCodecInfo,
+hevcCodecInfo:elementaryStream.info.hevcCodecInfo,vp9CodecInfo:null,av1CodecInfo:null,proresFormat:null}),
+codedWidth:elementaryStream.info.width,codedHeight:elementaryStream.info.height,colorSpace:elementaryStream.
+info.colorSpace};if(elementaryStream.info.width!==elementaryStream.info.squarePixelWidth||elementaryStream.
+info.height!==elementaryStream.info.squarePixelHeight){elementaryStream.info.decoderConfig.displayAspectWidth=
+elementaryStream.info.squarePixelWidth;elementaryStream.info.decoderConfig.displayAspectHeight=elementaryStream.
+info.squarePixelHeight}elementaryStream.initialized=true}else{await context.markNextPacket();if(!context.
+suppliedPacket){throw new Error(`Couldn't parse first media packet for Elementary Stream with PID ${elementaryStream.
+pid}`)}if(elementaryStream.info.codec==="aac"){const slice=FileSlice.tempFromBytes(context.suppliedPacket.
+data);const header=readAdtsFrameHeader(slice);if(!header){throw new Error("Invalid AAC audio stream;\
+ could not read ADTS frame header from first packet.")}elementaryStream.info.aacCodecInfo={isMpeg2:false,
+objectType:header.objectType};elementaryStream.info.numberOfChannels=aacChannelMap[header.channelConfiguration];
+elementaryStream.info.sampleRate=aacFrequencyTable[header.samplingFrequencyIndex]}else if(elementaryStream.
+info.codec==="mp3"){const word=readU32Be(FileSlice.tempFromBytes(context.suppliedPacket.data));const result=readMp3FrameHeader(
+word,context.suppliedPacket.data.byteLength);if(!result.header){throw new Error("Invalid MP3 audio s\
+tream; could not read frame header from first packet.")}elementaryStream.info.numberOfChannels=getMp3ChannelCount(
+result.header.channel);elementaryStream.info.sampleRate=result.header.sampleRate}else if(elementaryStream.
+info.codec==="ac3"){const frameInfo=parseAc3SyncFrame(context.suppliedPacket.data);if(!frameInfo){throw new Error(
+"Invalid AC-3 audio stream; could not read sync frame from first packet.")}if(frameInfo.fscod===3){throw new Error(
+"Invalid AC-3 audio stream; reserved sample rate code found in first packet.")}elementaryStream.info.
+numberOfChannels=AC3_ACMOD_CHANNEL_COUNTS[frameInfo.acmod]+frameInfo.lfeon;elementaryStream.info.sampleRate=
+AC3_SAMPLE_RATES[frameInfo.fscod]}else if(elementaryStream.info.codec==="eac3"){const frameInfo=parseEac3SyncFrame(
+context.suppliedPacket.data);if(!frameInfo){throw new Error("Invalid E-AC-3 audio stream; could not \
+read sync frame from first packet.")}const sampleRate3=getEac3SampleRate(frameInfo);if(sampleRate3===
+null){throw new Error("Invalid E-AC-3 audio stream; reserved sample rate code found in first packet.")}
+elementaryStream.info.numberOfChannels=getEac3ChannelCount(frameInfo);elementaryStream.info.sampleRate=
+sampleRate3}else if(elementaryStream.info.codec==="dts"){const frameInfo=parseDtsFrame(context.suppliedPacket.
+data);if(!frameInfo){throw new Error("Invalid DTS audio stream; could not read frame header from fir\
+st packet.")}elementaryStream.info.numberOfChannels=frameInfo.numberOfChannels;elementaryStream.info.
+sampleRate=frameInfo.sampleRate;if(frameInfo.core){elementaryStream.info.dtsFormat=frameInfo.hasExtensions?
+"dtsh":"dtsc"}}else{throw new Error("Unhandled.")}elementaryStream.info.decoderConfig={codec:extractAudioCodecString(
+{codec:elementaryStream.info.codec,codecDescription:null,aacCodecInfo:elementaryStream.info.aacCodecInfo,
+dtsFormat:elementaryStream.info.dtsFormat}),numberOfChannels:elementaryStream.info.numberOfChannels,
+sampleRate:elementaryStream.info.sampleRate};elementaryStream.initialized=true}}}const isDone=hasProgramMap&&
+this.elementaryStreams.every(x=>x.initialized);if(isDone){break}currentPos+=this.packetStride}if(!hasProgramMap){
+if(!hasProgramAssociationTable){throw new Error("No Program Association Table found in the file.")}throw new Error(
+"No Program Map Table found in the file.")}for(const stream of this.elementaryStreams){if(!stream.initialized){
+continue}if(stream.info.type==="video"){this.trackBackingEntries.push(new MpegTsVideoTrackBacking(stream))}else{
+this.trackBackingEntries.push(new MpegTsAudioTrackBacking(stream))}}})()}async getTrackBackings(){await this.
+readMetadata();return this.trackBackingEntries}async getMetadataTags(){return{}}async getMimeType(){
+await this.readMetadata();const codecStrings=await Promise.all(this.trackBackingEntries.map(x=>x.getDecoderConfig().
+then(c=>c?.codec??null)));return buildMpegTsMimeType(codecStrings)}async readSection(startPos,full,contiguous=false){
+let endPos=startPos;let currentPos=startPos;const chunks=[];let chunksByteLength=0;let firstPacket=null;
+let mustAddSectionEnd=true;let randomAccessIndicator=0;while(true){const packet=await this.readPacket(
+currentPos);currentPos+=this.packetStride;if(!packet){break}if(!firstPacket){if(packet.payloadUnitStartIndicator===
+0){break}firstPacket=packet}else{if(packet.pid!==firstPacket.pid){if(contiguous){break}else{continue}}
+if(packet.payloadUnitStartIndicator===1){break}}const hasAdaptationField=!!(packet.adaptationFieldControl&
+2);const hasPayload=!!(packet.adaptationFieldControl&1);let adaptationFieldLength=0;if(hasAdaptationField){
+adaptationFieldLength=1+packet.body[0];if(packet===firstPacket&&adaptationFieldLength>1){randomAccessIndicator=
+packet.body[1]>>6&1}}if(hasPayload){if(adaptationFieldLength===0){chunks.push(packet.body);chunksByteLength+=
+packet.body.byteLength}else{chunks.push(packet.body.subarray(adaptationFieldLength));chunksByteLength+=
+packet.body.byteLength-adaptationFieldLength}}endPos=currentPos;if(!full&&chunksByteLength>=64){mustAddSectionEnd=
+false;break}const isKnownSectionEnd=binarySearchExact(this.sectionEndPositions,endPos,x=>x)!==-1;if(isKnownSectionEnd){
+mustAddSectionEnd=false;break}}if(mustAddSectionEnd){const index=binarySearchLessOrEqual(this.sectionEndPositions,
+endPos,x=>x);this.sectionEndPositions.splice(index+1,0,endPos)}if(!firstPacket){return null}let merged;
+if(chunks.length===1){merged=chunks[0]}else{const totalLength=chunks.reduce((sum,chunk)=>sum+chunk.length,
+0);merged=new Uint8Array(totalLength);let offset=0;for(const chunk of chunks){merged.set(chunk,offset);
+offset+=chunk.length}}return{startPos,endPos:full?endPos:null,pid:firstPacket.pid,payload:merged,randomAccessIndicator}}async readPacketHeader(pos){
+let slice=this.reader.requestSlice(pos,4);if(isThenable(slice))slice=await slice;if(!slice){return null}
+const syncByte=readU8(slice);if(syncByte!==71){throw new Error("Invalid TS packet sync byte. Likely \
+an internal bug, please report this file.")}const nextTwoBytes=readU16Be(slice);const transportErrorIndicator=nextTwoBytes>>
+15;const payloadUnitStartIndicator=nextTwoBytes>>14&1;const transportPriority=nextTwoBytes>>13&1;const pid=nextTwoBytes&
+8191;const nextByte=readU8(slice);const transportScramblingControl=nextByte>>6;const adaptationFieldControl=nextByte>>
+4&3;const continuityCounter=nextByte&15;return{payloadUnitStartIndicator,pid,adaptationFieldControl}}async readPacket(pos){
+let slice=this.reader.requestSlice(pos,TS_PACKET_SIZE);if(isThenable(slice))slice=await slice;if(!slice){
+return null}const bytes=readBytes(slice,TS_PACKET_SIZE);const syncByte=bytes[0];if(syncByte!==71){throw new Error(
+"Invalid TS packet sync byte. Likely an internal bug, please report this file.")}const nextTwoBytes=(bytes[1]<<
+8)+bytes[2];const transportErrorIndicator=nextTwoBytes>>15;const payloadUnitStartIndicator=nextTwoBytes>>
+14&1;const transportPriority=nextTwoBytes>>13&1;const pid=nextTwoBytes&8191;const nextByte=bytes[3];
+const transportScramblingControl=nextByte>>6;const adaptationFieldControl=nextByte>>4&3;const continuityCounter=nextByte&
+15;return{payloadUnitStartIndicator,pid,adaptationFieldControl,body:bytes.subarray(4)}}};readPesPacketHeader=
+(section,expectPts)=>{if(section.payload.byteLength<3){return null}const bitstream=new Bitstream(section.
+payload);const startCodePrefix=bitstream.readBits(24);if(startCodePrefix!==1){return null}const streamId=bitstream.
+readBits(8);bitstream.skipBits(16);if(streamId===188||streamId===190||streamId===191||streamId===240||
+streamId===241||streamId===255||streamId===242||streamId===248){return null}bitstream.skipBits(8);const ptsDtsFlags=bitstream.
+readBits(2);bitstream.skipBits(14);let pts=null;if(ptsDtsFlags===2||ptsDtsFlags===3){pts=0;bitstream.
+skipBits(4);pts+=bitstream.readBits(3)*(1<<30);bitstream.skipBits(1);pts+=bitstream.readBits(15)*(1<<
+15);bitstream.skipBits(1);pts+=bitstream.readBits(15)}else{if(expectPts){throw new Error(MISSING_PTS_ERROR_MESSAGE)}}
+return{sectionStartPos:section.startPos,sectionEndPos:section.endPos,pts,randomAccessIndicator:section.
+randomAccessIndicator}};readPesPacket=(section,expectPts)=>{assert2(section.endPos!==null);const header=readPesPacketHeader(
+section,expectPts);if(!header){return null}const bitstream=new Bitstream(section.payload);bitstream.
+skipBits(32);const pesPacketLength=bitstream.readBits(16);const BYTES_UNTIL_END_OF_PES_PACKET_LENGTH=6;
+bitstream.skipBits(16);const pesHeaderDataLength=bitstream.readBits(8);const pesHeaderEndPos=bitstream.
+pos+8*pesHeaderDataLength;bitstream.pos=pesHeaderEndPos;const bytePos=pesHeaderEndPos/8;assert2(Number.
+isInteger(bytePos));const data2=section.payload.subarray(bytePos,pesPacketLength>0?BYTES_UNTIL_END_OF_PES_PACKET_LENGTH+
+pesPacketLength:section.payload.byteLength);return{...header,data:data2}};MpegTsTrackBacking=class _MpegTsTrackBacking{constructor(elementaryStream){
+this.elementaryStream=elementaryStream;this.packetBuffers=new WeakMap;this.packetSectionStarts=new WeakMap}getId(){
+return this.elementaryStream.pid}getNumber(){const demuxer=this.elementaryStream.demuxer;const trackType=this.
+elementaryStream.info.type;let number=0;for(const backing of demuxer.trackBackingEntries){if(backing.
+getType()===trackType){number++}assert2(backing instanceof _MpegTsTrackBacking);if(backing.elementaryStream===
+this.elementaryStream){break}}return number}getCodec(){throw new Error("Not implemented on base clas\
+s.")}getInternalCodecId(){return this.elementaryStream.streamType}getName(){return null}getLanguageCode(){
+return UNDETERMINED_LANGUAGE}getDisposition(){return{...DEFAULT_TRACK_DISPOSITION,primary:false}}getTimeResolution(){
+return TIMESCALE}isRelativeToUnixEpoch(){return false}getUnixTimeForTimestamp(){return null}getPairingMask(){
+return 1n}getBitrate(){return null}getAverageBitrate(){return null}async getDurationFromMetadata(){return null}async getLiveRefreshInterval(){
+return null}createEncodedPacket(suppliedPacket,duration,options){let packetType;if(this.allPacketsAreKeyPackets()){
+packetType="key"}else{packetType=suppliedPacket.randomAccessIndicator===1?"key":"delta"}return new EncodedPacket(
+options.metadataOnly?PLACEHOLDER_DATA:suppliedPacket.data,packetType,suppliedPacket.pts/TIMESCALE,Math.
+max(duration/TIMESCALE,0),suppliedPacket.sequenceNumber,suppliedPacket.data.byteLength)}async getFirstPacket(options){
+const section=this.elementaryStream.firstSection;assert2(section);const pesPacket=readPesPacket(section,
+true);assert2(pesPacket);const context=new PacketReadingContext(this.elementaryStream,pesPacket);const buffer=new PacketBuffer(
+this,context);const result=await buffer.readNext();if(!result){return null}const packet=this.createEncodedPacket(
+result.packet,result.duration,options);this.packetBuffers.set(packet,buffer);this.packetSectionStarts.
+set(packet,result.packet.sectionStartPos);return packet}async getNextPacket(packet,options){let buffer=this.
+packetBuffers.get(packet);if(buffer){const result=await buffer.readNext();if(!result){return null}this.
+packetBuffers.delete(packet);const newPacket=this.createEncodedPacket(result.packet,result.duration,
+options);this.packetBuffers.set(newPacket,buffer);this.packetSectionStarts.set(newPacket,result.packet.
+sectionStartPos);return newPacket}const sectionStartPos=this.packetSectionStarts.get(packet);if(sectionStartPos===
+void 0){throw new Error("Packet was not created from this track.")}const demuxer=this.elementaryStream.
+demuxer;const section=await demuxer.readSection(sectionStartPos,true);assert2(section);const pesPacket=readPesPacket(
+section,true);assert2(pesPacket);const context=new PacketReadingContext(this.elementaryStream,pesPacket);
+buffer=new PacketBuffer(this,context);const targetSequenceNumber=packet.sequenceNumber;while(true){const result=await buffer.
+readNext();if(!result){return null}if(result.packet.sequenceNumber>targetSequenceNumber){const newPacket=this.
+createEncodedPacket(result.packet,result.duration,options);this.packetBuffers.set(newPacket,buffer);
+this.packetSectionStarts.set(newPacket,result.packet.sectionStartPos);return newPacket}}}async getNextKeyPacket(packet,options){
+let currentPacket=packet;while(true){currentPacket=await this.getNextPacket(currentPacket,options);if(!currentPacket){
+return null}if(currentPacket.type==="key"){return currentPacket}}}getPacket(timestamp,options){return this.
+doPacketLookup(timestamp,false,options)}getKeyPacket(timestamp,options){return this.doPacketLookup(timestamp,
+true,options)}async doPacketLookup(timestamp,keyframesOnly,options){const searchPts=roundIfAlmostInteger(
+timestamp*TIMESCALE);const demuxer=this.elementaryStream.demuxer;const{reader,seekChunkSize}=demuxer;
+const pid=this.elementaryStream.pid;const findFirstPesPacketHeaderInChunk=async(startPos,endPos,readSectionInFull)=>{
+let currentPos=startPos;while(currentPos<endPos){const packetHeader=await demuxer.readPacketHeader(currentPos);
+if(!packetHeader){return null}if(packetHeader.pid===pid&&packetHeader.payloadUnitStartIndicator===1){
+const section=await demuxer.readSection(currentPos,readSectionInFull);if(!section){return null}const pesPacketHeader=readPesPacketHeader(
+section,false);if(pesPacketHeader&&pesPacketHeader.pts!==null){return{pesPacketHeader,section}}}currentPos+=
+demuxer.packetStride}return null};const firstSection=this.elementaryStream.firstSection;assert2(firstSection);
+const firstPesPacketHeader=readPesPacketHeader(firstSection,true);assert2(firstPesPacketHeader);if(searchPts<
+firstPesPacketHeader.pts){return null}let scanStartPos;const referencePesPackets=this.elementaryStream.
+referencePesPackets;const referencePointIndex=binarySearchLessOrEqual(referencePesPackets,searchPts,
+x=>x.pts);const referencePoint=referencePointIndex!==-1?referencePesPackets[referencePointIndex]:null;
+if(referencePoint&&searchPts-referencePoint.pts<TIMESCALE/2){scanStartPos=referencePoint.sectionStartPos}else{
+let startChunkIndex=0;if(reader.fileSize!==null){const numChunks=Math.ceil(reader.fileSize/seekChunkSize);
+if(numChunks>1){let low=0;let high=numChunks-1;startChunkIndex=low;while(low<=high){const mid=Math.floor(
+(low+high)/2);const chunkStartPos=floorToMultiple(mid*seekChunkSize,demuxer.packetStride)+firstPesPacketHeader.
+sectionStartPos;const chunkEndPos=chunkStartPos+seekChunkSize;const result2=await findFirstPesPacketHeaderInChunk(
+chunkStartPos,chunkEndPos,false);if(!result2){high=mid-1;continue}if(result2.pesPacketHeader.pts<=searchPts){
+startChunkIndex=mid;low=mid+1}else{high=mid-1}}}}scanStartPos=floorToMultiple(startChunkIndex*seekChunkSize,
+demuxer.packetStride)+firstPesPacketHeader.sectionStartPos}const result=await findFirstPesPacketHeaderInChunk(
+scanStartPos,reader.fileSize??Infinity,false);let currentPesHeader=result?.pesPacketHeader??null;if(!currentPesHeader){
+currentPesHeader=firstPesPacketHeader}const reorderSize=this.getReorderSize();const retrieveEncodedPacket=async(sectionStartPos,predicate)=>{
+const section=await demuxer.readSection(sectionStartPos,true);assert2(section);const pesPacket=readPesPacket(
+section,true);assert2(pesPacket);const context=new PacketReadingContext(this.elementaryStream,pesPacket);
+const buffer=new PacketBuffer(this,context);while(true){const topPts=last(buffer.presentationOrderPackets)?.
+pts??-Infinity;if(topPts>=searchPts){break}const didRead=await buffer.readNextPacket();if(!didRead){
+break}}const targetIndex=findLastIndex(buffer.presentationOrderPackets,predicate);if(targetIndex===-1){
+return null}const targetPacket=buffer.presentationOrderPackets[targetIndex];const lastDuration=targetIndex===
+0?0:targetPacket.pts-buffer.presentationOrderPackets[targetIndex-1].pts;while(buffer.decodeOrderPackets[0]!==
+targetPacket){buffer.decodeOrderPackets.shift()}buffer.lastDuration=lastDuration;const result2=await buffer.
+readNext();assert2(result2);const packet=this.createEncodedPacket(result2.packet,result2.duration,options);
+this.packetBuffers.set(packet,buffer);this.packetSectionStarts.set(packet,result2.packet.sectionStartPos);
+return packet};if(!keyframesOnly||this.allPacketsAreKeyPackets()){outer:while(true){let currentPos=currentPesHeader.
+sectionStartPos+demuxer.packetStride;while(true){const packetHeader=await demuxer.readPacketHeader(currentPos);
+if(!packetHeader){break outer}if(packetHeader.pid===pid&&packetHeader.payloadUnitStartIndicator===1){
+const section=await demuxer.readSection(currentPos,false);if(section){const nextPesHeader=readPesPacketHeader(
+section,false);if(nextPesHeader&&nextPesHeader.pts!==null){if(nextPesHeader.pts>searchPts){break outer}
+currentPesHeader=nextPesHeader;maybeInsertReferencePacket(this.elementaryStream,currentPesHeader);break}}}
+currentPos+=demuxer.packetStride}}outer:for(let i=0;i<reorderSize+1;i++){let pos=currentPesHeader.sectionStartPos-
+demuxer.packetStride;while(pos>=demuxer.packetOffset){const packetHeader=await demuxer.readPacketHeader(
+pos);if(!packetHeader){break outer}if(packetHeader.pid===pid&&packetHeader.payloadUnitStartIndicator===
+1){const section=await demuxer.readSection(pos,false);if(section){const header=readPesPacketHeader(section,
+false);if(header&&header.pts!==null){currentPesHeader=header;break}}}pos-=demuxer.packetStride}}return retrieveEncodedPacket(
+currentPesHeader.sectionStartPos,p=>p.pts<=searchPts)}else{let currentChunkStartPos=scanStartPos;let nextChunkStartPos=null;
+const readSectionsInFull=!this.elementaryStream.canBeTrustedWithKeyPackets;while(true){let bestKeyPesHeader=null;
+const isFirstChunk=currentChunkStartPos<=firstPesPacketHeader.sectionStartPos;let pesHeader;let pesHeaderSection=null;
+if(isFirstChunk){pesHeader=firstPesPacketHeader;pesHeaderSection=firstSection}else{const result2=await findFirstPesPacketHeaderInChunk(
+currentChunkStartPos,reader.fileSize??Infinity,readSectionsInFull);pesHeader=result2?.pesPacketHeader??
+null;pesHeaderSection=result2?.section??null}let passedSearchPts=false;let lookaheadCount=0;outer:while(pesHeader){
+if(nextChunkStartPos!==null&&pesHeader.sectionStartPos>=nextChunkStartPos){break}if(pesHeader.pts<=searchPts){
+let isKeyPacket;if(this.elementaryStream.canBeTrustedWithKeyPackets){isKeyPacket=pesHeader.randomAccessIndicator===
+1}else{assert2(pesHeaderSection);const pesPacket=readPesPacket(pesHeaderSection,true);assert2(pesPacket);
+const context=new PacketReadingContext(this.elementaryStream,pesPacket);await context.markNextPacket();
+isKeyPacket=context.suppliedPacket?.randomAccessIndicator===1}if(isKeyPacket){bestKeyPesHeader=pesHeader}}
+if(pesHeader.pts>searchPts){passedSearchPts=true}if(passedSearchPts){lookaheadCount++;if(lookaheadCount>
+reorderSize){break}}let currentPos=pesHeader.sectionStartPos+demuxer.packetStride;while(true){const packetHeader=await demuxer.
+readPacketHeader(currentPos);if(!packetHeader){break outer}if(packetHeader.pid===pid&&packetHeader.payloadUnitStartIndicator===
+1){const section=await demuxer.readSection(currentPos,readSectionsInFull);if(section){const nextPesHeader=readPesPacketHeader(
+section,false);if(nextPesHeader&&nextPesHeader.pts!==null){pesHeader=nextPesHeader;pesHeaderSection=
+section;maybeInsertReferencePacket(this.elementaryStream,pesHeader);break}}}currentPos+=demuxer.packetStride}}
+if(bestKeyPesHeader){let startPesHeader=bestKeyPesHeader;if(lookaheadCount===0){outer:for(let i=0;i<
+reorderSize;i++){let pos=startPesHeader.sectionStartPos-demuxer.packetStride;while(pos>=demuxer.packetOffset){
+const packetHeader=await demuxer.readPacketHeader(pos);if(!packetHeader){break outer}if(packetHeader.
+pid===pid&&packetHeader.payloadUnitStartIndicator===1){const section=await demuxer.readSection(pos,readSectionsInFull);
+if(section){const header=readPesPacketHeader(section,false);if(header&&header.pts!==null){startPesHeader=
+header;break}}}pos-=demuxer.packetStride}}}const encodedPacket=await retrieveEncodedPacket(startPesHeader.
+sectionStartPos,p=>p.pts<=searchPts&&p.randomAccessIndicator===1);assert2(encodedPacket);return encodedPacket}
+if(isFirstChunk){return null}nextChunkStartPos=currentChunkStartPos;currentChunkStartPos=Math.max(floorToMultiple(
+currentChunkStartPos-firstPesPacketHeader.sectionStartPos-seekChunkSize,demuxer.packetStride)+firstPesPacketHeader.
+sectionStartPos,firstPesPacketHeader.sectionStartPos)}}}};MpegTsVideoTrackBacking=class extends MpegTsTrackBacking{getType(){
+return"video"}getCodec(){return this.elementaryStream.info.codec}getCodedWidth(){return this.elementaryStream.
+info.width}getCodedHeight(){return this.elementaryStream.info.height}getSquarePixelWidth(){return this.
+elementaryStream.info.squarePixelWidth}getSquarePixelHeight(){return this.elementaryStream.info.squarePixelHeight}getRotation(){
+return 0}async getColorSpace(){return this.elementaryStream.info.colorSpace}async canBeTransparent(){
+return false}async getDecoderConfig(){assert2(this.elementaryStream.info.decoderConfig);return this.
+elementaryStream.info.decoderConfig}allPacketsAreKeyPackets(){return false}getReorderSize(){return this.
+elementaryStream.info.reorderSize}};MpegTsAudioTrackBacking=class extends MpegTsTrackBacking{getType(){
+return"audio"}getCodec(){return this.elementaryStream.info.codec}getNumberOfChannels(){return this.elementaryStream.
+info.numberOfChannels}getSampleRate(){return this.elementaryStream.info.sampleRate}async getDecoderConfig(){
+assert2(this.elementaryStream.info.decoderConfig);return this.elementaryStream.info.decoderConfig}allPacketsAreKeyPackets(){
+return true}getReorderSize(){return 0}};maybeInsertReferencePacket=(elementaryStream,pesPacketHeader)=>{
+const referencePesPackets=elementaryStream.referencePesPackets;const index=binarySearchLessOrEqual(referencePesPackets,
+pesPacketHeader.sectionStartPos,x=>x.sectionStartPos);if(index>=0){const entry=referencePesPackets[index];
+if(pesPacketHeader.pts<=entry.pts){return false}const minByteDistance=elementaryStream.demuxer.minReferencePointByteDistance;
+if(pesPacketHeader.sectionStartPos-entry.sectionStartPos<minByteDistance){return false}if(index<referencePesPackets.
+length-1){const nextEntry=referencePesPackets[index+1];if(nextEntry.pts<pesPacketHeader.pts){return false}
+if(nextEntry.sectionStartPos-pesPacketHeader.sectionStartPos<minByteDistance){return false}}}referencePesPackets.
+splice(index+1,0,pesPacketHeader);return true};PacketReadingContext=class{constructor(elementaryStream,startingPesPacket){
+this.currentPos=0;this.pesPackets=[];this.currentPesPacketIndex=0;this.currentPesPacketPos=0;this.endPos=
+0;this.lastSuppliedPesPacket=null;this.nextPts=null;this.suppliedPacket=null;this.elementaryStream=elementaryStream;
+this.pid=elementaryStream.pid;this.demuxer=elementaryStream.demuxer;this.startingPesPacket=startingPesPacket}ensureBuffered(length){
+const remaining=this.endPos-this.currentPos;if(remaining>=length){return length}return this.bufferData(
+length-remaining).then(()=>Math.min(this.endPos-this.currentPos,length))}getCurrentPesPacket(){const packet=this.
+pesPackets[this.currentPesPacketIndex];assert2(packet);return packet}async bufferData(length){const targetEndPos=this.
+endPos+length;while(this.endPos<targetEndPos){let pesPacket;if(this.pesPackets.length===0){pesPacket=
+this.startingPesPacket}else{let currentPos=last(this.pesPackets).sectionEndPos;assert2(currentPos!==
+null);while(true){const packetHeader=await this.demuxer.readPacketHeader(currentPos);if(!packetHeader){
+return}if(packetHeader.pid===this.pid){const nextSection=await this.demuxer.readSection(currentPos,true);
+if(!nextSection){return}const nextPesPacket=readPesPacket(nextSection,false);if(nextPesPacket){pesPacket=
+nextPesPacket;break}}currentPos+=this.demuxer.packetStride}}this.pesPackets.push(pesPacket);this.endPos+=
+pesPacket.data.byteLength}}readBytes(length){const currentPesPacket=this.getCurrentPesPacket();const relativeStartOffset=this.
+currentPos-this.currentPesPacketPos;const relativeEndOffset=relativeStartOffset+length;this.currentPos+=
+length;if(relativeEndOffset<=currentPesPacket.data.byteLength){return currentPesPacket.data.subarray(
+relativeStartOffset,relativeEndOffset)}const result=new Uint8Array(length);result.set(currentPesPacket.
+data.subarray(relativeStartOffset));let offset=currentPesPacket.data.byteLength-relativeStartOffset;
+while(true){this.advanceCurrentPacket();const currentPesPacket2=this.getCurrentPesPacket();const relativeEndOffset2=length-
+offset;if(relativeEndOffset2<=currentPesPacket2.data.byteLength){result.set(currentPesPacket2.data.subarray(
+0,relativeEndOffset2),offset);break}result.set(currentPesPacket2.data,offset);offset+=currentPesPacket2.
+data.byteLength}return result}readU8(){let currentPesPacket=this.getCurrentPesPacket();const relativeOffset=this.
+currentPos-this.currentPesPacketPos;this.currentPos++;if(relativeOffset<currentPesPacket.data.byteLength){
+return currentPesPacket.data[relativeOffset]}this.advanceCurrentPacket();currentPesPacket=this.getCurrentPesPacket();
+return currentPesPacket.data[0]}seekTo(pos){if(pos===this.currentPos){return}if(pos<this.currentPos){
+while(pos<this.currentPesPacketPos){this.currentPesPacketIndex--;const currentPacket=this.getCurrentPesPacket();
+this.currentPesPacketPos-=currentPacket.data.byteLength}}else{while(true){const currentPesPacket=this.
+getCurrentPesPacket();const currentEndPos=this.currentPesPacketPos+currentPesPacket.data.byteLength;
+if(pos<currentEndPos){break}this.currentPesPacketPos+=currentPesPacket.data.byteLength;this.currentPesPacketIndex++}}
+this.currentPos=pos}skip(n){this.seekTo(this.currentPos+n)}advanceCurrentPacket(){this.currentPesPacketPos+=
+this.getCurrentPesPacket().data.byteLength;this.currentPesPacketIndex++}async markNextPacket(){assert2(
+!this.suppliedPacket);const elementaryStream=this.elementaryStream;if(elementaryStream.info.type==="\
+video"){const codec=elementaryStream.info.codec;const CHUNK_SIZE=1024;if(codec!=="avc"&&codec!=="hev\
+c"){throw new Error("Unhandled.")}const nalHeaderSize=codec==="avc"?1:2;let packetStartPos=null;let frameStartFound=false;
+let lastFirstMacroblockInSlice=0;while(true){let remaining=this.ensureBuffered(CHUNK_SIZE);if(isThenable(
+remaining))remaining=await remaining;if(remaining===0){break}const chunkStartPos=this.currentPos;const chunk=this.
+readBytes(remaining);const length=chunk.byteLength;let i=0;while(i<length){const zeroIndex=chunk.indexOf(
+0,i);if(zeroIndex===-1||zeroIndex>=length){break}i=zeroIndex;const posBeforeZero=chunkStartPos+i;if(i+
+3>=length){this.seekTo(posBeforeZero);break}const b1=chunk[i+1];const b2=chunk[i+2];const b3=chunk[i+
+3];let startCodeLength=0;if(b1===0&&b2===0&&b3===1){startCodeLength=4}else if(b1===0&&b2===1){startCodeLength=
+3}if(startCodeLength===0){i++;continue}const startCodePos=posBeforeZero;packetStartPos??=startCodePos;
+const nalHeaderStart=i+startCodeLength;const payloadStart=nalHeaderStart+nalHeaderSize;const AVC_SLICE_HEADER_PEEK_SIZE=6;
+const bytesNeeded=payloadStart+(codec==="avc"?AVC_SLICE_HEADER_PEEK_SIZE:1);if(bytesNeeded>length){this.
+seekTo(posBeforeZero);break}const headerByte0=chunk[nalHeaderStart];let nalUnitType;let isSlice;let isAccessUnitStart;
+if(codec==="avc"){nalUnitType=extractNalUnitTypeForAvc(headerByte0);isSlice=nalUnitType===AvcNalUnitType.
+NON_IDR_SLICE||nalUnitType===AvcNalUnitType.SLICE_DPA||nalUnitType===AvcNalUnitType.IDR;isAccessUnitStart=
+nalUnitType===AvcNalUnitType.SEI||nalUnitType===AvcNalUnitType.SPS||nalUnitType===AvcNalUnitType.PPS||
+nalUnitType===AvcNalUnitType.AUD}else{nalUnitType=extractNalUnitTypeForHevc(headerByte0);const layerId=(headerByte0&
+1)<<5|chunk[nalHeaderStart+1]>>3;if(layerId>0){i+=startCodeLength;continue}isSlice=nalUnitType<=HevcNalUnitType.
+RASL_R||nalUnitType>=HevcNalUnitType.BLA_W_LP&&nalUnitType<=21;isAccessUnitStart=nalUnitType>=HevcNalUnitType.
+VPS_NUT&&nalUnitType<=37||nalUnitType===HevcNalUnitType.PREFIX_SEI_NUT||nalUnitType>=41&&nalUnitType<=
+44||nalUnitType>=48&&nalUnitType<=55}let isFrameBoundary=false;if(isSlice){let startsNewPicture;if(codec===
+"avc"){const headerBytes=chunk.subarray(payloadStart,payloadStart+AVC_SLICE_HEADER_PEEK_SIZE);const firstMacroblockInSlice=readExpGolomb(
+new Bitstream(headerBytes));startsNewPicture=!frameStartFound||firstMacroblockInSlice<=lastFirstMacroblockInSlice;
+lastFirstMacroblockInSlice=firstMacroblockInSlice}else{startsNewPicture=chunk[payloadStart]>>7===1}if(startsNewPicture){
+if(frameStartFound){isFrameBoundary=true}else{frameStartFound=true}}}else if(isAccessUnitStart&&frameStartFound){
+isFrameBoundary=true}if(isFrameBoundary){const packetLength=startCodePos-packetStartPos;this.seekTo(
+packetStartPos);return this.supplyPacket(packetLength,0)}i+=startCodeLength}if(remaining<CHUNK_SIZE){
+break}}if(packetStartPos!==null&&this.endPos>packetStartPos){const packetLength=this.endPos-packetStartPos;
+this.seekTo(packetStartPos);return this.supplyPacket(packetLength,0)}}else{const codec=elementaryStream.
+info.codec;const CHUNK_SIZE=128;while(true){let remaining=this.ensureBuffered(CHUNK_SIZE);if(isThenable(
+remaining))remaining=await remaining;const startPos=this.currentPos;while(this.currentPos-startPos<remaining){
+const byte=this.readU8();if(codec==="aac"){if(byte!==255){continue}this.skip(-1);const possibleHeaderStartPos=this.
+currentPos;let remaining2=this.ensureBuffered(MAX_ADTS_FRAME_HEADER_SIZE);if(isThenable(remaining2))
+remaining2=await remaining2;if(remaining2<MAX_ADTS_FRAME_HEADER_SIZE){return}const headerBytes=this.
+readBytes(MAX_ADTS_FRAME_HEADER_SIZE);const header=readAdtsFrameHeader(FileSlice.tempFromBytes(headerBytes));
+if(header){this.seekTo(possibleHeaderStartPos);let remaining3=this.ensureBuffered(header.frameLength);
+if(isThenable(remaining3))remaining3=await remaining3;return this.supplyPacket(remaining3,Math.round(
+SAMPLES_PER_AAC_FRAME*TIMESCALE/elementaryStream.info.sampleRate))}else{this.seekTo(possibleHeaderStartPos+
+1)}}else if(codec==="mp3"){if(byte!==255){continue}this.skip(-1);const possibleHeaderStartPos=this.currentPos;
+let remaining2=this.ensureBuffered(MP3_FRAME_HEADER_SIZE);if(isThenable(remaining2))remaining2=await remaining2;
+if(remaining2<MP3_FRAME_HEADER_SIZE){return}const headerBytes=this.readBytes(MP3_FRAME_HEADER_SIZE);
+const word=toDataView(headerBytes).getUint32(0);const result=readMp3FrameHeader(word,null);if(result.
+header){this.seekTo(possibleHeaderStartPos);let remaining3=this.ensureBuffered(result.header.totalSize);
+if(isThenable(remaining3))remaining3=await remaining3;const duration=result.header.audioSamplesInFrame*
+TIMESCALE/elementaryStream.info.sampleRate;return this.supplyPacket(remaining3,Math.round(duration))}else{
+this.seekTo(possibleHeaderStartPos+1)}}else if(codec==="ac3"){if(byte!==11){continue}this.skip(-1);const possibleSyncPos=this.
+currentPos;let remaining2=this.ensureBuffered(5);if(isThenable(remaining2))remaining2=await remaining2;
+if(remaining2<5){return}const headerBytes=this.readBytes(5);if(headerBytes[0]!==11||headerBytes[1]!==
+119){this.seekTo(possibleSyncPos+1);continue}const fscod=headerBytes[4]>>6;const frmsizecod=headerBytes[4]&
+63;if(fscod===3||frmsizecod>37){this.seekTo(possibleSyncPos+1);continue}const frameSize=AC3_FRAME_SIZES[3*
+frmsizecod+fscod];assert2(frameSize!==void 0);this.seekTo(possibleSyncPos);remaining2=this.ensureBuffered(
+frameSize);if(isThenable(remaining2))remaining2=await remaining2;const duration=Math.round(AC3_SAMPLES_PER_FRAME*
+TIMESCALE/elementaryStream.info.sampleRate);return this.supplyPacket(remaining2,duration)}else if(codec===
+"eac3"){if(byte!==11){continue}this.skip(-1);const possibleSyncPos=this.currentPos;let remaining2=this.
+ensureBuffered(5);if(isThenable(remaining2))remaining2=await remaining2;if(remaining2<5){return}const headerBytes=this.
+readBytes(5);if(headerBytes[0]!==11||headerBytes[1]!==119){this.seekTo(possibleSyncPos+1);continue}const frmsiz=(headerBytes[2]&
+7)<<8|headerBytes[3];const frameSize=(frmsiz+1)*2;const fscod=headerBytes[4]>>6;const numblkscod=fscod===
+3?3:headerBytes[4]>>4&3;const numblks=EAC3_NUMBLKS_TABLE[numblkscod];this.seekTo(possibleSyncPos);remaining2=
+this.ensureBuffered(frameSize);if(isThenable(remaining2))remaining2=await remaining2;const samplesPerFrame=numblks*
+256;const duration=Math.round(samplesPerFrame*TIMESCALE/elementaryStream.info.sampleRate);return this.
+supplyPacket(remaining2,duration)}else if(codec==="dts"){if(byte!==127&&byte!==100){continue}this.skip(
+-1);const possibleSyncPos=this.currentPos;let remaining2=this.ensureBuffered(DTS_CORE_FRAME_HEADER_SIZE);
+if(isThenable(remaining2))remaining2=await remaining2;if(remaining2<DTS_CORE_FRAME_HEADER_SIZE){return}
+const headerBytes=this.readBytes(DTS_CORE_FRAME_HEADER_SIZE);const core=parseDtsCoreFrameHeader(headerBytes);
+let leadingExss=core?null:parseDtsExssHeader(headerBytes);if(!core&&!leadingExss){this.seekTo(possibleSyncPos+
+1);continue}if(leadingExss&&!leadingExss.asset){this.seekTo(possibleSyncPos);const headerBound=Math.
+min(leadingExss.frameSize,DTS_EXSS_MAX_HEADER_SIZE);let remaining3=this.ensureBuffered(headerBound);
+if(isThenable(remaining3))remaining3=await remaining3;leadingExss=parseDtsExssHeader(this.readBytes(
+remaining3))??leadingExss}let frameSize=core?core.frameSize:leadingExss.frameSize;if(core){let nextSubstreamPos=Math.
+ceil(core.frameSize/4)*4;while(true){this.seekTo(possibleSyncPos);const neededBytes=nextSubstreamPos+
+DTS_EXSS_HEADER_PREFIX_SIZE;let remaining3=this.ensureBuffered(neededBytes);if(isThenable(remaining3))
+remaining3=await remaining3;if(remaining3<neededBytes){break}this.seekTo(possibleSyncPos+nextSubstreamPos);
+const exss=parseDtsExssHeader(this.readBytes(DTS_EXSS_HEADER_PREFIX_SIZE));if(!exss){break}nextSubstreamPos+=
+exss.frameSize;frameSize=nextSubstreamPos}}const sampleCount=core?.sampleCount??leadingExss.asset?.sampleCount;
+if(sampleCount===void 0){this.seekTo(possibleSyncPos+1);continue}this.seekTo(possibleSyncPos);remaining2=
+this.ensureBuffered(frameSize);if(isThenable(remaining2))remaining2=await remaining2;const duration=Math.
+round(sampleCount*TIMESCALE/elementaryStream.info.sampleRate);return this.supplyPacket(remaining2,duration)}else{
+throw new Error("Unhandled.")}}if(remaining<CHUNK_SIZE){break}}}}supplyPacket(packetLength,intrinsicDuration){
+const currentPesPacket=this.getCurrentPesPacket();let pts;if(this.lastSuppliedPesPacket===currentPesPacket){
+assert2(this.nextPts!==null);pts=this.nextPts}else{if(currentPesPacket.pts===null){throw new Error(MISSING_PTS_ERROR_MESSAGE)}
+pts=currentPesPacket.pts;maybeInsertReferencePacket(this.elementaryStream,currentPesPacket)}this.lastSuppliedPesPacket=
+currentPesPacket;this.nextPts=pts+intrinsicDuration;const sectionStartPos=currentPesPacket.sectionStartPos;
+const sequenceNumber=sectionStartPos+(this.currentPos-this.currentPesPacketPos);const data2=this.readBytes(
+packetLength);let randomAccessIndicator=currentPesPacket.randomAccessIndicator;if(randomAccessIndicator===
+0&&!this.elementaryStream.canBeTrustedWithKeyPackets){if(this.elementaryStream.info.type==="audio"){
+randomAccessIndicator=1}else{if(this.elementaryStream.info.decoderConfig){const isKey=determineVideoPacketType(
+this.elementaryStream.info.codec,this.elementaryStream.info.decoderConfig,data2)==="key";randomAccessIndicator=
+Number(isKey)}else{}}}this.suppliedPacket={pts,data:data2,sequenceNumber,sectionStartPos,randomAccessIndicator};
+this.pesPackets.splice(0,this.currentPesPacketIndex);this.currentPesPacketIndex=0}};PacketBuffer=class{constructor(backing,context){
+this.decodeOrderPackets=[];this.reorderBuffer=[];this.presentationOrderPackets=[];this.reachedEnd=false;
+this.lastDuration=0;this.backing=backing;this.context=context;this.reorderSize=backing.getReorderSize();
+assert2(this.reorderSize>=0)}async readNext(){if(this.decodeOrderPackets.length===0){const didRead=await this.
+readNextPacket();if(!didRead){return null}}await this.ensureCurrentPacketHasNext();const packet=this.
+decodeOrderPackets[0];const presentationIndex=this.presentationOrderPackets.indexOf(packet);assert2(
+presentationIndex!==-1);let duration;if(presentationIndex===this.presentationOrderPackets.length-1){
+duration=this.lastDuration}else{const nextPacket=this.presentationOrderPackets[presentationIndex+1];
+duration=nextPacket.pts-packet.pts;this.lastDuration=duration}this.decodeOrderPackets.shift();while(this.
+presentationOrderPackets.length>0){const first=this.presentationOrderPackets[0];if(this.decodeOrderPackets.
+includes(first)){break}this.presentationOrderPackets.shift()}return{packet,duration}}async readNextPacket(){
+if(this.reachedEnd){return false}let suppliedPacket;if(this.context.suppliedPacket){suppliedPacket=this.
+context.suppliedPacket}else{await this.context.markNextPacket();suppliedPacket=this.context.suppliedPacket}
+this.context.suppliedPacket=null;if(!suppliedPacket){this.reachedEnd=true;this.flushReorderBuffer();
+return false}this.decodeOrderPackets.push(suppliedPacket);this.processPacketThroughReorderBuffer(suppliedPacket);
+return true}async ensureCurrentPacketHasNext(){const current=this.decodeOrderPackets[0];assert2(current);
+while(true){const presentationIndex=this.presentationOrderPackets.indexOf(current);if(presentationIndex!==
+-1&&presentationIndex<=this.presentationOrderPackets.length-2){break}const didRead=await this.readNextPacket();
+if(!didRead){break}}}processPacketThroughReorderBuffer(packet){this.reorderBuffer.push(packet);if(this.
+reorderBuffer.length>this.reorderSize){let minIndex=0;for(let i=1;i<this.reorderBuffer.length;i++){if(this.
+reorderBuffer[i].pts<this.reorderBuffer[minIndex].pts){minIndex=i}}const packet2=this.reorderBuffer[minIndex];
+this.presentationOrderPackets.push(packet2);this.reorderBuffer.splice(minIndex,1)}}flushReorderBuffer(){
+this.reorderBuffer.sort((a,b)=>a.pts-b.pts);this.presentationOrderPackets.push(...this.reorderBuffer);
+this.reorderBuffer.length=0}}}});var HLS_MIME_TYPE,TAG_STREAM_INF,TAG_I_FRAME_STREAM_INF,TAG_MEDIA,TAG_EXTINF,TAG_MAP,TAG_KEY,TAG_MEDIA_SEQUENCE,
+TAG_BYTERANGE,TAG_PROGRAM_DATE_TIME,TAG_DISCONTINUITY,TAG_TARGETDURATION,TAG_ENDLIST,TAG_PLAYLIST_TYPE,
+TAG_I_FRAMES_ONLY,canIgnoreLine,AttributeList;var init_hls_misc=__esm({"node_modules/mediabunny/dist\
+/modules/src/hls/hls-misc.js"(){HLS_MIME_TYPE="application/vnd.apple.mpegurl";TAG_STREAM_INF="#EXT-X\
+-STREAM-INF:";TAG_I_FRAME_STREAM_INF="#EXT-X-I-FRAME-STREAM-INF:";TAG_MEDIA="#EXT-X-MEDIA:";TAG_EXTINF=
+"#EXTINF:";TAG_MAP="#EXT-X-MAP:";TAG_KEY="#EXT-X-KEY:";TAG_MEDIA_SEQUENCE="#EXT-X-MEDIA-SEQUENCE:";TAG_BYTERANGE=
+"#EXT-X-BYTERANGE:";TAG_PROGRAM_DATE_TIME="#EXT-X-PROGRAM-DATE-TIME:";TAG_DISCONTINUITY="#EXT-X-DISC\
+ONTINUITY";TAG_TARGETDURATION="#EXT-X-TARGETDURATION:";TAG_ENDLIST="#EXT-X-ENDLIST";TAG_PLAYLIST_TYPE=
+"#EXT-X-PLAYLIST-TYPE:";TAG_I_FRAMES_ONLY="#EXT-X-I-FRAMES-ONLY";canIgnoreLine=line=>line.length===0||
+line.startsWith("#")&&!line.startsWith("#EXT");AttributeList=class{constructor(str){this._attributes=
+{};let key="";let value="";let inValue=false;let inQuotes=false;for(let i=0;i<str.length;i++){const char=str[i];
+if(char==='"'){inQuotes=!inQuotes}else if(char==="="&&!inValue&&!inQuotes){inValue=true}else if(char===
+","&&!inQuotes){if(key){this._attributes[key.trim().toLowerCase()]=value}key="";value="";inValue=false}else if(inValue){
+value+=char}else{key+=char}}if(key){this._attributes[key.trim().toLowerCase()]=value}}get(name){return this.
+_attributes[name.toLowerCase()]??null}getAsNumber(name){const value=this.get(name);if(value===null){
+return null}const num=Number(value);return Number.isFinite(num)?num:null}merge(other){Object.assign(
+this._attributes,other._attributes)}}}});var SegmentedInput,SegmentedInputInputTrackBacking,SegmentedInputInputVideoTrackBacking,SegmentedInputInputAudioTrackBacking;
+var init_segmented_input=__esm({"node_modules/mediabunny/dist/modules/src/segmented-input.js"(){init_misc();
+SegmentedInput=class{constructor(input,path,trackDeclarations){this.nextInputCacheAge=0;this.inputCache=
+[];this.trackBackingsPromise=null;this.firstSegment=null;this.firstSegmentFirstTimestamps=new WeakMap;
+this.firstTimestampCache=new WeakMap;this.input=input;this.path=path;this.trackDeclarations=trackDeclarations}async getDurationFromMetadata(options){
+const lastSegment=await this.getSegmentAt(Infinity,{skipLiveWait:options.skipLiveWait});if(!lastSegment){
+return null}return lastSegment.timestamp+lastSegment.duration}async getUnixTimeForTimestamp(timestamp){
+let segment=await this.getSegmentAt(timestamp,{});segment??=await this.getFirstSegment({});if(!segment||
+segment.unixEpochTimestamp===null){return null}const elapsed=timestamp-segment.timestamp;return segment.
+unixEpochTimestamp+elapsed}async getTrackBackings(){return this.trackBackingsPromise??=(async()=>{const backings=[];
+if(this.trackDeclarations){for(const decl of this.trackDeclarations){if(decl.type==="video"){const number=arrayCount(
+backings,x=>x.getType()==="video")+1;backings.push(new SegmentedInputInputVideoTrackBacking(this,decl,
+number))}else if(decl.type==="audio"){const number=arrayCount(backings,x=>x.getType()==="audio")+1;backings.
+push(new SegmentedInputInputAudioTrackBacking(this,decl,number))}}}else{this.firstSegment=await this.
+getFirstSegment({});if(!this.firstSegment){return[]}const input=this.getInputForSegment(this.firstSegment);
+const inputTracks=await input.getTracks();for(const track of inputTracks){if(track.type==="video"){const number=arrayCount(
+backings,x=>x.getType()==="video")+1;backings.push(new SegmentedInputInputVideoTrackBacking(this,{id:backings.
+length+1,type:"video"},number))}else if(track.type==="audio"){const number=arrayCount(backings,x=>x.
+getType()==="audio")+1;backings.push(new SegmentedInputInputAudioTrackBacking(this,{id:backings.length+
+1,type:"audio"},number))}}}return backings})()}async getFirstTimestampForInput(input){const existing=this.
+firstTimestampCache.get(input);if(existing!==void 0){return existing}const firstTimestamp=await input.
+getFirstTimestamp();this.firstTimestampCache.set(input,firstTimestamp);return firstTimestamp}async getMediaOffset(segment,input){
+const firstSegment=segment.firstSegment??segment;let firstSegmentFirstTimestamp;if(this.firstSegmentFirstTimestamps.
+has(firstSegment)){firstSegmentFirstTimestamp=this.firstSegmentFirstTimestamps.get(firstSegment)}else{
+const firstInput=this.getInputForSegment(firstSegment);firstSegmentFirstTimestamp=await this.getFirstTimestampForInput(
+firstInput);this.firstSegmentFirstTimestamps.set(firstSegment,firstSegmentFirstTimestamp)}if(firstSegment===
+segment){return firstSegment.timestamp-firstSegmentFirstTimestamp}const segmentFirstTimestamp=await this.
+getFirstTimestampForInput(input);const segmentElapsed=segment.timestamp-firstSegment.timestamp;const inputElapsed=segmentFirstTimestamp-
+firstSegmentFirstTimestamp;const difference=inputElapsed-segmentElapsed;if(Math.abs(difference)<=Math.
+min(.25,segmentElapsed)){return firstSegment.timestamp-firstSegmentFirstTimestamp}else{return segment.
+timestamp-segmentFirstTimestamp}}dispose(){for(const entry of this.inputCache){entry.input.dispose()}
+this.inputCache.length=0}};SegmentedInputInputTrackBacking=class{constructor(segmentedInput,decl,number){
+this.packetInfos=new WeakMap;this.hydrationPromise=null;this.firstInputTrack=null;this.firstSegment=
+null;this.segmentedInput=segmentedInput;this.decl=decl;this.number=number}hydrate(){return this.hydrationPromise??=
+(async()=>{this.segmentedInput.firstSegment??=await this.segmentedInput.getFirstSegment({});if(!this.
+segmentedInput.firstSegment){throw new Error("Missing first segment, can't retrieve track.")}let currentSegment=this.
+segmentedInput.firstSegment;let track=null;while(currentSegment){const input=this.segmentedInput.getInputForSegment(
+currentSegment);const inputTracks=await input.getTracks();track=inputTracks.find(x=>x.type===this.decl.
+type&&x.number===this.number)??null;if(track){break}currentSegment=await this.segmentedInput.getNextSegment(
+currentSegment,{})}if(!track){throw new Error("No matching track found in underlying media data.")}this.
+firstInputTrack=track;this.firstSegment=currentSegment})()}getId(){return this.decl.id}getType(){return this.
+decl.type}getNumber(){return this.number}delegate(fn){if(this.firstInputTrack){return fn()}return this.
+hydrate().then(fn)}async getDecoderConfig(){return this.delegate(()=>this.firstInputTrack._backing.getDecoderConfig())}getHasOnlyKeyPackets(){
+return this.delegate(()=>this.firstInputTrack._backing.getHasOnlyKeyPackets?.()??null)}getPairingMask(){
+return 1n}getCodec(){return this.delegate(()=>this.firstInputTrack._backing.getCodec())}getInternalCodecId(){
+return this.delegate(()=>this.firstInputTrack._backing.getInternalCodecId())}getDisposition(){return this.
+delegate(()=>this.firstInputTrack._backing.getDisposition())}getLanguageCode(){return this.delegate(
+()=>this.firstInputTrack._backing.getLanguageCode())}getName(){return this.delegate(()=>this.firstInputTrack.
+_backing.getName())}getTimeResolution(){return this.delegate(()=>this.firstInputTrack._backing.getTimeResolution())}async isRelativeToUnixEpoch(){
+await this.hydrate();assert2(this.segmentedInput.firstSegment);return this.segmentedInput.firstSegment.
+unixEpochTimestamp===this.segmentedInput.firstSegment.timestamp}getUnixTimeForTimestamp(timestamp){return this.
+segmentedInput.getUnixTimeForTimestamp(timestamp)}getBitrate(){return this.delegate(()=>this.firstInputTrack.
+_backing.getBitrate())}getAverageBitrate(){return this.delegate(()=>this.firstInputTrack._backing.getAverageBitrate())}getDurationFromMetadata(options){
+return this.segmentedInput.getDurationFromMetadata(options)}getLiveRefreshInterval(){return this.segmentedInput.
+getLiveRefreshInterval()}async createAdjustedPacket(packet,segment,track){assert2(packet.sequenceNumber>=
+0);assert2(this.segmentedInput.firstSegment);const mediaOffset=await this.segmentedInput.getMediaOffset(
+segment,track.input);const segmentTimestampRelativeToFirst=segment.timestamp-this.segmentedInput.firstSegment.
+timestamp;const modified=packet.clone({timestamp:roundToDivisor(packet.timestamp+mediaOffset,await track.
+getTimeResolution()),sequenceNumber:Math.floor(1e8*segmentTimestampRelativeToFirst)+packet.sequenceNumber});
+this.packetInfos.set(modified,{segment,track,sourcePacket:packet});return modified}async getFirstPacket(options){
+await this.hydrate();assert2(this.firstInputTrack);assert2(this.firstSegment);let currentTrack=this.
+firstInputTrack;let currentSegment=this.firstSegment;while(true){if(currentTrack){const packet=await currentTrack.
+_backing.getFirstPacket(options);if(packet){return this.createAdjustedPacket(packet,currentSegment,currentTrack)}}
+currentSegment=await this.segmentedInput.getNextSegment(currentSegment,{skipLiveWait:options.skipLiveWait});
+if(!currentSegment){break}const nextInput=this.segmentedInput.getInputForSegment(currentSegment);const nextTracks=await nextInput.
+getTracks();currentTrack=nextTracks.find(t=>t.type===this.firstInputTrack.type&&t.number===this.firstInputTrack.
+number)??null}return null}getNextPacket(packet,options){return this._getNextInternal(packet,options,
+false)}getNextKeyPacket(packet,options){return this._getNextInternal(packet,options,true)}async _getNextInternal(packet,options,keyframesOnly){
+const info=this.packetInfos.get(packet);if(!info){throw new Error("Packet was not created from this \
+track.")}const nextPacket=keyframesOnly?await info.track._backing.getNextKeyPacket(info.sourcePacket,
+options):await info.track._backing.getNextPacket(info.sourcePacket,options);if(nextPacket){return this.
+createAdjustedPacket(nextPacket,info.segment,info.track)}let currentSegment=info.segment;while(true){
+const nextSegment=await this.segmentedInput.getNextSegment(currentSegment,{skipLiveWait:options.skipLiveWait});
+if(!nextSegment){return null}const nextInput=this.segmentedInput.getInputForSegment(nextSegment);const nextTracks=await nextInput.
+getTracks();const nextTrack=nextTracks.find(t=>t.type===info.track.type&&t.number===info.track.number);
+if(!nextTrack){currentSegment=nextSegment;continue}const firstPacket=await nextTrack._backing.getFirstPacket(
+options);if(!firstPacket){return null}return this.createAdjustedPacket(firstPacket,nextSegment,nextTrack)}}getPacket(timestamp,options){
+return this._getPacketInternal(timestamp,options,false)}getKeyPacket(timestamp,options){return this.
+_getPacketInternal(timestamp,options,true)}async _getPacketInternal(timestamp,options,keyframesOnly){
+let currentSegment=await this.segmentedInput.getSegmentAt(timestamp,{skipLiveWait:options.skipLiveWait});
+if(!currentSegment){return null}await this.hydrate();while(currentSegment){const input=this.segmentedInput.
+getInputForSegment(currentSegment);const tracks=await input.getTracks();const track=tracks.find(t=>t.
+type===this.firstInputTrack.type&&t.number===this.firstInputTrack.number);if(!track){currentSegment=
+await this.segmentedInput.getPreviousSegment(currentSegment,{skipLiveWait:options.skipLiveWait});continue}
+const mediaOffset=await this.segmentedInput.getMediaOffset(currentSegment,input);const offsetTimestamp=timestamp-
+mediaOffset;const packet=keyframesOnly?await track._backing.getKeyPacket(offsetTimestamp,options):await track.
+_backing.getPacket(offsetTimestamp,options);if(!packet){currentSegment=await this.segmentedInput.getPreviousSegment(
+currentSegment,{skipLiveWait:options.skipLiveWait});continue}return this.createAdjustedPacket(packet,
+currentSegment,track)}return null}};SegmentedInputInputVideoTrackBacking=class extends SegmentedInputInputTrackBacking{getType(){
+return"video"}getCodec(){return this.delegate(()=>this.firstInputTrack._backing.getCodec())}getCodedWidth(){
+return this.delegate(()=>this.firstInputTrack._backing.getCodedWidth())}getCodedHeight(){return this.
+delegate(()=>this.firstInputTrack._backing.getCodedHeight())}getSquarePixelWidth(){return this.delegate(
+()=>this.firstInputTrack._backing.getSquarePixelWidth())}getSquarePixelHeight(){return this.delegate(
+()=>this.firstInputTrack._backing.getSquarePixelHeight())}getRotation(){return this.delegate(()=>this.
+firstInputTrack._backing.getRotation())}async getColorSpace(){return this.delegate(()=>this.firstInputTrack.
+_backing.getColorSpace())}async canBeTransparent(){return this.delegate(()=>this.firstInputTrack._backing.
+canBeTransparent())}async getDecoderConfig(){return this.delegate(()=>this.firstInputTrack._backing.
+getDecoderConfig())}};SegmentedInputInputAudioTrackBacking=class extends SegmentedInputInputTrackBacking{getType(){
+return"audio"}getCodec(){return this.delegate(()=>this.firstInputTrack._backing.getCodec())}getNumberOfChannels(){
+return this.delegate(()=>this.firstInputTrack._backing.getNumberOfChannels())}getSampleRate(){return this.
+delegate(()=>this.firstInputTrack._backing.getSampleRate())}async getDecoderConfig(){return this.delegate(
+()=>this.firstInputTrack._backing.getDecoderConfig())}}}});var DEFAULT_MIN_READ_POSITION,DEFAULT_MAX_READ_POSITION,sourceFinalizationRegistry,Source,SourceRef,
+PathedSource,sourceRequestsAreEqual,CustomPathedSource,BufferSource,blobReaderRegistry,URL_SOURCE_MIN_LOAD_AMOUNT,
+ReadableStreamSource,RangedSource;var init_source=__esm({"node_modules/mediabunny/dist/modules/src/s\
+ource.js"(){init_misc();init_input();polyfillSymbolDispose();DEFAULT_MIN_READ_POSITION=0;DEFAULT_MAX_READ_POSITION=
+Infinity;sourceFinalizationRegistry=null;if(typeof FinalizationRegistry!=="undefined"){sourceFinalizationRegistry=
+new FinalizationRegistry(cleanup=>{cleanup()})}Source=class extends EventEmitter{constructor(){super();
+this._disposed=false;this._refCount=0;this._usedForHls=false;this._refFinalizationRegistry=null;this.
+_sizePromise=null;this.onread=null;if(typeof FinalizationRegistry!=="undefined"){this._refFinalizationRegistry=
+new FinalizationRegistry(source2=>{source2._decrementRefCount()})}}async getSizeOrNull(){if(this._disposed){
+throw new InputDisposedError}return this._sizePromise??=(async()=>{let size=this._getFileSize();if(size!==
+void 0){return size}await this._read(0,1,DEFAULT_MIN_READ_POSITION,DEFAULT_MAX_READ_POSITION);size=this.
+_getFileSize();assert2(size!==void 0);return size})()}async getSize(){if(this._disposed){throw new InputDisposedError}
+const result=await this.getSizeOrNull();if(result===null){throw new Error("Cannot determine the size\
+ of an unsized source.")}return result}slice(offset,length){if(!Number.isInteger(offset)||offset<0){
+throw new TypeError("offset must be a non-negative integer.")}if(length!==void 0&&(!Number.isInteger(
+length)||length<0)){throw new TypeError("length, when provided, must be a non-negative integer.")}return new RangedSource(
+this,offset,length)}_dispatchRead(start,end){this.onread?.(start,end);this._emit("read",{start,end})}ref(){
+return new SourceRef(this)}_incrementRefCount(){this._refCount++}_decrementRefCount(){this._refCount--;
+if(this._refCount===0){this._dispose();this._disposed=true}}};SourceRef=class{constructor(source2){this.
+_freed=false;if(source2._disposed){throw new Error("Cannot ref a disposed source.")}source2._incrementRefCount();
+source2._refFinalizationRegistry?.register(this,source2,this);this._source=source2}get source(){if(!this.
+_source){throw new Error("Can't get source; ref has already been freed.")}return this._source}get freed(){
+return this._freed}free(){if(this._freed){throw new Error("Illegal operation: double free on SourceR\
+ef.")}const source2=this.source;assert2(source2._refCount>0);source2._decrementRefCount();source2._refFinalizationRegistry?.
+unregister(this);this._freed=true;this._source=null}[Symbol.dispose](){if(!this.freed){this.free()}}};
+PathedSource=class extends Source{constructor(rootPath,requestHandler){if(typeof rootPath!=="string"){
+throw new TypeError("rootPath must be a string.")}if(typeof requestHandler!=="function"){throw new TypeError(
+"requestHandler must be a function.")}super();this.rootPath=rootPath;this.requestHandler=requestHandler}_resolveRequest(request){
+const result=this.requestHandler(request);const handle=result2=>{if(!(result2 instanceof Source||result2 instanceof
+SourceRef)){throw new TypeError("requestHandler must return or resolve to a Source or SourceRef.")}const ref=result2 instanceof
+Source?result2.ref():result2;ref.source._usedForHls||=this._usedForHls;return ref};if(isThenable(result)){
+return result.then(handle)}else{return handle(result)}}};sourceRequestsAreEqual=(a,b)=>{return a.path===
+b.path};CustomPathedSource=class extends PathedSource{constructor(){super(...arguments);this._root=null;
+this._rootRequest=null}_read(start,end,minReadPosition,maxReadPosition){if(!this._root){if(!this._rootRequest){
+const result=this._resolveRequest({path:this.rootPath,isRoot:true});const handle=result2=>{const ref=result2 instanceof
+Source?result2.ref():result2;this._root=ref;this._rootRequest=null;return ref};if(isThenable(result)){
+this._rootRequest=result.then(handle)}else{handle(result);assert2(this._root)}}if(this._rootRequest){
+return this._rootRequest.then(ref=>ref.source._read(start,end,minReadPosition,maxReadPosition))}}return this.
+_root.source._read(start,end,minReadPosition,maxReadPosition)}_getFileSize(){if(this._root){return this.
+_root.source._getFileSize()}return void 0}_dispose(){if(this._root){this._root.free()}else if(this._rootRequest){
+void this._rootRequest.then(ref=>ref.free())}}};BufferSource=class extends Source{constructor(buffer){
+if(!(buffer instanceof ArrayBuffer)&&!(typeof SharedArrayBuffer!=="undefined"&&buffer instanceof SharedArrayBuffer)&&
+!ArrayBuffer.isView(buffer)){throw new TypeError("buffer must be an ArrayBuffer, SharedArrayBuffer, \
+or ArrayBufferView.")}super();this._onreadCalled=false;this._bytes=toUint8Array(buffer);this._view=toDataView(
+buffer)}_getFileSize(){return this._bytes.byteLength}_read(){if(!this._onreadCalled){this._dispatchRead(
+0,this._bytes.byteLength);this._onreadCalled=true}return{bytes:this._bytes,view:this._view,offset:0}}_dispose(){}};
+blobReaderRegistry=typeof FinalizationRegistry!=="undefined"?new FinalizationRegistry(reader=>{void reader.
+cancel().catch(()=>{})}):null;URL_SOURCE_MIN_LOAD_AMOUNT=.5*2**20;ReadableStreamSource=class extends Source{constructor(stream,options={}){
+if(!(stream instanceof ReadableStream)){throw new TypeError("stream must be a ReadableStream.")}if(!options||
+typeof options!=="object"){throw new TypeError("options must be an object.")}if(options.maxCacheSize!==
+void 0&&(!isNumber(options.maxCacheSize)||options.maxCacheSize<0)){throw new TypeError("options.maxC\
+acheSize, when provided, must be a non-negative number.")}super();this._reader=null;this._cache=[];this.
+_pendingSlices=[];this._currentIndex=0;this._targetIndex=0;this._maxRequestedIndex=0;this._endIndex=
+null;this._pulling=false;this._cacheMissErrorMessage="Attempted to read data from an already-evicted\
+ part of the cache. With ReadableStreamSource, you must access the data more sequentially or increas\
+e the size of its cache.";this._stream=stream;this._maxCacheSize=options.maxCacheSize??32*2**20}_getFileSize(){
+return this._endIndex}_read(start,end){if(this._endIndex!==null&&end>this._endIndex){return null}this.
+_maxRequestedIndex=Math.max(this._maxRequestedIndex,end);const cacheStartIndex=binarySearchLessOrEqual(
+this._cache,start,x=>x.start);const cacheStartEntry=cacheStartIndex!==-1?this._cache[cacheStartIndex]:
+null;if(cacheStartEntry&&cacheStartEntry.start<=start&&end<=cacheStartEntry.end){return{bytes:cacheStartEntry.
+bytes,view:cacheStartEntry.view,offset:cacheStartEntry.start}}let lastEnd=start;const bytes=new Uint8Array(
+end-start);if(cacheStartIndex!==-1){for(let i=cacheStartIndex;i<this._cache.length;i++){const cacheEntry=this.
+_cache[i];if(cacheEntry.start>=end){break}const cappedStart=Math.max(start,cacheEntry.start);if(cappedStart>
+lastEnd){this._throwDueToCacheMiss()}const cappedEnd=Math.min(end,cacheEntry.end);if(cappedStart<cappedEnd){
+bytes.set(cacheEntry.bytes.subarray(cappedStart-cacheEntry.start,cappedEnd-cacheEntry.start),cappedStart-
+start);lastEnd=cappedEnd}}}if(lastEnd===end){return{bytes,view:toDataView(bytes),offset:start}}if(this.
+_currentIndex>lastEnd){this._throwDueToCacheMiss()}const{promise,resolve,reject}=promiseWithResolvers();
+this._pendingSlices.push({start,end,bytes,resolve,reject});this._targetIndex=Math.max(this._targetIndex,
+end);if(!this._pulling){this._pulling=true;void this._pull().catch(error2=>{this._pulling=false;if(this.
+_pendingSlices.length>0){this._pendingSlices.forEach(x=>x.reject(error2));this._pendingSlices.length=
+0}else{throw error2}})}return promise}_throwDueToCacheMiss(){throw new Error(this._cacheMissErrorMessage)}async _pull(){
+this._reader??=this._stream.getReader();while(this._currentIndex<this._targetIndex&&!this._disposed){
+const{done,value}=await this._reader.read();if(done){for(const pendingSlice of this._pendingSlices){
+pendingSlice.resolve(null)}this._pendingSlices.length=0;this._endIndex=this._currentIndex;break}const startIndex=this.
+_currentIndex;const endIndex=this._currentIndex+value.byteLength;this._dispatchRead(startIndex,endIndex);
+for(let i=0;i<this._pendingSlices.length;i++){const pendingSlice=this._pendingSlices[i];const cappedStart=Math.
+max(startIndex,pendingSlice.start);const cappedEnd=Math.min(endIndex,pendingSlice.end);if(cappedStart<
+cappedEnd){pendingSlice.bytes.set(value.subarray(cappedStart-startIndex,cappedEnd-startIndex),cappedStart-
+pendingSlice.start);if(cappedEnd===pendingSlice.end){pendingSlice.resolve({bytes:pendingSlice.bytes,
+view:toDataView(pendingSlice.bytes),offset:pendingSlice.start});this._pendingSlices.splice(i,1);i--}}}
+this._cache.push({start:startIndex,end:endIndex,bytes:value,view:toDataView(value),age:0});while(this.
+_cache.length>0){const firstEntry=this._cache[0];const distance=this._maxRequestedIndex-firstEntry.end;
+if(distance<=this._maxCacheSize){break}this._cache.shift()}this._currentIndex+=value.byteLength}this.
+_pulling=false}_dispose(){for(const pendingSlice of this._pendingSlices){pendingSlice.reject(new InputDisposedError)}
+this._pendingSlices.length=0;this._cache.length=0;void this._reader?.cancel()}};RangedSource=class extends Source{constructor(baseSource,offset,length){
+super();this._ref=null;if(baseSource._disposed){throw new Error("Cannot create a slice of a disposed\
+ source.")}this._baseSource=baseSource;this._offset=offset;this._length=length??null}_getFileSize(){
+const baseSize=this._baseSource._getFileSize();if(baseSize===void 0){return this._length!==null?this.
+_length:void 0}if(baseSize===null){if(this._length!==null){return this._length}else{return null}}return clamp(
+baseSize-this._offset,0,this._length??Infinity)}_read(start,end,minReadPosition,maxReadPosition){if(this.
+_length!==null&&end>this._length){return null}const result=this._baseSource._read(this._offset+start,
+this._offset+end,this._offset+minReadPosition,this._offset+maxReadPosition);const processResult=result2=>{
+if(!result2){return null}result2.offset-=this._offset;return result2};if(isThenable(result)){return result.
+then(processResult)}else{return processResult(result)}}_dispose(){this._ref?.free()}ref(){this._ref??=
+this._baseSource.ref();return super.ref()}}}});var __addDisposableResource,__disposeResources,IV_STRING_REGEX,BASE64_DATA_URI_REGEX,HlsSegmentedInput;
+var init_hls_segmented_input=__esm({"node_modules/mediabunny/dist/modules/src/hls/hls-segmented-inpu\
+t.js"(){init_aes();init_input();init_segmented_input();init_misc();init_reader();init_source();init_hls_misc();
+init_input_format();init_isobmff_misc();__addDisposableResource=function(env,value,async){if(value!==
+null&&value!==void 0){if(typeof value!=="object"&&typeof value!=="function")throw new TypeError("Obj\
+ect expected.");var dispose,inner;if(async){if(!Symbol.asyncDispose)throw new TypeError("Symbol.asyn\
+cDispose is not defined.");dispose=value[Symbol.asyncDispose]}if(dispose===void 0){if(!Symbol.dispose)
+throw new TypeError("Symbol.dispose is not defined.");dispose=value[Symbol.dispose];if(async)inner=dispose}
+if(typeof dispose!=="function")throw new TypeError("Object not disposable.");if(inner)dispose=function(){
+try{inner.call(this)}catch(e){return Promise.reject(e)}};env.stack.push({value,dispose,async})}else if(async){
+env.stack.push({async:true})}return value};__disposeResources=(function(SuppressedError2){return function(env){
+function fail(e){env.error=env.hasError?new SuppressedError2(e,env.error,"An error was suppressed du\
+ring disposal."):e;env.hasError=true}var r,s=0;function next(){while(r=env.stack.pop()){try{if(!r.async&&
+s===1)return s=0,env.stack.push(r),Promise.resolve().then(next);if(r.dispose){var result=r.dispose.call(
+r.value);if(r.async)return s|=2,Promise.resolve(result).then(next,function(e){fail(e);return next()})}else
+s|=1}catch(e){fail(e)}}if(s===1)return env.hasError?Promise.reject(env.error):Promise.resolve();if(env.
+hasError)throw env.error}return next()}})(typeof SuppressedError==="function"?SuppressedError:function(error2,suppressed,message){
+var e=new Error(message);return e.name="SuppressedError",e.error=error2,e.suppressed=suppressed,e});
+IV_STRING_REGEX=/^0[xX][0-9a-fA-F]+$/;BASE64_DATA_URI_REGEX=/^data:.*;base64,/i;HlsSegmentedInput=class extends SegmentedInput{constructor(demuxer,path,trackDeclarations,lines){
+super(demuxer.input,path,trackDeclarations);this.segments=[];this.nextLines=null;this.currentUpdateSegmentsPromise=
+null;this.streamHasEnded=false;this.lastSegmentUpdateTime=-Infinity;this.refreshInterval=5;this.rootPath=
+path;this.demuxer=demuxer;this.nextLines=lines}runUpdateSegments(){return this.currentUpdateSegmentsPromise??=
+(async()=>{try{const remainingWaitTimeMs=this.getRemainingWaitTimeMs();if(remainingWaitTimeMs>0){await wait(
+remainingWaitTimeMs)}this.lastSegmentUpdateTime=performance.now();await this.updateSegments()}finally{
+this.currentUpdateSegmentsPromise=null}})()}getRemainingWaitTimeMs(){const elapsed=performance.now()-
+this.lastSegmentUpdateTime;const result=Math.max(0,1e3*this.refreshInterval-elapsed);if(result<=50){
+return 0}return result}async updateSegments(){let lines=this.nextLines;this.nextLines=null;if(!lines){
+const env_1={stack:[],error:void 0,hasError:false};try{const ref=__addDisposableResource(env_1,await this.
+demuxer.input._getSourceUncached({path:this.rootPath,isRoot:false}),false);const reader=new Reader(ref.
+source);const slice=await reader.requestEntireFile();assert2(slice);lines=readAllLines(slice,slice.length,
+{ignore:canIgnoreLine});if(ref.source instanceof PathedSource){this.rootPath=ref.source.rootPath}}catch(e_1){
+env_1.error=e_1;env_1.hasError=true}finally{__disposeResources(env_1)}}const offsetTimestampsByDateTime=this.
+input._formatOptions.hls?.offsetTimestampsByDateTime!==false;let headerRead=false;let accumulatedTime=0;
+let accumulatedUnixTime=null;let nextSegmentDuration=null;let currentKey=null;let nextSequenceNumber=0;
+let currentFirstSegment=null;let currentInitSegment=null;let lastByteRangeEnd=null;let nextByteRange=null;
+let lastProgramDateTimeSeconds=null;let targetDuration=null;let segmentSeen=false;let prevLastSegment=last(
+this.segments)??null;const parseByteRange=content=>{const atIndex=content.indexOf("@");const length=Number(
+atIndex===-1?content:content.slice(0,atIndex));if(!Number.isInteger(length)||length<0){throw new Error(
+`Invalid #EXT-X-BYTERANGE length '${content}'.`)}let offset=null;if(atIndex!==-1){offset=Number(content.
+slice(atIndex+1));if(!Number.isInteger(offset)||offset<0){throw new Error(`Invalid #EXT-X-BYTERANGE \
+offset '${content}'.`)}}return{length,offset}};const setNextSequenceNumber=number=>{nextSequenceNumber=
+number;if(prevLastSegment){assert2(prevLastSegment.sequenceNumber!==null);if(prevLastSegment.sequenceNumber<
+number){accumulatedTime=prevLastSegment.timestamp+prevLastSegment.duration;currentFirstSegment=prevLastSegment.
+firstSegment;currentInitSegment=prevLastSegment.initSegment;lastProgramDateTimeSeconds=prevLastSegment.
+lastProgramDateTimeSeconds;accumulatedUnixTime=prevLastSegment.unixEpochTimestamp!==null?prevLastSegment.
+unixEpochTimestamp+prevLastSegment.duration:null;prevLastSegment=null}}};for(let i=0;i<lines.length;i++){
+const line=lines[i];if(!headerRead){if(line!=="#EXTM3U"){throw new Error("Invalid M3U8 file; expecte\
+d first line to be #EXTM3U.")}headerRead=true;continue}if(!line.startsWith("#")){if(!prevLastSegment){
+if(nextSegmentDuration===null){throw new Error("Invalid M3U8 file; a segment must be preceded by an \
+#EXTINF tag.")}let key=currentKey;if(key&&key.method==="AES-128"&&!key.iv){const iv=new Uint8Array(AES_128_BLOCK_SIZE);
+const view=toDataView(iv);view.setUint32(8,Math.floor(nextSequenceNumber/2**32));view.setUint32(12,nextSequenceNumber);
+key={...key,iv}}const fullPath=joinPaths(this.rootPath,line);const location2={path:fullPath,offset:nextByteRange?.
+offset??0,length:nextByteRange?.length??null};const segment={timestamp:accumulatedTime,unixEpochTimestamp:accumulatedUnixTime,
+firstSegment:currentFirstSegment,sequenceNumber:nextSequenceNumber,location:location2,duration:nextSegmentDuration,
+encryption:key,initSegment:currentInitSegment,lastProgramDateTimeSeconds};currentFirstSegment??=segment;
+accumulatedTime+=nextSegmentDuration;if(accumulatedUnixTime!==null){accumulatedUnixTime+=nextSegmentDuration}
+this.segments.push(segment)}else{}nextSegmentDuration=null;if(nextByteRange===null){lastByteRangeEnd=
+null}else{nextByteRange=null}setNextSequenceNumber(nextSequenceNumber+1)}if(line.startsWith(TAG_EXTINF)){
+if(prevLastSegment){segmentSeen=true;continue}if(!segmentSeen){if(lastProgramDateTimeSeconds===null&&
+nextSequenceNumber>0&&targetDuration!==null){accumulatedTime=nextSequenceNumber*targetDuration}segmentSeen=
+true}const extinfContent=line.slice(TAG_EXTINF.length);const commaIndex=extinfContent.indexOf(",");const durationStr=commaIndex===
+-1?extinfContent:extinfContent.slice(0,commaIndex);const duration=Number(durationStr);if(!Number.isFinite(
+duration)||duration<0){throw new Error(`Invalid #EXTINF tag duration '${durationStr}'.`)}nextSegmentDuration=
+duration}else if(line.startsWith(TAG_MAP)){const attributes=new AttributeList(line.slice(TAG_MAP.length));
+const uri=attributes.get("uri");if(!uri){throw new Error("Invalid #EXT-X-MAP tag; missing URI attrib\
+ute.")}const byteRange=attributes.get("byterange");let parsedByteRange=null;if(byteRange!==null){parsedByteRange=
+parseByteRange(byteRange)}if(parsedByteRange&&parsedByteRange.offset===null){throw new Error("Invali\
+d #EXT-X-MAP tag; BYTERANGE attribute must have a specified offset.")}if(!prevLastSegment){const fullPath=joinPaths(
+this.rootPath,uri);const location2={path:fullPath,offset:parsedByteRange?.offset??0,length:parsedByteRange?.
+length??null};if(currentKey?.method==="AES-128"&&!currentKey.iv){throw new Error("IV attribute must \
+be set on #EXT-X-KEY tag preceding the #EXT-X-MAP tag.")}const segment={timestamp:accumulatedTime,unixEpochTimestamp:accumulatedUnixTime,
+firstSegment:null,sequenceNumber:null,location:location2,duration:0,encryption:currentKey,initSegment:null,
+lastProgramDateTimeSeconds};currentInitSegment=segment}else{}nextSegmentDuration=null;if(nextByteRange===
+null){lastByteRangeEnd=null}else{nextByteRange=null}}else if(line.startsWith(TAG_KEY)){const attributes=new AttributeList(
+line.slice(TAG_KEY.length));const method2=attributes.get("method");if(method2==="NONE"){currentKey=null}else if(method2===
+"AES-128"){const uri=attributes.get("uri");if(!uri){throw new Error("Invalid #EXT-X-KEY: AES-128 req\
+uires a URI attribute.")}let iv=null;const ivString=attributes.get("iv");if(ivString){if(!IV_STRING_REGEX.
+test(ivString)){throw new Error(`Unsupported IV format '${ivString}'.`)}let hex2=ivString.slice(2);hex2=
+hex2.padStart(AES_128_BLOCK_SIZE*2,"0");iv=new Uint8Array(AES_128_BLOCK_SIZE);for(let i2=0;i2<AES_128_BLOCK_SIZE;i2++){
+const startIndex=-AES_128_BLOCK_SIZE*2+i2;iv[i2]=parseInt(hex2.slice(startIndex,startIndex+2),16)}}const keyFormat=attributes.
+get("keyformat")??"identity";if(keyFormat!=="identity"){throw new Error("For AES-128 encryption, onl\
+y the 'identity' KEYFORMAT is currently supported. If you think other formats should be supported, p\
+lease raise an issue.")}currentKey={method:"AES-128",keyUri:joinPaths(this.rootPath,uri),iv,keyFormat}}else if(method2===
+"SAMPLE-AES"||method2==="SAMPLE-AES-CTR"){const uri=attributes.get("uri");if(!uri){throw new Error(`\
+Invalid #EXT-X-KEY: ${method2} requires a URI attribute.`)}const keyFormat=attributes.get("keyformat")??
+"identity";if(keyFormat==="identity"){throw new Error("For SAMPLE-AES and SAMPLE-AES-CTR encryption,\
+ the 'identity' KEYFORMAT is not supported. If you think this format should be supported, please rai\
+se an issue.")}let psshBox=null;if(BASE64_DATA_URI_REGEX.test(uri)){const commaIndex=uri.indexOf(",");
+const bytes=base64ToBytes(uri.slice(commaIndex+1));if(bytes.length>=8&&bytes[4]===112&&bytes[5]===115&&
+bytes[6]===115&&bytes[7]===104){const size=toDataView(bytes).getUint32(0);psshBox=parsePsshBoxContents(
+bytes.subarray(8,Math.min(size,bytes.length)))}}currentKey={method:method2,psshBox}}else{throw new Error(
+`Unsupported encryption method '${method2}'. If you think this method should be supported, please ra\
+ise an issue.`)}}else if(line.startsWith(TAG_MEDIA_SEQUENCE)){const value=line.slice(TAG_MEDIA_SEQUENCE.
+length);const number=Number(value);if(!Number.isInteger(number)||number<0){throw new Error(`Invalid \
+EXT-X-MEDIA-SEQUENCE value '${value}'.`)}setNextSequenceNumber(number)}else if(line.startsWith(TAG_BYTERANGE)){
+const parsed=parseByteRange(line.slice(TAG_BYTERANGE.length));if(parsed.offset===null){if(lastByteRangeEnd===
+null){throw new Error("Invalid M3U8 file; #EXT-X-BYTERANGE without offset requires a previous byte r\
+ange.")}parsed.offset=lastByteRangeEnd}nextByteRange=parsed;lastByteRangeEnd=parsed.offset+parsed.length}else if(line.
+startsWith(TAG_PROGRAM_DATE_TIME)){if(prevLastSegment){continue}const dateTime=line.slice(TAG_PROGRAM_DATE_TIME.
+length);const dateTimeMs=Date.parse(dateTime);if(!Number.isFinite(dateTimeMs)){continue}const dateTimeSeconds=dateTimeMs/
+1e3;if(lastProgramDateTimeSeconds===dateTimeSeconds){continue}if(lastProgramDateTimeSeconds===null&&
+this.segments.length>0){const lastSegment=last(this.segments);const lastSegmentEnd=lastSegment.timestamp+
+lastSegment.duration;const offset=dateTimeSeconds-lastSegmentEnd;for(const segment of this.segments){
+segment.unixEpochTimestamp=segment.timestamp+offset;if(offsetTimestampsByDateTime){segment.timestamp=
+segment.unixEpochTimestamp}}}lastProgramDateTimeSeconds=dateTimeSeconds;accumulatedUnixTime=dateTimeSeconds;
+if(offsetTimestampsByDateTime){accumulatedTime=dateTimeSeconds}}else if(line===TAG_DISCONTINUITY){currentFirstSegment=
+null}else if(line.startsWith(TAG_TARGETDURATION)){const value=line.slice(TAG_TARGETDURATION.length);
+const duration=Number(value);if(!Number.isFinite(duration)||duration<0){throw new Error(`Invalid EXT\
+-X-TARGETDURATION value '${value}'.`)}this.refreshInterval=duration;targetDuration=duration}else if(line===
+TAG_ENDLIST){this.streamHasEnded=true;break}else if(line.startsWith(TAG_PLAYLIST_TYPE)){const type=line.
+slice(TAG_PLAYLIST_TYPE.length);if(type.toLowerCase()==="vod"){this.streamHasEnded=true}}}if(!headerRead){
+throw new Error("Invalid M3U8 file; no #EXTM3U header.")}}async getFirstSegment(){if(this.segments.length===
+0){await this.runUpdateSegments()}return this.segments[0]??null}async getSegmentAt(timestamp,options){
+if(this.segments.length===0){await this.runUpdateSegments()}let isLazy=!!options.skipLiveWait&&this.
+getRemainingWaitTimeMs()>0;while(true){const index=binarySearchLessOrEqual(this.segments,timestamp,x=>x.
+timestamp);if(index===-1){return null}if(index<this.segments.length-1||this.streamHasEnded||isLazy){
+return this.segments[index]}const segment=this.segments[index];if(timestamp<segment.timestamp+segment.
+duration){return segment}await this.runUpdateSegments();if(options.skipLiveWait){isLazy=true}}}async getNextSegment(segment,options){
+const index=this.segments.indexOf(segment);assert2(index!==-1);const nextIndex=index+1;let isLazy=!!options.
+skipLiveWait&&this.getRemainingWaitTimeMs()>0;while(true){if(nextIndex<this.segments.length){return this.
+segments[nextIndex]}if(this.streamHasEnded||isLazy){return null}await this.runUpdateSegments();if(options.
+skipLiveWait){isLazy=true}}}async getPreviousSegment(segment){const index=this.segments.indexOf(segment);
+assert2(index!==-1);return this.segments[index-1]??null}getInputForSegment(segment){const hlsSegment=segment;
+const cacheEntry=this.inputCache.find(x=>x.segment===hlsSegment);if(cacheEntry){cacheEntry.age=this.
+nextInputCacheAge++;return cacheEntry.input}let initInput=null;if(hlsSegment.initSegment||hlsSegment.
+firstSegment){initInput=this.getInputForSegment(hlsSegment.initSegment??hlsSegment.firstSegment)}const formatOptions={
+...this.input._formatOptions,isobmff:{...this.input._formatOptions.isobmff,resolveKeyId:this.input._formatOptions.
+isobmff?.resolveKeyId&&(options=>{if(!hlsSegment.encryption||!(hlsSegment.encryption.method==="SAMPL\
+E-AES"||hlsSegment.encryption.method==="SAMPLE-AES-CTR")||!hlsSegment.encryption.psshBox){return this.
+input._formatOptions.isobmff.resolveKeyId(options)}let psshBoxes=options.psshBoxes;const{psshBox}=hlsSegment.
+encryption;if((psshBox.keyIds===null||psshBox.keyIds.includes(options.keyId))&&!psshBoxes.some(x=>psshBoxesAreEqual(
+x,psshBox))){psshBoxes=[...psshBoxes,psshBox]}return this.input._formatOptions.isobmff.resolveKeyId(
+{...options,psshBoxes})})}};const input=new Input({source:new CustomPathedSource(hlsSegment.location.
+path,async request=>{assert2(request.isRoot);const proxiedRequest={...request,isRoot:false};let ref;
+const needsSlice=hlsSegment.location.offset>0||hlsSegment.location.length!==null;if(!hlsSegment.encryption||
+hlsSegment.encryption.method==="SAMPLE-AES"||hlsSegment.encryption.method==="SAMPLE-AES-CTR"){ref=await this.
+input._getSourceCached(proxiedRequest);if(needsSlice){const slice=ref.source.slice(hlsSegment.location.
+offset,hlsSegment.location.length??void 0);const sliceRef=slice.ref();ref.free();ref=sliceRef}}else if(hlsSegment.
+encryption.method==="AES-128"){const encryption=hlsSegment.encryption;assert2(encryption.iv);let ciphertextRef=await this.
+input._getSourceCached(proxiedRequest);if(needsSlice){const slice=ciphertextRef.source.slice(hlsSegment.
+location.offset,hlsSegment.location.length??void 0);const sliceRef=slice.ref();ciphertextRef.free();
+ciphertextRef=sliceRef}const ciphertextReader=new Reader(ciphertextRef.source);const stream=createAes128CbcDecryptStream(
+ciphertextReader,async()=>{const env_2={stack:[],error:void 0,hasError:false};try{const keyRef=__addDisposableResource(
+env_2,await this.input._getSourceCached({path:encryption.keyUri,isRoot:false},ENCRYPTION_KEY_CACHE_GROUP),
+false);const keyReader=new Reader(keyRef.source);const keySlice=await keyReader.requestSlice(0,AES_128_BLOCK_SIZE);
+if(!keySlice){throw new Error("Invalid AES-128 key; expected at least 16 bytes of data.")}const key=readBytes(
+keySlice,AES_128_BLOCK_SIZE);return{key,iv:encryption.iv}}catch(e_2){env_2.error=e_2;env_2.hasError=
+true}finally{__disposeResources(env_2)}},()=>{ciphertextRef.free()});ref=new ReadableStreamSource(stream).
+ref()}else{assert2(false)}return ref}),formats:this.input._formats.filter(x=>!(x instanceof HlsInputFormat)),
+initInput:initInput??void 0,formatOptions});input._onFormatDetermined=format=>{if((hlsSegment.encryption?.
+method==="SAMPLE-AES"||hlsSegment.encryption?.method==="SAMPLE-AES-CTR")&&!format._isIsobmff){throw new Error(
+"The SAMPLE-AES and SAMPLE-AES-CTR encryption methods are currently only supported for ISOBMFF files\
+.")}};this.inputCache.push({segment:hlsSegment,input,age:this.nextInputCacheAge++});const MAX_INPUT_CACHE_SIZE=4;
+if(this.inputCache.length>MAX_INPUT_CACHE_SIZE){const minAgeIndex=arrayArgmin(this.inputCache,x=>x.age);
+assert2(minAgeIndex!==-1);this.inputCache.splice(minAgeIndex,1)}return input}async getLiveRefreshInterval(){
+if(this.getRemainingWaitTimeMs()===0){await this.runUpdateSegments()}return this.streamHasEnded?null:
+this.refreshInterval}}}});var HlsDemuxer,HlsInputTrackBacking,HlsInputVideoTrackBacking,HlsInputAudioTrackBacking,getMediaTagDefault,
+getMediaTagAutoselect,preprocessLanguageCode;var init_hls_demuxer=__esm({"node_modules/mediabunny/di\
+st/modules/src/hls/hls-demuxer.js"(){init_codec();init_demuxer();init_metadata();init_misc();init_reader();
+init_hls_misc();init_hls_segmented_input();init_source();HlsDemuxer=class extends Demuxer{constructor(input){
+super(input);this.metadataPromise=null;this.trackBackings=null;this.internalTracks=null;this.segmentedInputs=
+[];this.hasMasterPlaylist=true}readMetadata(){return this.metadataPromise??=(async()=>{assert2(this.
+input._rootSource instanceof PathedSource);const slice=await this.input._reader.requestEntireFile();
+assert2(slice);const lines=readAllLines(slice,slice.length,{ignore:canIgnoreLine});const{rootPath}=this.
+input._rootSource;const variantStreams=[];const mediaTags=[];for(let i=1;i<lines.length;i++){const line=lines[i];
+if(line.startsWith(TAG_STREAM_INF)){const streamInfLineNumber=i;const playlistPath=lines[++i];if(playlistPath===
+void 0){throw new Error("Incorrect M3U8 file; a line must follow the #EXT-X-STREAM-INF tag.")}const fullPath=joinPaths(
+rootPath,playlistPath);const attributes=new AttributeList(line.slice(TAG_STREAM_INF.length));const bandwidth=attributes.
+getAsNumber("bandwidth");if(bandwidth===null){throw new Error("Invalid M3U8 file; #EXT-X-STREAM-INF \
+tag requires a BANDWIDTH attribute with a valid numerical value.")}variantStreams.push({fullPath,attributes,
+lineNumber:streamInfLineNumber,hasOnlyKeyPackets:false})}else if(line.startsWith(TAG_I_FRAME_STREAM_INF)){
+const attributes=new AttributeList(line.slice(TAG_I_FRAME_STREAM_INF.length));const playlistPath=attributes.
+get("uri");if(playlistPath===null){throw new Error("Invalid M3U8 file; #EXT-X-I-FRAME-STREAM-INF tag\
+ requires a URI attribute.")}const bandwidth=attributes.getAsNumber("bandwidth");if(bandwidth===null){
+throw new Error("Invalid M3U8 file; #EXT-X-I-FRAME-STREAM-INF tag requires a BANDWIDTH attribute wit\
+h a valid numerical value.")}const fullPath=joinPaths(rootPath,playlistPath);variantStreams.push({fullPath,
+attributes,lineNumber:i,hasOnlyKeyPackets:true})}else if(line.startsWith(TAG_MEDIA)){const attributes=new AttributeList(
+line.slice(TAG_MEDIA.length));const type=attributes.get("type");if(type===null){throw new Error("Inv\
+alid M3U8 file; #EXT-X-MEDIA tag requires a TYPE attribute.")}const groupId=attributes.get("group-id");
+if(groupId===null){throw new Error("Invalid M3U8 file; #EXT-X-MEDIA tag requires a GROUP-ID attribut\
+e.")}let fullPath=null;const uri=attributes.get("uri");if(uri!==null){fullPath=joinPaths(rootPath,uri)}
+mediaTags.push({fullPath,attributes,lineNumber:i})}else if(line===TAG_I_FRAMES_ONLY){}else if(line.startsWith(
+TAG_EXTINF)){const segmentedInput=new HlsSegmentedInput(this,rootPath,null,lines);this.segmentedInputs=
+[segmentedInput];this.hasMasterPlaylist=false;this.trackBackings=await segmentedInput.getTrackBackings();
+return}}const videoGroupIds=[...new Set(mediaTags.filter(tag=>tag.attributes.get("type").toLowerCase()===
+"video").map(tag=>tag.attributes.get("group-id")))];const audioGroupIds=[...new Set(mediaTags.filter(
+tag=>tag.attributes.get("type").toLowerCase()==="audio").map(tag=>tag.attributes.get("group-id")))];
+const internalTracksByVariant=await Promise.all(variantStreams.map(async(variantStream,i)=>{const result=[];
+const codecsList=variantStream.attributes.get("codecs");let codecStrings;if(codecsList){codecStrings=
+codecsList.split(",").map(x=>x.trim())}else{const segmentedInput=this.getSegmentedInputForPath(variantStream.
+fullPath);const trackBackings=await segmentedInput.getTrackBackings();const tracksWithCodec=await Promise.
+all(trackBackings.map(async t=>({track:t,codec:await t.getCodec()})));codecStrings=await Promise.all(
+tracksWithCodec.filter(x=>x.codec!==null).map(x=>x.track.getDecoderConfig().then(x2=>x2.codec)))}const videoGroupId=variantStream.
+attributes.get("video");const audioGroupId=variantStream.attributes.get("audio");const containsVideoCodecs=codecStrings.
+some(x=>VIDEO_CODECS.includes(inferCodecFromCodecString(x)));const containsAudioCodecs=codecStrings.
+some(x=>AUDIO_CODECS.includes(inferCodecFromCodecString(x)));if(videoGroupId!==null&&!containsVideoCodecs){
+if(!videoGroupIds.includes(videoGroupId)){throw new Error(`Invalid M3U8 file; variant stream referen\
+ces video group "${videoGroupId}" which is not defined in any #EXT-X-MEDIA tags.`)}const matchingVideoMediaTag=mediaTags.
+find(mediaTag=>{const groupId=mediaTag.attributes.get("group-id");const type=mediaTag.attributes.get(
+"type");return groupId===videoGroupId&&type.toLowerCase()==="video"});outer:if(matchingVideoMediaTag){
+const uri=matchingVideoMediaTag.attributes.get("uri");if(uri===null){break outer}const fullPath=joinPaths(
+rootPath,uri);const segmentedInput=this.getSegmentedInputForPath(fullPath);const trackBackings=await segmentedInput.
+getTrackBackings();const videoTrack=trackBackings.find(x=>x.getType()==="video");if(!videoTrack||await videoTrack.
+getCodec()===null){break outer}const additionalCodecString=await videoTrack.getDecoderConfig().then(
+x=>x?.codec??null);assert2(additionalCodecString!==null);codecStrings.push(additionalCodecString)}}if(audioGroupId!==
+null&&!containsAudioCodecs){if(!audioGroupIds.includes(audioGroupId)){throw new Error(`Invalid M3U8 \
+file; variant stream references audio group "${audioGroupId}" which is not defined in any #EXT-X-MED\
+IA tags.`)}const matchingAudioMediaTag=mediaTags.find(tag=>{const groupId=tag.attributes.get("group-\
+id");const type=tag.attributes.get("type");return groupId===audioGroupId&&type.toLowerCase()==="audi\
+o"});outer:if(matchingAudioMediaTag){const uri=matchingAudioMediaTag.attributes.get("uri");if(uri===
+null){break outer}const fullPath=joinPaths(rootPath,uri);const segmentedInput=this.getSegmentedInputForPath(
+fullPath);const trackBackings=await segmentedInput.getTrackBackings();const audioTrack=trackBackings.
+find(x=>x.getType()==="audio");if(!audioTrack||await audioTrack.getCodec()===null){break outer}const additionalCodecString=await audioTrack.
+getDecoderConfig().then(x=>x?.codec??null);assert2(additionalCodecString!==null);codecStrings.push(additionalCodecString)}}
+codecStrings=[...new Set(codecStrings)];let videoCodecString=null;let audioCodecString=null;const bandwidth=variantStream.
+attributes.getAsNumber("bandwidth");assert2(bandwidth!==null);const averageBandwidth=variantStream.attributes.
+getAsNumber("average-bandwidth");const name=variantStream.attributes.get("name");for(const codecString of codecStrings){
+const inferredCodec=inferCodecFromCodecString(codecString);if(inferredCodec===null){continue}if(VIDEO_CODECS.
+includes(inferredCodec)){if(videoCodecString!==null){throw new Error("Unsupported M3U8 file; multipl\
+e video codecs found in the CODECS attribute of a variant stream.")}videoCodecString=codecString;const videoGroupId2=variantStream.
+attributes.get("video");if(videoGroupId2===null){const resolution=variantStream.attributes.get("reso\
+lution");let width=null;let height=null;if(resolution){const match=resolution.match(/^(\d+)x(\d+)$/);
+if(match){width=Number(match[1]);height=Number(match[2])}}result.push({id:-1,demuxer:this,backingTrack:null,
+default:true,autoselect:true,languageCode:UNDETERMINED_LANGUAGE,lineNumber:variantStream.lineNumber,
+fullPath:variantStream.fullPath,fullCodecString:videoCodecString,pairingMask:1n<<BigInt(i),peakBitrate:bandwidth,
+averageBitrate:averageBandwidth,name,hasOnlyKeyPackets:variantStream.hasOnlyKeyPackets,info:{type:"v\
+ideo",width,height}})}else{if(!videoGroupIds.includes(videoGroupId2)){throw new Error(`Invalid M3U8 \
+file; variant stream references video group "${videoGroupId2}" which is not defined in any #EXT-X-ME\
+DIA tags.`)}for(const mediaTag of mediaTags){const groupId=mediaTag.attributes.get("group-id");const type=mediaTag.
+attributes.get("type");if(groupId!==videoGroupId2||type.toLowerCase()!=="video"){continue}const resolution=mediaTag.
+attributes.get("resolution")??variantStream.attributes.get("resolution");let width=null;let height=null;
+if(resolution){const match=resolution.match(/^(\d+)x(\d+)$/);if(match){width=Number(match[1]);height=
+Number(match[2])}}result.push({id:-1,demuxer:this,backingTrack:null,default:getMediaTagDefault(mediaTag.
+attributes),autoselect:getMediaTagDefault(mediaTag.attributes)||getMediaTagAutoselect(mediaTag.attributes),
+languageCode:preprocessLanguageCode(mediaTag.attributes.get("language")),lineNumber:mediaTag.lineNumber,
+fullPath:mediaTag.fullPath??variantStream.fullPath,fullCodecString:videoCodecString,pairingMask:1n<<
+BigInt(i),peakBitrate:null,averageBitrate:null,name:mediaTag.attributes.get("name"),hasOnlyKeyPackets:variantStream.
+hasOnlyKeyPackets,info:{type:"video",width,height}})}}}else if(AUDIO_CODECS.includes(inferredCodec)){
+if(audioCodecString!==null){throw new Error("Unsupported M3U8 file; multiple audio codecs found in t\
+he CODECS attribute of a variant stream.")}audioCodecString=codecString;const audioGroupId2=variantStream.
+attributes.get("audio");if(audioGroupId2===null){const channels=variantStream.attributes.get("channe\
+ls");const parsedChannels=channels!==null?Number(channels.split("/")[0]):null;result.push({id:-1,demuxer:this,
+backingTrack:null,default:true,autoselect:true,languageCode:UNDETERMINED_LANGUAGE,lineNumber:variantStream.
+lineNumber,fullPath:variantStream.fullPath,fullCodecString:audioCodecString,pairingMask:1n<<BigInt(i),
+peakBitrate:bandwidth,averageBitrate:averageBandwidth,name,hasOnlyKeyPackets:variantStream.hasOnlyKeyPackets,
+info:{type:"audio",numberOfChannels:parsedChannels!==null&&Number.isInteger(parsedChannels)&&parsedChannels>
+0?parsedChannels:null}})}else{if(!audioGroupIds.includes(audioGroupId2)){throw new Error(`Invalid M3\
+U8 file; variant stream references audio group "${audioGroupId2}" which is not defined in any #EXT-X\
+-MEDIA tags.`)}for(const mediaTag of mediaTags){const groupId=mediaTag.attributes.get("group-id");const type=mediaTag.
+attributes.get("type");if(groupId!==audioGroupId2||type.toLowerCase()!=="audio"){continue}const channels=mediaTag.
+attributes.get("channels")??variantStream.attributes.get("channels");const parsedChannels=channels!==
+null?Number(channels.split("/")[0]):null;result.push({id:-1,demuxer:this,backingTrack:null,default:getMediaTagDefault(
+mediaTag.attributes),autoselect:getMediaTagDefault(mediaTag.attributes)||getMediaTagAutoselect(mediaTag.
+attributes),languageCode:preprocessLanguageCode(mediaTag.attributes.get("language")),lineNumber:mediaTag.
+lineNumber,fullPath:mediaTag.fullPath??variantStream.fullPath,fullCodecString:audioCodecString,pairingMask:1n<<
+BigInt(i),peakBitrate:null,averageBitrate:null,name:mediaTag.attributes.get("name"),hasOnlyKeyPackets:variantStream.
+hasOnlyKeyPackets,info:{type:"audio",numberOfChannels:parsedChannels!==null&&Number.isInteger(parsedChannels)&&
+parsedChannels>0?parsedChannels:null}})}}}}return result}));const internalTracks=[];const addInternalTrack=track=>{
+const existingTrack=internalTracks.find(x=>x.fullPath===track.fullPath&&x.info.type===track.info.type);
+if(existingTrack){existingTrack.pairingMask|=track.pairingMask;existingTrack.default||=track.default;
+existingTrack.autoselect||=track.autoselect;existingTrack.lineNumber=Math.min(existingTrack.lineNumber,
+track.lineNumber);if(track.peakBitrate!==null){existingTrack.peakBitrate=Math.max(existingTrack.peakBitrate??
+-Infinity,track.peakBitrate)}if(track.averageBitrate!==null){existingTrack.averageBitrate=Math.max(existingTrack.
+averageBitrate??-Infinity,track.averageBitrate)}if(existingTrack.languageCode===UNDETERMINED_LANGUAGE){
+existingTrack.languageCode=track.languageCode}}else{track.id=internalTracks.length+1;internalTracks.
+push(track)}};for(const variantInternalTracks of internalTracksByVariant){for(const trackEntry of variantInternalTracks){
+addInternalTrack(trackEntry)}}internalTracks.sort((a,b)=>a.lineNumber-b.lineNumber);this.trackBackings=
+[];for(const internalTrack of internalTracks){if(internalTrack.info.type==="video"){this.trackBackings.
+push(new HlsInputVideoTrackBacking(internalTrack))}else{this.trackBackings.push(new HlsInputAudioTrackBacking(
+internalTrack))}}this.internalTracks=internalTracks})()}async getTrackBackings(){await this.readMetadata();
+assert2(this.trackBackings);return this.trackBackings}getSegmentedInputForPath(path){let segmentedInput=this.
+segmentedInputs.find(x=>x.path===path);if(segmentedInput){return segmentedInput}let decls=null;if(this.
+internalTracks){const tracks=this.internalTracks.filter(x=>x.fullPath===path);decls=tracks.map(x=>({
+id:x.id,type:x.info.type}))}segmentedInput=new HlsSegmentedInput(this,path,decls,null);this.segmentedInputs.
+push(segmentedInput);return segmentedInput}async getMetadataTags(){return{}}async getMimeType(){return HLS_MIME_TYPE}dispose(){
+if(this.segmentedInputs){for(const segInput of this.segmentedInputs){segInput.dispose()}this.segmentedInputs.
+length=0}}};HlsInputTrackBacking=class{constructor(internalTrack){this.internalTrack=internalTrack;this.
+hydrationPromise=null}hydrate(){return this.hydrationPromise??=(async()=>{const segmentedInput=this.
+internalTrack.demuxer.getSegmentedInputForPath(this.internalTrack.fullPath);let trackBacking=null;const trackBackings=await segmentedInput.
+getTrackBackings();const matchingType=trackBackings.filter(x=>x.getType()===this.getType());if(matchingType.
+length===1){trackBacking=matchingType[0]}else{if(this instanceof HlsInputVideoTrackBacking){for(const backing of matchingType){
+if(await backing.getCodec()===this.getCodec()){trackBacking=backing;break}}}else{assert2(this instanceof
+HlsInputAudioTrackBacking);for(const backing of matchingType){if(await backing.getCodec()===this.getCodec()){
+trackBacking=backing;break}}}}if(!trackBacking){throw new Error("Could not find matching track in un\
+derlying media data.")}this.internalTrack.backingTrack=trackBacking})()}delegate(fn){if(this.internalTrack.
+backingTrack){return fn()}return this.hydrate().then(fn)}getCodec(){throw new Error("Not implemented\
+ on base class.")}getDisposition(){return{...DEFAULT_TRACK_DISPOSITION,default:this.internalTrack.autoselect,
+primary:this.internalTrack.default}}getId(){return this.internalTrack.id}getPairingMask(){return this.
+internalTrack.pairingMask}getInternalCodecId(){return null}getLanguageCode(){return this.internalTrack.
+languageCode}getName(){return this.internalTrack.name}getNumber(){assert2(this.internalTrack.demuxer.
+internalTracks);const trackType=this.internalTrack.info.type;let number=0;for(const track of this.internalTrack.
+demuxer.internalTracks){if(track.info.type===trackType){number++}if(track===this.internalTrack){break}}
+return number}getTimeResolution(){return this.delegate(()=>this.internalTrack.backingTrack.getTimeResolution())}isRelativeToUnixEpoch(){
+return this.delegate(()=>this.internalTrack.backingTrack.isRelativeToUnixEpoch())}getUnixTimeForTimestamp(timestamp){
+return this.delegate(()=>this.internalTrack.backingTrack.getUnixTimeForTimestamp(timestamp))}getBitrate(){
+return this.internalTrack.peakBitrate}getAverageBitrate(){return this.internalTrack.averageBitrate}async getDurationFromMetadata(options){
+await this.hydrate();return this.internalTrack.backingTrack.getDurationFromMetadata(options)}async getLiveRefreshInterval(){
+await this.hydrate();return this.internalTrack.backingTrack.getLiveRefreshInterval()}getHasOnlyKeyPackets(){
+return this.internalTrack.hasOnlyKeyPackets||null}async getFirstPacket(options){await this.hydrate();
+return this.internalTrack.backingTrack.getFirstPacket(options)}async getPacket(timestamp,options){await this.
+hydrate();return this.internalTrack.backingTrack.getPacket(timestamp,options)}async getKeyPacket(timestamp,options){
+await this.hydrate();return this.internalTrack.backingTrack.getKeyPacket(timestamp,options)}async getNextPacket(packet,options){
+await this.hydrate();return this.internalTrack.backingTrack.getNextPacket(packet,options)}async getNextKeyPacket(packet,options){
+await this.hydrate();return this.internalTrack.backingTrack.getNextKeyPacket(packet,options)}};HlsInputVideoTrackBacking=
+class extends HlsInputTrackBacking{constructor(internalTrack){super(internalTrack)}get backingVideoTrack(){
+return this.internalTrack.backingTrack}getType(){return"video"}getCodec(){const inferredCodec=inferCodecFromCodecString(
+this.internalTrack.fullCodecString);return inferredCodec}getCodedWidth(){return this.delegate(()=>this.
+backingVideoTrack.getCodedWidth())}getCodedHeight(){return this.delegate(()=>this.backingVideoTrack.
+getCodedHeight())}getSquarePixelWidth(){return this.delegate(()=>this.backingVideoTrack.getSquarePixelWidth())}getSquarePixelHeight(){
+return this.delegate(()=>this.backingVideoTrack.getSquarePixelHeight())}getMetadataDisplayWidth(){if(this.
+backingVideoTrack){return null}return this.internalTrack.info.width}getMetadataDisplayHeight(){if(this.
+backingVideoTrack){return null}return this.internalTrack.info.height}getRotation(){return this.delegate(
+()=>this.backingVideoTrack.getRotation())}async getColorSpace(){await this.hydrate();return this.backingVideoTrack.
+getColorSpace()}async canBeTransparent(){await this.hydrate();return this.backingVideoTrack.canBeTransparent()}getMetadataCodecParameterString(){
+if(this.backingVideoTrack){return null}return this.internalTrack.fullCodecString}async getDecoderConfig(){
+await this.hydrate();return this.backingVideoTrack.getDecoderConfig()}};HlsInputAudioTrackBacking=class extends HlsInputTrackBacking{constructor(internalTrack){
+super(internalTrack)}get backingAudioTrack(){return this.internalTrack.backingTrack}getType(){return"\
+audio"}getCodec(){const inferredCodec=inferCodecFromCodecString(this.internalTrack.fullCodecString);
+return inferredCodec}getNumberOfChannels(){if(this.internalTrack.info.numberOfChannels!==null){return this.
+internalTrack.info.numberOfChannels}return this.delegate(()=>this.backingAudioTrack.getNumberOfChannels())}getSampleRate(){
+return this.delegate(()=>this.backingAudioTrack.getSampleRate())}getMetadataCodecParameterString(){if(this.
+backingAudioTrack){return null}return this.internalTrack.fullCodecString}async getDecoderConfig(){await this.
+hydrate();return this.backingAudioTrack.getDecoderConfig()}};getMediaTagDefault=attributes=>{const value=attributes.
+get("default");if(value===null){return false}const normalized=value.toUpperCase();if(normalized==="Y\
+ES"){return true}if(normalized==="NO"){return false}throw new Error(`Invalid M3U8 file; #EXT-X-MEDIA\
+ DEFAULT attribute must be YES or NO, got "${value}".`)};getMediaTagAutoselect=attributes=>{const value=attributes.
+get("autoselect");if(value===null){return false}const normalized=value.toUpperCase();if(normalized===
+"YES"){return true}if(normalized==="NO"){return false}throw new Error(`Invalid M3U8 file; #EXT-X-MED\
+IA AUTOSELECT attribute must be YES or NO, got "${value}".`)};preprocessLanguageCode=code=>{if(code===
+null){return UNDETERMINED_LANGUAGE}const languageSubtag=code.split("-")[0];if(!languageSubtag){return UNDETERMINED_LANGUAGE}
+return languageSubtag}}});var InputFormat,IsobmffInputFormat,Mp4InputFormat,AdtsInputFormat,MpegTsInputFormat,HlsInputFormat,MP4,
+ADTS,MPEG_TS,HLS,validateInputFormatOptions;var init_input_format=__esm({"node_modules/mediabunny/di\
+st/modules/src/input-format.js"(){init_isobmff_demuxer();init_id3();init_adts_reader();init_adts_demuxer();
+init_reader();init_mpeg_ts_demuxer();init_mpeg_ts_misc();init_hls_demuxer();init_hls_misc();init_source();
+init_misc();InputFormat=class{constructor(){this._isIsobmff=false}};IsobmffInputFormat=class extends InputFormat{constructor(){
+super(...arguments);this._isIsobmff=true}async _getMajorBrand(input){let slice=input._reader.requestSlice(
+0,12);if(isThenable(slice))slice=await slice;if(!slice)return null;slice.skip(4);const fourCc=readAscii(
+slice,4);if(fourCc!=="ftyp"&&fourCc!=="styp"){return null}return readAscii(slice,4)}_createDemuxer(input){
+return new IsobmffDemuxer(input)}};Mp4InputFormat=class extends IsobmffInputFormat{async _canReadInput(input){
+const majorBrand=await this._getMajorBrand(input);if(majorBrand!==null){return majorBrand!=="qt  "}let pos=0;
+for(let iter=0;iter<10;iter++){let slice=input._reader.requestSlice(pos,8);if(isThenable(slice))slice=
+await slice;if(!slice)return false;let size=readU32Be(slice);let headerSize=8;if(size===1){let sizeExtensionSlice=input.
+_reader.requestSlice(pos+8,8);if(isThenable(sizeExtensionSlice))sizeExtensionSlice=await sizeExtensionSlice;
+if(!sizeExtensionSlice)return false;size=readU64Be(sizeExtensionSlice);headerSize=16}if(size<headerSize){
+return false}const fourCc=readAscii(slice,4);if(fourCc==="moof"||fourCc==="sidx"){return true}else if(fourCc===
+"emsg"||fourCc==="prft"||fourCc==="free"){pos+=size}else{return false}}return false}get name(){return"\
+MP4"}get mimeType(){return"video/mp4"}};AdtsInputFormat=class extends InputFormat{async _canReadInput(input){
+let currentPos=0;while(true){let slice2=input._reader.requestSlice(currentPos,ID3_V2_HEADER_SIZE);if(isThenable(
+slice2))slice2=await slice2;if(!slice2)break;const id3V2Header=readId3V2Header(slice2);if(!id3V2Header){
+break}currentPos=slice2.filePos+id3V2Header.size}let slice=input._reader.requestSliceRange(currentPos,
+MIN_ADTS_FRAME_HEADER_SIZE,MAX_ADTS_FRAME_HEADER_SIZE);if(isThenable(slice))slice=await slice;if(!slice)
+return false;const firstHeader=readAdtsFrameHeader(slice);if(!firstHeader){return false}currentPos+=
+firstHeader.frameLength;slice=input._reader.requestSliceRange(currentPos,MIN_ADTS_FRAME_HEADER_SIZE,
+MAX_ADTS_FRAME_HEADER_SIZE);if(isThenable(slice))slice=await slice;if(!slice)return false;const secondHeader=readAdtsFrameHeader(
+slice);if(!secondHeader){return false}return firstHeader.objectType===secondHeader.objectType&&firstHeader.
+samplingFrequencyIndex===secondHeader.samplingFrequencyIndex&&firstHeader.channelConfiguration===secondHeader.
+channelConfiguration}_createDemuxer(input){return new AdtsDemuxer(input)}get name(){return"ADTS"}get mimeType(){
+return"audio/aac"}};MpegTsInputFormat=class extends InputFormat{async _canReadInput(input){const lengthToCheck=TS_PACKET_SIZE+
+16+1;let slice=input._reader.requestSlice(0,lengthToCheck);if(isThenable(slice))slice=await slice;if(!slice)
+return false;const bytes=readBytes(slice,lengthToCheck);if(bytes[0]===71&&bytes[TS_PACKET_SIZE]===71){
+return true}else if(bytes[0]===71&&bytes[TS_PACKET_SIZE+16]===71){return true}else if(bytes[4]===71&&
+bytes[4+TS_PACKET_SIZE+4]===71){return true}return false}_createDemuxer(input){return new MpegTsDemuxer(
+input)}get name(){return"MPEG Transport Stream"}get mimeType(){return"video/MP2T"}};HlsInputFormat=class extends InputFormat{async _canReadInput(input){
+let slice=input._reader.requestSlice(0,7);if(isThenable(slice))slice=await slice;if(!slice)return false;
+const isM3u8=readAscii(slice,7)==="#EXTM3U";if(!isM3u8){return false}if(!(input._rootSource instanceof
+PathedSource)){throw new TypeError("HLS inputs require `InputOptions.source` to be a PathedSource or\
+ a ref to one.")}input._rootSource._usedForHls=true;return true}_createDemuxer(input){return new HlsDemuxer(
+input)}get name(){return"HTTP Live Streaming (HLS)"}get mimeType(){return HLS_MIME_TYPE}};MP4=new Mp4InputFormat;
+ADTS=new AdtsInputFormat;MPEG_TS=new MpegTsInputFormat;HLS=new HlsInputFormat;validateInputFormatOptions=
+(options,prefix)=>{if(!options||typeof options!=="object"){throw new TypeError(`${prefix}, when prov\
+ided, must be an object.`)}if(options.isobmff!==void 0){if(!options.isobmff||typeof options.isobmff!==
+"object"){throw new TypeError(`${prefix}.isobmff, when provided, must be an object.`)}if(options.isobmff.
+resolveKeyId!==void 0&&typeof options.isobmff.resolveKeyId!=="function"){throw new TypeError(`${prefix}\
+.isobmff.resolveKeyId, when provided, must be a function.`)}}if(options.hls!==void 0){if(!options.hls||
+typeof options.hls!=="object"){throw new TypeError(`${prefix}.hls, when provided, must be an object.`)}
+if(options.hls.offsetTimestampsByDateTime!==void 0&&typeof options.hls.offsetTimestampsByDateTime!==
+"boolean"){throw new TypeError(`${prefix}.hls.offsetTimestampsByDateTime, when provided, must be a b\
+oolean.`)}}}}});var customVideoDecoders,customAudioDecoders;var init_custom_coder=__esm({"node_modules/mediabunny/di\
+st/modules/src/custom-coder.js"(){customVideoDecoders=[];customAudioDecoders=[]}});var validatePacketRetrievalOptions,validateTimestamp,maybeFixPacketType,EncodedPacketSink;var init_media_sink=__esm(
+{"node_modules/mediabunny/dist/modules/src/media-sink.js"(){init_input();init_input_track();init_misc();
+init_packet();validatePacketRetrievalOptions=options=>{if(!options||typeof options!=="object"){throw new TypeError(
+"options must be an object.")}if(options.metadataOnly!==void 0&&typeof options.metadataOnly!=="boole\
+an"){throw new TypeError("options.metadataOnly, when defined, must be a boolean.")}if(options.verifyKeyPackets!==
+void 0&&typeof options.verifyKeyPackets!=="boolean"){throw new TypeError("options.verifyKeyPackets, \
+when defined, must be a boolean.")}if(options.verifyKeyPackets&&options.metadataOnly){throw new TypeError(
+"options.verifyKeyPackets and options.metadataOnly cannot be enabled together.")}if(options.skipLiveWait!==
+void 0&&typeof options.skipLiveWait!=="boolean"){throw new TypeError("options.skipLiveWait, when def\
+ined, must be a boolean.")}};validateTimestamp=timestamp=>{if(!isNumber(timestamp)){throw new TypeError(
+"timestamp must be a number.")}};maybeFixPacketType=(track,promise,options)=>{if(options.verifyKeyPackets){
+return promise.then(async packet=>{if(!packet||packet.type==="delta"){return packet}const determinedType=await track.
+determinePacketType(packet);if(determinedType){packet.type=determinedType}return packet})}else{return promise}};
+EncodedPacketSink=class{constructor(track){if(!(track instanceof InputTrack)){throw new TypeError("t\
+rack must be an InputTrack.")}this._track=track}async getFirstPacket(options={}){validatePacketRetrievalOptions(
+options);if(this._track.input._disposed){throw new InputDisposedError}return maybeFixPacketType(this.
+_track,this._track._backing.getFirstPacket(options),options)}async getFirstKeyPacket(options={}){validatePacketRetrievalOptions(
+options);const firstPacket=await this.getFirstPacket(options);if(!firstPacket){return null}if(firstPacket.
+type==="key"){return firstPacket}return this.getNextKeyPacket(firstPacket,options)}async getPacket(timestamp,options={}){
+validateTimestamp(timestamp);validatePacketRetrievalOptions(options);if(this._track.input._disposed){
+throw new InputDisposedError}return maybeFixPacketType(this._track,this._track._backing.getPacket(timestamp,
+options),options)}async getNextPacket(packet,options={}){if(!(packet instanceof EncodedPacket)){throw new TypeError(
+"packet must be an EncodedPacket.")}validatePacketRetrievalOptions(options);if(this._track.input._disposed){
+throw new InputDisposedError}return maybeFixPacketType(this._track,this._track._backing.getNextPacket(
+packet,options),options)}async getKeyPacket(timestamp,options={}){validateTimestamp(timestamp);validatePacketRetrievalOptions(
+options);if(this._track.input._disposed){throw new InputDisposedError}if(!options.verifyKeyPackets){
+return this._track._backing.getKeyPacket(timestamp,options)}const packet=await this._track._backing.
+getKeyPacket(timestamp,options);if(!packet){return packet}assert2(packet.type==="key");const determinedType=await this.
+_track.determinePacketType(packet);if(determinedType==="delta"){return this.getKeyPacket(packet.timestamp-
+1/await this._track.getTimeResolution(),options)}return packet}async getNextKeyPacket(packet,options={}){
+if(!(packet instanceof EncodedPacket)){throw new TypeError("packet must be an EncodedPacket.")}validatePacketRetrievalOptions(
+options);if(this._track.input._disposed){throw new InputDisposedError}if(!options.verifyKeyPackets){
+return this._track._backing.getNextKeyPacket(packet,options)}const nextPacket=await this._track._backing.
+getNextKeyPacket(packet,options);if(!nextPacket){return nextPacket}assert2(nextPacket.type==="key");
+const determinedType=await this._track.determinePacketType(nextPacket);if(determinedType==="delta"){
+return this.getNextKeyPacket(nextPacket,options)}return nextPacket}packets(startPacket,endPacket,options={}){
+if(startPacket!==void 0&&!(startPacket instanceof EncodedPacket)){throw new TypeError("startPacket m\
+ust be an EncodedPacket.")}if(startPacket!==void 0&&startPacket.isMetadataOnly&&!options?.metadataOnly){
+throw new TypeError("startPacket can only be metadata-only if options.metadataOnly is enabled.")}if(endPacket!==
+void 0&&!(endPacket instanceof EncodedPacket)){throw new TypeError("endPacket must be an EncodedPack\
+et.")}validatePacketRetrievalOptions(options);if(this._track.input._disposed){throw new InputDisposedError}
+const packetQueue=[];let{promise:queueNotEmpty,resolve:onQueueNotEmpty}=promiseWithResolvers();let{promise:queueDequeue,
+resolve:onQueueDequeue}=promiseWithResolvers();let ended=false;let terminated=false;let outOfBandError=null;
+let hasOutOfBandError=false;const timestamps=[];const maxQueueSize=()=>Math.max(2,timestamps.length);
+(async()=>{let packet=startPacket??await this.getFirstPacket(options);while(packet&&!terminated&&!this.
+_track.input._disposed){if(endPacket&&packet.sequenceNumber>=endPacket?.sequenceNumber){break}if(packetQueue.
+length>maxQueueSize()){({promise:queueDequeue,resolve:onQueueDequeue}=promiseWithResolvers());await queueDequeue;
+continue}packetQueue.push(packet);onQueueNotEmpty();({promise:queueNotEmpty,resolve:onQueueNotEmpty}=
+promiseWithResolvers());packet=await this.getNextPacket(packet,options)}ended=true;onQueueNotEmpty()})().
+catch(error2=>{if(!hasOutOfBandError){outOfBandError=error2;hasOutOfBandError=true;onQueueNotEmpty()}});
+const track=this._track;return{async next(){while(true){if(track.input._disposed){throw new InputDisposedError}else if(terminated){
+return{value:void 0,done:true}}else if(hasOutOfBandError){throw outOfBandError}else if(packetQueue.length>
+0){const value=packetQueue.shift();const now=performance.now();timestamps.push(now);while(timestamps.
+length>0&&now-timestamps[0]>=1e3){timestamps.shift()}onQueueDequeue();return{value,done:false}}else if(ended){
+return{value:void 0,done:true}}else{await queueNotEmpty}}},async return(){terminated=true;onQueueDequeue();
+onQueueNotEmpty();return{value:void 0,done:true}},async throw(error2){throw error2},[Symbol.asyncIterator](){
+return this}}}}}});var InputTrack,requireSync,toValidatedPredicate,InputVideoTrack,InputAudioTrack,desc,prefer,toValidatedInputTrackQuery,
+mergeInputTrackQueries,queryInputTracks,findUnderlyingFrameRate,simplestFractionBetween,getBestGuessFrameRate;
+var init_input_track=__esm({"node_modules/mediabunny/dist/modules/src/input-track.js"(){init_codec_data();
+init_custom_coder();init_logging();init_media_sink();init_misc();init_packet();InputTrack=class _InputTrack{constructor(input,backing){
+this.input=input;this._backing=backing}isVideoTrack(){return this instanceof InputVideoTrack}isAudioTrack(){
+return this instanceof InputAudioTrack}get id(){return this._backing.getId()}get number(){return this.
+_backing.getNumber()}async getInternalCodecId(){return this._backing.getInternalCodecId()}get internalCodecId(){
+return requireSync(this._backing.getInternalCodecId(),"internalCodecId","getInternalCodecId")}async getLanguageCode(){
+return this._backing.getLanguageCode()}get languageCode(){return requireSync(this._backing.getLanguageCode(),
+"languageCode","getLanguageCode")}async getName(){return this._backing.getName()}get name(){return requireSync(
+this._backing.getName(),"name","getName")}async getTimeResolution(){return this._backing.getTimeResolution()}get timeResolution(){
+return requireSync(this._backing.getTimeResolution(),"timeResolution","getTimeResolution")}async isRelativeToUnixEpoch(){
+return this._backing.isRelativeToUnixEpoch()}async getUnixTimeForTimestamp(timestamp){return this._backing.
+getUnixTimeForTimestamp(timestamp)}async hasUnixTimeMapping(){return await this._backing.getUnixTimeForTimestamp(
+await this.getFirstTimestamp())!==null}async getDisposition(){return this._backing.getDisposition()}get disposition(){
+return requireSync(this._backing.getDisposition(),"disposition","getDisposition")}async getBitrate(){
+return this._backing.getBitrate()}async getAverageBitrate(){return this._backing.getAverageBitrate()}async getFirstTimestamp(){
+const firstPacket=await this._backing.getFirstPacket({metadataOnly:true});return firstPacket?.timestamp??
+0}async computeDuration(options){const lastPacket=await this._backing.getPacket(Infinity,{metadataOnly:true,
+...options});const result=(lastPacket?.timestamp??0)+(lastPacket?.duration??0);return roundToDivisor(
+result,await this.getTimeResolution())}async getDurationFromMetadata(options={}){return this._backing.
+getDurationFromMetadata(options)}async computePacketStats(targetPacketCount=Infinity,options){const sink=new EncodedPacketSink(
+this);let startTimestamp=Infinity;let endTimestamp=-Infinity;let packetCount=0;let totalPacketBytes=0;
+for await(const packet of sink.packets(void 0,void 0,{metadataOnly:true,...options})){if(packetCount>=
+targetPacketCount&&packet.timestamp>=endTimestamp){break}startTimestamp=Math.min(startTimestamp,packet.
+timestamp);endTimestamp=Math.max(endTimestamp,packet.timestamp+packet.duration);packetCount++;totalPacketBytes+=
+packet.byteLength}return{packetCount,averagePacketRate:packetCount?Number((packetCount/(endTimestamp-
+startTimestamp)).toPrecision(16)):0,averageBitrate:packetCount?Number((8*totalPacketBytes/(endTimestamp-
+startTimestamp)).toPrecision(16)):0}}async isLive(){return await this._backing.getLiveRefreshInterval()!==
+null}async getLiveRefreshInterval(){return this._backing.getLiveRefreshInterval()}canBePairedWith(other){
+if(!(other instanceof _InputTrack)){throw new TypeError("other must be an InputTrack.")}if(this.input!==
+other.input||this===other){return false}return(this._backing.getPairingMask()&other._backing.getPairingMask())!==
+0n}async getPairableTracks(query){return this.input.getTracks(mergeInputTrackQueries({filter:t=>t.canBePairedWith(
+this)},query))}async getPairableVideoTracks(query){return this.input.getVideoTracks(mergeInputTrackQueries(
+{filter:t=>t.canBePairedWith(this)},query))}async getPairableAudioTracks(query){return this.input.getAudioTracks(
+mergeInputTrackQueries({filter:t=>t.canBePairedWith(this)},query))}async getPrimaryPairableVideoTrack(query){
+return this.input.getPrimaryVideoTrack(mergeInputTrackQueries({filter:t=>t.canBePairedWith(this)},query))}async getPrimaryPairableAudioTrack(query){
+return this.input.getPrimaryAudioTrack(mergeInputTrackQueries({filter:t=>t.canBePairedWith(this)},query))}async hasPairableTrack(predicate){
+predicate&&=toValidatedPredicate(predicate);const tracks=await this.input.getTracks();for(const track of tracks){
+if(!this.canBePairedWith(track)){continue}if(!predicate||await predicate(track)){return true}}return false}hasPairableVideoTrack(predicate){
+predicate&&=toValidatedPredicate(predicate);return this.hasPairableTrack(async x=>x.isVideoTrack()&&
+(!predicate||await predicate(x)))}hasPairableAudioTrack(predicate){predicate&&=toValidatedPredicate(
+predicate);return this.hasPairableTrack(async x=>x.isAudioTrack()&&(!predicate||await predicate(x)))}};
+requireSync=(value,getterName,asyncName)=>{if(isThenable(value)){throw new Error(`'${getterName}' is\
+ deprecated and not available synchronously for this track. Use the preferred '${asyncName}()' inste\
+ad.`)}return value};toValidatedPredicate=predicate=>{if(predicate!==void 0&&typeof predicate!=="func\
+tion"){throw new TypeError("predicate, when provided, must be a function.")}return predicate?track=>{
+const handle=result2=>{if(typeof result2!=="boolean"){throw new TypeError("predicate must return or \
+resolve to a boolean value.")}return result2};const result=predicate(track);if(isThenable(result)){return result.
+then(handle)}return handle(result)}:void 0};InputVideoTrack=class extends InputTrack{constructor(input,backing){
+super(input,backing);this._pixelAspectRatioCache=null;this._backing=backing}get type(){return"video"}async getCodec(){
+return this._backing.getCodec()}get codec(){return requireSync(this._backing.getCodec(),"codec","get\
+Codec")}async hasOnlyKeyPackets(){return await this._backing.getHasOnlyKeyPackets?.()??await this._backing.
+getCodec()==="prores"}async getCodedWidth(){return this._backing.getCodedWidth()}get codedWidth(){return requireSync(
+this._backing.getCodedWidth(),"codedWidth","getCodedWidth")}async getCodedHeight(){return this._backing.
+getCodedHeight()}get codedHeight(){return requireSync(this._backing.getCodedHeight(),"codedHeight","\
+getCodedHeight")}async getRotation(){return this._backing.getRotation()}get rotation(){return requireSync(
+this._backing.getRotation(),"rotation","getRotation")}async getSquarePixelWidth(){return this._backing.
+getSquarePixelWidth()}get squarePixelWidth(){return requireSync(this._backing.getSquarePixelWidth(),
+"squarePixelWidth","getSquarePixelWidth")}async getSquarePixelHeight(){return this._backing.getSquarePixelHeight()}get squarePixelHeight(){
+return requireSync(this._backing.getSquarePixelHeight(),"squarePixelHeight","getSquarePixelHeight")}async getPixelAspectRatio(){
+return this._pixelAspectRatioCache??=simplifyRational({num:await this.getSquarePixelWidth()*await this.
+getCodedHeight(),den:await this.getSquarePixelHeight()*await this.getCodedWidth()})}get pixelAspectRatio(){
+return this._pixelAspectRatioCache??=simplifyRational({num:requireSync(this._backing.getSquarePixelWidth(),
+"pixelAspectRatio","getPixelAspectRatio")*requireSync(this._backing.getCodedHeight(),"pixelAspectRat\
+io","getPixelAspectRatio"),den:requireSync(this._backing.getSquarePixelHeight(),"pixelAspectRatio","\
+getPixelAspectRatio")*requireSync(this._backing.getCodedWidth(),"pixelAspectRatio","getPixelAspectRa\
+tio")})}async getDisplayWidth(){const metadata=await this._backing.getMetadataDisplayWidth?.();if(metadata!=
+null){return metadata}const rotation=await this.getRotation();return rotation%180===0?this.getSquarePixelWidth():
+this.getSquarePixelHeight()}get displayWidth(){const metadataRaw=this._backing.getMetadataDisplayWidth?.();
+if(metadataRaw!==void 0){const metadata=requireSync(metadataRaw,"displayWidth","getDisplayWidth");if(metadata!==
+null){return metadata}}const rotation=requireSync(this._backing.getRotation(),"displayWidth","getDis\
+playWidth");const value=rotation%180===0?this._backing.getSquarePixelWidth():this._backing.getSquarePixelHeight();
+return requireSync(value,"displayWidth","getDisplayWidth")}async getDisplayHeight(){const metadata=await this.
+_backing.getMetadataDisplayHeight?.();if(metadata!=null){return metadata}const rotation=await this.getRotation();
+return rotation%180===0?this.getSquarePixelHeight():this.getSquarePixelWidth()}get displayHeight(){const metadataRaw=this.
+_backing.getMetadataDisplayHeight?.();if(metadataRaw!==void 0){const metadata=requireSync(metadataRaw,
+"displayHeight","getDisplayHeight");if(metadata!==null){return metadata}}const rotation=requireSync(
+this._backing.getRotation(),"displayHeight","getDisplayHeight");const value=rotation%180===0?this._backing.
+getSquarePixelHeight():this._backing.getSquarePixelWidth();return requireSync(value,"displayHeight",
+"getDisplayHeight")}async getColorSpace(){return this._backing.getColorSpace()}async hasHighDynamicRange(){
+const colorSpace=await this._backing.getColorSpace();return colorSpace.primaries==="bt2020"||colorSpace.
+primaries==="smpte432"||colorSpace.transfer==="pq"||colorSpace.transfer==="hlg"||colorSpace.matrix===
+"bt2020-ncl"}async canBeTransparent(){return this._backing.canBeTransparent()}async getDecoderConfig(){
+return this._backing.getDecoderConfig()}async getCodecParameterString(){const fromMetadata=await this.
+_backing.getMetadataCodecParameterString?.();if(fromMetadata!=null){return fromMetadata}const decoderConfig=await this.
+_backing.getDecoderConfig();return decoderConfig?.codec??null}async canDecode(){try{const decoderConfig=await this.
+_backing.getDecoderConfig();if(!decoderConfig){return false}const codec=await this._backing.getCodec();
+assert2(codec!==null);if(customVideoDecoders.some(x=>x.supports(codec,decoderConfig))){return true}if(typeof VideoDecoder===
+"undefined"){return false}const support=await VideoDecoder.isConfigSupported(decoderConfig);return support.
+supported===true}catch(error2){Logging._error("Error during decodability check:",error2);return false}}async determinePacketType(packet){
+if(!(packet instanceof EncodedPacket)){throw new TypeError("packet must be an EncodedPacket.")}if(packet.
+isMetadataOnly){throw new TypeError("packet must not be metadata-only to determine its type.")}const codec=await this.
+getCodec();if(codec===null){return null}const decoderConfig=await this.getDecoderConfig();assert2(decoderConfig);
+return determineVideoPacketType(codec,decoderConfig,packet.data)}async computeFrameRateMetrics(options={}){
+if(!options||typeof options!=="object"){throw new TypeError("options must be an object.")}if(options.
+targetPacketCount!==void 0&&(!isNumber(options.targetPacketCount)||options.targetPacketCount<0)){throw new TypeError(
+"options.targetPacketCount must be a non-negative number.")}const timeResolution=await this.getTimeResolution();
+const targetPacketCount=options.targetPacketCount??256;const sink=new EncodedPacketSink(this);const timestamps=[];
+let maxTimestamp=-Infinity;let probedPacketCount=0;for await(const packet of sink.packets(void 0,void 0,
+{metadataOnly:true})){if(timestamps.length>=targetPacketCount&&packet.timestamp>=maxTimestamp){break}
+timestamps.push(packet.timestamp);maxTimestamp=Math.max(maxTimestamp,packet.timestamp);probedPacketCount++}
+const ticks=new Float64Array(timestamps.length);for(let i=0;i<timestamps.length;i++){ticks[i]=Math.round(
+timestamps[i]*timeResolution)}ticks.sort();let n=1;for(let i=1;i<ticks.length;i++){if(ticks[i]!==ticks[n-
+1]){ticks[n++]=ticks[i]}}if(n<2){return{underlyingFrameRate:null,bestGuessFrameRate:timeResolution,minFrameRate:timeResolution,
+maxFrameRate:timeResolution,averageFrameRate:timeResolution,medianFrameRate:timeResolution,frameRateIsConstant:true,
+probedPacketCount}}const activeTicks=ticks.subarray(0,n);const underlyingFrameRate=findUnderlyingFrameRate(
+activeTicks,timeResolution);const unitRate=underlyingFrameRate??timeResolution;const ticksPerFrame=underlyingFrameRate!==
+null?timeResolution/underlyingFrameRate:null;const histogram=new Map;let minDifference=Infinity;let maxDifference=-Infinity;
+let totalDifference=0;for(let i=1;i<n;i++){const tickDifference=activeTicks[i]-activeTicks[i-1];const difference=ticksPerFrame!==
+null?Math.max(1,Math.round(tickDifference/ticksPerFrame)):tickDifference;histogram.set(difference,(histogram.
+get(difference)??0)+1);minDifference=Math.min(minDifference,difference);maxDifference=Math.max(maxDifference,
+difference);totalDifference+=difference}const differenceCount=n-1;const sortedDifferences=[...histogram.
+keys()].sort((a,b)=>a-b);const middleA=differenceCount-1>>1;const middleB=differenceCount>>1;let medianDifferenceA=0;
+let medianDifferenceB=0;let cumulativeCount=0;for(const difference of sortedDifferences){cumulativeCount+=
+histogram.get(difference);if(medianDifferenceA===0&&cumulativeCount>middleA){medianDifferenceA=difference}
+if(cumulativeCount>middleB){medianDifferenceB=difference;break}}const medianFrameRate=(unitRate/medianDifferenceA+
+unitRate/medianDifferenceB)/2;return{underlyingFrameRate,bestGuessFrameRate:underlyingFrameRate!==null?
+underlyingFrameRate:getBestGuessFrameRate(medianFrameRate),minFrameRate:unitRate/maxDifference,maxFrameRate:unitRate/
+minDifference,averageFrameRate:unitRate*differenceCount/totalDifference,medianFrameRate,frameRateIsConstant:underlyingFrameRate!==
+null&&minDifference===1&&maxDifference===1,probedPacketCount}}};InputAudioTrack=class extends InputTrack{constructor(input,backing){
+super(input,backing);this._backing=backing}get type(){return"audio"}async getCodec(){return this._backing.
+getCodec()}get codec(){return requireSync(this._backing.getCodec(),"codec","getCodec")}async hasOnlyKeyPackets(){
+return await this._backing.getHasOnlyKeyPackets?.()??true}async getNumberOfChannels(){return this._backing.
+getNumberOfChannels()}get numberOfChannels(){return requireSync(this._backing.getNumberOfChannels(),
+"numberOfChannels","getNumberOfChannels")}async getSampleRate(){return this._backing.getSampleRate()}get sampleRate(){
+return requireSync(this._backing.getSampleRate(),"sampleRate","getSampleRate")}async getDecoderConfig(){
+return this._backing.getDecoderConfig()}async getCodecParameterString(){const fromMetadata=await this.
+_backing.getMetadataCodecParameterString?.();if(fromMetadata!=null){return fromMetadata}const decoderConfig=await this.
+_backing.getDecoderConfig();return decoderConfig?.codec??null}async canDecode(){try{const decoderConfig=await this.
+_backing.getDecoderConfig();if(!decoderConfig){return false}const codec=await this._backing.getCodec();
+assert2(codec!==null);if(customAudioDecoders.some(x=>x.supports(codec,decoderConfig))){return true}if(decoderConfig.
+codec.startsWith("pcm-")){return true}else{if(typeof AudioDecoder==="undefined"){return false}const support=await AudioDecoder.
+isConfigSupported(decoderConfig);return support.supported===true}}catch(error2){Logging._error("Erro\
+r during decodability check:",error2);return false}}async determinePacketType(packet){if(!(packet instanceof
+EncodedPacket)){throw new TypeError("packet must be an EncodedPacket.")}if(await this.getCodec()===null){
+return null}return"key"}};desc=value=>{return-(value??-Infinity)};prefer=value=>{return-value};toValidatedInputTrackQuery=
+query=>{if(typeof query!=="object"||!query){throw new TypeError("query must be an object.")}if(query.
+filter!==void 0&&typeof query.filter!=="function"){throw new TypeError("query.filter, when provided,\
+ must be a function.")}if(query.sortBy!==void 0&&typeof query.sortBy!=="function"){throw new TypeError(
+"query.sortBy, when provided, must be a function.")}return{filter:query.filter?track=>{const handle=bool=>{
+if(typeof bool!=="boolean"){throw new TypeError("query.filter must return or resolve to a boolean.")}
+return bool};const result=query.filter(track);if(isThenable(result)){return result.then(handle)}else{
+return handle(result)}}:void 0,sortBy:query.sortBy?track=>{const handle=value=>{if(typeof value!=="n\
+umber"&&(!Array.isArray(value)||!value.every(x=>typeof x==="number"))){throw new TypeError("query.so\
+rtBy must return or resolve to a number or an array of numbers.")}return value};const result=query.sortBy(
+track);if(isThenable(result)){return result.then(handle)}else{return handle(result)}}:void 0}};mergeInputTrackQueries=
+(queryA,queryB)=>{return{filter:queryA?.filter||queryB?.filter?track=>{const resultA=queryA?.filter?.(
+track)??true;const handleResultA=resultA2=>{if(resultA2===false){return false}return queryB?.filter?.(
+track)??true};if(isThenable(resultA)){return resultA.then(handleResultA)}else{return handleResultA(resultA)}}:
+void 0,sortBy:queryA?.sortBy||queryB?.sortBy?track=>{const resultA=queryA?.sortBy?.(track)??[];const resultB=queryB?.
+sortBy?.(track)??[];const join=(resultA2,resultB2)=>{return[...Array.isArray(resultA2)?resultA2:[resultA2],
+...Array.isArray(resultB2)?resultB2:[resultB2]]};if(isThenable(resultA)||isThenable(resultB)){return Promise.
+all([resultA,resultB]).then(([resultA2,resultB2])=>{return join(resultA2,resultB2)})}else{return join(
+resultA,resultB)}}:void 0}};queryInputTracks=async(tracks,query)=>{let matched=tracks;if(query?.filter){
+const filterMatches=tracks.map(t=>query.filter(t));const hasAsyncFilter=filterMatches.some(x=>isThenable(
+x));if(hasAsyncFilter){const resolvedFilterMatches=await Promise.all(filterMatches);matched=tracks.filter(
+(_,i)=>resolvedFilterMatches[i])}else{matched=tracks.filter((_,i)=>filterMatches[i])}}if(!query?.sortBy){
+return matched}const sortValues=matched.map(t=>query.sortBy(t));const hasAsyncSort=sortValues.some(x=>isThenable(
+x));const resolvedSortValues=hasAsyncSort?await Promise.all(sortValues):sortValues;return matched.map(
+(track,i)=>({track,sortValue:resolvedSortValues[i]})).sort((a,b)=>{const aValues=Array.isArray(a.sortValue)?
+a.sortValue:[a.sortValue];const bValues=Array.isArray(b.sortValue)?b.sortValue:[b.sortValue];const maxLength=Math.
+max(aValues.length,bValues.length);for(let i=0;i<maxLength;i++){const aValue=aValues[i]??0;const bValue=bValues[i]??
+0;if(aValue===bValue){continue}return aValue-bValue}return 0}).map(x=>x.track)};findUnderlyingFrameRate=
+(ticks,resolution)=>{const MAX_DENOMINATOR=1e6;const MIN_INLIER_RATIO=.98;const DELTA_TOLERANCE=1+1e-9;
+const MAX_EFFECTIVE_FRAME_SPAN=1e3;const KNOWN_FRAME_RATES=[12,15,20,24e3/1001,24,25,3e4/1001,30,48,
+50,6e4/1001,60,100,12e4/1001,120,144,240];if(ticks.length<2){return null}const gaps=new Float64Array(
+ticks.length-1);for(let i=1;i<ticks.length;i++){const gap=ticks[i]-ticks[i-1];if(!(gap>0)){return null}
+gaps[i-1]=gap}const sortedGaps=gaps.slice();sortedGaps.sort();let period=sortedGaps[Math.floor(sortedGaps.
+length*.05)];for(let iteration=0;iteration<6;iteration++){let totalTicks2=0;let totalFrames2=0;for(const gap of gaps){
+const multiple=Math.max(1,Math.round(gap/period));if(Math.abs(gap-multiple*period)>=DELTA_TOLERANCE){
+continue}totalTicks2+=gap;totalFrames2+=multiple}if(totalFrames2===0){return null}const refinedPeriod=totalTicks2/
+totalFrames2;if(Math.abs(refinedPeriod-period)<=1e-12*Math.max(1,period)){period=refinedPeriod;break}
+period=refinedPeriod}let inlierCount=0;let totalTicks=0;let totalFrames=0;for(const gap of gaps){const multiple=Math.
+max(1,Math.round(gap/period));if(Math.abs(gap-multiple*period)>=DELTA_TOLERANCE){continue}inlierCount++;
+totalTicks+=gap;totalFrames+=multiple}if(inlierCount/gaps.length<MIN_INLIER_RATIO){return null}period=
+totalTicks/totalFrames;const uncertainty=1/Math.min(totalFrames,MAX_EFFECTIVE_FRAME_SPAN);const periodLo=Math.
+max(Number.EPSILON,period-uncertainty);const periodHi=period+uncertainty;const fpsLo=resolution/periodHi;
+const fpsHi=resolution/periodLo;const fittedFps=resolution/period;let fps=null;let bestKnownError=Infinity;
+for(const candidate of KNOWN_FRAME_RATES){if(candidate<fpsLo||candidate>fpsHi){continue}const error2=Math.
+abs(candidate/fittedFps-1);if(error2<bestKnownError){fps=candidate;bestKnownError=error2}}if(fps===null){
+const periodFraction=simplestFractionBetween(periodLo,periodHi,MAX_DENOMINATOR);const fpsFraction=simplestFractionBetween(
+fpsLo,fpsHi,MAX_DENOMINATOR);if(fpsFraction&&(!periodFraction||fpsFraction.den<periodFraction.den||fpsFraction.
+den===periodFraction.den&&fpsFraction.num<=periodFraction.num)){fps=fpsFraction.num/fpsFraction.den}else if(periodFraction){
+fps=resolution*periodFraction.den/periodFraction.num}else{return null}}const finalPeriod=resolution/
+fps;let finalInlierCount=0;for(const gap of gaps){const multiple=Math.max(1,Math.round(gap/finalPeriod));
+if(Math.abs(gap-multiple*finalPeriod)<DELTA_TOLERANCE){finalInlierCount++}}if(finalInlierCount/gaps.
+length<MIN_INLIER_RATIO){return null}return fps};simplestFractionBetween=(lo,hi,maxDenominator)=>{for(let den=1;den<=
+maxDenominator;den++){const num=Math.floor(lo*den)+1;if(num/den<hi){return simplifyRational({num,den})}}
+return null};getBestGuessFrameRate=frameRate=>{const SPECIAL_FRAME_RATES=[24/1.001,30/1.001,60/1.001,
+120/1.001];const COMMON_FRAME_RATES=[12,15,20,24,25,30,48,50,60,100,120,144,240];const SPECIAL_TOLERANCE=5e-4;
+const COMMON_TOLERANCE=.025;for(const candidate of SPECIAL_FRAME_RATES){if(Math.abs(candidate/frameRate-
+1)<=SPECIAL_TOLERANCE){return candidate}}let best=frameRate;let bestError=Infinity;for(const candidate of COMMON_FRAME_RATES){
+const error2=Math.abs(candidate/frameRate-1);if(error2<=COMMON_TOLERANCE&&error2<bestError){best=candidate;
+bestError=error2}}return best}}});var DEFAULT_SOURCE_CACHE_GROUP,ENCRYPTION_KEY_CACHE_GROUP,Input,UnsupportedInputFormatError,InputDisposedError;
+var init_input=__esm({"node_modules/mediabunny/dist/modules/src/input.js"(){init_input_format();init_input_track();
+init_misc();init_reader();init_source();polyfillSymbolDispose();DEFAULT_SOURCE_CACHE_GROUP=1;ENCRYPTION_KEY_CACHE_GROUP=
+2;Input=class _Input extends EventEmitter{get disposed(){return this._disposed}constructor(options){
+super();this._demuxerPromise=null;this._format=null;this._trackBackingsCache=null;this._backingToTrack=
+new Map;this._disposed=false;this._nextSourceCacheAge=0;this._sourceRefs=[];this._sourceCache=[];this.
+_sourceCachePromises=[];this._onFormatDetermined=null;if(!options||typeof options!=="object"){throw new TypeError(
+"options must be an object.")}if(!Array.isArray(options.formats)||options.formats.some(x=>!(x instanceof
+InputFormat))){throw new TypeError("options.formats must be an array of InputFormat.")}if(!(options.
+source instanceof Source||options.source instanceof SourceRef)){throw new TypeError("options.source \
+must be a Source or SourceRef.")}if(options.source instanceof Source&&options.source._disposed){throw new TypeError(
+"options.source must not be a disposed Source.")}if(options.initInput!==void 0&&!(options.initInput instanceof
+_Input)){throw new TypeError("options.initInput, when provided, must be an Input.")}if(options.formatOptions!==
+void 0){validateInputFormatOptions(options.formatOptions,"formatOptions")}this._formats=options.formats;
+this._initInput=options.initInput??null;this._formatOptions=options.formatOptions??{};if(options.source instanceof
+Source){this._rootRef=options.source.ref()}else{this._rootRef=options.source}this._sourceRefs.push(this.
+_rootRef)}get _rootSource(){return this._rootRef.source}async _getSourceUncached(request){assert2(this.
+_rootSource instanceof PathedSource);const ref=await this._rootSource._resolveRequest(request);this.
+_emit("source",{source:ref.source,request,isRoot:request.isRoot});return ref}_getSourceCached(request,cacheGroup=DEFAULT_SOURCE_CACHE_GROUP){
+const cachedEntry=this._sourceCache.find(x=>x.cacheGroup===cacheGroup&&sourceRequestsAreEqual(x.request,
+request));if(cachedEntry){cachedEntry.age++;return Promise.resolve(cachedEntry.sourceRef.source.ref())}
+const cachedPromiseEntry=this._sourceCachePromises.find(x=>x.cacheGroup===cacheGroup&&sourceRequestsAreEqual(
+x.request,request));if(cachedPromiseEntry){return cachedPromiseEntry.promise.then(x=>x.sourceRef.source.
+ref())}const promise=(async()=>{const sourceRef=await this._getSourceUncached(request);const MAX_SOURCE_CACHE_SIZE=4;
+const count=arrayCount(this._sourceCache,x=>x.cacheGroup===cacheGroup&&x.sourceRef.source._refCount===
+1);if(count>=MAX_SOURCE_CACHE_SIZE){const minAgeIndex=arrayArgmin(this._sourceCache,x=>x.cacheGroup===
+cacheGroup&&x.sourceRef.source._refCount===1?x.age:Infinity);assert2(minAgeIndex!==-1);const entry=this.
+_sourceCache[minAgeIndex];this._sourceCache.splice(minAgeIndex,1);entry.sourceRef.free();removeItem(
+this._sourceRefs,entry.sourceRef)}this._sourceRefs.push(sourceRef);const promiseIndex=this._sourceCachePromises.
+findIndex(x=>x.request===request);assert2(promiseIndex!==-1);this._sourceCachePromises.splice(promiseIndex,
+1);const cacheEntry={request,sourceRef,age:this._nextSourceCacheAge++,cacheGroup};return cacheEntry})();
+this._sourceCachePromises.push({request,cacheGroup,promise});return promise.then(entry=>{const ref=entry.
+sourceRef.source.ref();this._sourceCache.push(entry);return ref})}_getDemuxer(){return this._demuxerPromise??=
+(async()=>{this._reader=new Reader(this._rootSource);this._emit("source",{source:this._rootSource,request:null,
+isRoot:true});for(const format of this._formats){const canRead=await format._canReadInput(this);if(canRead){
+this._format=format;this._onFormatDetermined?.(format);return format._createDemuxer(this)}}throw new UnsupportedInputFormatError})()}get source(){
+return this._rootSource}async getFormat(){await this._getDemuxer();assert2(this._format);return this.
+_format}async canRead(){try{await this._getDemuxer();return true}catch(error2){if(error2 instanceof UnsupportedInputFormatError){
+return false}throw error2}}async getFirstTimestamp(tracks){tracks??=await this.getTracks();const filtered=tracks.
+filter(x=>x!==null);if(filtered.length===0){return 0}const firstPackets=await Promise.all(filtered.map(
+x=>x._backing.getFirstPacket({metadataOnly:true})));const result=Math.min(...firstPackets.map(x=>x?.
+timestamp??Infinity));return result===Infinity?0:result}async computeDuration(tracks,options){tracks??=
+await this.getTracks();const filtered=tracks.filter(x=>x!==null);if(filtered.length===0){return 0}const tracksDurations=await Promise.
+all(filtered.map(x=>x.computeDuration(options)));return Math.max(...tracksDurations)}async getDurationFromMetadata(tracks,options){
+tracks??=await this.getTracks();const filtered=tracks.filter(x=>x!==null);const tracksDurations=await Promise.
+all(filtered.map(x=>x.getDurationFromMetadata(options)));const nonNullDurations=tracksDurations.filter(
+x=>x!==null);if(nonNullDurations.length===0){return null}return Math.max(...nonNullDurations)}async getTracks(query){
+query&&=toValidatedInputTrackQuery(query);const backings=await this._getTrackBackings();const tracks=backings.
+map(backing=>this._wrapBackingAsTrack(backing));return queryInputTracks(tracks,query)}async getVideoTracks(query){
+query&&=toValidatedInputTrackQuery(query);const tracks=await this.getTracks();const videoTracks=tracks.
+filter(x=>x.isVideoTrack());return queryInputTracks(videoTracks,query)}async getAudioTracks(query){query&&=
+toValidatedInputTrackQuery(query);const tracks=await this.getTracks();const audioTracks=tracks.filter(
+x=>x.isAudioTrack());return queryInputTracks(audioTracks,query)}async getPrimaryVideoTrack(query){query&&=
+toValidatedInputTrackQuery(query);const merged=mergeInputTrackQueries(query,{sortBy:async t=>[prefer(
+(await t.getDisposition()).default),prefer(await t.hasPairableAudioTrack()),prefer(!await t.hasOnlyKeyPackets()),
+desc(await t.getBitrate())]});const sorted=await this.getVideoTracks(merged);return sorted[0]??null}async getPrimaryAudioTrack(query){
+query&&=toValidatedInputTrackQuery(query);const primaryVideoTrack=await this.getPrimaryVideoTrack();
+const merged=mergeInputTrackQueries(query,{sortBy:async t=>[prefer(!primaryVideoTrack||t.canBePairedWith(
+primaryVideoTrack)),prefer((await t.getDisposition()).default),desc(await t.getBitrate())]});const sorted=await this.
+getAudioTracks(merged);return sorted[0]??null}async _getTrackBackings(){const demuxer=await this._getDemuxer();
+return this._trackBackingsCache??=await demuxer.getTrackBackings()}_wrapBackingAsTrack(backing){const existing=this.
+_backingToTrack.get(backing);if(existing){return existing}const type=backing.getType();const track=type===
+"video"?new InputVideoTrack(this,backing):new InputAudioTrack(this,backing);this._backingToTrack.set(
+backing,track);return track}async getMimeType(){const demuxer=await this._getDemuxer();return demuxer.
+getMimeType()}async getMetadataTags(){const demuxer=await this._getDemuxer();return demuxer.getMetadataTags()}dispose(){
+if(this._disposed){return}this._disposed=true;for(const ref of this._sourceRefs){ref.free()}this._sourceRefs.
+length=0;if(this._demuxerPromise){void this._demuxerPromise.then(demuxer=>demuxer.dispose()).catch(()=>{})}}[Symbol.
+dispose](){this.dispose()}};UnsupportedInputFormatError=class extends Error{constructor(message="Inp\
+ut has an unsupported or unrecognizable format."){super(message);this.name="UnsupportedInputFormatEr\
+ror"}};InputDisposedError=class extends Error{constructor(message="Input has been disposed."){super(
+message);this.name="InputDisposedError"}}}});var Reader,FileSlice,checkIsInRange,readBytes,readU8,readU16Be,readU24Be,readI16Be,readU32Be,readI32Be,
+readU64Be,readI64Be,readF64Be,readAscii,readAllLines;var init_reader=__esm({"node_modules/mediabunny\
+/dist/modules/src/reader.js"(){init_input();init_misc();init_source();Reader=class{constructor(source2){
+this.source=source2}get fileSize(){const size=this.source._getFileSize();if(size===void 0){throw new Error(
+"Reading file size too early; read required first.")}return size}get fileSizeNonStrict(){return this.
+source._getFileSize()??null}requestSlice(start,length){if(this.source._disposed){throw new InputDisposedError}
+if(start<0){return null}if(this.fileSizeNonStrict!==null&&start+length>this.fileSizeNonStrict){return null}
+if(length===0){const buffer=new Uint8Array(0);return new FileSlice(buffer,toDataView(buffer),0,start,
+start)}const end=start+length;const result=this.source._read(start,end,DEFAULT_MIN_READ_POSITION,DEFAULT_MAX_READ_POSITION);
+if(isThenable(result)){return result.then(x=>{if(!x){return null}return new FileSlice(x.bytes,x.view,
+x.offset,start,end)})}else{if(!result){return null}return new FileSlice(result.bytes,result.view,result.
+offset,start,end)}}requestSliceRange(start,minLength,maxLength){if(this.source._disposed){throw new InputDisposedError}
+if(start<0){return null}if(this.fileSizeNonStrict!==null){return this.requestSlice(start,clamp(this.
+fileSizeNonStrict-start,minLength,maxLength))}else{const promisedAttempt=this.requestSlice(start,maxLength);
+const handleAttempt=attempt=>{if(attempt){return attempt}assert2(this.fileSizeNonStrict!==null);return this.
+requestSlice(start,clamp(this.fileSizeNonStrict-start,minLength,maxLength))};if(isThenable(promisedAttempt)){
+return promisedAttempt.then(handleAttempt)}else{return handleAttempt(promisedAttempt)}}}requestEntireFile(){
+if(this.fileSizeNonStrict!==null){return this.requestSlice(0,this.fileSizeNonStrict)}const CHUNK_SIZE=1024;
+return(async()=>{const chunks=[];let currentSize=0;while(true){if(chunks.length===1&&this.fileSizeNonStrict!==
+null){return this.requestSlice(0,this.fileSizeNonStrict)}let slice=this.requestSliceRange(currentSize,
+0,CHUNK_SIZE);if(isThenable(slice))slice=await slice;if(!slice||slice.length===0){break}const chunk=readBytes(
+slice,slice.length);chunks.push(chunk);currentSize+=slice.length}const joined=new Uint8Array(currentSize);
+let offset=0;for(const chunk of chunks){joined.set(chunk,offset);offset+=chunk.length}return new FileSlice(
+joined,toDataView(joined),0,0,currentSize)})()}};FileSlice=class _FileSlice{constructor(bytes,view,offset,start,end){
+this.bytes=bytes;this.view=view;this.offset=offset;this.start=start;this.end=end;this.bufferPos=start-
+offset}static tempFromBytes(bytes){return new _FileSlice(bytes,toDataView(bytes),0,0,bytes.length)}get length(){
+return this.end-this.start}get filePos(){return this.offset+this.bufferPos}set filePos(value){this.bufferPos=
+value-this.offset}get remainingLength(){return Math.max(this.end-this.filePos,0)}skip(byteCount){this.
+bufferPos+=byteCount}slice(filePos,length=this.end-filePos){if(filePos<this.start||filePos+length>this.
+end){throw new RangeError("Slicing outside of original slice.")}return new _FileSlice(this.bytes,this.
+view,this.offset,filePos,filePos+length)}};checkIsInRange=(slice,bytesToRead)=>{if(slice.filePos<slice.
+start||slice.filePos+bytesToRead>slice.end){throw new RangeError(`Tried reading [${slice.filePos}, ${slice.
+filePos+bytesToRead}), but slice is [${slice.start}, ${slice.end}). This is likely an internal error\
+, please report it alongside the file that caused it.`)}};readBytes=(slice,length)=>{checkIsInRange(
+slice,length);const bytes=slice.bytes.subarray(slice.bufferPos,slice.bufferPos+length);slice.bufferPos+=
+length;return bytes};readU8=slice=>{checkIsInRange(slice,1);return slice.view.getUint8(slice.bufferPos++)};
+readU16Be=slice=>{checkIsInRange(slice,2);const value=slice.view.getUint16(slice.bufferPos,false);slice.
+bufferPos+=2;return value};readU24Be=slice=>{checkIsInRange(slice,3);const value=getUint24(slice.view,
+slice.bufferPos,false);slice.bufferPos+=3;return value};readI16Be=slice=>{checkIsInRange(slice,2);const value=slice.
+view.getInt16(slice.bufferPos,false);slice.bufferPos+=2;return value};readU32Be=slice=>{checkIsInRange(
+slice,4);const value=slice.view.getUint32(slice.bufferPos,false);slice.bufferPos+=4;return value};readI32Be=
+slice=>{checkIsInRange(slice,4);const value=slice.view.getInt32(slice.bufferPos,false);slice.bufferPos+=
+4;return value};readU64Be=slice=>{const high=readU32Be(slice);const low=readU32Be(slice);return high*
+4294967296+low};readI64Be=slice=>{const high=readI32Be(slice);const low=readU32Be(slice);return high*
+4294967296+low};readF64Be=slice=>{checkIsInRange(slice,8);const value=slice.view.getFloat64(slice.bufferPos,
+false);slice.bufferPos+=8;return value};readAscii=(slice,length)=>{checkIsInRange(slice,length);let str="";
+for(let i=0;i<length;i++){str+=String.fromCharCode(slice.bytes[slice.bufferPos++])}return str};readAllLines=
+(slice,length,options)=>{const text=textDecoder.decode(readBytes(slice,length));const lines=text.split(
+"\n").map(x=>x.trim()).filter(x=>x.length>0&&!options?.ignore?.(x));return lines}}});var Id3V2HeaderFlags,Id3V2TextEncoding,ID3_V2_HEADER_SIZE,ID3_V1_GENRES,readId3V2Header,parseId3V2Tag,
+Id3V2Reader;var init_id3=__esm({"node_modules/mediabunny/dist/modules/src/id3.js"(){init_mp3_misc();
+init_logging();init_misc();init_reader();(function(Id3V2HeaderFlags2){Id3V2HeaderFlags2[Id3V2HeaderFlags2["\
+Unsynchronisation"]=128]="Unsynchronisation";Id3V2HeaderFlags2[Id3V2HeaderFlags2["ExtendedHeader"]=64]=
+"ExtendedHeader";Id3V2HeaderFlags2[Id3V2HeaderFlags2["ExperimentalIndicator"]=32]="ExperimentalIndic\
+ator";Id3V2HeaderFlags2[Id3V2HeaderFlags2["Footer"]=16]="Footer"})(Id3V2HeaderFlags||(Id3V2HeaderFlags=
+{}));(function(Id3V2TextEncoding2){Id3V2TextEncoding2[Id3V2TextEncoding2["ISO_8859_1"]=0]="ISO_8859_\
+1";Id3V2TextEncoding2[Id3V2TextEncoding2["UTF_16_WITH_BOM"]=1]="UTF_16_WITH_BOM";Id3V2TextEncoding2[Id3V2TextEncoding2["\
+UTF_16_BE_NO_BOM"]=2]="UTF_16_BE_NO_BOM";Id3V2TextEncoding2[Id3V2TextEncoding2["UTF_8"]=3]="UTF_8"})(
+Id3V2TextEncoding||(Id3V2TextEncoding={}));ID3_V2_HEADER_SIZE=10;ID3_V1_GENRES=["Blues","Classic roc\
+k","Country","Dance","Disco","Funk","Grunge","Hip-hop","Jazz","Metal","New age","Oldies","Other","Po\
+p","Rhythm and blues","Rap","Reggae","Rock","Techno","Industrial","Alternative","Ska","Death metal",
+"Pranks","Soundtrack","Euro-techno","Ambient","Trip-hop","Vocal","Jazz & funk","Fusion","Trance","Cl\
+assical","Instrumental","Acid","House","Game","Sound clip","Gospel","Noise","Alternative rock","Bass",
+"Soul","Punk","Space","Meditative","Instrumental pop","Instrumental rock","Ethnic","Gothic","Darkwav\
+e","Techno-industrial","Electronic","Pop-folk","Eurodance","Dream","Southern rock","Comedy","Cult","\
+Gangsta","Top 40","Christian rap","Pop/funk","Jungle music","Native US","Cabaret","New wave","Psyche\
+delic","Rave","Showtunes","Trailer","Lo-fi","Tribal","Acid punk","Acid jazz","Polka","Retro","Musica\
+l","Rock 'n' roll","Hard rock","Folk","Folk rock","National folk","Swing","Fast fusion","Bebop","Lat\
+in","Revival","Celtic","Bluegrass","Avantgarde","Gothic rock","Progressive rock","Psychedelic rock",
+"Symphonic rock","Slow rock","Big band","Chorus","Easy listening","Acoustic","Humour","Speech","Chan\
+son","Opera","Chamber music","Sonata","Symphony","Booty bass","Primus","Porn groove","Satire","Slow \
+jam","Club","Tango","Samba","Folklore","Ballad","Power ballad","Rhythmic Soul","Freestyle","Duet","P\
+unk rock","Drum solo","A cappella","Euro-house","Dance hall","Goa music","Drum & bass","Club-house",
+"Hardcore techno","Terror","Indie","Britpop","Negerpunk","Polsk punk","Beat","Christian gangsta rap",
+"Heavy metal","Black metal","Crossover","Contemporary Christian","Christian rock","Merengue","Salsa",
+"Thrash metal","Anime","Jpop","Synthpop","Christmas","Art rock","Baroque","Bhangra","Big beat","Brea\
+kbeat","Chillout","Downtempo","Dub","EBM","Eclectic","Electro","Electroclash","Emo","Experimental","\
+Garage","Global","IDM","Illbient","Industro-Goth","Jam Band","Krautrock","Leftfield","Lounge","Math \
+rock","New romantic","Nu-breakz","Post-punk","Post-rock","Psytrance","Shoegaze","Space rock","Trop r\
+ock","World music","Neoclassical","Audiobook","Audio theatre","Neue Deutsche Welle","Podcast","Indie\
+ rock","G-Funk","Dubstep","Garage rock","Psybient"];readId3V2Header=slice=>{const startPos=slice.filePos;
+const tag=readAscii(slice,3);const majorVersion=readU8(slice);const revision=readU8(slice);const flags=readU8(
+slice);const sizeRaw=readU32Be(slice);if(tag!=="ID3"||majorVersion===255||revision===255||(sizeRaw&2155905152)!==
+0){slice.filePos=startPos;return null}let size=decodeSynchsafe(sizeRaw);if(flags&Id3V2HeaderFlags.Footer){
+size+=ID3_V2_HEADER_SIZE}return{majorVersion,revision,flags,size}};parseId3V2Tag=(slice,header,tags)=>{
+if(![2,3,4].includes(header.majorVersion)){Logging._warn(`Unsupported ID3v2 major version: ${header.
+majorVersion}`);return}const dataSize=header.flags&Id3V2HeaderFlags.Footer?header.size-ID3_V2_HEADER_SIZE:
+header.size;const bytes=readBytes(slice,dataSize);const reader=new Id3V2Reader(header,bytes);if(header.
+flags&Id3V2HeaderFlags.Unsynchronisation&&header.majorVersion===3){reader.ununsynchronizeAll()}if(header.
+flags&Id3V2HeaderFlags.ExtendedHeader){const extendedHeaderSize=reader.readU32();if(header.majorVersion===
+3){reader.pos+=extendedHeaderSize}else{reader.pos+=extendedHeaderSize-4}}while(reader.pos<=reader.bytes.
+length-reader.frameHeaderSize()){const frame=reader.readId3V2Frame();if(!frame){break}const frameStartPos=reader.
+pos;const frameEndPos=reader.pos+frame.size;let frameEncrypted=false;let frameCompressed=false;let frameUnsynchronized=false;
+if(header.majorVersion===3){frameEncrypted=!!(frame.flags&1<<6);frameCompressed=!!(frame.flags&1<<7)}else if(header.
+majorVersion===4){frameEncrypted=!!(frame.flags&1<<2);frameCompressed=!!(frame.flags&1<<3);frameUnsynchronized=
+!!(frame.flags&1<<1)||!!(header.flags&Id3V2HeaderFlags.Unsynchronisation)}if(frameEncrypted){Logging.
+_warn(`Skipping encrypted ID3v2 frame ${frame.id}`);reader.pos=frameEndPos;continue}if(frameCompressed){
+Logging._warn(`Skipping compressed ID3v2 frame ${frame.id}`);reader.pos=frameEndPos;continue}if(frameUnsynchronized){
+reader.ununsynchronizeRegion(reader.pos,frameEndPos)}tags.raw??={};if(frame.id==="TXXX"){const txxx=tags.
+raw["TXXX"]??={};const encoding=reader.readId3V2TextEncoding();const description=reader.readId3V2Text(
+encoding,frameEndPos);const value=reader.readId3V2Text(encoding,frameEndPos);txxx[description]??=value}else if(frame.
+id[0]==="T"){tags.raw[frame.id]??=reader.readId3V2EncodingAndText(frameEndPos)}else{tags.raw[frame.id]??=
+reader.readBytes(frame.size)}reader.pos=frameStartPos;switch(frame.id){case"TIT2":case"TT2":{tags.title??=
+reader.readId3V2EncodingAndText(frameEndPos)};break;case"TIT3":case"TT3":{tags.description??=reader.
+readId3V2EncodingAndText(frameEndPos)};break;case"TPE1":case"TP1":{tags.artist??=reader.readId3V2EncodingAndText(
+frameEndPos)};break;case"TALB":case"TAL":{tags.album??=reader.readId3V2EncodingAndText(frameEndPos)}
+;break;case"TPE2":case"TP2":{tags.albumArtist??=reader.readId3V2EncodingAndText(frameEndPos)};break;case"\
+TRCK":case"TRK":{const trackText=reader.readId3V2EncodingAndText(frameEndPos);const parts=trackText.
+split("/");const trackNum=Number.parseInt(parts[0],10);const tracksTotal=parts[1]&&Number.parseInt(parts[1],
+10);if(Number.isInteger(trackNum)&&trackNum>0){tags.trackNumber??=trackNum}if(tracksTotal&&Number.isInteger(
+tracksTotal)&&tracksTotal>0){tags.tracksTotal??=tracksTotal}};break;case"TPOS":case"TPA":{const discText=reader.
+readId3V2EncodingAndText(frameEndPos);const parts=discText.split("/");const discNum=Number.parseInt(
+parts[0],10);const discsTotal=parts[1]&&Number.parseInt(parts[1],10);if(Number.isInteger(discNum)&&discNum>
+0){tags.discNumber??=discNum}if(discsTotal&&Number.isInteger(discsTotal)&&discsTotal>0){tags.discsTotal??=
+discsTotal}};break;case"TCON":case"TCO":{const genreText=reader.readId3V2EncodingAndText(frameEndPos);
+let match=/^\((\d+)\)/.exec(genreText);if(match){const genreNumber=Number.parseInt(match[1]);if(ID3_V1_GENRES[genreNumber]!==
+void 0){tags.genre??=ID3_V1_GENRES[genreNumber];break}}match=/^\d+$/.exec(genreText);if(match){const genreNumber=Number.
+parseInt(match[0]);if(ID3_V1_GENRES[genreNumber]!==void 0){tags.genre??=ID3_V1_GENRES[genreNumber];break}}
+tags.genre??=genreText};break;case"TDRC":case"TDAT":{const dateText=reader.readId3V2EncodingAndText(
+frameEndPos);const date=new Date(dateText);if(!Number.isNaN(date.getTime())){tags.date??=date}};break;case"\
+TYER":case"TYE":{const yearText=reader.readId3V2EncodingAndText(frameEndPos);const year=Number.parseInt(
+yearText,10);if(Number.isInteger(year)){tags.date??=new Date(String(year))}};break;case"USLT":case"U\
+LT":{const encoding=reader.readU8();reader.pos+=3;reader.readId3V2Text(encoding,frameEndPos);tags.lyrics??=
+reader.readId3V2Text(encoding,frameEndPos)};break;case"COMM":case"COM":{const encoding=reader.readU8();
+reader.pos+=3;reader.readId3V2Text(encoding,frameEndPos);tags.comment??=reader.readId3V2Text(encoding,
+frameEndPos)};break;case"APIC":case"PIC":{const encoding=reader.readId3V2TextEncoding();let mimeType;
+if(header.majorVersion===2){const imageFormat=reader.readAscii(3);mimeType=imageFormat==="PNG"?"imag\
+e/png":imageFormat==="JPG"?"image/jpeg":"image/*"}else{mimeType=reader.readId3V2Text(encoding,frameEndPos)}
+const pictureType=reader.readU8();const description=reader.readId3V2Text(encoding,frameEndPos).trimEnd();
+const imageDataSize=frameEndPos-reader.pos;if(imageDataSize>=0){const imageData=reader.readBytes(imageDataSize);
+if(!tags.images)tags.images=[];tags.images.push({data:imageData,mimeType,kind:pictureType===3?"cover\
+Front":pictureType===4?"coverBack":"unknown",description})}};break;default:{reader.pos+=frame.size};
+break}reader.pos=frameEndPos}};Id3V2Reader=class{constructor(header,bytes){this.header=header;this.bytes=
+bytes;this.pos=0;this.view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength)}frameHeaderSize(){
+return this.header.majorVersion===2?6:10}ununsynchronizeAll(){const newBytes=[];for(let i=0;i<this.bytes.
+length;i++){const value1=this.bytes[i];newBytes.push(value1);if(value1===255&&i!==this.bytes.length-
+1){const value2=this.bytes[i];if(value2===0){i++}}}this.bytes=new Uint8Array(newBytes);this.view=new DataView(
+this.bytes.buffer)}ununsynchronizeRegion(start,end){const newBytes=[];for(let i=start;i<end;i++){const value1=this.
+bytes[i];newBytes.push(value1);if(value1===255&&i!==end-1){const value2=this.bytes[i+1];if(value2===
+0){i++}}}const before=this.bytes.subarray(0,start);const after=this.bytes.subarray(end);this.bytes=new Uint8Array(
+before.length+newBytes.length+after.length);this.bytes.set(before,0);this.bytes.set(newBytes,before.
+length);this.bytes.set(after,before.length+newBytes.length);this.view=new DataView(this.bytes.buffer)}readBytes(length){
+const slice=this.bytes.subarray(this.pos,this.pos+length);this.pos+=length;return slice}readU8(){const value=this.
+view.getUint8(this.pos);this.pos+=1;return value}readU16(){const value=this.view.getUint16(this.pos,
+false);this.pos+=2;return value}readU24(){const high=this.view.getUint16(this.pos,false);const low=this.
+view.getUint8(this.pos+2);this.pos+=3;return high*256+low}readU32(){const value=this.view.getUint32(
+this.pos,false);this.pos+=4;return value}readAscii(length){let str="";for(let i=0;i<length;i++){str+=
+String.fromCharCode(this.view.getUint8(this.pos+i))}this.pos+=length;return str}readId3V2Frame(){if(this.
+header.majorVersion===2){const id=this.readAscii(3);if(id==="\0\0\0"){return null}const size=this.readU24();
+return{id,size,flags:0}}else{const id=this.readAscii(4);if(id==="\0\0\0\0"){return null}const sizeRaw=this.
+readU32();let size=this.header.majorVersion===4?decodeSynchsafe(sizeRaw):sizeRaw;const flags=this.readU16();
+const headerEndPos=this.pos;const isSizeValid=size2=>{const nextPos=this.pos+size2;if(nextPos>this.bytes.
+length){return false}if(nextPos<=this.bytes.length-this.frameHeaderSize()){this.pos+=size2;const nextId=this.
+readAscii(4);if(nextId!=="\0\0\0\0"&&!/[0-9A-Z]{4}/.test(nextId)){return false}}return true};if(!isSizeValid(
+size)){const otherSize=this.header.majorVersion===4?sizeRaw:decodeSynchsafe(sizeRaw);if(isSizeValid(
+otherSize)){size=otherSize}}this.pos=headerEndPos;return{id,size,flags}}}readId3V2TextEncoding(){const number=this.
+readU8();if(number>3){throw new Error(`Unsupported text encoding: ${number}`)}return number}readId3V2Text(encoding,until){
+const startPos=this.pos;const data2=this.readBytes(until-this.pos);switch(encoding){case Id3V2TextEncoding.
+ISO_8859_1:{let str="";for(let i=0;i<data2.length;i++){const value=data2[i];if(value===0){this.pos=startPos+
+i+1;break}str+=String.fromCharCode(value)}return str}case Id3V2TextEncoding.UTF_16_WITH_BOM:{if(data2[0]===
+255&&data2[1]===254){const decoder=new TextDecoder("utf-16le");const endIndex=coalesceIndex(data2.findIndex(
+(x,i)=>x===0&&data2[i+1]===0&&i%2===0),data2.length);this.pos=startPos+Math.min(endIndex+2,data2.length);
+return decoder.decode(data2.subarray(2,endIndex))}else if(data2[0]===254&&data2[1]===255){const decoder=new TextDecoder(
+"utf-16be");const endIndex=coalesceIndex(data2.findIndex((x,i)=>x===0&&data2[i+1]===0&&i%2===0),data2.
+length);this.pos=startPos+Math.min(endIndex+2,data2.length);return decoder.decode(data2.subarray(2,endIndex))}else{
+const endIndex=coalesceIndex(data2.findIndex(x=>x===0),data2.length);this.pos=startPos+Math.min(endIndex+
+1,data2.length);return textDecoder.decode(data2.subarray(0,endIndex))}}case Id3V2TextEncoding.UTF_16_BE_NO_BOM:{
+const decoder=new TextDecoder("utf-16be");const endIndex=coalesceIndex(data2.findIndex((x,i)=>x===0&&
+data2[i+1]===0&&i%2===0),data2.length);this.pos=startPos+Math.min(endIndex+2,data2.length);return decoder.
+decode(data2.subarray(0,endIndex))}case Id3V2TextEncoding.UTF_8:{const endIndex=coalesceIndex(data2.
+findIndex(x=>x===0),data2.length);this.pos=startPos+Math.min(endIndex+1,data2.length);return textDecoder.
+decode(data2.subarray(0,endIndex))}}}readId3V2EncodingAndText(until){if(this.pos>=until){return""}const encoding=this.
+readId3V2TextEncoding();return this.readId3V2Text(encoding,until)}}}});var MEDIABUNNY_LOADED_SYMBOL;var init_src=__esm({"node_modules/mediabunny/dist/modules/src/index.js"(){
+init_logging();init_source();init_input_format();init_input();init_media_sink();MEDIABUNNY_LOADED_SYMBOL=
+Symbol.for("mediabunny loaded");if(globalThis[MEDIABUNNY_LOADED_SYMBOL]){Logging._error("[WARNING]\nM\
+ediabunny was loaded twice. This will likely cause Mediabunny not to work correctly. Check if multip\
+le dependencies are importing different versions of Mediabunny, or if something is being bundled inc\
+orrectly.")}globalThis[MEDIABUNNY_LOADED_SYMBOL]=true}});var decoder_exports={};__export(decoder_exports,{Mediabunny:()=>Mediabunny});var Mediabunny;var init_decoder=__esm(
+{"src/audio/decoder.mjs"(){"use strict";init_src();Mediabunny=Object.freeze({BufferSource,CustomPathedSource,
+EncodedPacketSink,HLS_FORMATS:Object.freeze([HLS,MP4,ADTS,MPEG_TS]),Input})}});var require_SignalsmithStretch=__commonJS({"vendor/signalsmith/SignalsmithStretch.js"(exports,module){
+"use strict";var SignalsmithStretch2=(()=>{var _scriptName=typeof document!="undefined"?document.currentScript?.
+src:void 0;return(function(moduleArg={}){var moduleRtn;var Module=moduleArg;var readyPromiseResolve,
+readyPromiseReject;var readyPromise=new Promise((resolve,reject)=>{readyPromiseResolve=resolve;readyPromiseReject=
+reject});var ENVIRONMENT_IS_WEB=typeof window=="object";var ENVIRONMENT_IS_WORKER=typeof WorkerGlobalScope!=
+"undefined";var ENVIRONMENT_IS_NODE=typeof process=="object"&&typeof process.versions=="object"&&typeof process.
+versions.node=="string"&&process.type!="renderer";var ENVIRONMENT_IS_SHELL=!ENVIRONMENT_IS_WEB&&!ENVIRONMENT_IS_NODE&&
+!ENVIRONMENT_IS_WORKER;var crypto2=globalThis?.crypto||{getRandomValues:array=>{for(var i=0;i<array.
+length;i++)array[i]=Math.random()*256|0}};var performance2=globalThis?.performance||{now:_=>Date.now()};
+var moduleOverrides=Object.assign({},Module);var arguments_=[];var quit_=(status,toThrow)=>{throw toThrow};
+var scriptDirectory="";var readAsync,readBinary;if(ENVIRONMENT_IS_SHELL){readBinary=f=>{if(typeof readbuffer==
+"function"){return new Uint8Array(readbuffer(f))}let data2=read(f,"binary");assert(typeof data2=="ob\
+ject");return data2};readAsync=f=>new Promise((resolve,reject)=>{setTimeout(()=>resolve(readBinary(f)))});
+globalThis.clearTimeout??=id=>{};globalThis.setTimeout??=f=>f();arguments_=globalThis.arguments||globalThis.
+scriptArgs;if(typeof quit=="function"){quit_=(status,toThrow)=>{setTimeout(()=>{if(!(toThrow instanceof
+ExitStatus)){let toLog=toThrow;if(toThrow&&typeof toThrow=="object"&&toThrow.stack){toLog=[toThrow,toThrow.
+stack]}err(`exiting due to exception: ${toLog}`)}quit(status)});throw toThrow}}if(typeof print!="und\
+efined"){globalThis.console??={};console.log=print;console.warn=console.error=globalThis.printErr??print}}else if(ENVIRONMENT_IS_WEB||
+ENVIRONMENT_IS_WORKER){if(ENVIRONMENT_IS_WORKER){scriptDirectory=self.location.href}else if(typeof document!=
+"undefined"&&document.currentScript){scriptDirectory=document.currentScript.src}if(_scriptName){scriptDirectory=
+_scriptName}if(scriptDirectory.startsWith("blob:")){scriptDirectory=""}else{scriptDirectory=scriptDirectory.
+substr(0,scriptDirectory.replace(/[?#].*/,"").lastIndexOf("/")+1)}{if(ENVIRONMENT_IS_WORKER){readBinary=
+url=>{var xhr=new XMLHttpRequest;xhr.open("GET",url,false);xhr.responseType="arraybuffer";xhr.send(null);
+return new Uint8Array(xhr.response)}}readAsync=url=>fetch(url,{credentials:"same-origin"}).then(response=>{
+if(response.ok){return response.arrayBuffer()}return Promise.reject(new Error(response.status+" : "+
+response.url))})}}else{}var out=console.log.bind(console);var err=console.error.bind(console);Object.
+assign(Module,moduleOverrides);moduleOverrides=null;var wasmBinary;if(typeof atob=="undefined"){if(typeof global!=
+"undefined"&&typeof globalThis=="undefined"){globalThis=global}globalThis.atob=function(input){var keyStr="\
+ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";var output="";var chr1,chr2,chr3;
+var enc1,enc2,enc3,enc4;var i=0;input=input.replace(/[^A-Za-z0-9\+\/\=]/g,"");do{enc1=keyStr.indexOf(
+input.charAt(i++));enc2=keyStr.indexOf(input.charAt(i++));enc3=keyStr.indexOf(input.charAt(i++));enc4=
+keyStr.indexOf(input.charAt(i++));chr1=enc1<<2|enc2>>4;chr2=(enc2&15)<<4|enc3>>2;chr3=(enc3&3)<<6|enc4;
+output=output+String.fromCharCode(chr1);if(enc3!==64){output=output+String.fromCharCode(chr2)}if(enc4!==
+64){output=output+String.fromCharCode(chr3)}}while(i<input.length);return output}}function intArrayFromBase64(s){
+var decoded=atob(s);var bytes=new Uint8Array(decoded.length);for(var i=0;i<decoded.length;++i){bytes[i]=
+decoded.charCodeAt(i)}return bytes}function tryParseAsDataURI(filename){if(!isDataURI(filename)){return}
+return intArrayFromBase64(filename.slice(dataURIPrefix.length))}var wasmMemory;var ABORT=false;var EXITSTATUS;
+var HEAP8,HEAPU8,HEAP16,HEAPU16,HEAP32,HEAPU32,HEAPF32,HEAPF64;function updateMemoryViews(){var b=wasmMemory.
+buffer;Module["HEAP8"]=HEAP8=new Int8Array(b);HEAP16=new Int16Array(b);HEAPU8=new Uint8Array(b);HEAPU16=
+new Uint16Array(b);HEAP32=new Int32Array(b);HEAPU32=new Uint32Array(b);HEAPF32=new Float32Array(b);HEAPF64=
+new Float64Array(b)}var __ATPRERUN__=[];var __ATINIT__=[];var __ATMAIN__=[];var __ATPOSTRUN__=[];var runtimeInitialized=false;
+function preRun(){callRuntimeCallbacks(__ATPRERUN__)}function initRuntime(){runtimeInitialized=true;
+callRuntimeCallbacks(__ATINIT__)}function preMain(){callRuntimeCallbacks(__ATMAIN__)}function postRun(){
+callRuntimeCallbacks(__ATPOSTRUN__)}function addOnInit(cb){__ATINIT__.unshift(cb)}var runDependencies=0;
+var runDependencyWatcher=null;var dependenciesFulfilled=null;function addRunDependency(id){runDependencies++}
+function removeRunDependency(id){runDependencies--;if(runDependencies==0){if(runDependencyWatcher!==
+null){clearInterval(runDependencyWatcher);runDependencyWatcher=null}if(dependenciesFulfilled){var callback=dependenciesFulfilled;
+dependenciesFulfilled=null;callback()}}}function abort(what){what="Aborted("+what+")";err(what);ABORT=
+true;what+=". Build with -sASSERTIONS for more info.";var e=new WebAssembly.RuntimeError(what);readyPromiseReject(
+e);throw e}var dataURIPrefix="data:application/octet-stream;base64,";var isDataURI=filename=>filename.
+startsWith(dataURIPrefix);function findWasmBinary(){var f="data:application/octet-stream;base64,AGFz\
+bQEAAAABeBVgAX8AYAJ/fwBgAABgAX8Bf2ACf38Bf2ADf39/AGAAAX9gAX0BfWAEf39/fwBgAXwBfWABfAF8YAl/f39/f39/f38A\
+YAF9AGAHf39/f39/fwBgAn9/AX1gAn1/AGACfX0AYAJ/fQBgAnx/AXxgAn1/AX9gAn98AAIZBAFhAWEABAFhAWIAAwFhAWMABQFh\
+AWQAAgM8OwAEAQMBBwcJCQICCAMKEgULCwwAAQgCBQMHCgUTDQ0BAQEBBgQCAwAABAAAARQMDw8QEAgAERECBgYGBAUBcAEFBQUG\
+AQEIgIACBggBfwFB4LgECwdVFQFlAgABZgAaAWcBAAFoACgBaQAnAWoAPgFrAD0BbAA8AW0AOwFuADoBbwA5AXAANwFxADYBcgA1\
+AXMANAF0ADMBdQAyAXYAMQF3ADABeAAuAXkALQkKAQBBAQsEOC8sKwqfzQM73gsBB38CQCAARQ0AIABBCGsiAyAAQQRrKAIAIgJB\
+eHEiAGohBQJAIAJBAXENACACQQJxRQ0BIAMgAygCACIEayIDQfA0KAIASQ0BIAAgBGohAAJAAkACQEH0NCgCACADRwRAIAMoAgwh\
+ASAEQf8BTQRAIAEgAygCCCICRw0CQeA0QeA0KAIAQX4gBEEDdndxNgIADAULIAMoAhghBiABIANHBEAgAygCCCICIAE2AgwgASAC\
+NgIIDAQLIAMoAhQiAgR/IANBFGoFIAMoAhAiAkUNAyADQRBqCyEEA0AgBCEHIAIiAUEUaiEEIAEoAhQiAg0AIAFBEGohBCABKAIQ\
+IgINAAsgB0EANgIADAMLIAUoAgQiAkEDcUEDRw0DQeg0IAA2AgAgBSACQX5xNgIEIAMgAEEBcjYCBCAFIAA2AgAPCyACIAE2Agwg\
+ASACNgIIDAILQQAhAQsgBkUNAAJAIAMoAhwiBEECdEGQN2oiAigCACADRgRAIAIgATYCACABDQFB5DRB5DQoAgBBfiAEd3E2AgAM\
+AgsCQCADIAYoAhBGBEAgBiABNgIQDAELIAYgATYCFAsgAUUNAQsgASAGNgIYIAMoAhAiAgRAIAEgAjYCECACIAE2AhgLIAMoAhQi\
+AkUNACABIAI2AhQgAiABNgIYCyADIAVPDQAgBSgCBCIEQQFxRQ0AAkACQAJAAkAgBEECcUUEQEH4NCgCACAFRgRAQfg0IAM2AgBB\
+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\
+KAIIIQMgBCgCACEFAkACQCABQQRPBEAgAyAFckEDcQ0BA0AgAygCACAFKAIARw0CIAVBBGohBSADQQRqIQMgAUEEayIBQQNLDQAL\
+CyABRQ0BCwNAIAMtAAAiCSAFLQAAIgpGBEAgBUEBaiEFIANBAWohAyABQQFrIgENAQwCCwsgCSAKawwBC0EACyIBDQBBACEBIAAo\
+AgwiAyAEKAIEIgVGDQBBf0EBIAMgBUkbIQELIAZBEGokACABRSEDCyAEQRBqJAAgAEEgaiQAIANFBEAjAEEQayIFJABBuggQHCEE\
+An8gAi0AC0EHdgRAIAIoAgQMAQsgAi0AC0H/AHELIQMCfwJ/IwBBEGsiByQAIAhBBGohASADIARqIgBB9////wdNBEACQCAAQQtJ\
+BEAgAUIANwIAIAFBADYCCCABIAEtAAtBgAFxIABB/wBxcjoACyABIAEtAAtB/wBxOgALDAELIABBC08EfyAAQQhqQXhxIgYgBkEB\
+ayIGIAZBC0YbBUEKC0EBaiIGEAchCCABIAEoAghBgICAgHhxIAZB/////wdxcjYCCCABIAEoAghBgICAgHhyNgIIIAEgCDYCACAB\
+IAA2AgQLIAdBEGokACABDAELEA0ACyIALQALQQd2BEAgACgCAAwBCyAACyIAQboIIAQQGyAAIARqIgACfyACLQALQQd2BEAgAigC\
+AAwBCyACCyADEBsgACADaiECIwBBEGsiACQAIABBADoAD0EBIQQDQCAEBEAgAiAALQAPOgAAIARBAWshBCACQQFqIQIMAQsLIABB\
+EGokACAFQRBqJAACfyABLQALQQd2BEAgASgCAAwBC0EACxoQDgALIAhBEGokACAHLAAPQQBIBEAgBygCBBAECyMAQRBrIgIkACMA\
+QRBrIgEkACACQQxqQQQQACIABH9B3DQgADYCAEF/BUEACyABKAIMGiABQRBqJAAEQEHcNCgCABoQDgALIAIoAgwhASACQRBqJABB\
+kDRBASABQf////8HcCICIAJBAU0bNgIAQZw0QgA3AgBBlDRCADcCAEGoNEIANwMAQbA0QgA3AwAgB0EQaiQAQbg0QgA3AgBBwDRB\
+ADYCAEHENEIANwIAQcw0QQA2AgBB0DRCADcCAEHYNEEANgIAC+gBAQR/IwBBEGsiBiQAIwBBIGsiAyQAIwBBEGsiBCQAIAQgATYC\
+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\
+IScgAkEBaiICQbgzKAIASA0ACwwCCyADIAJrIQMLAkACQEGKMC0AAEEBRgRAIANBAk0EQCADRQRAQeAzKAIAIg5B5DMoAgAiA0cE\
+QCAOIAMgDmtBBGtBfHFBBGoQBRoLAkACQEG0MygCACIIQQBMBEBBuDMoAgAhBQwBC0G4MygCACIFQQBMDQFByDMoAgAhCiAFQf7/\
+//8HcSEHIAVBAXEhBgNAIAogBCAFbEEcbGohDEEAIQNBACEJIAVBAUcEQANAIAwgA0EcbGoiAiACKgIEIiAgIJQgAioCACIgICCU\
+kiIgOAIYIA4gA0ECdGoiAiACKgIAICCSOAIAIAwgA0EBciICQRxsaiILIAsqAgQiICAglCALKgIAIiAgIJSSIiA4AhggDiACQQJ0\
+aiICIAIqAgAgIJI4AgAgA0ECaiEDIAlBAmoiCSAHRw0ACwsgBgRAIAwgA0EcbGoiAiACKgIEIiAgIJQgAioCACIgICCUkiIgOAIY\
+IA4gA0ECdGoiAyADKgIAICCSOAIACyAEQQFqIgQgCEcNAAsLIAVBAEwNAEHsMygCACEKQQAhCUEAIQMgBUEETwRAIAVB/P///wdx\
+IQRBACEGA0AgCiADQQJ0IgdqIAcgDmoqAgA4AgAgCiAHQQRyIgJqIAIgDmoqAgA4AgAgCiAHQQhyIgJqIAIgDmoqAgA4AgAgCiAH\
+QQxyIgJqIAIgDmoqAgA4AgAgA0EEaiEDIAZBBGoiBiAERw0ACwsgBUEDcSIERQ0AA0AgCiADQQJ0IgJqIAIgDmoqAgA4AgAgA0EB\
+aiEDIAlBAWoiCSAERw0ACwtBmDRBADYCAAwHC0GYNCoCACEiAkBBuDMoAgAiAkEATA0AQwAAgD8gIUMAAAA/lEMAAIA/kpUhIUHs\
+MygCACEIAkAgAkEDcSIGRQRAIAIhAwwBCyACIQMDQCAIIANBAWsiA0ECdGoiBSAFKgIAICKTICGUICKSIiI4AgAgBEEBaiIEIAZH\
+DQALCyACQQRJIgpFBEAgCEEIayEHIAhBBGshBgNAIAYgA0ECdCIFaiIEIAQqAgAgIpMgIZQgIpIiIDgCACAFIAdqIgQgBCoCACAg\
+kyAhlCAgkiIgOAIAIAggA0EDayIFQQJ0aiIEIAQqAgAgIJMgIZQgIJIiIDgCACAIIANBBGsiA0ECdGoiBCAEKgIAICCTICGUICCS\
+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\
+ACElQwAAgD9BvDAqAgCTQZwwKgIAIiOUICSSQcAwKgIAICSUIiAgICAjXhsgIpRDAAAAv5IiIkMAAAAAXUUEQCADsiIgICIgICAi\
+XRsiICAgjiIgkyACAn8gIItDAAAAT10EQCAgqAwBC0GAgICAeAtBAnRqIgIqAgQgAioCACIgk5QgIJIhIQsCQEG0MygCACIIQQBM\
+DQAgISAlQ2BCog2SlSIgICCUISBByDMoAgAgCUEcbGpBGGohC0EAIQVBACECIAhBBE8EQCAIQfz///8HcSEHQQAhBANAIAsgAiAD\
+bEEcbGoiBiAgIAYqAgCUOAIAIAsgAyACQQFybEEcbGoiBiAgIAYqAgCUOAIAIAsgAyACQQJybEEcbGoiBiAgIAYqAgCUOAIAIAsg\
+AyACQQNybEEcbGoiBiAgIAYqAgCUOAIAIAJBBGohAiAEQQRqIgQgB0cNAAsLIAhBA3EiBkUNAANAIAsgAiADbEEcbGoiBCAgIAQq\
+AgCUOAIAIAJBAWohAiAFQQFqIgUgBkcNAAsLIAlBAWoiCSADSA0ACwwCC0G4MygCACICQQBMDQFEAAAAAAAA8D9BpDQqAgC7RAAA\
+AAAAAOA/okQAAAAAAADwP6CjtiEhQag0KAIAIQgCQCACQQNxIgZFBEAgAiEDDAELIAIhAwNAIAggA0EBayIDQQJ0aiIEIAQqAgAg\
+JJMgIZQgJJIiJDgCACAFQQFqIgUgBkcNAAsLIAJBBEkiCkUEQCAIQQhrIQcgCEEEayEGA0AgBiADQQJ0IgVqIgQgBCoCACAkkyAh\
+lCAkkiIgOAIAIAUgB2oiBCAEKgIAICCTICGUICCSIiA4AgAgCCADQQNrIgVBAnRqIgQgBCoCACAgkyAhlCAgkiIgOAIAIAggA0EE\
+ayIDQQJ0aiIEIAQqAgAgIJMgIZQgIJIiJDgCACAFQQFLDQALCyACQQNxIQdBACEFAkAgCgRAQQAhAwwBCyACQfz///8HcSEGQQAh\
+A0EAIQQDQCAIIANBAnRqIgogCioCACAkkyAhlCAkkiIgOAIAIAogCioCBCAgkyAhlCAgkiIgOAIEIAogCioCCCAgkyAhlCAgkiIg\
+OAIIIAogCioCDCAgkyAhlCAgkiIkOAIMIANBBGohAyAEQQRqIgQgBkcNAAsLIAcEQANAIAggA0ECdGoiBCAEKgIAICSTICGUICSS\
+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\
+OAIAIAwgAkEBaiIHQQJ0IgZqIgQgBCoCACAIIAcgBWtBAnRqKgIAIAYgCmoqAgCUkjgCACACQQJqIgIgA0cNAAsLAkAgCyAPTw0A\
+IANBAWohAiAQIBMgD2tBAnRqIQhB6DIoAgAhCkHIMigCACEHIA8gA2tBAXEEQCAIIANBAnQiBmoiBCAEKgIAIAogAyAFa0ECdGoq\
+AgAgBiAHaioCAJSSOAIAIAIhAwsgAiAPRg0AA0AgCCADQQJ0IgRqIgIgAioCACAKIAMgBWtBAnRqKgIAIAQgB2oqAgCUkjgCACAI\
+IANBAWoiBkECdCIEaiICIAIqAgAgCiAGIAVrQQJ0aioCACAEIAdqKgIAlJI4AgAgA0ECaiIDIA9HDQALCwtBhDAoAgAiAyAYSQ0A\
+C0H8L0H8LygCAEEBajYCAEH4Ly0AAEEBcQ0BDAILQfwvQfwvKAIAQQFqNgIAIAJFDQELQYwzKQIAITNBjDNBhDIpAgA3AgBBhDIg\
+MzcCAEGUMykCACEzQZQzQYwyKQIANwIAQYwyIDM3AgBBnDMpAgAhM0GcM0GUMikCADcCAEGUMiAzNwIAQaQzKAIAIQNBpDNBnDIo\
+AgA2AgBBnDIgAzYCAAsCQEG0MygCACILQQBMDQBBhDIoAgBBrDIoAgAiCHBBAnQiA0GUMigCAGohCkGIMigCACADaiEHQdA0KAIA\
+IQZBACEDIAtBAUcEQCALQf7///8HcSEFQQAhGANAIBlBAnQiBCAGIANBAnRqKAIAaiAHIAMgCGxBAnRqKgIAIAoqAgCVOAIAIAQg\
+BiADQQFyIgJBAnRqKAIAaiAHIAIgCGxBAnRqKgIAIAoqAgCVOAIAIANBAmohAyAYQQJqIhggBUcNAAsLIAtBAXFFDQAgBiADQQJ0\
+aigCACAZQQJ0aiAHIAMgCGxBAnRqKgIAIAoqAgCVOAIAC0EBEBdB+C8tAAAEQEGMMykCACEzQYwzQYQyKQIANwIAQYQyIDM3AgBB\
+lDMpAgAhM0GUM0GMMikCADcCAEGMMiAzNwIAQZwzKQIAITNBnDNBlDIpAgA3AgBBlDIgMzcCAEGkMygCACEDQaQzQZwyKAIANgIA\
+QZwyIAM2AgALIBlBAWoiGSABRw0ACwsgFiAAEBhBvDNBvDMoAgAgAGs2AgALIBZBEGokAAvLDwMbfwV9AXwgACEJQawzKAIAIgBB\
+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";return f}var wasmBinaryFile;
+function getBinarySync(file){if(file==wasmBinaryFile&&wasmBinary){return new Uint8Array(wasmBinary)}
+var binary=tryParseAsDataURI(file);if(binary){return binary}if(readBinary){return readBinary(file)}throw"\
+both async and sync fetching of the wasm failed"}function getBinaryPromise(binaryFile){return Promise.
+resolve().then(()=>getBinarySync(binaryFile))}function instantiateArrayBuffer(binaryFile,imports,receiver){
+return getBinaryPromise(binaryFile).then(binary=>WebAssembly.instantiate(binary,imports)).then(receiver,
+reason=>{err(`failed to asynchronously prepare wasm: ${reason}`);abort(reason)})}function instantiateAsync(binary,binaryFile,imports,callback){
+return instantiateArrayBuffer(binaryFile,imports,callback)}function getWasmImports(){return{a:wasmImports}}
+function createWasm(){function receiveInstance(instance,module2){wasmExports=instance.exports;wasmMemory=
+wasmExports["e"];updateMemoryViews();addOnInit(wasmExports["f"]);removeRunDependency("wasm-instantia\
+te");return wasmExports}addRunDependency("wasm-instantiate");function receiveInstantiationResult(result){
+receiveInstance(result["instance"])}var info=getWasmImports();wasmBinaryFile??=findWasmBinary();instantiateAsync(
+wasmBinary,wasmBinaryFile,info,receiveInstantiationResult).catch(readyPromiseReject);return{}}class ExitStatus{name="\
+ExitStatus";constructor(status){this.message=`Program terminated with exit(${status})`;this.status=status}}
+var callRuntimeCallbacks=callbacks=>{while(callbacks.length>0){callbacks.shift()(Module)}};var __abort_js=()=>abort(
+"");var __emscripten_memcpy_js=(dest,src,num)=>HEAPU8.copyWithin(dest,src,src+num);var getHeapMax=()=>2147483648;
+var alignMemory=(size,alignment)=>Math.ceil(size/alignment)*alignment;var abortOnCannotGrowMemory=requestedSize=>{
+abort("OOM")};var growMemory=size=>{var b=wasmMemory.buffer;var pages=(size-b.byteLength+65535)/65536|
+0;try{wasmMemory.grow(pages);updateMemoryViews();return 1}catch(e){}};var _emscripten_resize_heap=requestedSize=>{
+var oldSize=HEAPU8.length;requestedSize>>>=0;var maxHeapSize=getHeapMax();if(requestedSize>maxHeapSize){
+abortOnCannotGrowMemory(requestedSize)}for(var cutDown=1;cutDown<=4;cutDown*=2){var overGrownHeapSize=oldSize*
+(1+.5/cutDown);overGrownHeapSize=Math.min(overGrownHeapSize,requestedSize+100663296);var newSize=Math.
+min(maxHeapSize,alignMemory(Math.max(requestedSize,overGrownHeapSize),65536));var replacement=growMemory(
+newSize);if(replacement){return true}}abortOnCannotGrowMemory(requestedSize)};var initRandomFill=()=>{
+if(typeof crypto2=="object"&&typeof crypto2["getRandomValues"]=="function"){return view=>crypto2.getRandomValues(
+view)}else abort("initRandomDevice")};var randomFill=view=>(randomFill=initRandomFill())(view);var _random_get=(buffer,size)=>{
+randomFill(HEAPU8.subarray(buffer,buffer+size));return 0};var keepRuntimeAlive=()=>true;var _proc_exit=code=>{
+EXITSTATUS=code;if(!keepRuntimeAlive()){ABORT=true}quit_(code,new ExitStatus(code))};var exitJS=(status,implicit)=>{
+EXITSTATUS=status;_proc_exit(status)};var handleException=e=>{if(e instanceof ExitStatus||e=="unwind"){
+return EXITSTATUS}quit_(1,e)};var UTF8Decoder=typeof TextDecoder!="undefined"?new TextDecoder:void 0;
+var UTF8ArrayToString=(heapOrArray,idx=0,maxBytesToRead=NaN)=>{var endIdx=idx+maxBytesToRead;var endPtr=idx;
+while(heapOrArray[endPtr]&&!(endPtr>=endIdx))++endPtr;if(endPtr-idx>16&&heapOrArray.buffer&&UTF8Decoder){
+return UTF8Decoder.decode(heapOrArray.subarray(idx,endPtr))}var str="";while(idx<endPtr){var u0=heapOrArray[idx++];
+if(!(u0&128)){str+=String.fromCharCode(u0);continue}var u1=heapOrArray[idx++]&63;if((u0&224)==192){str+=
+String.fromCharCode((u0&31)<<6|u1);continue}var u2=heapOrArray[idx++]&63;if((u0&240)==224){u0=(u0&15)<<
+12|u1<<6|u2}else{u0=(u0&7)<<18|u1<<12|u2<<6|heapOrArray[idx++]&63}if(u0<65536){str+=String.fromCharCode(
+u0)}else{var ch=u0-65536;str+=String.fromCharCode(55296|ch>>10,56320|ch&1023)}}return str};var UTF8ToString=(ptr,maxBytesToRead)=>ptr?
+UTF8ArrayToString(HEAPU8,ptr,maxBytesToRead):"";var wasmImports={d:__abort_js,c:__emscripten_memcpy_js,
+b:_emscripten_resize_heap,a:_random_get};var wasmExports=createWasm();var ___wasm_call_ctors=()=>(___wasm_call_ctors=
+wasmExports["f"])();var _setBuffers=Module["_setBuffers"]=(a0,a1)=>(_setBuffers=Module["_setBuffers"]=
+wasmExports["h"])(a0,a1);var _blockSamples=Module["_blockSamples"]=()=>(_blockSamples=Module["_block\
+Samples"]=wasmExports["i"])();var _intervalSamples=Module["_intervalSamples"]=()=>(_intervalSamples=
+Module["_intervalSamples"]=wasmExports["j"])();var _inputLatency=Module["_inputLatency"]=()=>(_inputLatency=
+Module["_inputLatency"]=wasmExports["k"])();var _outputLatency=Module["_outputLatency"]=()=>(_outputLatency=
+Module["_outputLatency"]=wasmExports["l"])();var _reset=Module["_reset"]=()=>(_reset=Module["_reset"]=
+wasmExports["m"])();var _presetDefault=Module["_presetDefault"]=(a0,a1)=>(_presetDefault=Module["_pr\
+esetDefault"]=wasmExports["n"])(a0,a1);var _presetCheaper=Module["_presetCheaper"]=(a0,a1)=>(_presetCheaper=
+Module["_presetCheaper"]=wasmExports["o"])(a0,a1);var _configure=Module["_configure"]=(a0,a1,a2,a3)=>(_configure=
+Module["_configure"]=wasmExports["p"])(a0,a1,a2,a3);var _setTransposeFactor=Module["_setTransposeFac\
+tor"]=(a0,a1)=>(_setTransposeFactor=Module["_setTransposeFactor"]=wasmExports["q"])(a0,a1);var _setTransposeSemitones=Module["\
+_setTransposeSemitones"]=(a0,a1)=>(_setTransposeSemitones=Module["_setTransposeSemitones"]=wasmExports["\
+r"])(a0,a1);var _setFormantFactor=Module["_setFormantFactor"]=(a0,a1)=>(_setFormantFactor=Module["_s\
+etFormantFactor"]=wasmExports["s"])(a0,a1);var _setFormantSemitones=Module["_setFormantSemitones"]=(a0,a1)=>(_setFormantSemitones=
+Module["_setFormantSemitones"]=wasmExports["t"])(a0,a1);var _setFormantBase=Module["_setFormantBase"]=
+a0=>(_setFormantBase=Module["_setFormantBase"]=wasmExports["u"])(a0);var _seek=Module["_seek"]=(a0,a1)=>(_seek=
+Module["_seek"]=wasmExports["v"])(a0,a1);var _process=Module["_process"]=(a0,a1)=>(_process=Module["\
+_process"]=wasmExports["w"])(a0,a1);var _flush=Module["_flush"]=a0=>(_flush=Module["_flush"]=wasmExports["\
+x"])(a0);var _main=Module["_main"]=(a0,a1)=>(_main=Module["_main"]=wasmExports["y"])(a0,a1);Module["\
+UTF8ToString"]=UTF8ToString;var calledRun;dependenciesFulfilled=function runCaller(){if(!calledRun)run();
+if(!calledRun)dependenciesFulfilled=runCaller};function callMain(){var entryFunction=_main;var argc=0;
+var argv=0;try{var ret=entryFunction(argc,argv);exitJS(ret,true);return ret}catch(e){return handleException(
+e)}}function run(){if(runDependencies>0){return}preRun();if(runDependencies>0){return}function doRun(){
+if(calledRun)return;calledRun=true;Module["calledRun"]=true;if(ABORT)return;initRuntime();preMain();
+readyPromiseResolve(Module);if(shouldRunNow)callMain();postRun()}{doRun()}}var shouldRunNow=true;run();
+moduleRtn=readyPromise;return moduleRtn})})();if(typeof exports==="object"&&typeof module==="object")
+module.exports=SignalsmithStretch2;else if(typeof define==="function"&&define["amd"])define([],()=>SignalsmithStretch2);
+function registerWorkletProcessor(Module,audioNodeKey){class WasmProcessor extends AudioWorkletProcessor{constructor(options){
+super(options);this.wasmReady=false;this.wasmModule=null;this.channels=0;this.buffersIn=[];this.buffersOut=
+[];this.audioBuffers=[];this.audioBuffersStart=0;this.audioBuffersEnd=0;this.timeIntervalSamples=sampleRate*
+.1;this.timeIntervalCounter=0;this.timeMap=[{active:false,input:0,output:0,rate:1,semitones:0,tonalityHz:8e3,
+formantSemitones:0,formantCompensation:false,formantBaseHz:0,loopStart:0,loopEnd:0}];let remoteMethods={
+configure:config=>{Object.assign(this.config,config);this.configure()},latency:_=>{return this.inputLatencySeconds+
+this.outputLatencySeconds},setUpdateInterval:seconds=>{this.timeIntervalSamples=sampleRate*seconds},
+stop:when=>{if(typeof when!=="number")when=currentTime;return remoteMethods.schedule({active:false,output:when})},
+start:(when,offset,duration,rate,semitones)=>{if(typeof when==="object"){if(!("active"in when))when.
+active=true;return remoteMethods.schedule(when)}let obj={active:true,input:0,output:currentTime+this.
+outputLatencySeconds};if(typeof when==="number")obj.output=when;if(typeof offset==="number")obj.input=
+offset;if(typeof rate==="number")obj.rate=rate;if(typeof semitones==="number")obj.semitones=semitones;
+let result=remoteMethods.schedule(obj);if(typeof duration==="number"){remoteMethods.stop(obj.output+
+duration);obj.output+=duration;obj.active=false;remoteMethods.schedule(obj)}return result},schedule:(objIn,adjustPrevious)=>{
+let outputTime="outputTime"in objIn?objIn.outputTime:currentTime;let latestSegment=this.timeMap[this.
+timeMap.length-1];while(this.timeMap.length&&this.timeMap[this.timeMap.length-1].output>=outputTime){
+latestSegment=this.timeMap.pop()}let obj=Object.assign({},latestSegment);Object.assign(obj,{input:null,
+output:outputTime});Object.assign(obj,objIn);if(obj.input===null){let rate2=latestSegment.active?latestSegment.
+rate:0;obj.input=latestSegment.input+(obj.output-latestSegment.output)*rate2}this.timeMap.push(obj);
+if(adjustPrevious&&this.timeMap.length>1){let previous=this.timeMap[this.timeMap.length-2];if(previous.
+output<currentTime){let rate2=previous.active?previous.rate:0;previous.input+=(currentTime-previous.
+output)*rate2;previous.output=currentTime}previous.rate=(obj.input-previous.input)/(obj.output-previous.
+output)}let currentMapSegment=this.timeMap[0];while(this.timeMap.length>1&&this.timeMap[1].output<=outputTime){
+this.timeMap.shift();currentMapSegment=this.timeMap[0]}let rate=currentMapSegment.active?currentMapSegment.
+rate:0;let inputTime=currentMapSegment.input+(outputTime-currentMapSegment.output)*rate;this.timeIntervalCounter=
+this.timeIntervalSamples;this.port.postMessage(["time",inputTime]);return obj},dropBuffers:toSeconds=>{
+if(typeof toSeconds!=="number"){let buffers=this.audioBuffers.flat(1).map(b=>b.buffer);this.audioBuffers=
+[];this.audioBuffersStart=this.audioBuffersEnd=0;return{value:{start:0,end:0},transfer:buffers}}let transfer=[];
+while(this.audioBuffers.length){let first=this.audioBuffers[0];let length=first[0].length;let endSamples=this.
+audioBuffersStart+length;let endSeconds=endSamples/sampleRate;if(endSeconds>toSeconds)break;this.audioBuffers.
+shift().forEach(b=>transfer.push(b.buffer));this.audioBuffersStart+=length}return{value:{start:this.
+audioBuffersStart/sampleRate,end:this.audioBuffersEnd/sampleRate},transfer}},addBuffers:sampleBuffers=>{
+sampleBuffers=[].concat(sampleBuffers);this.audioBuffers.push(sampleBuffers);let length=sampleBuffers[0].
+length;this.audioBuffersEnd+=length;return this.audioBuffersEnd/sampleRate}};let pendingMessages=[];
+this.port.onmessage=event=>pendingMessages.push(event);Module().then(wasmModule=>{this.wasmModule=wasmModule;
+this.wasmReady=true;wasmModule._main();this.channels=options.numberOfOutputs?options.outputChannelCount[0]:
+2;this.configure();this.port.onmessage=event=>{let data2=event.data;let messageId=data2.shift();let method2=data2.
+shift();let result=remoteMethods[method2](...data2);if(result?.transfer){this.port.postMessage([messageId,
+result.value],result.transfer)}else{this.port.postMessage([messageId,result])}};let methodArgCounts={};
+for(let key in remoteMethods){methodArgCounts[key]=remoteMethods[key].length}this.port.postMessage([
+"ready",methodArgCounts]);pendingMessages.forEach(this.port.onmessage);pendingMessages=null})}config={
+preset:"default"};configure(){if(this.config.blockMs){let blockSamples=Math.round(this.config.blockMs/
+1e3*sampleRate);let intervalSamples=Math.round((this.config.intervalMs||this.config.blockMs*.25)/1e3*
+sampleRate);let splitComputation=this.config.splitComputation;this.wasmModule._configure(this.channels,
+blockSamples,intervalSamples,splitComputation);this.wasmModule._reset()}else if(this.config.preset==
+"cheaper"){this.wasmModule._presetCheaper(this.channels,sampleRate)}else{this.wasmModule._presetDefault(
+this.channels,sampleRate)}this.updateBuffers();this.inputLatencySeconds=this.wasmModule._inputLatency()/
+sampleRate;this.outputLatencySeconds=this.wasmModule._outputLatency()/sampleRate}updateBuffers(){let wasmModule=this.
+wasmModule;this.bufferLength=wasmModule._inputLatency()+wasmModule._outputLatency();let lengthBytes=this.
+bufferLength*4;let bufferPointer=wasmModule._setBuffers(this.channels,this.bufferLength);this.buffersIn=
+[];this.buffersOut=[];for(let c=0;c<this.channels;++c){this.buffersIn.push(bufferPointer+lengthBytes*
+c);this.buffersOut.push(bufferPointer+lengthBytes*(c+this.channels))}}process(inputList,outputList,parameters){
+if(!this.wasmReady){outputList.forEach(output=>{output.forEach(channel=>{channel.fill(0)})});return true}
+if(!outputList[0]?.length)return false;let outputTime=currentTime+this.outputLatencySeconds;while(this.
+timeMap.length>1&&this.timeMap[1].output<=outputTime){this.timeMap.shift()}let currentMapSegment=this.
+timeMap[0];let wasmModule=this.wasmModule;wasmModule._setTransposeSemitones(currentMapSegment.semitones,
+currentMapSegment.tonalityHz/sampleRate);wasmModule._setFormantSemitones(currentMapSegment.formantSemitones,
+currentMapSegment.formantCompensation);wasmModule._setFormantBase(currentMapSegment.formantBaseHz/sampleRate);
+if(outputList[0].length!=this.channels){this.channels=outputList[0]?.length||0;configure()}let outputBlockSize=outputList[0][0].
+length;let memory=wasmModule.exports?wasmModule.exports.memory.buffer:wasmModule.HEAP8.buffer;let inputs=inputList[0];
+if(!currentMapSegment.active){outputList[0].forEach((_,c)=>{let channelBuffer=inputs[c%inputs.length];
+let buffer=new Float32Array(memory,this.buffersIn[c],outputBlockSize);buffer.fill(0)});wasmModule._process(
+outputBlockSize,outputBlockSize)}else if(inputs?.length){outputList[0].forEach((_,c)=>{let channelBuffer=inputs[c%
+inputs.length];let buffer=new Float32Array(memory,this.buffersIn[c],outputBlockSize);if(channelBuffer){
+buffer.set(channelBuffer)}else{buffer.fill(0)}});wasmModule._process(outputBlockSize,outputBlockSize)}else{
+let inputTime=currentMapSegment.input+(outputTime-currentMapSegment.output)*currentMapSegment.rate;let loopLength=currentMapSegment.
+loopEnd-currentMapSegment.loopStart;if(loopLength>0&&inputTime>=currentMapSegment.loopEnd){currentMapSegment.
+input-=loopLength;inputTime-=loopLength}inputTime+=this.inputLatencySeconds;let inputSamplesEnd=Math.
+round(inputTime*sampleRate);let buffers=outputList[0].map((_,c)=>new Float32Array(memory,this.buffersIn[c],
+this.bufferLength));let blockSamples=0;let audioBufferIndex=0;let audioSamples=this.audioBuffersStart;
+let inputSamples=inputSamplesEnd-this.bufferLength;if(inputSamples<audioSamples){blockSamples=audioSamples-
+inputSamples;buffers.forEach(b=>b.fill(0,0,blockSamples));inputSamples=audioSamples}while(audioBufferIndex<
+this.audioBuffers.length&&audioSamples<inputSamplesEnd){let audioBuffer=this.audioBuffers[audioBufferIndex];
+let startIndex=inputSamples-audioSamples;let bufferEnd=audioSamples+audioBuffer[0].length;let count=Math.
+min(audioBuffer[0].length-startIndex,inputSamplesEnd-inputSamples);if(count>0){buffers.forEach((buffer,c)=>{
+let channelBuffer=audioBuffer[c%audioBuffer.length];buffer.subarray(blockSamples).set(channelBuffer.
+subarray(startIndex,startIndex+count))});audioSamples+=count;blockSamples+=count}else{audioSamples+=
+audioBuffer[0].length}++audioBufferIndex}if(blockSamples<this.bufferLength){buffers.forEach(buffer=>buffer.
+subarray(blockSamples).fill(0))}wasmModule._seek(this.bufferLength,currentMapSegment.rate);wasmModule.
+_process(0,outputBlockSize);this.timeIntervalCounter-=outputBlockSize;if(this.timeIntervalCounter<=0){
+this.timeIntervalCounter=this.timeIntervalSamples;this.port.postMessage(["time",inputTime])}}memory=
+wasmModule.exports?wasmModule.exports.memory.buffer:wasmModule.HEAP8.buffer;outputList[0].forEach((channelBuffer,c)=>{
+let buffer=new Float32Array(memory,this.buffersOut[c],outputBlockSize);channelBuffer.set(buffer)});return true}}
+registerProcessor(audioNodeKey,WasmProcessor)}SignalsmithStretch2=((Module,audioNodeKey)=>{if(typeof AudioWorkletProcessor===
+"function"&&typeof registerProcessor==="function"){registerWorkletProcessor(Module,audioNodeKey);return{}}
+let promiseKey=Symbol();let createNode=async function(audioContext,options){let audioNode;options=options||
+{numberOfInputs:1,numberOfOutputs:1,outputChannelCount:[2]};try{audioNode=new AudioWorkletNode(audioContext,
+audioNodeKey,options)}catch(e){if(!audioContext[promiseKey]){let moduleUrl=createNode.moduleUrl;if(!moduleUrl){
+let moduleCode=`(${registerWorkletProcessor})((_scriptName=>${Module})(),${JSON.stringify(audioNodeKey)}\
+)`;moduleUrl=URL.createObjectURL(new Blob([moduleCode],{type:"text/javascript"}))}audioContext[promiseKey]=
+audioContext.audioWorklet.addModule(moduleUrl)}await audioContext[promiseKey];audioNode=new AudioWorkletNode(
+audioContext,audioNodeKey,options)}let requestMap={};let idCounter=0;let timeUpdateCallback=null;let post=(transfer,...data2)=>{
+let id=idCounter++;return new Promise(resolve=>{requestMap[id]=resolve;audioNode.port.postMessage([id].
+concat(data2),transfer)})};audioNode.inputTime=0;audioNode.port.onmessage=event=>{let data2=event.data;
+let id=data2[0],value=data2[1];if(id=="time"){audioNode.inputTime=value;if(timeUpdateCallback)timeUpdateCallback(
+value)}if(id in requestMap){requestMap[id](value);delete requestMap[id]}};return new Promise(resolve=>{
+requestMap["ready"]=remoteMethodKeys=>{Object.keys(remoteMethodKeys).forEach(key=>{let argCount=remoteMethodKeys[key];
+audioNode[key]=(...args)=>{let transfer=null;if(args.length>argCount){transfer=args.pop()}return post(
+transfer,key,...args)}});audioNode.setUpdateInterval=(seconds,callback)=>{timeUpdateCallback=callback;
+return post(null,"setUpdateInterval",seconds)};resolve(audioNode)}})};return createNode})(SignalsmithStretch2,
+"signalsmith-stretch");if(typeof exports==="object"&&typeof module==="object"){module.exports=SignalsmithStretch2}else if(typeof define===
+"function"&&define["amd"]){define([],()=>SignalsmithStretch2)}}});var pitchSettingsKey="soundcloud.tempo.pitchControls";var defaultPitchSettings={min:-12,max:12,step:.5};
+function validPitchSettings(value){return value&&[value.min,value.max,value.step].every(Number.isFinite)&&
+value.min>=-12&&value.max<=12&&value.min<value.max&&value.step>=.001&&value.step<=12}function readPitchSettings(){
+try{const value=JSON.parse(localStorage.getItem(pitchSettingsKey));if(validPitchSettings(value)){const{
+min,max,step}=value;return{min,max,step}}}catch{}return{...defaultPitchSettings}}var tempoIncrementKey="soundcloud.tempo.tempoIncrement";var defaultTempoIncrement=.025;function validTempoIncrement(value){
+return Number.isFinite(value)&&value>=.001&&value<=1}function readTempoIncrement(){try{const value=Number(
+localStorage.getItem(tempoIncrementKey));if(validTempoIncrement(value))return value}catch{}return defaultTempoIncrement}function enhanceTempoFields(root){const syncs=[];for(const input of root.querySelectorAll('input[typ\
+e="number"]:not(#rate-number)')){let nudge2=function(direction){if(input.disabled||input.readOnly)return;
+const value=input.valueAsNumber;if(!Number.isFinite(value))return;const min=input.min===""?-Infinity:
+Number(input.min);const max=input.max===""?Infinity:Number(input.max);input.value=String(Math.max(min,
+Math.min(max,Math.round((value+direction*(Number(input.step)||1))*1e6)/1e6)));input.dispatchEvent(new Event(
+"input",{bubbles:true}));input.dispatchEvent(new Event("change",{bubbles:true}));sync2()},sync2=function(){
+buttons.forEach((button,index)=>{button.disabled=input.disabled||input.readOnly||(index?input.min!==
+""&&input.valueAsNumber<=Number(input.min):input.max!==""&&input.valueAsNumber>=Number(input.max))})};
+var nudge=nudge2,sync3=sync2;const wrap=document.createElement("span");wrap.className="tempo-number";
+input.before(wrap);wrap.append(input);const arrows=document.createElement("span");arrows.className="\
+tempo-number-arrows";wrap.append(arrows);const label=input.getAttribute("aria-label")||[...input.labels?.[0]?.
+childNodes||[]].filter(node=>node.nodeType===3).map(node=>node.textContent.trim()).join(" ")||"value";
+const buttons=[1,-1].map(direction=>{const button=document.createElement("button");button.type="butt\
+on";button.setAttribute("aria-label",(direction>0?"Increase ":"Decrease ")+label);button.innerHTML='\
+<svg viewBox="0 0 10 8" aria-hidden="true"><path d="'+(direction>0?"m2 5 3-3 3 3":"m2 3 3 3 3-3")+'"\
+/></svg>';button.onclick=()=>nudge2(direction);arrows.append(button);return button});input.addEventListener(
+"keydown",event=>{if(event.key!=="ArrowUp"&&event.key!=="ArrowDown")return;event.preventDefault();nudge2(
+event.key==="ArrowUp"?1:-1)});input.addEventListener("change",sync2);syncs.push(sync2)}for(const select of root.
+querySelectorAll("select")){let close2=function(focus=false){list.hidden=true;trigger.setAttribute("\
+aria-expanded","false");if(focus)trigger.focus()},sync2=function(){caption.textContent=select.selectedOptions[0]?.
+textContent||"Choose";trigger.setAttribute("aria-label",name+": "+(select.selectedOptions[0]?.textContent||
+""));trigger.disabled=select.disabled},open2=function(){list.replaceChildren(...[...select.options].
+map(option=>{const button=document.createElement("button");button.type="button";button.setAttribute(
+"role","option");button.setAttribute("aria-selected",String(option.selected));button.tabIndex=-1;button.
+disabled=option.disabled;button.textContent=option.textContent;button.onclick=()=>{select.value=option.
+value;select.dispatchEvent(new Event("change",{bubbles:true}));sync2();close2(true)};return button}));
+list.hidden=false;trigger.setAttribute("aria-expanded","true");(list.children[select.selectedIndex]||
+list.firstElementChild)?.focus()};var close=close2,sync3=sync2,open=open2;const wrap=document.createElement(
+"span");wrap.className="tempo-choice";select.before(wrap);wrap.append(select);select.hidden=true;const trigger=document.
+createElement("button");trigger.type="button";trigger.className="tempo-choice-trigger";const caption=document.
+createElement("span");const chevron=document.createElementNS("http://www.w3.org/2000/svg","svg");chevron.
+setAttribute("viewBox","0 0 10 8");chevron.setAttribute("aria-hidden","true");chevron.innerHTML='<pa\
+th d="m2 3 3 3 3-3"/>';trigger.append(caption,chevron);trigger.setAttribute("aria-haspopup","listbox");
+trigger.setAttribute("aria-expanded","false");const name=select.getAttribute("aria-label")||[...select.
+labels?.[0]?.childNodes||[]].filter(node=>node.nodeType===3).map(node=>node.textContent.trim()).join(
+" ")||"Choose";const list=document.createElement("span");list.className="tempo-choice-list";list.setAttribute(
+"role","listbox");list.setAttribute("aria-label",name);list.hidden=true;wrap.append(trigger,list);trigger.
+onclick=()=>list.hidden?open2():close2();let search="",searchTime=0;wrap.addEventListener("keydown",
+event=>{if(event.key==="Escape"&&!list.hidden){event.preventDefault();event.stopPropagation();close2(
+true);return}if(event.key==="Tab"){close2();return}const options=[...list.children].filter(option=>!option.
+disabled);if(["ArrowDown","ArrowUp","Home","End"].includes(event.key)){event.preventDefault();if(list.
+hidden){open2();return}const active=wrap.getRootNode().activeElement;const index=options.indexOf(active);
+const next=event.key==="Home"?0:event.key==="End"?options.length-1:(index+(event.key==="ArrowDown"?1:
+-1)+options.length)%options.length;options[next]?.focus()}else if(event.key.length===1&&event.key!==
+" "&&!event.ctrlKey&&!event.metaKey&&!event.altKey){const now=Date.now();search=(now-searchTime<700?
+search:"")+event.key.toLowerCase();searchTime=now;if(list.hidden)open2();[...list.children].find(option=>option.
+textContent.trim().toLowerCase().startsWith(search))?.focus()}});wrap.addEventListener("focusout",event=>{
+if(!wrap.contains(event.relatedTarget))close2()});root.addEventListener("pointerdown",event=>{if(!wrap.
+contains(event.target))close2()});select.addEventListener("change",sync2);syncs.push(sync2)}const sync=()=>syncs.
+forEach(update=>update());sync();return sync}var tempoFieldStyle=`
+.tempo-number { display:inline-flex; align-items:center; min-width:0; vertical-align:middle; }
+.tempo-number input { appearance:textfield; min-width:0; width:64px; }
+.tempo-number input::-webkit-inner-spin-button,.tempo-number input::-webkit-outer-spin-button { appe\
+arance:none; margin:0; }
+.tempo-number-arrows { display:grid; flex-shrink:0; }
+.tempo-number-arrows button { display:grid; place-items:center; min-height:16px; width:22px; padding\
+:0; border:0; background:transparent; color:inherit; }
+.tempo-number-arrows svg { width:10px; height:8px; fill:none; stroke:currentColor; stroke-width:1.4;\
+ }
+.tempo-choice { position:relative; display:inline-block; min-width:0; }
+.tempo-choice-trigger { display:flex; align-items:center; justify-content:space-between; gap:12px; w\
+idth:100%; text-align:left; color:inherit; }
+.tempo-choice-trigger > svg { flex:none; width:10px; height:8px; fill:none; stroke:currentColor; str\
+oke-width:1.5; }
+.tempo-choice-trigger[aria-expanded="true"] > svg { transform:rotate(180deg); }
+.tempo-choice-list { position:absolute; z-index:5; left:0; top:100%; min-width:100%; max-width:240px\
+; max-height:220px; overflow:auto; padding:4px; border:1px solid var(--tempo-track); background:var(\
+--tempo-surface); box-shadow:0 4px 12px #0004; }
+.tempo-choice-list button { display:block; width:100%; text-align:left; border:0; color:inherit; min\
+-height:32px; }
+.tempo-choice-list [aria-selected="true"] { color:var(--tempo-fg); box-shadow:inset 2px 0 var(--temp\
+o-accent); }
+.tempo-number-arrows button:focus-visible,.tempo-choice button:focus-visible { outline:2px solid var\
+(--tempo-accent); outline-offset:1px; }
+.tempo-number-arrows button:disabled { opacity:.35; }
+`;function syncTempoRange(input){const minimum=Number(input.min)||0;const span=Number(input.max)-minimum;
+const value=span>0?(input.valueAsNumber-minimum)/span:0;const fill=`${Math.max(0,Math.min(1,value||0))*
+100}%`;if(input.style.getPropertyValue("--range-fill")!==fill)input.style.setProperty("--range-fill",
+fill)}var tempoRangeStyle=`
+  input[type='range'] {
+    --range-thumb-opacity: 1;
+    appearance: none;
+    -webkit-appearance: none;
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    height: 32px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: linear-gradient(to right,
+      var(--tempo-accent) var(--range-fill, 0%),
+      var(--tempo-track) var(--range-fill, 0%))
+      center / calc(100% - 12px) 2px no-repeat;
+    cursor: pointer;
+    touch-action: none;
+  }
+  input[type='range']::-webkit-slider-runnable-track {
+    height: 2px;
+    background: transparent;
+  }
+  input[type='range']::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    box-sizing: border-box;
+    width: 12px;
+    height: 12px;
+    margin-top: -5px;
+    border: 1px solid color-mix(in srgb, var(--tempo-accent) 85%, var(--tempo-fg));
+    border-radius: 50%;
+    background: var(--tempo-surface);
+    opacity: var(--range-thumb-opacity);
+    transition: opacity 120ms ease-out;
+  }
+  input[type='range']::-moz-range-track,
+  input[type='range']::-moz-range-progress {
+    height: 2px;
+    background: transparent;
+  }
+  input[type='range']::-moz-range-thumb {
+    box-sizing: border-box;
+    width: 12px;
+    height: 12px;
+    border: 1px solid color-mix(in srgb, var(--tempo-accent) 85%, var(--tempo-fg));
+    border-radius: 50%;
+    background: var(--tempo-surface);
+    opacity: var(--range-thumb-opacity);
+    transition: opacity 120ms ease-out;
+  }
+  input[type='range']:disabled {
+    opacity: .45;
+    cursor: default;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    input[type='range']:not(:hover):not(:focus-visible):not(:active) {
+      --range-thumb-opacity: 0;
+    }
+  }
+  @media (any-pointer: coarse), (forced-colors: active) {
+    input[type='range'] {
+      --range-thumb-opacity: 1 !important;
+    }
+  }
+  @media (forced-colors: active) {
+    input[type='range'] {
+      forced-color-adjust: none;
+      --tempo-accent: Highlight;
+      --tempo-track: GrayText;
+      --tempo-surface: Canvas;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    input[type='range']::-webkit-slider-thumb { transition: none; }
+    input[type='range']::-moz-range-thumb { transition: none; }
+  }
+`;var controlsStyle=`
+        :host {
+          font: inherit;
+          color: inherit;
+          --tempo-fg: #222;
+          --tempo-accent: #ff5500;
+          --tempo-accent-surface: #242424;
+          --tempo-accent-hover: #282828;
+          --tempo-track: #888;
+        }
+
+        * {
+          box-sizing: border-box;
+        }
+
+        .controls {
+          display: grid;
+          grid-template-columns: 56px 20px minmax(0, 1fr) 132px 24px 24px;
+          align-items: center;
+          gap: 4px;
+          width: 100%;
+          height: 32px;
+          color: var(--tempo-fg);
+          font-size: 12px;
+        }
+
+        .controls.hide-key { grid-template-columns: 56px 20px minmax(0, 1fr) 24px 24px; }
+
+        button,
+        input,
+        select {
+          font: inherit;
+          color: inherit;
+        }
+
+        button {
+          cursor: pointer;
+        }
+
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible {
+          outline: 2px solid var(--tempo-fg);
+          outline-offset: 2px;
+        }
+
+        .field {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 2px;
+          font-variant-numeric: tabular-nums;
+        }
+
+        .field #rate-number {
+          text-align: right;
+        }
+
+        .field #rate-number:hover {
+          background: transparent;
+        }
+
+        .unit {
+          flex: none;
+          line-height: 24px;
+        }
+
+        .slider-wrap {
+          position: relative;
+          min-width: 0;
+          height: 32px;
+        }
+        .slider-wrap[data-style='slider'] {
+          transform: translateY(var(--tempo-rail-offset, 0px));
+        }
+        .controls:has(.slider-wrap:not([data-style='slider'])) {
+          grid-template-columns: 56px 20px 36px 132px 24px 24px;
+        }
+        .controls.hide-key:has(.slider-wrap:not([data-style='slider'])) {
+          grid-template-columns: 56px 20px 36px 24px 24px;
+        }
+        .quick-key {
+          display: grid;
+          grid-template-columns: 28px 42px 12px 20px;
+          align-items: center;
+          gap: 4px;
+          margin-left: 16px;
+          font-size: 12px;
+          line-height: 24px;
+        }
+        .fader-value, .fader-reset, .fader-normal, .fader-limit, .fader-level, .fader-ticks { displa\
+y: none; }
+        #tempo-fader[popover] .fader-value {
+          display: block;
+          text-align: center;
+          font: inherit;
+          font-variant-numeric: tabular-nums;
+          line-height: 24px;
+          margin-bottom: 4px;
+        }
+        #tempo-fader[popover] .fader-reset {
+          display: block;
+          width: 100%;
+          height: 32px;
+          margin-top: 8px;
+          padding: 0;
+          border: 1px solid var(--tempo-track);
+          border-radius: 2px;
+          background: transparent;
+          font-size: 11px;
+        }
+        .fader-reset:hover { background: color-mix(in srgb, var(--tempo-fg) 8%, transparent); }
+        #tempo-fader[popover] .fader-rail { position: relative; margin: 8px 0; }
+        #tempo-fader[popover] .fader-normal {
+          display: block;
+          position: absolute;
+          top: calc(6px + (100% - 12px) * 0.8);
+          right: calc(50% + 16px);
+          transform: translateY(-50%);
+          font-size: 11px;
+          line-height: 12px;
+          pointer-events: none;
+        }
+        #tempo-fader[popover] .fader-normal::before {
+          content: '';
+          position: absolute;
+          left: calc(100% + 4px);
+          width: 6px;
+          top: 50%;
+          border-top: 1px solid var(--tempo-fg);
+        }
+        #tempo-fader[popover] .fader-limit {
+          display: block; position: absolute; right: calc(50% + 16px);
+          font-size: 11px; line-height: 12px; pointer-events: none;
+        }
+        .fader-max { top: 0; }
+        .fader-min { bottom: 0; }
+        #tempo-fader[popover] .fader-ticks {
+          display: block; position: absolute; top: 0; left: calc(50% - 16px);
+          width: 32px; height: 144px; pointer-events: none;
+          fill: none; stroke: var(--tempo-track); stroke-width: 1;
+        }
+        #tempo-fader[popover] .fader-level {
+          display: block; position: absolute; right: calc(50% + 16px);
+          top: calc(6px + (100% - 12px) * var(--position));
+          transform: translateY(-50%); font-size: 11px; line-height: 12px;
+          pointer-events: none;
+        }
+
+        .ticks {
+          position: absolute;
+          inset: 24px 6px auto;
+          width: calc(100% - 12px);
+          height: 5px;
+          overflow: visible;
+          pointer-events: none;
+        }
+
+        .ticks path {
+          fill: none;
+          stroke: var(--tempo-track);
+          stroke-width: 1px;
+          vector-effect: non-scaling-stroke;
+        }
+
+        .ticks .normal-tick {
+          stroke: var(--tempo-fg);
+        }
+
+        #rate-dial {
+          display: block;
+          position: relative;
+          width: 32px;
+          height: 32px;
+          margin: auto;
+          padding: 0;
+          border: 0;
+          border-radius: 3px;
+          background: transparent;
+          touch-action: none;
+          cursor: ns-resize;
+          user-select: none;
+        }
+        #rate-dial svg { position: absolute; inset: 0; width: 32px; height: 32px; overflow: visible;\
+ }
+        #rate-dial svg path { fill: none; stroke-width: 1.5; stroke-linecap: round; }
+        .dial-track { stroke: var(--tempo-track); }
+        #rate-dial svg .dial-ticks { stroke: var(--tempo-track); stroke-width: 1; }
+        .dial-fill { stroke: var(--tempo-accent); stroke-dasharray: 100; stroke-dashoffset: var(--di\
+al-unfilled, 50); }
+        .dial-zero { stroke: var(--tempo-fg); }
+        #rate-dial circle { fill: color-mix(in srgb, var(--tempo-fg) 10%, var(--tempo-surface)); }
+        #rate-dial:hover circle, #rate-dial:active circle { fill: color-mix(in srgb, var(--tempo-fg)\
+ 18%, var(--tempo-surface)); }
+        #rate-dial span {
+          position: absolute;
+          inset: 8px;
+          transform: rotate(var(--dial-angle, 0deg));
+        }
+        #rate-dial span::before {
+          content: '';
+          display: block;
+          width: 2px;
+          height: 6px;
+          margin: 0 auto;
+          background: var(--tempo-accent);
+        }
+        #rate-dial[hidden], #rate-slider[hidden], #vertical-toggle[hidden] { display: none; }
+        #vertical-toggle {
+          display: grid;
+          place-items: center;
+          width: 32px;
+          height: 32px;
+          margin: auto;
+          padding: 6px;
+          border: 0;
+          border-radius: 3px;
+          background: transparent;
+        }
+        #vertical-toggle:hover, #vertical-toggle[aria-expanded='true'] {
+          background: color-mix(in srgb, var(--tempo-fg) 8%, transparent);
+        }
+        #vertical-toggle svg {
+          width: 20px;
+          height: 20px;
+          fill: none;
+          stroke: currentColor;
+          stroke-width: 1.5;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+        }
+        #tempo-fader[popover] {
+          position: fixed;
+          inset: auto;
+          margin: 0;
+          padding: 8px;
+          width: 96px;
+          border: 1px solid color-mix(in srgb, var(--tempo-fg) 35%, var(--tempo-surface));
+          border-radius: 4px;
+          background: var(--tempo-surface, #f2f2f2);
+          color: var(--tempo-fg);
+          font: inherit;
+        }
+        .slider-wrap[data-style='dial'] .ticks,
+        .slider-wrap[data-style='vertical'] .ticks { display: none; }
+        .slider-wrap[data-style='vertical'] #rate-slider {
+          width: 32px;
+          height: 144px;
+          --range-thumb-opacity: 1;
+          border: 0;
+          padding: 0;
+          margin: auto;
+          writing-mode: vertical-lr;
+          direction: rtl;
+          background: linear-gradient(to top, var(--tempo-accent) var(--range-fill, 0%), var(--tempo\
+-track) var(--range-fill, 0%)) center / 2px calc(100% - 12px) no-repeat;
+        }
+        .slider-wrap[data-style='vertical'] #rate-slider::-webkit-slider-runnable-track { width: 2px\
+; height: 100%; }
+        .slider-wrap[data-style='vertical'] #rate-slider::-webkit-slider-thumb { margin-top: 0; marg\
+in-left: -5px; }
+        .slider-wrap[data-style='vertical'] #rate-slider::-moz-range-track { width: 2px; height: 100\
+%; }
+        .control-style-label, .key-shift-label { display: flex; align-items: center; gap: 12px; marg\
+in: 12px 0; flex-wrap: wrap; }
+        .key-shift-label input { width: 58px; }
+        .settings select { font: inherit; color: inherit; background: var(--tempo-surface); border: \
+1px solid var(--tempo-track); min-height: 32px; }
+
+        @media (forced-colors: active) {
+          .slider-wrap {
+            forced-color-adjust: none;
+            --tempo-accent: Highlight;
+            --tempo-track: GrayText;
+            --tempo-fg: CanvasText;
+          }
+        }
+
+        .settings {
+          display: flex;
+          flex-direction: column;
+          position: fixed;
+          inset: auto;
+          margin: 0;
+          z-index: 2147483647;
+          max-height: calc(100dvh - 80px);
+          overflow: auto;
+          padding: 12px;
+          border: 1px solid var(--tempo-track);
+          border-radius: 4px;
+          background: var(--tempo-surface, #f2f2f2);
+          color: var(--tempo-fg);
+          font-family: inherit;
+          font-size: 12px;
+          line-height: 1.5;
+        }
+
+        .settings > * {
+          flex-shrink: 0;
+        }
+
+        .settings header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 8px;
+        }
+
+        .settings-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .settings[data-choosing-style] .quick-settings,
+        .settings[data-choosing-style] #saved-filter,
+        .settings[data-choosing-style] .saved-count,
+        .settings[data-choosing-style] .saved-list,
+        .settings[data-choosing-style] .saved-more,
+        .settings[data-choosing-style] .open-editor,
+        .settings[data-choosing-style] .appearance-options,
+        .settings[data-choosing-style] .appearance-settings summary,
+        .settings[data-choosing-style] .settings-tools > details:not(.appearance-settings) {
+          display: none;
+        }
+        .settings[data-choosing-style] header {
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        .settings[data-choosing-style] .settings-tools {
+          border: 0;
+          margin: 0;
+        }
+        .settings[data-choosing-style] .close-settings {
+          min-height: 44px;
+        }
+
+        .quick-settings {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 4px 20px;
+          margin-bottom: 8px;
+        }
+
+        .advanced-audio {
+          margin: 0;
+        }
+
+        .settings summary {
+          cursor: pointer;
+          padding: 5px 0;
+        }
+
+        .crossfade-debug pre {
+          white-space: pre-wrap;
+          overflow-wrap: anywhere;
+          max-height: 180px;
+          overflow: auto;
+          font-size: 11px;
+          line-height: 1.5;
+        }
+        .settings button {
+          min-height: 28px;
+          padding: 3px 6px;
+          border: 0;
+          border-radius: 3px;
+          background: transparent;
+        }
+
+        .settings button:hover {
+          background: color-mix(in srgb, var(--tempo-fg) 10%, transparent);
+        }
+
+        .random-label {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          cursor: pointer;
+        }
+
+        .settings input[type='checkbox'] {
+          accent-color: var(--tempo-accent);
+          margin: 0;
+        }
+
+        .settings p {
+          margin: 6px 0 12px;
+        }
+        .output-label {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          margin-top: 12px;
+        }
+
+        .output-entry { display: flex; align-items: center; gap: 6px; }
+        #output-value { width: 84px; min-height: 32px; padding: 4px 8px; border: 1px solid var(--tem\
+po-track); border-radius: 2px; text-align: right; font-variant-numeric: tabular-nums; }
+
+        #output-level {
+          display: block;
+          width: 100%;
+          accent-color: var(--tempo-accent);
+        }
+
+        .settings input[type='search'] {
+          width: 100%;
+          padding: 6px;
+          border: 1px solid var(--tempo-track);
+          border-radius: 3px;
+          background: transparent;
+        }
+
+        .settings input::placeholder {
+          color: var(--tempo-fg);
+          opacity: 0.7;
+        }
+
+        .saved-row {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 132px;
+          gap: 4px 12px;
+          align-items: center;
+          padding: 4px 2px;
+          border-bottom: 1px solid color-mix(in srgb, var(--tempo-fg) 16%, transparent);
+          min-width: 0;
+        }
+
+        .saved-list {
+          flex: 1 1 auto;
+          min-height: 80px;
+          max-height: 680px;
+          overflow: auto;
+          overscroll-behavior: contain;
+          scrollbar-gutter: stable;
+          scrollbar-width: thin;
+          scrollbar-color: var(--tempo-track) transparent;
+          padding-right: 6px;
+        }
+
+        .saved-list:empty {
+          min-height: 0;
+        }
+
+        .saved-row:last-child {
+          border-bottom: 0;
+        }
+
+        .settings .saved-count {
+          margin: 6px 0;
+        }
+
+        .saved-setting {
+          display: grid;
+          grid-column: 2;
+          grid-template-columns: 28px 64px 28px;
+          gap: 6px;
+          align-items: center;
+        }
+
+        .saved-switch {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 32px;
+          cursor: pointer;
+        }
+
+        .saved-setting button {
+          min-height: 32px;
+        }
+
+        .saved-row a {
+          grid-column: 1;
+          grid-row: 1;
+          overflow: hidden;
+          color: inherit;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          text-underline-offset: 3px;
+        }
+
+        .saved-row input[type='number'] {
+          width: 46px;
+          height: 32px;
+          border: 0;
+        }
+
+        .saved-value {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid var(--tempo-track);
+          border-radius: 3px;
+          font-variant-numeric: tabular-nums;
+        }
+
+        .saved-remove svg {
+          display: block;
+          width: 12px;
+          height: 12px;
+          margin: auto;
+          fill: none;
+          stroke: currentColor;
+          stroke-width: 1.5;
+          stroke-linecap: round;
+        }
+
+        .settings-tools {
+          margin-top: 8px;
+          border-top: 1px solid color-mix(in srgb, var(--tempo-fg) 16%, transparent);
+          padding-top: 4px;
+        }
+
+        .appearance-options {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 4px 16px;
+          margin: 0 0 4px;
+          padding: 0;
+          border: 0;
+        }
+
+        .appearance-options label {
+          display: flex;
+          align-items: center;
+          min-height: 32px;
+          gap: 6px;
+          cursor: pointer;
+        }
+
+        .appearance-options input {
+          margin: 0;
+          accent-color: var(--tempo-accent);
+        }
+
+        .library-backup {
+          margin: 0;
+        }
+
+        .backup-actions {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          margin-block: 10px;
+        }
+
+        .backup-preview p {
+          margin-block: 8px;
+        }
+
+        .saved-more {
+          margin-top: 10px;
+        }
+
+        @media (max-width: 390px) {
+          .saved-row {
+            grid-template-columns: minmax(0, 1fr) 118px;
+            column-gap: 6px;
+          }
+
+          .saved-setting {
+            grid-template-columns: 24px 58px 28px;
+            gap: 4px;
+          }
+
+          .saved-row input[type='number'] {
+            width: 42px;
+          }
+        }
+
+        @media (pointer: coarse) {
+          .appearance-options label,
+          .saved-setting button,
+          .saved-switch,
+          .saved-row input[type='number'] {
+            min-height: 44px;
+          }
+        }
+
+        .settings-status:empty {
+          display: none;
+        }
+
+        input[type='number'] {
+          width: 46px;
+          min-width: 0;
+          height: 24px;
+          padding: 0;
+          border: 0;
+          border-radius: 2px;
+          background: transparent;
+          text-align: center;
+          font-variant-numeric: tabular-nums;
+          appearance: textfield;
+          -moz-appearance: textfield;
+          caret-color: var(--tempo-accent);
+        }
+
+        input[type='number']::-webkit-inner-spin-button,
+        input[type='number']::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+
+        input[type='number']:hover {
+          background: color-mix(in srgb, var(--tempo-fg) 8%, transparent);
+        }
+
+        .steppers {
+          display: grid;
+          grid-template-rows: repeat(2, 16px);
+        }
+
+        .step {
+          display: grid;
+          place-items: center;
+          width: 20px;
+          height: 16px;
+          padding: 0;
+          border: 0;
+          border-radius: 2px;
+          background: transparent;
+        }
+
+        .step:hover:not(:disabled) {
+          color: var(--tempo-accent);
+          background: color-mix(in srgb, var(--tempo-fg) 8%, transparent);
+        }
+
+        .step:disabled {
+          opacity: 0.35;
+          cursor: default;
+        }
+
+        .step svg {
+          width: 10px;
+          height: 8px;
+          fill: none;
+          stroke: currentColor;
+          stroke-width: 1.5;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+        }
+
+        @media (max-width: 960px) {
+          .controls { gap: 3px; }
+          :host {
+            flex-basis: var(--tempo-compact-width, 292px) !important;
+            min-width: var(--tempo-compact-width, 292px) !important;
+          }
+        }
+
+        input::selection {
+          background: var(--tempo-accent);
+          color: #fff;
+        }
+
+        ${tempoRangeStyle}${tempoFieldStyle}
+.quick-key .tempo-number{display:contents}
+.quick-key .tempo-number input{grid-column:2;grid-row:1;width:42px;height:32px;padding:0;border:0;ba\
+ckground:transparent;text-align:center;color:inherit;font:inherit;font-variant-numeric:tabular-nums}\
+
+.quick-key .tempo-number-arrows{grid-column:4;grid-row:1}
+.quick-key .tempo-number-arrows button{width:20px}
+.quick-key .key-unit{grid-column:3;grid-row:1}
+#tempo-settings input[type='range']{--range-thumb-opacity:1}
+.settings .tempo-choice-trigger{min-height:36px;padding:6px 10px;border:1px solid var(--tempo-track)\
+;border-radius:3px;background:var(--tempo-surface)}
+.control-style-label .tempo-choice{min-width:164px}
+.quick-key{white-space:nowrap}
+
+
+        .memory,
+        .settings-button {
+          display: grid;
+          place-items: center;
+          width: 24px;
+          height: 24px;
+          padding: 4px;
+          border: 0;
+          border-radius: 3px;
+          background: transparent;
+        }
+
+        .memory:hover,
+        .settings-button:hover {
+          background: color-mix(in srgb, var(--tempo-fg) 8%, transparent);
+        }
+
+        .memory svg,
+        .settings-button svg {
+          width: 14px;
+          height: 14px;
+          fill: none;
+          stroke: currentColor;
+          stroke-width: 1.5;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+        }
+
+        .memory[aria-pressed='true'] {
+          color: var(--tempo-accent);
+        }
+
+        .memory[data-state='saved'] .bookmark {
+          fill: currentColor;
+        }
+
+        .memory .update-dot,
+        .memory .warning,
+        .memory .check {
+          display: none;
+        }
+
+        .memory[data-state='modified'] .update-dot {
+          display: block;
+          fill: currentColor;
+          stroke: none;
+        }
+
+        .memory[data-state='error'] .warning {
+          display: block;
+        }
+
+        .memory[data-state='error'] .bookmark,
+        .memory[data-state='error'] .update-dot {
+          display: none;
+        }
+
+        .memory:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+
+        .memory[data-feedback='saved'] .check {
+          display: block;
+        }
+
+        .memory[data-feedback='saved'] .bookmark,
+        .memory[data-feedback='saved'] .update-dot {
+          display: none;
+        }
+
+        .error {
+          font-weight: 700;
+        }
+
+        .sr-only {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip-path: inset(50%);
+          white-space: nowrap;
+          border: 0;
+        }
+
+        [hidden] {
+          display: none !important;
+        }
+
+.pitch-bounds{display:grid;gap:12px;margin:12px 0}
+.pitch-bounds label,.increment-label{display:grid;grid-template-columns:minmax(0,1fr) 90px 16px;gap:\
+8px;align-items:center}
+.increment-label{margin:12px 0}
+.pitch-bounds .tempo-number,.increment-label .tempo-number{border:1px solid var(--tempo-track);borde\
+r-radius:3px;min-height:36px}
+.pitch-bounds .tempo-number input,.increment-label .tempo-number input{width:64px;text-align:center}\
+
+`;function dialTicks(){return Array.from({length:17},(_,index)=>{const angle=(index/16*270-135)*Math.PI/
+180;const inner=index%4===0?12:14;const point=radius=>`${(16+Math.sin(angle)*radius).toFixed(2)} ${(16-
+Math.cos(angle)*radius).toFixed(2)}`;return`M${point(inner)}L${point(16)}`}).join("")}function faderTicks(){
+return Array.from({length:16},(_,index)=>{const y=(6+index/15*132).toFixed(2);return`M25 ${y}h${index%
+4===0||index===15?6:3}`}).join("")}function controlsTemplate({MIN,MAX,SLIDER_MAX,SLIDER_STEP,SLIDER_STEPS,
+sliderTicks}){return`
+      <style>${controlsStyle}</style>
+      <div class="controls" role="group" aria-label="Playback tempo">
+        <div class="field"
+          ><input
+            id="rate-number"
+            type="number"
+            min="${MIN}"
+            max="4"
+            step="0.001"
+            aria-label="Exact playback speed"
+            aria-describedby="number-help"
+          /><span class="unit" aria-hidden="true">\xD7</span
+          ><span class="error" hidden aria-label="Playback error">!</span></div
+        >
+        <div class="steppers">
+          <button
+            class="step step-up"
+            type="button"
+            aria-label="Increase speed by 0.025\xD7; Shift for 0.01\xD7"
+            title="Increase tempo"
+          >
+            <svg viewBox="0 0 10 8" aria-hidden="true"><path d="m2 5 3-3 3 3" /></svg>
+          </button>
+          <button
+            class="step step-down"
+            type="button"
+            aria-label="Decrease speed by 0.025\xD7; Shift for 0.01\xD7"
+            title="Decrease tempo"
+          >
+            <svg viewBox="0 0 10 8" aria-hidden="true"><path d="m2 3 3 3 3-3" /></svg>
+          </button>
+        </div>
+        <div class="slider-wrap"
+          ><button id="rate-dial" type="button" role="slider" aria-label="Playback speed dial" aria-\
+valuemin="${MIN}" aria-valuemax="${MAX}" aria-valuenow="1" aria-describedby="dial-help" title="Drag \
+up or down \xB7 Shift for fine adjustment \xB7 Double-click to reset" hidden><svg viewBox="0 0 32 32" aria\
+-hidden="true"><path class="dial-track" d="M6.1 25.9a14 14 0 1 1 19.8 0"/><path class="dial-fill" pa\
+thLength="100" d="M6.1 25.9a14 14 0 1 1 19.8 0"/><path class="dial-ticks" d="${dialTicks()}"/><circl\
+e cx="16" cy="16" r="9"/><path class="dial-zero" d="M16 0v4"/></svg><span aria-hidden="true"></span>\
+</button>
+          <button id="vertical-toggle" type="button" popovertarget="tempo-fader" aria-label="Open ve\
+rtical tempo slider" title="Tempo slider" hidden><svg viewBox="0 0 20 20" aria-hidden="true"><path d\
+="M10 2v5m0 6v5M6 7h8v6H6Z" /></svg></button>
+          <div id="tempo-fader"><output class="fader-value" aria-hidden="true">1\xD7</output><div class\
+="fader-rail"><input
+            id="rate-slider"
+            type="range"
+            min="${MIN}"
+            max="${SLIDER_MAX}"
+            step="${SLIDER_STEP}"
+            aria-label="Playback speed"
+            aria-describedby="slider-help" />
+          <svg class="ticks" viewBox="0 0 ${SLIDER_STEPS} 5" preserveAspectRatio="none" aria-hidden=\
+"true">
+            <path d="${sliderTicks()}" />
+            <path class="normal-tick" d="M${Math.round((1-MIN)/SLIDER_STEP)} 0v5" />
+          </svg>
+          <span class="fader-normal" aria-hidden="true">1\xD7</span>
+          <svg class="fader-ticks" viewBox="0 0 32 144" aria-hidden="true"><path d="${faderTicks()}"\
+/></svg>
+          <span class="fader-level" style="--position:0.533333" aria-hidden="true">2\xD7</span>
+          <span class="fader-level" style="--position:0.266667" aria-hidden="true">3\xD7</span>
+          <span class="fader-limit fader-max" aria-hidden="true">4\xD7</span>
+          <span class="fader-limit fader-min" aria-hidden="true">.25\xD7</span>
+          </div>
+          <button class="fader-reset" type="button">Reset</button>
+          </div>
+        </div>
+        <label class="quick-key">Pitch <input id="quick-key-shift" type="number" min="-12" max="12" \
+step="0.5" value="0" aria-label="Key shift in semitones"><span class="key-unit" aria-hidden="true">s\
+t</span></label>
+        <button
+          class="memory"
+          type="button"
+          aria-label="Remember tempo for this track"
+          aria-pressed="false"
+          aria-haspopup="dialog"
+          aria-controls="tempo-settings"
+          aria-expanded="false"
+          ><svg viewBox="0 0 16 16" aria-hidden="true">
+            <path class="bookmark" d="M4 2h8v12l-4-3-4 3Z" />
+            <circle class="update-dot" cx="13" cy="3" r="2" />
+            <path class="check" d="m3 8 3 3 7-7" />
+            <path class="warning" d="M8 2 15 14H1Z M8 6v3 M8 11.5v.1" /></svg
+        ></button>
+        <button
+          class="settings-button"
+          type="button"
+          aria-label="Tempo settings"
+          title="Settings"
+          aria-haspopup="dialog"
+          aria-controls="tempo-settings"
+          aria-expanded="false"
+        >
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path
+              d="m6 1-.4 2-1.2.7-1.9-.6-2 3.4L2 8l-1.5 1.5 2 3.4 1.9-.6 1.2.7.4 2h4l.4-2 1.2-.7 1.9.\
+6 2-3.4L14 8l1.5-1.5-2-3.4-1.9.6-1.2-.7L10 1Z"
+            />
+            <circle cx="8" cy="8" r="2.3" />
+          </svg>
+        </button>
+        <span class="sr-only" id="number-help">${MIN} to ${MAX}\xD7. Double-click to reset.</span>
+        <span class="sr-only" id="slider-help">Arrow keys use your default tempo increment. Double-c\
+lick to reset.</span>
+        <span class="sr-only" id="dial-help">Drag up to speed up, down to slow down. Hold Shift for \
+fine adjustment. Double-click to reset to 1\xD7. Arrow keys use your default tempo increment.</span>
+        <span
+          class="sr-only status"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        ></span>
+      </div>
+      <section
+        id="tempo-settings"
+        class="settings"
+        role="dialog"
+        popover="manual"
+        aria-labelledby="settings-title"
+        hidden
+      >
+        <header
+          ><strong id="settings-title">Tempo settings</strong
+          ><div class="settings-actions"><button class="open-editor" type="button">Tempo editor</but\
+ton><button class="close-settings" type="button" aria-label="Close tempo settings"
+            >Close</button
+          ></div></header
+        >
+        <p class="control-setup-intro" hidden>Choose a tempo control and whether to show semitone ad\
+justment. You can change both later in Appearance.</p>
+        <div class="quick-settings">
+        <label class="random-label"
+          ><input id="apply-saved" type="checkbox" checked />Apply saved tempos</label
+        >
+        <label class="random-label"><input id="copy-tempo-links" type="checkbox" />Include tempo in \
+copied links</label>
+        </div>
+        <input
+          id="saved-filter"
+          type="search"
+          placeholder="Find a saved track\u2026"
+          aria-label="Find a saved track"
+        />
+        <p class="saved-count"></p>
+        <div class="saved-list" role="region" aria-label="Saved tracks"></div>
+        <button class="saved-more" type="button" hidden>Show 100 more</button>
+        <div class="settings-tools">
+        <details class="appearance-settings">
+          <summary>Appearance</summary>
+          <label class="random-label"><input id="show-key" type="checkbox" checked />Show semitone a\
+djustment in player</label>
+          <label class="control-style-label">Tempo control <select id="control-style"><option value=\
+"slider">Slider</option><option value="dial">Dial</option><option value="vertical">Vertical slider</\
+option></select></label>
+          <label class="increment-label">Default tempo increment <input id="tempo-increment" type="n\
+umber" min="0.001" max="1" step="0.001" value="0.025" aria-label="Default tempo increment"> \xD7</label\
+>
+          <fieldset class="appearance-options" aria-label="SoundCloud theme">
+            <label><input type="radio" name="appearance" value="native" checked>SoundCloud</label>
+            <label><input type="radio" name="appearance" value="light">Light</label>
+            <label><input type="radio" name="appearance" value="charcoal">Charcoal</label>
+            <label><input type="radio" name="appearance" value="oled">OLED</label>
+          </fieldset>
+          <label class="random-label"><input id="star-motion" type="checkbox" />Star motion</label>
+          <label class="output-label" for="star-speed">Star speed <output id="star-speed-value">1.5\xD7\
+</output></label>
+          <input id="star-speed" type="range" min="0.5" max="4" step="0.25" value="1.5" aria-label="\
+Star motion speed" />
+        </details>
+        <details class="advanced-audio">
+          <summary>Advanced audio</summary>
+          <label class="random-label"><input id="crossfade" type="checkbox" />Crossfade tracks</labe\
+l>
+          <label class="output-label" for="crossfade-seconds">Overlap <output id="crossfade-value">5\
+ seconds</output></label>
+          <input id="crossfade-seconds" type="range" min="1" max="10" step="1" value="5" aria-label=\
+"Crossfade duration in seconds" />
+          <p id="crossfade-status" role="status"></p>
+          <details class="crossfade-debug">
+            <summary>Crossfade diagnostics</summary>
+            <pre id="crossfade-debug-output" tabindex="0" aria-label="Crossfade diagnostics"></pre>
+            <button id="crossfade-debug-refresh" type="button">Refresh</button>
+            <button id="crossfade-debug-copy" type="button">Copy diagnostics</button>
+            <p id="crossfade-debug-feedback" role="status"></p>
+          </details>
+          <details class="pitch-customization"><summary>Semitone controls</summary><div class="pitch\
+-bounds"><label>Minimum <input id="pitch-min" type="number" min="-12" max="12" step="0.5" value="-12\
+"><span>st</span></label><label>Maximum <input id="pitch-max" type="number" min="-12" max="12" step=\
+"0.5" value="12"><span>st</span></label><label>Default increment <input id="pitch-step" type="number\
+" min="0.001" max="12" step="0.1" value="0.5"><span>st</span></label></div></details>
+          <label class="key-shift-label">Semitone shift <input id="key-shift" type="number" min="-12\
+" max="12" step="0.5" value="0" /> st</label>
+          <label class="random-label"
+            ><input id="preserve-key" type="checkbox" />Preserve key by default</label
+          >
+          <p id="pitch-mode-help"
+            >Timelines can use their own pitch mode.</p
+          >
+          <p id="wasm-status" role="status"></p>
+          <label class="random-label"><input id="use-wasm" type="checkbox" />Use WASM for Preserve k\
+ey</label>
+          <label class="output-label" for="output-value">Output level <span class="output-entry"><in\
+put id="output-value" type="number" min="-24" step="any" value="-6" aria-describedby="output-help" /\
+> dB</span></label>
+          <input id="output-level" type="range" min="-24" max="12" step="0.1" value="-6" aria-label=\
+"Output level in dB" aria-describedby="output-help" />
+          <p id="output-help">Above 0 dB can clip and become very loud. Start low.</p>
+          <p id="output-status" role="status"></p>
+        </details>
+        <details class="shortcuts">
+          <summary>Shortcuts</summary>
+          <p>Double-click speed or slider: reset to 1\xD7.<br>Shift-click arrows: 0.01\xD7 steps.<br>Alt+S\
+hift+Left/Right: 0.05\xD7 steps.<br>Alt+Shift+Down: reset.</p>
+        </details>
+        <details class="library-backup">
+          <summary>Backup</summary>
+          <div class="backup-actions">
+            <button class="backup-export" type="button">Export backup</button>
+            <button class="backup-import" type="button">Import backup</button>
+          </div>
+          <input class="backup-file" type="file" accept=".json,application/json" aria-label="Choose \
+a Track Control backup" hidden />
+          <div class="backup-preview" hidden>
+            <p class="backup-summary"></p>
+            <p class="backup-preferences"></p>
+            <div class="backup-actions">
+              <button class="backup-confirm" type="button">Confirm import</button>
+              <button class="backup-cancel" type="button">Cancel</button>
+            </div>
+          </div>
+        </details>
+        </div>
+        <p class="settings-status" role="status" aria-live="polite"></p>
+        <button class="saved-undo" type="button" hidden>Undo removal</button>
+      </section>
+    `}var audio_exports={};__export(audio_exports,{createBufferedTransport:()=>createBufferedTransport,createMediaFacade:()=>createMediaFacade,
+createNaturalOutput:()=>createNaturalOutput,createPcmSource:()=>createPcmSource,createPcmWindow:()=>createPcmWindow,
+createPlaybackGate:()=>createPlaybackGate,createPlaybackOwner:()=>createPlaybackOwner,createPreserveOutput:()=>createBundledPreserveOutput,
+createRateWindow:()=>createRateWindow,createSoundCloudHostClock:()=>createSoundCloudHostClock,createSourceBinding:()=>createSourceBinding,
+loadAudioDependencies:()=>loadAudioDependencies});var QUANTUM=128;var MIN_RATE=.025;var MAX_SOURCE_SECONDS=24*60*60;var MAX_OUTPUT_SECONDS=MAX_SOURCE_SECONDS/
+MIN_RATE;function sampleRate2(value){if(!Number.isInteger(value)||value<8e3||value>384e3)throw new RangeError(
+"Unsupported sample rate");return value}function intervalAt(intervals,value,key){let left=0;let right=intervals.
+length-1;while(left<right){const middle=Math.ceil((left+right)/2);if(intervals[middle][key]<=value)left=
+middle;else right=middle-1}return intervals[left]}function createRateWindow({outputStartFrame,sourceStartFrame,
+sourceSampleRate,outputSampleRate,frameCount,rateAt}){const sourceRate=sampleRate2(sourceSampleRate);
+const outputRate=sampleRate2(outputSampleRate);const sourceLimit=sourceRate*MAX_SOURCE_SECONDS;if(!Number.
+isSafeInteger(outputStartFrame)||outputStartFrame<0||outputStartFrame%QUANTUM)throw new RangeError("\
+Start must be aligned to a render quantum");if(!Number.isFinite(sourceStartFrame)||sourceStartFrame<
+0)throw new RangeError("Invalid source position");if(sourceStartFrame>sourceLimit)throw new RangeError(
+"Source position exceeds the 24-hour clock limit");if(!Number.isInteger(frameCount)||frameCount<=0||
+frameCount>outputRate*2||frameCount%QUANTUM)throw new RangeError("Window must contain at most two se\
+conds of whole render quanta");if(typeof rateAt!=="function")throw new TypeError("A rate function is\
+ required");const outputEndFrame=outputStartFrame+frameCount;if(!Number.isSafeInteger(outputEndFrame)||
+outputEndFrame>outputRate*MAX_OUTPUT_SECONDS)throw new RangeError("Output position exceeds the 40-da\
+y clock limit");const intervals=[];let sourceFrame=sourceStartFrame;for(let outputFrame=outputStartFrame;outputFrame<
+outputEndFrame;outputFrame+=QUANTUM){const requestedRate=rateAt(sourceFrame/sourceRate);if(!Number.isFinite(
+requestedRate)||requestedRate<MIN_RATE||requestedRate>4)throw new RangeError("Playback rate must be \
+between 0.025 and 4");const rate=Math.fround(requestedRate);const sourceFramesPerOutputFrame=rate*sourceRate/
+outputRate;const nextSourceFrame=sourceFrame+QUANTUM*sourceFramesPerOutputFrame;if(!Number.isFinite(
+nextSourceFrame)||nextSourceFrame<=sourceFrame)throw new RangeError("Source interval must advance");
+if(nextSourceFrame>sourceLimit)throw new RangeError("Source position exceeds the 24-hour clock limit");
+intervals.push(Object.freeze({outputFrame,sourceFrame,rate,sourceFramesPerOutputFrame}));sourceFrame=
+nextSourceFrame}const sourceEndFrame=sourceFrame;const sourceAt=outputFrame=>{if(!Number.isFinite(outputFrame)||
+outputFrame<outputStartFrame||outputFrame>outputEndFrame)throw new RangeError("Output position is ou\
+tside the scheduled window");if(outputFrame===outputEndFrame)return sourceEndFrame;const interval=intervalAt(
+intervals,outputFrame,"outputFrame");return interval.sourceFrame+(outputFrame-interval.outputFrame)*
+interval.sourceFramesPerOutputFrame};const outputAt=frame=>{if(!Number.isFinite(frame)||frame<sourceStartFrame||
+frame>sourceEndFrame)throw new RangeError("Source position is outside the scheduled window");if(frame===
+sourceEndFrame)return outputEndFrame;const interval=intervalAt(intervals,frame,"sourceFrame");return interval.
+outputFrame+(frame-interval.sourceFrame)/interval.sourceFramesPerOutputFrame};return Object.freeze({
+sourceSampleRate:sourceRate,outputSampleRate:outputRate,outputStartFrame,outputEndFrame,sourceStartFrame,
+sourceEndFrame,intervals:Object.freeze(intervals),sourceAt,outputAt})}var QUANTUM2=128;var PADDING=128;var DEFAULT_LIMITS=Object.freeze({maxBufferBytes:32*1024*1024,maxNodes:16,
+maxAheadSeconds:4});function validSampleRate(value){if(!Number.isInteger(value)||value<8e3||value>384e3)
+throw new RangeError("Unsupported sample rate");return value}function readLimits(limits){if(!limits||
+typeof limits!=="object"||Array.isArray(limits))throw new TypeError("Limits must be an object");if(Object.
+keys(limits).some(key=>!Object.hasOwn(DEFAULT_LIMITS,key)))throw new TypeError("Unknown output limit");
+const result={...DEFAULT_LIMITS,...limits};if(!Number.isSafeInteger(result.maxBufferBytes)||result.maxBufferBytes<
+8||!Number.isSafeInteger(result.maxNodes)||result.maxNodes<1||!Number.isFinite(result.maxAheadSeconds)||
+result.maxAheadSeconds<=0)throw new RangeError("Output limits must be finite and positive");return Object.
+freeze(result)}function readClock(clock,sampleRate3,outputRate){if(!clock||typeof clock!=="object"||
+!Array.isArray(clock.intervals)||typeof clock.sourceAt!=="function"||typeof clock.outputAt!=="functi\
+on")throw new TypeError("A verified rate clock is required");if(clock.sourceSampleRate!==sampleRate3||
+clock.outputSampleRate!==outputRate)throw new RangeError("Clock and audio sample rates must match");
+const{outputStartFrame,outputEndFrame,sourceStartFrame,sourceEndFrame}=clock;const frameCount=outputEndFrame-
+outputStartFrame;if(!Number.isSafeInteger(outputStartFrame)||outputStartFrame<0||outputStartFrame%QUANTUM2||
+!Number.isSafeInteger(outputEndFrame)||frameCount<=0||frameCount%QUANTUM2||frameCount>outputRate*2||
+outputEndFrame>outputRate*86400/.025||!Number.isFinite(sourceStartFrame)||sourceStartFrame<0||!Number.
+isFinite(sourceEndFrame)||sourceEndFrame<=sourceStartFrame||sourceEndFrame>sampleRate3*86400||clock.
+intervals.length!==frameCount/QUANTUM2)throw new RangeError("Invalid rate-clock window");let sourceFrame=sourceStartFrame;
+const intervals=clock.intervals.map((interval,index)=>{const outputFrame=outputStartFrame+index*QUANTUM2;
+if(!interval||!Number.isFinite(interval.rate)||interval.rate<.025||interval.rate>4||Math.fround(interval.
+rate)!==interval.rate||interval.outputFrame!==outputFrame||interval.sourceFrame!==sourceFrame)throw new RangeError(
+"Invalid rate-clock interval");const slope=interval.rate*sampleRate3/outputRate;if(interval.sourceFramesPerOutputFrame!==
+slope)throw new RangeError("Rate-clock slope does not match its sample rates");const result={outputFrame,
+sourceFrame,rate:interval.rate,slope};const next=sourceFrame+QUANTUM2*slope;if(!(next>sourceFrame))throw new RangeError(
+"Rate-clock source position must advance");sourceFrame=next;return result});if(sourceFrame!==sourceEndFrame||
+clock.sourceAt(outputStartFrame)!==sourceStartFrame||clock.sourceAt(outputEndFrame)!==sourceEndFrame||
+clock.outputAt(sourceStartFrame)!==outputStartFrame||clock.outputAt(sourceEndFrame)!==outputEndFrame)
+throw new RangeError("Rate-clock endpoints do not match its intervals");return{outputStartFrame,outputEndFrame,
+sourceStartFrame,sourceEndFrame,intervals}}function readPcm({clock,sampleRate:sampleRate3,pcmStartFrame,
+channels,totalSourceFrames},outputRate){validSampleRate(sampleRate3);const plan=readClock(clock,sampleRate3,
+outputRate);if(!Number.isSafeInteger(pcmStartFrame)||pcmStartFrame<0||!Array.isArray(channels)||channels.
+length!==2||channels.some(channel=>!(channel instanceof Float32Array))||!channels[0].length||channels[0].
+length!==channels[1].length)throw new TypeError("PCM must contain two equal nonempty Float32 channel\
+s and an absolute frame origin");const pcmEndFrame=pcmStartFrame+channels[0].length;if(!Number.isSafeInteger(
+pcmEndFrame))throw new RangeError("PCM range exceeds frame precision");if(totalSourceFrames!==void 0){
+if(!Number.isSafeInteger(totalSourceFrames)||totalSourceFrames<=0||pcmEndFrame>totalSourceFrames||plan.
+sourceStartFrame>=totalSourceFrames)throw new RangeError("PCM or source position is outside the decl\
+ared file");if(plan.sourceEndFrame>totalSourceFrames){const interval=plan.intervals.findLast(value=>value.
+sourceFrame<=totalSourceFrames);const end=interval.outputFrame+(totalSourceFrames-interval.sourceFrame)/
+interval.slope;if(clock.outputAt(totalSourceFrames)!==end||!Number.isFinite(end)||end<=plan.outputStartFrame||
+end>plan.outputEndFrame)throw new RangeError("Invalid EOF inverse mapping");plan.sourceEndFrame=totalSourceFrames;
+plan.outputEndFrame=end}}const bufferStartFrame=Math.max(0,Math.floor(plan.sourceStartFrame)-PADDING);
+let bufferEndFrame=Math.ceil(plan.sourceEndFrame)+PADDING;if(totalSourceFrames!==void 0){bufferEndFrame=
+Math.min(totalSourceFrames,bufferEndFrame)}if(pcmStartFrame>bufferStartFrame||pcmEndFrame<bufferEndFrame)
+throw new RangeError("PCM does not cover the source window and 128-frame interpolation padding");return{
+...plan,sampleRate:sampleRate3,bufferStartFrame,bufferEndFrame,copyOffset:bufferStartFrame-pcmStartFrame,
+bufferBytes:(bufferEndFrame-bufferStartFrame)*8}}function createNaturalOutput({context,destination,limits={}}){
+if(!context||typeof context.createBuffer!=="function"||typeof context.createBufferSource!=="function"||
+typeof context.createGain!=="function"||typeof context.addEventListener!=="function"||typeof context.
+removeEventListener!=="function"||!destination||destination.context!==context)throw new TypeError("A\
+ context and destination from the same audio graph are required");const outputRate=validSampleRate(context.
+sampleRate);const budget=readLimits(limits);const entries=new Set;let bufferBytes=0,generation=0,disposed=false,
+lastOutputEndFrame=null,cleanupErrors=0;const now=()=>{if(!Number.isFinite(context.currentTime)||context.
+currentTime<0)throw new RangeError("Invalid audio context time");return context.currentTime};const available=()=>{
+if(disposed)throw new Error("Natural output is disposed");if(context.state==="closed")throw new Error(
+"Audio context is closed");if(context.sampleRate!==outputRate)throw new Error("Audio context sample \
+rate changed")};const stats=()=>{const time=now();let scheduledAheadSeconds=0;for(const entry of entries)
+scheduledAheadSeconds=Math.max(scheduledAheadSeconds,entry.outputEndFrame/outputRate-time);return Object.
+freeze({generation,disposed,nodes:entries.size*2,sourceNodes:entries.size,gainNodes:entries.size,bufferBytes,
+lastOutputEndFrame,cleanupErrors,scheduledAheadSeconds})};function release(entry,stop){if(!entries.delete(
+entry))return[];clearTimeout(entry.cleanupTimer);bufferBytes-=entry.bufferBytes;const errors=[];const attempt=action=>{
+try{action()}catch(error2){cleanupErrors++;errors.push(error2)}};const node=entry.node;attempt(()=>node.
+removeEventListener("ended",entry.onEnded));if(stop&&entry.started)attempt(()=>node.stop());attempt(
+()=>node.disconnect());if(entry.gain){attempt(()=>entry.gain.gain.cancelScheduledValues(0));attempt(
+()=>{entry.gain.gain.value=0});attempt(()=>entry.gain.disconnect())}attempt(()=>{node.buffer=null});
+entry.node=null;entry.gain=null;entry.onEnded=null;return errors}function own3(node,plan){const entry={
+node,gain:null,bufferBytes:plan.bufferBytes,outputStartFrame:plan.outputStartFrame,outputEndFrame:plan.
+outputEndFrame,generation,started:false,cleanupTimer:null};entry.onEnded=()=>{if(entry.generation!==
+generation||!entries.has(entry))return;const remaining=entry.outputEndFrame/outputRate-now();if(context.
+state!=="closed"&&remaining>0){clearTimeout(entry.cleanupTimer);entry.cleanupTimer=setTimeout(entry.
+onEnded,Math.max(1,remaining*1e3));return}release(entry,false)};entries.add(entry);bufferBytes+=entry.
+bufferBytes;return entry}function clear(){generation++;lastOutputEndFrame=null;const errors=[...entries].
+flatMap(entry=>release(entry,true));if(errors.length)throw new AggregateError(errors,"Natural output\
+ cleanup failed");return stats()}function reset(){return disposed?stats():clear()}function truncate(outputFrame){
+available();if(!Number.isSafeInteger(outputFrame)||outputFrame<0||outputFrame%QUANTUM2)throw new RangeError(
+"Truncation must align to a render quantum");const cutTime=outputFrame/outputRate;if(cutTime<now())throw new RangeError(
+"Truncation cannot begin in the past");if(![...entries].some(entry=>entry.outputStartFrame<=outputFrame&&
+outputFrame<=entry.outputEndFrame))throw new RangeError("Truncation must be inside a scheduled windo\
+w");const epoch=generation;try{for(const entry of[...entries]){if(entry.outputStartFrame>=outputFrame){
+const errors=release(entry,true);if(errors.length)throw new AggregateError(errors,"Future output cle\
+anup failed")}else if(entry.outputEndFrame>outputFrame){const gateTime=Math.max(0,(outputFrame-.5)/outputRate);
+entry.node.stop(cutTime);entry.node.playbackRate.cancelScheduledValues(gateTime);entry.gain.gain.cancelScheduledValues(
+gateTime);entry.gain.gain.setValueAtTime(0,gateTime);entry.outputEndFrame=outputFrame}}if(epoch!==generation||
+disposed||cutTime<now())throw new Error("Truncation became stale");lastOutputEndFrame=outputFrame;return stats()}catch(error2){
+let cleanup=[];try{clear()}catch(failure2){cleanup=failure2 instanceof AggregateError?failure2.errors:
+[failure2]}throw new AggregateError([error2,...cleanup],"Truncation failed and output was reset",{cause:error2})}}
+function dispose(){if(disposed)return stats();disposed=true;context.removeEventListener("statechange",
+stateChanged);return clear()}function stateChanged(){if(context.state==="closed"){try{dispose()}catch{}}}
+function timing(plan){available();const time=now();if(plan.prerollStartTime<time)throw new RangeError(
+"Output window preroll starts in the past");if(plan.outputEndFrame/outputRate-time>budget.maxAheadSeconds)
+throw new RangeError("Output window exceeds the forward scheduling limit");if(lastOutputEndFrame!==null&&
+plan.outputStartFrame<lastOutputEndFrame)throw new RangeError("Output windows must be ordered and no\
+n-overlapping");if(entries.size*2+2>budget.maxNodes||bufferBytes+plan.bufferBytes>budget.maxBufferBytes)
+throw new RangeError("Output resource budget exceeded")}function schedule(input){available();const plan=readPcm(
+input,outputRate);const integerSourceStart=Math.floor(plan.sourceStartFrame);plan.prerollStartTime=plan.
+outputStartFrame/outputRate-(plan.sourceStartFrame-integerSourceStart)/(plan.intervals[0].rate*plan.
+sampleRate);timing(plan);const epoch=generation;const buffer=context.createBuffer(2,plan.bufferEndFrame-
+plan.bufferStartFrame,plan.sampleRate);for(let channel=0;channel<2;channel++){buffer.copyToChannel(input.
+channels[channel].subarray(plan.copyOffset,plan.copyOffset+buffer.length),channel);if(!buffer.getChannelData(
+channel).every(Number.isFinite))throw new RangeError("Copied PCM contains nonfinite samples")}timing(
+plan);if(epoch!==generation)throw new Error("Output generation changed during PCM copy");let entry;try{
+const node=context.createBufferSource();entry=own3(node,plan);const gain=context.createGain();entry.
+gain=gain;node.buffer=buffer;node.playbackRate.value=plan.intervals[0].rate;for(const interval of plan.
+intervals){if(interval.outputFrame>=plan.outputEndFrame)break;node.playbackRate.setValueAtTime(interval.
+rate,Math.max(0,(interval.outputFrame-.5)/outputRate))}gain.gain.automationRate="k-rate";gain.gain.value=
+0;gain.gain.setValueAtTime(1,Math.max(0,(plan.outputStartFrame-.5)/outputRate));node.addEventListener(
+"ended",entry.onEnded);node.connect(gain);gain.connect(destination);available();if(epoch!==generation||
+plan.prerollStartTime<now())throw new Error("Output window became stale during scheduling");node.start(
+plan.prerollStartTime,(integerSourceStart-plan.bufferStartFrame)/plan.sampleRate);entry.started=true;
+node.stop(plan.outputEndFrame/outputRate);if(epoch!==generation||disposed)throw new Error("Output ge\
+neration changed during scheduling");lastOutputEndFrame=plan.outputEndFrame;return Object.freeze({generation,
+outputStartFrame:plan.outputStartFrame,outputEndFrame:plan.outputEndFrame,sourceStartFrame:plan.sourceStartFrame,
+sourceEndFrame:plan.sourceEndFrame,bufferStartFrame:plan.bufferStartFrame,bufferEndFrame:plan.bufferEndFrame,
+prerollStartTime:plan.prerollStartTime})}catch(error2){const cleanup=entry?release(entry,true):[];if(cleanup.
+length)throw new AggregateError([error2,...cleanup],"Scheduling and cleanup failed",{cause:error2});
+throw error2}}available();now();context.addEventListener("statechange",stateChanged);return Object.freeze(
+{schedule,truncate,reset,dispose,stats})}function error(message,name="Error"){return Object.assign(new Error(message),{name})}function aborted(){
+return error("PCM window operation cancelled.","AbortError")}function positiveFrame(value){return Number.
+isSafeInteger(value)&&value>=0}var PcmWindow=class{constructor({source:source2,maxBytes=8*1024*1024,
+readAheadSeconds=2}){if(!source2||typeof source2.read!=="function"||typeof source2.dispose!=="functi\
+on")throw new TypeError("A bounded PCM source is required.");if(!Number.isSafeInteger(maxBytes)||maxBytes<
+16||!Number.isFinite(readAheadSeconds)||readAheadSeconds<=0||readAheadSeconds>30)throw new RangeError(
+"Invalid PCM window limits.");this.source=source2;this.maxBytes=maxBytes;this.readAheadSeconds=readAheadSeconds;
+this.blocks=[];this.cacheBytes=0;this.leaseBytes=0;this.reservedBytes=0;this.peakOwnedBytes=0;this.peakBudgetedBytes=
+0;this.sourceReads=0;this.cacheHits=0;this.generation=0;this.disposed=false;this.job=null;this.lease=
+null;this.closing=null}check(job){if(this.disposed||job?.generation!==void 0&&job.generation!==this.
+generation)throw aborted();if(job?.controller.signal.aborted)throw job.controller.signal.reason||aborted()}account(){
+const owned=this.cacheBytes+this.leaseBytes;const budgeted=owned+this.reservedBytes;if(budgeted>this.
+maxBytes)throw error("PCM window byte budget exceeded.","QuotaExceededError");this.peakOwnedBytes=Math.
+max(this.peakOwnedBytes,owned);this.peakBudgetedBytes=Math.max(this.peakBudgetedBytes,budgeted)}stats(){
+return Object.freeze({cacheBytes:this.cacheBytes,leaseBytes:this.leaseBytes,reservedBytes:this.reservedBytes,
+ownedBytes:this.cacheBytes+this.leaseBytes,peakOwnedBytes:this.peakOwnedBytes,peakBudgetedBytes:this.
+peakBudgetedBytes,blocks:this.blocks.length,sourceReads:this.sourceReads,cacheHits:this.cacheHits,activeJobs:this.
+job?1:0,activeLeases:this.lease?1:0,generation:this.generation,disposed:this.disposed,...this.sampleRate?
+{sampleRate:this.sampleRate}:{},...this.totalSourceFrames===void 0?{}:{totalSourceFrames:this.totalSourceFrames}})}metadata(){
+return Object.freeze({sampleRate:this.sampleRate,channels:2,...this.durationHint===void 0?{}:{durationHint:this.
+durationHint},...this.totalSourceFrames===void 0?{}:{totalSourceFrames:this.totalSourceFrames}})}run(signal,work){
+this.check();if(signal?.aborted)return Promise.reject(signal.reason||aborted());if(this.job||this.lease||
+this.closing)return Promise.reject(error("A PCM window job or lease is already active.","InvalidStat\
+eError"));const job={controller:new AbortController,generation:this.generation};const cancel=()=>job.
+controller.abort(signal.reason||aborted());signal?.addEventListener("abort",cancel,{once:true});this.
+job=job;job.done=Promise.resolve().then(()=>work(job)).finally(()=>{signal?.removeEventListener("abo\
+rt",cancel);this.reservedBytes=0;if(this.job===job)this.job=null});return job.done}async info({signal}={}){
+this.check();if(signal?.aborted)throw signal.reason||aborted();if(this.initialized)return this.metadata();
+return this.run(signal,async job=>{if(typeof this.source.info==="function"){const info=await this.source.
+info({signal:job.controller.signal});this.check(job);if(Number.isFinite(info?.duration)&&info.duration>=
+0)this.durationHint=info.duration}await this.fill(job,0,1);this.check(job);if(!this.sampleRate||!this.
+covers(0,1))throw error("The source has no initial PCM sample.","DataError");this.initialized=true;return this.
+metadata()})}frameAt(timestamp){const value=this.anchorFrame+Math.round((timestamp-this.anchorTimestamp)*
+this.sampleRate);if(!Number.isSafeInteger(value))throw error("PCM timestamp exceeds frame precision.",
+"DataError");return value}timestampAt(frame){return this.anchorTimestamp+(frame-this.anchorFrame)/this.
+sampleRate}packetFrame(packet,previousEnd){if(!packet||typeof packet.release!=="function"||!Number.isFinite(
+packet.timestamp)||!Number.isSafeInteger(packet.sampleRate)||packet.sampleRate<8e3||packet.sampleRate>
+192e3||!Array.isArray(packet.channels)||packet.channels.length!==2||packet.channels.some(plane=>!(plane instanceof
+Float32Array))||!packet.channels[0].length||packet.channels[0].length!==packet.channels[1].length)throw error(
+"Invalid stereo PCM packet.","DataError");if(!this.sampleRate){this.sampleRate=packet.sampleRate;this.
+anchorTimestamp=packet.timestamp;this.anchorFrame=Math.round(packet.timestamp*packet.sampleRate);if(!Number.
+isSafeInteger(this.anchorFrame))throw error("PCM origin exceeds frame precision.","DataError")}if(packet.
+sampleRate!==this.sampleRate)throw error("PCM sample rate changed.","DataError");const frame=previousEnd===
+void 0?this.frameAt(packet.timestamp):previousEnd;if(Math.abs(packet.timestamp-this.timestampAt(frame))>
+Math.max(1/this.sampleRate,1e-6))throw error("PCM timestamps do not match carried frame counts.","Da\
+taError");if(!Number.isSafeInteger(frame+packet.channels[0].length))throw error("PCM range exceeds f\
+rame precision.","DataError");return frame}covers(start,end){let cursor=start;for(const block of this.
+blocks){if(block.end<=cursor)continue;if(block.start>cursor)return false;cursor=Math.max(cursor,block.
+end);if(cursor>=end)return true}return cursor>=end}missing(start,end){let cursor=start;const spans=[];
+for(const block of this.blocks){if(block.end<=cursor)continue;if(block.start>=end)break;if(block.start>
+cursor)spans.push([cursor,Math.min(block.start,end)]);cursor=Math.max(cursor,block.end)}if(cursor<end)
+spans.push([cursor,end]);return spans}evict(start,end){this.blocks=this.blocks.filter(block=>{if(block.
+end>start&&block.start<end)return true;this.cacheBytes-=(block.end-block.start)*8;block.channels.length=
+0;return false})}clearCache(){for(const block of this.blocks)block.channels.length=0;this.blocks.length=
+0;this.cacheBytes=0}retain(packet,packetStart,keepStart,keepEnd,requiredEnd){const packetEnd=packetStart+
+packet.channels[0].length;const start=Math.max(0,packetStart,keepStart);const end=Math.min(packetEnd,
+keepEnd);let capacityReached=false;for(const[from,to]of this.missing(start,end)){const freeFrames=Math.
+floor((this.maxBytes-this.cacheBytes-this.leaseBytes-this.reservedBytes)/8);const stop=Math.min(to,from+
+freeFrames);if(stop<Math.min(to,requiredEnd))throw error("PCM window byte budget exceeded.","QuotaEx\
+ceededError");if(stop>from){const bytes=(stop-from)*8;this.cacheBytes+=bytes;this.account();try{const channels=packet.
+channels.map(plane=>plane.slice(from-packetStart,stop-packetStart));if(channels.some(plane=>!plane.every(
+Number.isFinite)))throw error("PCM contains non-finite samples.","DataError");this.blocks.push({start:from,
+end:stop,channels});this.blocks.sort((left,right)=>left.start-right.start)}catch(cause){this.cacheBytes-=
+bytes;throw cause}}if(stop<to)capacityReached=true}return capacityReached}acceptEof(result,lastFrame){
+if(!result||result.endOfStream!==true)return;if(!this.sampleRate||result.sampleRate!==this.sampleRate||
+!Number.isFinite(result.endTimestamp))throw error("EOF has no verified decoded sample format.","Data\
+Error");const reportedFrame=this.frameAt(result.endTimestamp);const frame=lastFrame??reportedFrame;if(frame<
+0||Math.abs(reportedFrame-frame)>1||Math.abs(result.endTimestamp-this.timestampAt(frame))>1/this.sampleRate+
+Number.EPSILON*Math.max(1,Math.abs(result.endTimestamp))*2||this.blocks.some(block=>block.end>frame)||
+this.totalSourceFrames!==void 0&&this.totalSourceFrames!==frame)throw error("Decoded EOF contradicts\
+ retained PCM.","DataError");this.totalSourceFrames=frame}async fill(job,startFrame,requiredEnd){this.
+check(job);let keepEnd=this.sampleRate?Math.max(requiredEnd,startFrame+Math.ceil(this.readAheadSeconds*
+this.sampleRate)):void 0;const start=this.sampleRate?Math.max(0,this.timestampAt(startFrame)):0;const end=this.
+sampleRate?this.timestampAt(keepEnd):this.readAheadSeconds;const iterator=this.source.read(start,end,
+{signal:job.controller.signal,allowEndOfStream:true})[Symbol.asyncIterator]();this.sourceReads++;let previousEnd;
+try{while(true){const result=await iterator.next();if(result.done){this.check(job);this.acceptEof(result.
+value,previousEnd);break}const packet=result.value;let full;try{this.check(job);const frame=this.packetFrame(
+packet,previousEnd);previousEnd=frame+packet.channels[0].length;keepEnd??=Math.ceil(this.anchorFrame+
+(end-this.anchorTimestamp)*this.sampleRate);full=this.retain(packet,frame,startFrame,keepEnd,requiredEnd)}finally{
+packet?.release?.()}if(full)break}}finally{await iterator.return?.()}this.check(job);const clippedEnd=this.
+totalSourceFrames===void 0?requiredEnd:Math.min(requiredEnd,this.totalSourceFrames);if(startFrame<clippedEnd&&
+!this.covers(startFrame,clippedEnd))throw error("Decoded PCM does not cover the requested window.","\
+DataError")}makeLease(start,end){const bytes=Math.max(0,end-start)*8;this.reservedBytes=bytes;this.account();
+const channels=[new Float32Array(Math.max(0,end-start)),new Float32Array(Math.max(0,end-start))];for(const block of this.
+blocks){const from=Math.max(start,block.start);const to=Math.min(end,block.end);if(from>=to)continue;
+for(let channel=0;channel<2;channel++)channels[channel].set(block.channels[channel].subarray(from-block.
+start,to-block.start),from-start)}this.reservedBytes=0;this.leaseBytes=bytes;this.account();let released=false;
+const lease=Object.freeze({sampleRate:this.sampleRate,pcmStartFrame:start,channels,...this.totalSourceFrames===
+void 0?{}:{totalSourceFrames:this.totalSourceFrames},get released(){return released},release:()=>{if(released)
+return;released=true;channels.length=0;if(this.lease===lease){this.lease=null;this.leaseBytes=0}}});
+this.lease=lease;return lease}async acquire(startFrame,endFrame,{signal}={}){if(!positiveFrame(startFrame)||
+!positiveFrame(endFrame)||endFrame<=startFrame)throw new RangeError("PCM window bounds must be incre\
+asing non-negative integer frames.");if(!this.initialized)throw error("Read PCM info before acquirin\
+g a window.","InvalidStateError");return this.run(signal,async job=>{this.check(job);if(this.totalSourceFrames!==
+void 0&&startFrame>=this.totalSourceFrames)return this.makeLease(this.totalSourceFrames,this.totalSourceFrames);
+let end=this.totalSourceFrames===void 0?endFrame:Math.min(endFrame,this.totalSourceFrames);const bytes=(end-
+startFrame)*8;if(!Number.isSafeInteger(bytes)||bytes*2>this.maxBytes)throw error("PCM window needs m\
+ore cache and lease space than allowed.","QuotaExceededError");this.evict(Math.max(0,startFrame-128),
+Math.max(end,startFrame+Math.ceil(this.readAheadSeconds*this.sampleRate)));const requiredBytes=()=>this.
+missing(startFrame,end).reduce((total,[from,to])=>total+(to-from)*8,0);if(this.cacheBytes+bytes+requiredBytes()>
+this.maxBytes)this.evict(startFrame,end);if(this.cacheBytes+bytes+requiredBytes()>this.maxBytes)this.
+clearCache();this.reservedBytes=bytes;this.account();if(this.covers(startFrame,end))this.cacheHits++;else{
+for(const[from,to]of this.missing(startFrame,end)){if(this.covers(from,to))continue;await this.fill(
+job,from,to);this.check(job);if(this.totalSourceFrames!==void 0)break}}this.check(job);end=this.totalSourceFrames===
+void 0?endFrame:Math.min(endFrame,this.totalSourceFrames);if(startFrame>=end)return this.makeLease(end,
+end);if(!this.covers(startFrame,end))throw error("PCM cache has a coverage gap.","DataError");return this.
+makeLease(startFrame,end)})}async reset(){if(this.disposal)return this.disposal;if(this.closing)return this.
+closing;this.generation++;this.lease?.release();this.clearCache();const job=this.job;job?.controller.
+abort(aborted());this.closing=(async()=>{try{await job?.done}catch{}this.clearCache();this.reservedBytes=
+0;return this.stats()})();try{return await this.closing}finally{this.closing=null}}dispose(){if(this.
+disposal)return this.disposal;this.disposed=true;this.disposal=(async()=>{try{await this.reset()}finally{
+await this.source.dispose()}return this.stats()})();return this.disposal}};function createPcmWindow(options){
+const window2=new PcmWindow(options);return Object.freeze({info:options2=>window2.info(options2),acquire:(start,end,options2)=>window2.
+acquire(start,end,options2),reset:()=>window2.reset(),dispose:()=>window2.dispose(),stats:()=>window2.
+stats()})}var DEFAULT_LIMITS2=Object.freeze({encodedBytes:16*1024*1024,resourceBytes:4*1024*1024,pcmBytes:2*1024*
+1024,resourceCount:64,networkTimeoutMs:8e3,operationTimeoutMs:8e3,decoderQueue:2,outputSamples:8,packetsPerRead:4096,
+channels:2,sampleRate:192e3,framesPerSample:32768});var AAC_PREROLL_PACKETS=4;var MAX_PREROLL_SECONDS=1;
+function failure(message,name="Error"){return Object.assign(new Error(message),{name})}function abortError(){
+return failure("PCM source operation cancelled.","AbortError")}function mediaUrl(value,base){const url=new URL(
+value,base);const hostAllowed=[".sndcdn.com",".media-streaming.soundcloud.cloud"].some(suffix=>url.hostname.
+endsWith(suffix)&&url.hostname.length>suffix.length);if(url.protocol!=="https:"||!hostAllowed||url.username||
+url.password||url.port||url.hash)throw failure("Unsupported media URL.","SecurityError");return url.
+href}function configuredLimits(input={}){for(const key of Object.keys(input)){if(!Object.hasOwn(DEFAULT_LIMITS2,
+key))throw new TypeError(`Unknown source limit: ${key}`)}const limits={...DEFAULT_LIMITS2,...input};
+for(const[key,value]of Object.entries(limits)){if(!Number.isSafeInteger(value)||value<=0)throw new TypeError(
+`Invalid source limit: ${key}`)}if(limits.networkTimeoutMs>2147483647||limits.operationTimeoutMs>2147483647)
+throw new TypeError("Source deadlines exceed the timer range.");return Object.freeze(limits)}function guarded(promise,signal,timeoutMs,timeoutMessage){
+return new Promise((resolve,reject)=>{let settled=false;const finish=(callback,value)=>{if(settled)return;
+settled=true;clearTimeout(timer);signal.removeEventListener("abort",abort);callback(value)};const abort=()=>finish(
+reject,signal.reason||abortError());const timer=setTimeout(()=>finish(reject,failure(timeoutMessage,
+"TimeoutError")),timeoutMs);signal.addEventListener("abort",abort,{once:true});Promise.resolve(promise).
+then(value=>finish(resolve,value),error2=>finish(reject,error2));if(signal.aborted)abort()})}function quietCancel(reader){
+try{Promise.resolve(reader?.cancel()).catch(()=>{})}catch{}}var Budget=class{constructor(owner,field,maximum){
+this.owner=owner;this.field=field;this.maximum=maximum;this.releases=new Set}reserve(bytes){const stats=this.
+owner.counters;if(!Number.isSafeInteger(bytes)||bytes<0||stats[this.field]+bytes>this.maximum)throw failure(
+`${this.field==="heldEncodedBytes"?"Encoded resource":"PCM output"} budget exceeded.`,"QuotaExceeded\
+Error");stats[this.field]+=bytes;const peak=this.field==="heldEncodedBytes"?"peakHeldEncodedBytes":"\
+peakHeldPcmBytes";stats[peak]=Math.max(stats[peak],stats[this.field]);const release=()=>{if(!this.releases.
+delete(release))return;stats[this.field]-=bytes};this.releases.add(release);return release}clear(){for(const release of this.
+releases)release()}};var SourceTransaction=class{constructor(owner,signal){this.owner=owner;this.limits=
+owner.limits;this.controller=new AbortController;this.signal=this.controller.signal;this.resources=new Map;
+this.readers=new Set;this.queue=[];this.waiters=new Set;this.encoded=new Budget(owner,"heldEncodedBy\
+tes",this.limits.encodedBytes);this.pcm=new Budget(owner,"heldPcmBytes",this.limits.pcmBytes);this.networkTail=
+Promise.resolve();this.closed=false;this.error=null;this.lastTimestamp=-Infinity;this.callerPacket=null;
+this.externalSignal=signal;this.onAbort=()=>this.fail(signal.reason||abortError());signal?.addEventListener(
+"abort",this.onAbort,{once:true});if(signal?.aborted)this.onAbort()}check(){if(this.error)throw this.
+error;if(this.closed||this.owner.disposed)throw abortError()}async wait(promise){this.check();try{const result=await guarded(
+promise,this.signal,this.limits.operationTimeoutMs,"PCM source operation timed out.");this.check();return result}catch(error2){
+this.fail(error2);throw error2}}wake(){for(const resolve of this.waiters)resolve();this.waiters.clear()}async changed(){
+let notify;const change=new Promise(resolve=>{notify=resolve});this.waiters.add(notify);try{await this.
+wait(change)}finally{this.waiters.delete(notify)}}fail(error2){if(!this.error)this.error=error2;this.
+close()}close(){if(this.closed)return;this.closed=true;this.controller.abort(this.error||abortError());
+this.externalSignal?.removeEventListener("abort",this.onAbort);for(const reader of this.readers)quietCancel(
+reader);this.readers.clear();if(this.decoder){this.decoder.removeEventListener("dequeue",this.onDequeue);
+try{this.decoder.close()}catch{}this.owner.counters.closedDecoders++;this.decoder=null}try{this.input?.
+dispose()}catch{}this.input=null;this.sink=null;this.packet=null;this.resources.clear();this.callerPacket?.
+release();this.callerPacket=null;for(const packet of this.queue)packet.release();this.queue.length=0;
+this.encoded.clear();this.pcm.clear();this.owner.counters.decodeQueueSize=0;this.owner.counters.queuedSamples=
+0;this.wake();if(this.owner.active===this)this.owner.active=null}resource(path){this.check();const url=mediaUrl(
+path,this.owner.url);if(!this.resources.has(url)){if(this.resources.size>=this.limits.resourceCount)
+throw failure("Media resource count exceeded.","QuotaExceededError");const pending=this.networkTail.
+then(()=>this.fetchResource(url));this.networkTail=pending.then(()=>void 0,()=>void 0);this.resources.
+set(url,pending)}return this.resources.get(url).then(bytes=>{this.check();return new this.owner.library.
+BufferSource(bytes)})}async fetchResource(url){this.check();if(url===this.owner.url&&this.owner.manifest){
+this.encoded.reserve(this.owner.manifest.byteLength);return this.owner.manifest.slice()}const controller=new AbortController;
+const abort=()=>controller.abort(this.signal.reason);this.signal.addEventListener("abort",abort,{once:true});
+const timer=setTimeout(()=>controller.abort(failure("Media resource timed out.","TimeoutError")),this.
+limits.networkTimeoutMs);const chunks=[];let reader;let response;let total=0;let assembledRelease;try{
+const pending=this.owner.fetch(url,{signal:controller.signal,credentials:"omit",redirect:"error",mode:"\
+cors",referrerPolicy:"no-referrer"});Promise.resolve(pending).then(response2=>{if(controller.signal.
+aborted)quietCancel(response2.body)},()=>{});response=await guarded(pending,controller.signal,this.limits.
+networkTimeoutMs,"Media resource timed out.");this.check();if(response.redirected||response.url&&mediaUrl(
+response.url)!==url)throw failure("Media redirects are not allowed.","SecurityError");if(response.status!==
+200||!response.body)throw failure("Media resource could not be read.");const lengthHeader=response.headers.
+get("content-length");const length=lengthHeader===null?null:Number(lengthHeader);if(length!==null&&(!/^\d+$/.
+test(lengthHeader)||!Number.isSafeInteger(length)||length>this.limits.resourceBytes))throw failure("\
+Media resource exceeds its size limit.","QuotaExceededError");reader=response.body.getReader();this.
+readers.add(reader);while(true){const{done,value}=await guarded(reader.read(),controller.signal,this.
+limits.networkTimeoutMs,"Media resource timed out.");this.check();if(done)break;if(!(value instanceof
+Uint8Array))throw new TypeError("Invalid media resource chunk.");this.owner.counters.deliveredBytes+=
+value.byteLength;total+=value.byteLength;if(total>this.limits.resourceBytes)throw failure("Media res\
+ource exceeds its size limit.","QuotaExceededError");const release=this.encoded.reserve(value.buffer.
+byteLength);chunks.push({value,release})}if(!total)throw failure("Empty media resource.");assembledRelease=
+this.encoded.reserve(total);const bytes=new Uint8Array(total);let offset=0;for(const chunk of chunks){
+bytes.set(chunk.value,offset);offset+=chunk.value.byteLength;chunk.release()}chunks.length=0;assembledRelease=
+null;this.owner.counters.fetchedResources++;this.owner.retainManifest(url,bytes);return bytes}catch(error2){
+this.fail(error2);throw error2}finally{clearTimeout(timer);this.signal.removeEventListener("abort",abort);
+controller.abort();for(const chunk of chunks)chunk.release();assembledRelease?.();if(reader){this.readers.
+delete(reader);quietCancel(reader);try{reader.releaseLock()}catch{}}else quietCancel(response?.body)}}async open(){
+this.check();const{library}=this.owner;const source2=new library.CustomPathedSource(this.owner.url,({
+path})=>this.resource(path));this.input=new library.Input({source:source2,formats:this.owner.formats});
+const track=await this.wait(this.input.getPrimaryAudioTrack());if(!track)throw failure("Media resour\
+ce has no audio track.");const config=await this.wait(track.getDecoderConfig());if(!config||typeof config.
+codec!=="string"||!config.codec)throw failure("Audio decoder configuration is unavailable.");this.validateFormat(
+config.sampleRate,config.numberOfChannels);const duration=await this.wait(track.getDurationFromMetadata());
+if(duration!==null&&(!Number.isFinite(duration)||duration<0))throw failure("Invalid audio duration.");
+return{track,config,metadata:Object.freeze({codec:config.codec,declaredSampleRate:config.sampleRate,
+declaredChannels:config.numberOfChannels,duration})}}validateFormat(sampleRate3,channels){if(!Number.
+isSafeInteger(sampleRate3)||sampleRate3<=0||sampleRate3>this.limits.sampleRate||!Number.isSafeInteger(
+channels)||channels<=0||channels>this.limits.channels)throw failure("Unsupported audio sample format\
+.")}output(sample,start,end){this.owner.counters.receivedSamples++;let release;try{if(this.closed){this.
+owner.counters.staleSamples++;return}const{timestamp:microseconds,sampleRate:sampleRate3,numberOfChannels,
+numberOfFrames}=sample;this.validateFormat(sampleRate3,numberOfChannels);if(!Number.isSafeInteger(microseconds)||
+!Number.isSafeInteger(numberOfFrames)||numberOfFrames<=0||numberOfFrames>this.limits.framesPerSample)
+throw failure("Invalid decoded audio sample.");const timestamp=microseconds/1e6;if(timestamp<=this.lastTimestamp)
+throw failure("Audio timestamps did not advance.");this.lastTimestamp=timestamp;if(this.outputFormat&&
+(this.outputFormat.sampleRate!==sampleRate3||this.outputFormat.channels!==numberOfChannels))throw failure(
+"Audio sample format changed during the read.");this.outputFormat={sampleRate:sampleRate3,channels:numberOfChannels};
+const sampleEnd=timestamp+numberOfFrames/sampleRate3;const tolerance=Math.max(1/sampleRate3,1e-6);if(this.
+previousSampleEnd!==void 0&&Math.abs(timestamp-this.previousSampleEnd)>tolerance)throw failure("Deco\
+ded audio is not contiguous.","DataError");this.previousSampleEnd=sampleEnd;if(timestamp>=end||sampleEnd<=
+start)return;if(this.coveredUntil===void 0&&timestamp>start+tolerance)throw failure("Decoded audio d\
+oes not cover the requested start.","DataError");this.coveredUntil=sampleEnd;this.coverageTolerance=
+tolerance;if(this.queue.length>=this.limits.outputSamples)throw failure("Decoded audio queue exceede\
+d.","QuotaExceededError");const bytes=numberOfFrames*numberOfChannels*Float32Array.BYTES_PER_ELEMENT;
+release=this.pcm.reserve(bytes);const channels=[];for(let planeIndex=0;planeIndex<numberOfChannels;planeIndex++){
+const plane=new Float32Array(numberOfFrames);sample.copyTo(plane,{planeIndex,format:"f32-planar"});if(!plane.
+every(Number.isFinite))throw failure("Decoded audio contains non-finite samples.");channels.push(plane)}
+let released=false;const free=release;const packet=Object.freeze({timestamp,sampleRate:sampleRate3,channels,
+get released(){return released},release(){if(released)return;released=true;channels.length=0;free()}});
+this.queue.push(packet);release=null;this.owner.counters.queuedSamples=this.queue.length;this.owner.
+counters.peakQueuedSamples=Math.max(this.owner.counters.peakQueuedSamples,this.queue.length)}catch(error2){
+release?.();this.owner.counters.rejectedSamples++;this.fail(error2)}finally{try{sample.close()}finally{
+this.owner.counters.closedSamples++}this.wake()}}async configure(config,start,end){const Decoder=this.
+owner.Decoder;if(typeof Decoder!=="function")throw failure("Audio decoding is unavailable.");const supported=await this.
+wait(Decoder.isConfigSupported(config));if(!supported.supported)throw failure("Audio codec is unsupp\
+orted.");this.decoder=new Decoder({output:sample=>this.output(sample,start,end),error:error2=>this.fail(
+error2)});this.owner.counters.openedDecoders++;this.onDequeue=()=>{this.owner.counters.decodeQueueSize=
+this.decoder?.decodeQueueSize||0;this.wake()};this.decoder.addEventListener("dequeue",this.onDequeue);
+this.decoder.configure(config)}async prepare(start,end){const{track,config}=await this.open();if(!/^mp4a\.40\.0?2$/.
+test(config.codec))throw failure("Only AAC-LC seek decoding is available.","NotSupportedError");const resolution=await this.
+wait(track.getTimeResolution());if(!Number.isFinite(resolution)||resolution<=0)throw failure("Invali\
+d audio time resolution.");this.packetTick=Math.max(1/resolution,1e-6);await this.configure(config,start,
+end);this.sink=new this.owner.library.EncodedPacketSink(track)}async firstPacket(start,options){let packet=await this.
+wait(this.sink.getKeyPacket(start,options));if(!packet)return this.wait(this.sink.getFirstKeyPacket(
+options));const targetTimestamp=packet.timestamp;if(!Number.isFinite(targetTimestamp))throw failure(
+"Invalid encoded audio timestamps.");for(let count=0;count<AAC_PREROLL_PACKETS;count++){const previous=await this.
+wait(this.sink.getPacket(packet.timestamp-this.packetTick,options));if(!previous)break;if(!Number.isFinite(
+previous.timestamp)||previous.timestamp>=packet.timestamp||targetTimestamp-previous.timestamp>MAX_PREROLL_SECONDS)
+throw failure("AAC preroll exceeds the supported seek window.","DataError");packet=previous}return packet}validateCoverage(end){
+if(this.coveredUntil===void 0||this.coveredUntil+this.coverageTolerance<end)throw failure("Decoded a\
+udio does not cover the requested interval.","DataError")}finish(start,end,allowEndOfStream){if(!allowEndOfStream){
+this.validateCoverage(end);return}if(this.packet){this.validateCoverage(end);return Object.freeze({endOfStream:false,
+sampleRate:this.outputFormat.sampleRate})}if(!this.outputFormat||!Number.isFinite(this.previousSampleEnd))
+throw failure("Decoded audio has no verified end.","DataError");if(start<this.previousSampleEnd)this.
+validateCoverage(Math.min(end,this.previousSampleEnd));return Object.freeze({endOfStream:true,sampleRate:this.
+outputFormat.sampleRate,endTimestamp:this.previousSampleEnd})}async*samples(start,end,allowEndOfStream){
+await this.prepare(start,end);const options={verifyKeyPackets:true,skipLiveWait:true};this.packet=await this.
+firstPacket(start,options);let previousTimestamp=-Infinity;let packetCount=0;let flushed=false;while(true){
+this.check();if(this.callerPacket&&!this.callerPacket.released)throw failure("Release the previous P\
+CM packet before reading another.","InvalidStateError");this.callerPacket=null;if(this.queue.length){
+this.callerPacket=this.queue.shift();this.owner.counters.queuedSamples=this.queue.length;yield this.
+callerPacket;continue}if(!this.packet||this.packet.timestamp>=end){if(flushed){return this.finish(start,
+end,allowEndOfStream)}await this.wait(this.decoder.flush());flushed=true;continue}if(this.decoder.decodeQueueSize>=
+this.limits.decoderQueue){await this.changed();continue}if(++packetCount>this.limits.packetsPerRead)
+throw failure("Encoded audio packet count exceeded.","QuotaExceededError");if(!Number.isFinite(this.
+packet.timestamp)||this.packet.timestamp<=previousTimestamp||!Number.isFinite(this.packet.duration)||
+this.packet.duration<=0)throw failure("Invalid encoded audio timestamps.");previousTimestamp=this.packet.
+timestamp;this.decoder.decode(this.packet.toEncodedAudioChunk());this.owner.counters.decodeQueueSize=
+this.decoder?.decodeQueueSize||0;this.owner.counters.peakDecodeQueueSize=Math.max(this.owner.counters.
+peakDecodeQueueSize,this.owner.counters.decodeQueueSize);this.check();this.packet=await this.wait(this.
+sink.getNextPacket(this.packet,options))}}};var PcmSource=class{constructor({library,url,limits,fetch:fetchFn=globalThis.
+fetch?.bind(globalThis),AudioDecoder:Decoder=globalThis.AudioDecoder,formats}){for(const key of["Inp\
+ut","CustomPathedSource","BufferSource","EncodedPacketSink"]){if(typeof library?.[key]!=="function")
+throw new TypeError(`Missing media library API: ${key}`)}if(typeof fetchFn!=="function")throw new TypeError(
+"A fetch implementation is required.");this.formats=formats||library.HLS_FORMATS;if(!Array.isArray(this.
+formats)||!this.formats.length)throw new TypeError("Input formats are required.");this.library=library;
+this.url=mediaUrl(url);this.limits=configuredLimits(limits);this.fetch=fetchFn;this.Decoder=Decoder;
+this.disposed=false;this.active=null;this.metadata=null;this.counters={heldEncodedBytes:0,peakHeldEncodedBytes:0,
+heldPcmBytes:0,peakHeldPcmBytes:0,decodeQueueSize:0,peakDecodeQueueSize:0,queuedSamples:0,peakQueuedSamples:0,
+fetchedResources:0,deliveredBytes:0,openedDecoders:0,closedDecoders:0,receivedSamples:0,closedSamples:0,
+rejectedSamples:0,staleSamples:0};this.manifest=null;this.manifestBudget=new Budget(this,"heldEncode\
+dBytes",this.limits.encodedBytes)}retainManifest(url,bytes){if(this.manifest||url!==this.url||bytes.
+byteLength>262144||this.counters.heldEncodedBytes+bytes.byteLength>this.limits.encodedBytes)return;const text=new TextDecoder().
+decode(bytes);if(!/^#EXTM3U(?:\r?\n)/.test(text)||!/^#EXT-X-ENDLIST\s*$/m.test(text))return;this.manifestBudget.
+reserve(bytes.byteLength);this.manifest=bytes.slice()}begin(signal){if(this.disposed||signal?.aborted)
+throw signal?.reason||abortError();if(this.active)throw failure("A PCM source read is already active\
+.","InvalidStateError");const transaction=new SourceTransaction(this,signal);this.active=transaction;
+return transaction}async info({signal}={}){if(this.disposed||signal?.aborted)throw signal?.reason||abortError();
+if(this.metadata)return this.metadata;const transaction=this.begin(signal);try{const{metadata}=await transaction.
+open();this.metadata=metadata;return metadata}finally{transaction.close()}}async*read(start,end,{signal,
+allowEndOfStream=false}={}){if(!Number.isFinite(start)||start<0||!Number.isFinite(end)||end<=start)throw new TypeError(
+"A finite positive audio interval is required.");if(typeof allowEndOfStream!=="boolean")throw new TypeError(
+"allowEndOfStream must be a boolean.");const transaction=this.begin(signal);try{return yield*transaction.
+samples(start,end,allowEndOfStream)}finally{transaction.close()}}stats(){return Object.freeze({...this.
+counters,activeTransactions:this.active?1:0,retainedManifestBytes:this.manifest?.byteLength??0,disposed:this.
+disposed})}dispose(){if(this.disposed)return;this.disposed=true;this.active?.close();this.metadata=null;
+this.manifest=null;this.manifestBudget.clear()}};function createPcmSource(options){const source2=new PcmSource(
+options);return Object.freeze({info:options2=>source2.info(options2),read:(start,end,options2)=>source2.
+read(start,end,options2),dispose:()=>source2.dispose(),stats:()=>source2.stats()})}var transitions=Object.freeze({IDLE:["BUFFERING","SEEKING","DISPOSED"],BUFFERING:["IDLE","PLAYING","\
+SEEKING","DISPOSED"],PLAYING:["IDLE","BUFFERING","SEEKING","DISPOSED"],SEEKING:["IDLE","BUFFERING","\
+DISPOSED"],DISPOSED:[]});function createTransportLifecycle(){let phase="IDLE";let resumeAfterSeek=false;
+function transition(next){if(next===phase)return;if(!transitions[phase].includes(next))throw new Error(
+`Invalid transport transition: ${phase} to ${next}`);phase=next}function wanted(){return phase==="SE\
+EKING"?resumeAfterSeek:phase==="BUFFERING"||phase==="PLAYING"}return Object.freeze({get phase(){return phase},
+get wanted(){return wanted()},get disposed(){return phase==="DISPOSED"},play(){if(phase==="SEEKING")
+resumeAfterSeek=true;else transition("BUFFERING")},stop(){transition("IDLE");resumeAfterSeek=false},
+seek(){resumeAfterSeek=wanted();transition("SEEKING")},settled(){if(phase!=="SEEKING")return;transition(
+resumeAfterSeek?"BUFFERING":"IDLE");resumeAfterSeek=false},render(active){if(phase!=="BUFFERING"&&phase!==
+"PLAYING")return;transition(active?"PLAYING":"BUFFERING")},dispose(){transition("DISPOSED");resumeAfterSeek=
+false}})}var QUANTUM3=128;var PADDING2=128;var LEAD_SECONDS=.05;var LOOKAHEAD_SECONDS=.75;var WINDOW_SECONDS=.25;
+var POLL_MS=25;var align=frame=>Math.ceil(frame/QUANTUM3)*QUANTUM3;var aborted2=()=>new DOMException(
+"Playback command superseded","AbortError");function rateFunction(value,position){const rateAt=typeof value===
+"function"?value:()=>value;const rate=rateAt(position);if(!Number.isFinite(rate)||rate<.025||rate>4)
+throw new RangeError("Playback rate must be between 0.025 and 4");return rateAt}function reposition(clock,start){
+const offset=start-clock.outputStartFrame;return Object.freeze({...clock,outputStartFrame:start,outputEndFrame:clock.
+outputEndFrame+offset,intervals:Object.freeze(clock.intervals.map(interval=>Object.freeze({...interval,
+outputFrame:interval.outputFrame+offset}))),sourceAt:frame=>clock.sourceAt(frame-offset),outputAt:frame=>clock.
+outputAt(frame)+offset})}function untilAborted(promise,signal){return new Promise((resolve,reject)=>{
+const abort=()=>reject(aborted2());if(signal.aborted)return abort();signal.addEventListener("abort",
+abort,{once:true});Promise.resolve(promise).then(resolve,reject).finally(()=>{signal.removeEventListener(
+"abort",abort)})})}function createBufferedTransport({context,provider,output,destination=context?.destination,
+rate=1,initialPosition=0,initiallyEnded=false,onChange=()=>{},timers=globalThis}){if(!context||!Number.
+isInteger(context.sampleRate)||context.sampleRate<8e3||context.sampleRate>384e3||typeof context.addEventListener!==
+"function"||typeof context.removeEventListener!=="function"||typeof context.resume!=="function")throw new TypeError(
+"An audio context is required");if(!provider||["info","acquire","reset","dispose"].some(key=>typeof provider[key]!==
+"function"))throw new TypeError("A bounded PCM provider is required");if(typeof onChange!=="function"||
+!timers||typeof timers.setTimeout!=="function"||typeof timers.clearTimeout!=="function")throw new TypeError(
+"Invalid transport callbacks");if(!Number.isFinite(initialPosition)||initialPosition<0||initialPosition>=
+86400||typeof initiallyEnded!=="boolean")throw new TypeError("Invalid initial playback state");let rateAt=rateFunction(
+rate,initialPosition);const renderer=output??createNaturalOutput({context,destination});if(["schedul\
+e","truncate","reset","dispose"].some(key=>typeof renderer[key]!=="function"))throw new TypeError("A\
+ resource-owning output renderer is required");const outputRate=context.sampleRate;const frameCount=Math.
+floor(outputRate*WINDOW_SECONDS/QUANTUM3)*QUANTUM3;let sourceRate=null;let durationHint=null;let totalSourceFrames;
+let anchorSeconds=initialPosition;let sourceFrame=0;let windows=[];let pendingStart=null;const lifecycle=createTransportLifecycle();
+let ended=initiallyEnded;let failure2=null;let observerErrors=0;let epoch=0;let playGeneration=0;let controller=new AbortController;
+let worker=null;let completedEpoch=-1;let renderGeneration=0;let rendererInitialized=false;let outputBarrier=Promise.
+resolve();let pendingRate=null;let unsubscribeFailure;let timer=null;let resetPending=false;let ready=Promise.
+resolve();let disposing=null;function hasWork(){return lifecycle.wanted||resetPending||pendingRate!==
+null}function leadSeconds(){const lead=renderer.minimumLeadSeconds??LEAD_SECONDS;if(!Number.isFinite(
+lead)||lead<0||lead>2)throw new RangeError("Invalid output scheduling lead");return Math.max(LEAD_SECONDS,
+lead)}function pcmRange(clock){const range=renderer.requiredPcmRange?.(clock)??{startFrame:Math.max(
+0,Math.floor(clock.sourceStartFrame)-PADDING2),endFrame:Math.ceil(clock.sourceEndFrame)+PADDING2};if(!Number.
+isSafeInteger(range.startFrame)||!Number.isSafeInteger(range.endFrame)||range.startFrame<0||range.startFrame>
+Math.floor(clock.sourceStartFrame)||range.endFrame<Math.ceil(clock.sourceEndFrame))throw new RangeError(
+"Invalid output PCM range");return range}function resetOutput(){const revision=++renderGeneration;outputBarrier=
+Promise.resolve(renderer.reset());outputBarrier.catch(error2=>{if(!lifecycle.disposed&&revision===renderGeneration)
+fail(error2,false)})}function nowFrame(){if(!Number.isFinite(context.currentTime)||context.currentTime<
+0)throw new RangeError("Invalid audio context time");return context.currentTime*outputRate}function available(){
+if(lifecycle.disposed)throw new Error("Buffered transport is disposed");if(context.state==="closed")
+throw new Error("Audio context is closed")}function positionAt(frame){let position=sourceFrame;for(const window2 of windows){
+if(frame<window2.outputStartFrame)return position;if(frame<window2.outputEndFrame)return window2.clock.
+sourceAt(frame);position=window2.sourceEndFrame}return position}function prune(){const frame=nowFrame();
+while(windows.length&&windows[0].outputEndFrame<=frame)sourceFrame=windows.shift().sourceEndFrame;if(lifecycle.
+wanted&&totalSourceFrames!==void 0&&sourceFrame>=totalSourceFrames&&!windows.length){sourceFrame=totalSourceFrames;
+lifecycle.stop();ended=true;stopTimer()}}function snapshot(){prune();const frame=nowFrame();const position=positionAt(
+frame);const activeWindow=windows.find(window2=>window2.outputStartFrame<=frame&&frame<window2.outputEndFrame);
+const active=Boolean(activeWindow);lifecycle.render(active&&context.state==="running");const renderedRate=active?
+activeWindow.clock.intervals[Math.floor((frame-activeWindow.outputStartFrame)/QUANTUM3)].rate:null;let state="\
+paused";if(lifecycle.disposed)state="disposed";else if(failure2)state="error";else if(ended)state="e\
+nded";else if(lifecycle.wanted&&context.state!=="running")state="suspended";else if(lifecycle.wanted)
+state=active?"playing":"buffering";return Object.freeze({state,generation:epoch,position:sourceRate?
+position/sourceRate:anchorSeconds,sourceFrame:sourceRate?position:null,sampleRate:sourceRate,duration:totalSourceFrames===
+void 0?null:totalSourceFrames/sourceRate,durationHint,lifecycle:lifecycle.phase,paused:!lifecycle.wanted,
+ended,error:failure2,scheduledWindows:windows.length,renderedRate,scheduledAheadSeconds:Math.max(0,((windows.
+at(-1)?.outputEndFrame??frame)-frame)/outputRate),observerErrors})}function notify(){const state=snapshot();
+try{onChange(state)}catch{observerErrors++}return state}function stopTimer(){if(timer===null)return;
+timers.clearTimeout(timer);timer=null}function armTimer(){if(timer!==null||lifecycle.disposed||!lifecycle.
+wanted||context.state!=="running")return;timer=timers.setTimeout(()=>{timer=null;notify();void kick()},
+POLL_MS)}function invalidate(){epoch++;controller.abort();controller=new AbortController;stopTimer()}
+function fail(error2,reset=true){if(lifecycle.disposed)return;sourceFrame=positionAt(nowFrame());lifecycle.
+stop();failure2=error2;invalidate();windows=[];pendingStart=null;try{if(reset)resetOutput();else renderGeneration++}catch(cleanup){
+failure2=new AggregateError([error2,cleanup],"Playback cleanup failed")}notify()}async function initialize(signal){
+if(signal.aborted)throw aborted2();if(!sourceRate){const info=await provider.info({signal});if(signal.
+aborted)throw aborted2();if(!info||!Number.isInteger(info.sampleRate)||info.sampleRate<8e3||info.sampleRate>
+384e3||info.channels!==2)throw new Error("Unsupported decoded audio format");acceptEnd(info.totalSourceFrames);
+sourceRate=info.sampleRate;sourceFrame=anchorSeconds*sourceRate;durationHint=Number.isFinite(info.durationHint)&&
+info.durationHint>=0?info.durationHint:null}if(rendererInitialized)return;await renderer.initialize?.(
+{sourceSampleRate:sourceRate,signal});if(signal.aborted)throw aborted2();leadSeconds();rendererInitialized=
+true}function acceptEnd(value){if(value===void 0)return;if(!Number.isSafeInteger(value)||value<0||totalSourceFrames!==
+void 0&&value!==totalSourceFrames)throw new Error("Invalid or changing decoded audio end");totalSourceFrames=
+value}async function fill(signal){if(resetPending){await provider.reset();resetPending=false}if(signal.
+aborted)return;await untilAborted(outputBarrier,signal);if(signal.aborted)return;lifecycle.settled();
+if(pendingRate)await applyRate();if(!lifecycle.wanted||signal.aborted)return;await untilAborted(ready,
+signal);await initialize(signal);while(!signal.aborted&&lifecycle.wanted&&context.state==="running"){
+prune();const last2=windows.at(-1);const sourceStart=last2?.sourceEndFrame??sourceFrame;if(totalSourceFrames!==
+void 0&&sourceStart>=totalSourceFrames){if(!windows.length)sourceFrame=totalSourceFrames;prune();break}
+const current=nowFrame();if(last2&&last2.outputEndFrame>=current+LOOKAHEAD_SECONDS*outputRate)break;
+if(windows.length>=4)break;let clock=createRateWindow({outputStartFrame:pendingStart??last2?.outputEndFrame??
+align(current+leadSeconds()*outputRate),sourceStartFrame:sourceStart,sourceSampleRate:sourceRate,outputSampleRate:outputRate,
+frameCount,rateAt});let lease;let generation;try{const range=pcmRange(clock);lease=await provider.acquire(
+range.startFrame,range.endFrame,{signal});if(signal.aborted)throw aborted2();acceptEnd(lease.totalSourceFrames);
+if(totalSourceFrames!==void 0&&sourceStart>=totalSourceFrames){if(!windows.length)sourceFrame=totalSourceFrames;
+break}const currentFrame=nowFrame();const minimumLead=Math.max(2*QUANTUM3+outputRate/(.025*sourceRate),
+(renderer.minimumLeadSeconds??0)*outputRate);if(clock.outputStartFrame<currentFrame+minimumLead)clock=
+reposition(clock,align(currentFrame+leadSeconds()*outputRate));generation=renderGeneration;const scheduled=await renderer.
+schedule({...lease,clock});if(lifecycle.disposed||generation!==renderGeneration)throw aborted2();if(scheduled.
+sourceStartFrame!==sourceStart||!Number.isFinite(scheduled.sourceEndFrame)||scheduled.sourceEndFrame<=
+sourceStart||scheduled.outputStartFrame!==clock.outputStartFrame||scheduled.outputEndFrame>clock.outputEndFrame||
+scheduled.outputEndFrame<=clock.outputStartFrame||Math.abs(scheduled.sourceEndFrame-clock.sourceAt(scheduled.
+outputEndFrame))>1e-6)throw new Error("Output renderer broke playback continuity");windows.push({...scheduled,
+clock});pendingStart=null}catch(error2){if(generation!==void 0&&generation===renderGeneration&&!lifecycle.
+disposed)fail(error2);throw error2}finally{lease?.release()}}}function kick(){if(worker)return worker.
+then(()=>{if(!lifecycle.disposed&&!failure2&&hasWork()&&completedEpoch!==epoch)return kick();return snapshot()});
+if(!hasWork()||lifecycle.disposed||failure2)return Promise.resolve(snapshot());worker=(async()=>{let revision;
+let state;do{revision=epoch;try{await fill(controller.signal)}catch(error2){if(revision===epoch&&!lifecycle.
+disposed)fail(error2)}state=notify()}while(revision!==epoch&&hasWork()&&!lifecycle.disposed&&!failure2);
+completedEpoch=revision;return state})().finally(()=>{worker=null;armTimer()});return worker}function play(){
+available();if(!lifecycle.wanted){const rewind=ended;invalidate();playGeneration++;lifecycle.play();
+failure2=null;ended=false;try{ready=context.state==="running"?Promise.resolve():Promise.resolve(context.
+resume())}catch(error2){ended=rewind;fail(error2);return Promise.reject(error2)}ready.catch(()=>{});
+if(rewind)seek(0);else notify()}const generation=playGeneration;return kick().then(state=>{if(generation!==
+playGeneration)throw aborted2();if(state.error)throw state.error;if(state.paused&&!state.ended)throw aborted2();
+return state})}function pause(){available();sourceFrame=positionAt(nowFrame());lifecycle.stop();playGeneration++;
+invalidate();windows=[];pendingStart=null;try{resetOutput()}catch(error2){failure2=error2}return notify()}
+function seek(seconds){available();if(!Number.isFinite(seconds)||seconds<0||seconds>=86400)throw new RangeError(
+"Seek position must be within 24 hours");invalidate();lifecycle.seek();anchorSeconds=seconds;sourceFrame=
+sourceRate?seconds*sourceRate:0;if(totalSourceFrames!==void 0)sourceFrame=Math.min(sourceFrame,totalSourceFrames);
+windows=[];resetPending=true;pendingStart=null;ended=false;failure2=null;try{resetOutput()}catch(error2){
+fail(error2)}notify();return kick()}function setRate(value){available();pendingRate=rateFunction(value,
+snapshot().position);invalidate();notify();return kick()}async function applyRate(){const next=pendingRate;
+pendingRate=null;const frame=nowFrame();let cut=align(frame+leadSeconds()*outputRate);const retained=windows.
+find(window2=>cut<=window2.outputEndFrame);if(retained)cut=Math.max(cut,retained.outputStartFrame);const generation=renderGeneration;
+rateAt=next;if(retained){pendingStart=cut;const position=retained.clock.sourceAt(cut);windows=windows.
+filter(window2=>window2.outputStartFrame<cut);const last2=windows.at(-1);if(last2&&last2.outputEndFrame>
+cut){last2.sourceEndFrame=position;last2.outputEndFrame=cut}try{await renderer.truncate(cut)}catch(error2){
+if(generation===renderGeneration&&!lifecycle.disposed)fail(error2);throw error2}}}function stateChanged(){
+if(lifecycle.disposed)return;if(context.state==="closed"){fail(new Error("Audio context is closed"));
+void dispose().catch(error2=>{failure2=error2;notify()});return}stopTimer();notify();if(lifecycle.wanted&&
+context.state==="running")void kick()}function dispose(){if(disposing)return disposing;sourceFrame=positionAt(
+nowFrame());lifecycle.dispose();renderGeneration++;playGeneration++;invalidate();windows=[];pendingStart=
+null;context.removeEventListener("statechange",stateChanged);const errors=[];let outputDisposal;try{
+unsubscribeFailure?.()}catch(error2){errors.push(error2)}try{outputDisposal=Promise.resolve(renderer.
+dispose());outputDisposal.catch(()=>{})}catch(error2){errors.push(error2)}disposing=(async()=>{await worker;
+try{await provider.dispose()}catch(error2){errors.push(error2)}try{await outputDisposal}catch(error2){
+errors.push(error2)}notify();if(errors.length)throw new AggregateError(errors,"Transport disposal fa\
+iled");return snapshot()})();return disposing}available();nowFrame();context.addEventListener("state\
+change",stateChanged);unsubscribeFailure=renderer.subscribeFailure?.(error2=>fail(error2,false));return Object.
+freeze({play,pause,seek,setRate,snapshot,dispose})}var EVENTS=["play","playing","pause","timeupdate","seeking","seeked","ended","waiting","stalled","ca\
+nplay","canplaythrough","progress","durationchange","loadedmetadata","loadeddata","ratechange","erro\
+r","abort"];var READERS=["currentTime","duration","paused","ended","seeking","readyState","networkSt\
+ate"];var RATE_READERS=["playbackRate","defaultPlaybackRate"];var abortError2=()=>new DOMException("\
+Playback was interrupted","AbortError");function deferred(){let resolve,reject;const promise=new Promise(
+(yes,no)=>{resolve=yes;reject=no});return{promise,resolve,reject}}function validateSnapshot(state){if(!state||
+!Number.isFinite(state.position)||state.position<0||typeof state.paused!=="boolean"||typeof state.ended!==
+"boolean"||state.requestedRate!==void 0&&(!Number.isFinite(state.requestedRate)||state.requestedRate<
+.025||state.requestedRate>4)||!["paused","buffering","suspended","playing","ended","error","disposed"].
+includes(state.state))throw new TypeError("Invalid transport snapshot");return state}function createMediaFacade({
+prototype=globalThis.HTMLMediaElement?.prototype,enqueue=callback=>setTimeout(callback,0),onError=()=>{}}={}){
+if(!prototype||typeof enqueue!=="function"||typeof onError!=="function")throw new TypeError("A media\
+ prototype and callbacks are required");const original=new Map;const installed=new Map;const owners=new Map;
+const releases=new Set;const ownEvents=new WeakSet;let disposed=false;let closing=false;let disposal=null;
+const descriptor=key=>Object.getOwnPropertyDescriptor(prototype,key);const read2=(audio,key)=>original.
+get(key)?.get?.call(audio);const currentSource=descriptor("currentSrc")?.get;const sourceOf=audio=>read2(
+audio,"srcObject")??(read2(audio,"src")||currentSource?.call(audio)||"");function report(error2){try{
+onError(error2)}catch{}}function patch(key,transform){const before=descriptor(key);if(!before?.configurable)
+throw new Error(`Cannot intercept media ${key}`);const after=transform(before);Object.defineProperty(
+prototype,key,after);original.set(key,before);installed.set(key,after)}function restore(){for(const[
+key,ours]of installed){const current2=descriptor(key);if(current2?.value===ours.value&&current2?.get===
+ours.get&&current2?.set===ours.set)Object.defineProperty(prototype,key,original.get(key))}installed.
+clear()}function current(entry){return!disposed&&owners.get(entry.audio)===entry}function stopPlay(entry,error2){
+const pending=entry.pendingPlay;if(!pending)return;entry.pendingPlay=null;pending.reject(error2)}function emit(entry,names,after){
+if(!names.length&&!after)return;entry.events.push(...names.map(name=>({name})));if(after)entry.events.
+push({after});if(entry.queued)return;entry.queued=true;enqueue(()=>{entry.queued=false;const events=entry.
+events.splice(0);for(const item of events){if(!current(entry))break;if(item.after){item.after();continue}
+const EventType=entry.audio.ownerDocument?.defaultView?.Event??Event;if(item.name==="ratechange")entry.
+rateEventQueued=false;const event=new EventType(item.name);ownEvents.add(event);entry.audio.dispatchEvent(
+event)}})}function finishPlay(entry){const pending=entry.pendingPlay;if(!pending)return;emit(entry,[],
+()=>{if(entry.pendingPlay!==pending||entry.state.paused&&!entry.state.ended)return;entry.pendingPlay=
+null;pending.resolve()})}function updateEntry(entry,value){if(!current(entry))return;const state=validateSnapshot(
+value);const previous=entry.state;entry.state=state;const names=[];if(state.requestedRate!==void 0&&
+state.requestedRate!==entry.lastRate){entry.lastRate=state.requestedRate;if(!entry.rateEventQueued){
+entry.rateEventQueued=true;names.push("ratechange")}}if(previous.paused&&!state.paused)names.push("p\
+lay");if(state.state==="playing"&&previous.state!=="playing")names.push("playing");if((state.state===
+"buffering"||state.state==="suspended")&&previous.state==="playing")names.push("waiting");if(!previous.
+paused&&state.paused)names.push("timeupdate","pause");if(state.ended&&!previous.ended)names.push("ti\
+meupdate","ended");if(state.error&&state.error!==previous.error){stopPlay(entry,state.error);names.push(
+"error")}else if(state.paused&&!state.ended)stopPlay(entry,abortError2());const duration=durationOf(
+entry);if(duration!==entry.lastDuration&&!(Number.isNaN(duration)&&Number.isNaN(entry.lastDuration))){
+entry.lastDuration=duration;names.push("durationchange")}const now=performance.now();if(state.position!==
+entry.lastTime&&now-entry.lastTimeUpdate>=250){if(!names.includes("timeupdate"))names.push("timeupda\
+te");entry.lastTime=state.position;entry.lastTimeUpdate=now}emit(entry,names);if(state.state==="play\
+ing"||state.ended)finishPlay(entry)}function refresh(entry){if(current(entry))updateEntry(entry,entry.
+transport.snapshot())}function durationOf(entry,state=entry.state){const{duration,durationHint}=state;
+if(Number.isFinite(duration)&&duration>=0)return duration;if(Number.isFinite(durationHint)&&durationHint>
+0)return durationHint;return read2(entry.audio,"duration")}function property(entry,key){const state=validateSnapshot(
+entry.transport.snapshot());if(key==="currentTime")return state.position;if(key==="paused")return state.
+paused;if(key==="ended")return state.ended;if(key==="seeking")return entry.seeking;if(key==="duratio\
+n")return durationOf(entry,state);if(RATE_READERS.includes(key))return state.requestedRate??read2(entry.
+audio,key);if(key==="networkState")return state.state==="buffering"?2:1;if(state.state==="playing"||
+state.scheduledWindows>0)return 3;return state.sampleRate?1:0}function play(entry){if(entry.pendingPlay)
+return entry.pendingPlay.promise;const pending=deferred();entry.pendingPlay=pending;try{const operation=entry.
+transport.play();refresh(entry);Promise.resolve(operation).then(()=>refresh(entry),error2=>{if(entry.
+pendingPlay===pending)stopPlay(entry,error2)})}catch(error2){stopPlay(entry,error2)}return pending.promise}
+function pause(entry){stopPlay(entry,abortError2());entry.transport.pause();refresh(entry)}function seek(entry,value){
+const position=Number(value);if(!Number.isFinite(position))throw new TypeError("Seek position must b\
+e finite");const target=Math.max(0,position);const revision=++entry.seekRevision;entry.seeking=true;
+emit(entry,["seeking"]);try{const operation=entry.transport.seek(target);refresh(entry);Promise.resolve(
+operation).then(()=>{if(!current(entry)||entry.seekRevision!==revision)return;entry.seeking=false;refresh(
+entry);emit(entry,["timeupdate","seeked"])},error2=>{if(!current(entry)||entry.seekRevision!==revision)
+return;entry.seeking=false;report(error2);refresh(entry)})}catch(error2){entry.seeking=false;throw error2}}
+function detach(entry,reason){if(!current(entry))return entry.releasing??Promise.resolve();const completion=deferred();
+entry.releasing=completion.promise;releases.add(entry.releasing);owners.delete(entry.audio);entry.releasing.
+then(()=>releases.delete(entry.releasing),error2=>{releases.delete(entry.releasing);report(error2)});
+const errors=[];let state=entry.state;try{state=validateSnapshot(entry.transport.snapshot())}catch(error2){
+errors.push(error2)}entry.events.length=0;stopPlay(entry,abortError2());for(const event of EVENTS)entry.
+audio.removeEventListener(event,entry.filter,true);for(const event of["emptied","loadstart"])entry.audio.
+removeEventListener(event,entry.changed,true);const tasks=[];const collect=task=>{if(task!==disposal&&
+task!==entry.releasing)tasks.push(task)};try{collect(entry.transport.dispose())}catch(error2){errors.
+push(error2)}try{collect(entry.onDetach({reason,state,media:entry.audio}))}catch(error2){errors.push(
+error2)}Promise.allSettled(tasks).then(results=>{errors.push(...results.filter(result=>result.status===
+"rejected").map(result=>result.reason));if(errors.length)completion.reject(new AggregateError(errors,
+"Media ownership cleanup failed"));else completion.resolve()});return entry.releasing}function bind(audio,{
+transport,onDetach=()=>{}}){if(disposed||closing)throw new Error("Media facade is disposed");if(!prototype.
+isPrototypeOf(audio)||typeof audio.addEventListener!=="function"||!transport||["snapshot","play","pa\
+use","seek","dispose"].some(key=>typeof transport[key]!=="function")||typeof onDetach!=="function")throw new TypeError(
+"A media element and transport are required");if(owners.has(audio)||owners.size+releases.size>=2)throw new Error(
+"Media ownership limit reached");const state=validateSnapshot(transport.snapshot());const entry={audio,
+transport,onDetach,state,source:sourceOf(audio),events:[],queued:false,seeking:false,seekRevision:0,
+lastTime:state.position,lastRate:read2(audio,"playbackRate")??state.requestedRate,rateEventQueued:false,
+lastTimeUpdate:performance.now(),pendingPlay:null};entry.lastDuration=durationOf(entry);entry.filter=
+event=>{if(current(entry)&&!ownEvents.has(event))event.stopImmediatePropagation()};entry.changed=event=>{
+if(event.type==="emptied"||sourceOf(audio)!==entry.source)void detach(entry,"source-change")};owners.
+set(audio,entry);for(const event of EVENTS)audio.addEventListener(event,entry.filter,true);for(const event of[
+"emptied","loadstart"])audio.addEventListener(event,entry.changed,true);updateEntry(entry,state);return Object.
+freeze({update:state2=>updateEntry(entry,state2),release:()=>detach(entry,"release"),get active(){return current(
+entry)}})}try{for(const key of[...READERS,...RATE_READERS.filter(name=>descriptor(name)?.get)])patch(
+key,before=>({...before,get(){const entry=owners.get(this);return entry?property(entry,key):before.get.
+call(this)},...key==="currentTime"?{set(value){const entry=owners.get(this);return entry?seek(entry,
+value):before.set.call(this,value)}}:{}}));for(const key of["play","pause","fastSeek"]){if(!descriptor(
+key)&&key==="fastSeek")continue;patch(key,before=>({...before,value:function(...args){const entry=owners.
+get(this);if(!entry)return Reflect.apply(before.value,this,args);if(key==="play")return play(entry);
+if(key==="pause")return pause(entry);return seek(entry,args[0])}}))}for(const key of["src","srcObjec\
+t"]){if(!descriptor(key))continue;patch(key,before=>({...before,set(value){const entry=owners.get(this);
+if(entry)void detach(entry,"source-change");return before.set.call(this,value)}}))}patch("load",before=>({
+...before,value:function(...args){const entry=owners.get(this);if(entry)void detach(entry,"load");return Reflect.
+apply(before.value,this,args)}}))}catch(error2){restore();throw error2}function dispose(){if(disposal)
+return disposal;const completion=deferred();disposal=completion.promise;closing=true;for(const entry of[
+...owners.values()])detach(entry,"dispose");disposed=true;const errors=[];try{restore()}catch(error2){
+errors.push(error2)}Promise.allSettled([...releases]).then(results=>{errors.push(...results.filter(result=>result.
+status==="rejected").map(result=>result.reason));if(errors.length)completion.reject(new AggregateError(
+errors,"Media facade cleanup failed"));else completion.resolve()});return disposal}return Object.freeze(
+{bind,owns:audio=>owners.has(audio),dispose})}function validOutputDb(value){return Number.isFinite(value)&&value>=-24&&Number.isFinite(Math.fround(
+10**(value/20)))}var ownedInputs=new WeakSet;function readLevel(levels){const value=levels.read();if(!value||!Number.
+isFinite(value.volume)||value.volume<0||value.volume>1||typeof value.muted!=="boolean"||!validOutputDb(
+value.outputDb))throw new RangeError("Invalid logical output level");return Object.freeze({volume:value.
+volume,muted:value.muted,outputDb:value.outputDb,gain:value.muted?0:value.volume*10**(value.outputDb/
+20)})}function aborted3(){return new DOMException("Playback ownership superseded","AbortError")}function interruptible(promise,signal){
+return new Promise((resolve,reject)=>{let finished=false;const finish=(callback,value)=>{if(finished)
+return;finished=true;signal.removeEventListener("abort",abort);callback(value)};const abort=()=>finish(
+reject,aborted3());Promise.resolve(promise).then(value=>finish(resolve,value),error2=>finish(reject,
+error2));if(signal.aborted)abort();else signal.addEventListener("abort",abort,{once:true})})}function createPlaybackGate({
+context,nativeInput,destination,levels,parkNative,restoreNative}){if(!context||typeof context.createGain!==
+"function"||typeof context.addEventListener!=="function"||typeof context.removeEventListener!=="func\
+tion"||!nativeInput||nativeInput.context!==context||typeof nativeInput.connect!=="function"||typeof nativeInput.
+disconnect!=="function"||!destination||destination.context!==context||destination===nativeInput)throw new TypeError(
+"A native input and destination in one audio context are required");if(!levels||typeof levels.read!==
+"function"||typeof levels.subscribe!=="function"||typeof parkNative!=="function"||typeof restoreNative!==
+"function")throw new TypeError("Logical levels and native ownership hooks are required");if(context.
+state==="closed")throw new Error("Audio context is closed");let level=readLevel(levels);if(ownedInputs.
+has(nativeInput))throw new Error("Native graph input already has a playback gate");ownedInputs.add(nativeInput);
+let nativeNode=null;let nativeConnected=false;let inputConnected=false;let unsubscribe=null;let listening=false;
+let current=null;let generation=0;let disposed=false;let phase="native";let failure2=null;let cleanupErrors=0;
+function available(){if(disposed)throw new Error("Playback gate is disposed");if(context.state==="cl\
+osed")throw new Error("Audio context is closed")}function value(node,gain){node.gain.cancelScheduledValues(
+0);node.gain.value=gain}function attempt(action,errors){try{action()}catch(error2){cleanupErrors++;errors.
+push(error2)}}function closeNative(errors){if(!nativeNode)return;if(nativeConnected)attempt(()=>{nativeNode.
+disconnect(destination);nativeConnected=false},errors);attempt(()=>value(nativeNode,0),errors)}function closeBuffered(owner,errors){
+if(!owner?.input)return;const before=errors.length;if(owner.connected)attempt(()=>{owner.input.disconnect(
+destination);owner.connected=false},errors);attempt(()=>value(owner.input,0),errors);if(errors.length===
+before)owner.input=null}function snapshot(){return Object.freeze({state:phase,generation,owned:current!==
+null,nodes:Number(nativeNode!==null)+Number(Boolean(current?.input)),nativeConnected,bufferedConnected:Boolean(
+current?.connected),nativeGain:nativeNode?.gain.value??0,bufferedGain:current?.input?.gain.value??0,
+level,error:failure2,cleanupErrors})}function valid(owner,revision){return!disposed&&context.state!==
+"closed"&&current===owner&&owner.generation===generation&&owner.revision===revision}function fail(owner,error2){
+const errors=[];closeNative(errors);closeBuffered(owner,errors);owner?.controller.abort();phase="fai\
+led";failure2=errors.length?new AggregateError([error2,...errors],"Playback gate could not be silenc\
+ed",{cause:error2}):error2;return failure2}function refresh(){if(disposed)return;try{level=readLevel(
+levels);if(phase==="buffered")value(current.input,level.gain)}catch(error2){fail(current,error2)}}function release(owner,position,options={}){
+if(!options||typeof options!=="object"||Array.isArray(options)||Object.keys(options).some(key=>key!==
+"restore")||options.restore!==void 0&&typeof options.restore!=="boolean")throw new TypeError("Invali\
+d native restoration options");const restore=options.restore??true;if((restore||position!==void 0)&&
+(!Number.isFinite(position)||position<0||position>86400))throw new RangeError("Native restoration re\
+quires a valid source position");if(owner.releasePromise)return owner.releasePromise;available();if(current!==
+owner||owner.generation!==generation)throw aborted3();owner.controller.abort();owner.controller=new AbortController;
+const signal=owner.controller.signal;const revision=++owner.revision;phase="releasing";failure2=null;
+const errors=[];closeBuffered(owner,errors);closeNative(errors);owner.releasePromise=Promise.resolve().
+then(async()=>{if(!valid(owner,revision))throw aborted3();if(errors.length)throw new AggregateError(
+errors,"Buffered route cleanup failed");await interruptible(restoreNative({position,restore,signal,generation:owner.
+generation}),signal);if(!valid(owner,revision))throw aborted3();level=readLevel(levels);value(nativeNode,
+1);nativeConnected=true;nativeNode.connect(destination);if(!valid(owner,revision))throw aborted3();current=
+null;phase="native";return snapshot()}).catch(error2=>{owner.releasePromise=null;if(valid(owner,revision))
+throw fail(owner,error2);throw error2});owner.releasePromise.catch(()=>{});return owner.releasePromise}
+function acquire(){available();if(current)throw new Error("Playback gate already has an owner");if(phase!==
+"native")throw new Error("Playback gate is not ready for ownership");level=readLevel(levels);const input=context.
+createGain();try{value(input,0);input.connect(destination)}catch(error2){const errors2=[];attempt(()=>input.
+disconnect(destination),errors2);if(errors2.length)throw new AggregateError([error2,...errors2],"Buf\
+fered route allocation failed",{cause:error2});throw error2}const owner={input,connected:true,generation:++generation,
+revision:0,controller:new AbortController,releasePromise:null};current=owner;phase="acquiring";failure2=
+null;const errors=[];closeNative(errors);const signal=owner.controller.signal;const ready=Promise.resolve().
+then(async()=>{if(!valid(owner,0))throw aborted3();if(errors.length)throw new AggregateError(errors,
+"Native route cleanup failed");await interruptible(parkNative({signal,generation:owner.generation}),
+signal);if(!valid(owner,0))throw aborted3();level=readLevel(levels);value(owner.input,level.gain);phase=
+"buffered";return snapshot()}).catch(error2=>{if(valid(owner,0))throw fail(owner,error2);throw error2});
+ready.catch(()=>{});return Object.freeze({input,ready,generation:owner.generation,release:(position,options)=>release(
+owner,position,options)})}function dispose(){if(disposed&&!nativeNode&&!current&&!unsubscribe&&!listening)
+return snapshot();disposed=true;phase="disposed";generation++;current?.controller.abort();const errors=[];
+if(listening)attempt(()=>{context.removeEventListener("statechange",stateChanged);listening=false},errors);
+if(unsubscribe)attempt(()=>{unsubscribe();unsubscribe=null},errors);closeBuffered(current,errors);closeNative(
+errors);if(inputConnected)attempt(()=>{nativeInput.disconnect(nativeNode);inputConnected=false},errors);
+if(!errors.length){current=null;nativeNode=null;ownedInputs.delete(nativeInput)}if(errors.length){failure2=
+new AggregateError(errors,"Playback gate cleanup failed");throw failure2}return snapshot()}function stateChanged(){
+if(disposed||context.state!=="closed")return;try{dispose()}catch{}}try{nativeNode=context.createGain();
+value(nativeNode,1);nativeConnected=true;nativeNode.connect(destination);inputConnected=true;nativeInput.
+connect(nativeNode);unsubscribe=levels.subscribe(refresh);if(typeof unsubscribe!=="function"){unsubscribe=
+null;throw new TypeError("Level subscription must provide cleanup")}listening=true;context.addEventListener(
+"statechange",stateChanged);available();if(phase!=="native")throw failure2}catch(error2){try{dispose()}catch(cleanup){
+throw new AggregateError([error2,cleanup],"Playback gate initialization failed",{cause:error2})}throw error2}
+return Object.freeze({acquire,snapshot,dispose})}var BLOCK_BYTES=16384;var DEFAULT_LIMITS3=Object.freeze({playlists:8,playlistCharacters:262144,segments:512,
+urlCharacters:4096,playlistUrlCharacters:1024*1024,resources:64,sources:8,media:8,parsers:16,boxBytes:4*
+1024*1024,pendingHashBytes:1024*1024,digestBytes:256*1024});function mediaUrl2(value,base,maximum){if(typeof value!==
+"string"||value.length>maximum)return null;try{const url=new URL(value,base);if(url.protocol!=="http\
+s:"||url.username||url.password||url.port||url.hash||!(url.hostname.endsWith(".sndcdn.com")||url.hostname.
+endsWith(".media-streaming.soundcloud.cloud"))||url.href.length>maximum)return null;return url.href}catch{
+return null}}function bytesOf(value){if(ArrayBuffer.isView(value))return new Uint8Array(value.buffer,
+value.byteOffset,value.byteLength);if(value instanceof ArrayBuffer)return new Uint8Array(value);throw new TypeError(
+"A byte buffer is required.")}function hex(value){return Array.from(new Uint8Array(value),byte=>byte.
+toString(16).padStart(2,"0")).join("")}var PayloadHash=class{constructor(owner,length,publish){this.
+owner=owner;this.length=length;this.publish=publish;this.remaining=length;this.used=0;this.blocks=[];
+this.metadataBytes=0;this.scratch=new Uint8Array(BLOCK_BYTES);owner.scratchBytes+=BLOCK_BYTES;owner.
+account()}write(bytes){if(this.closed)return;let offset=0;while(offset<bytes.length){const count=Math.
+min(bytes.length-offset,BLOCK_BYTES-this.used,this.remaining);if(!count)throw new Error("Invalid med\
+ia payload length.");this.scratch.set(bytes.subarray(offset,offset+count),this.used);this.used+=count;
+this.remaining-=count;offset+=count;if(this.used===BLOCK_BYTES||!this.remaining){this.owner.reserveDigest(
+32);this.metadataBytes+=32;this.blocks.push(this.owner.hash(this.scratch.subarray(0,this.used)));this.
+used=0}}if(!this.remaining)this.finish()}finish(){this.closed=true;this.releaseScratch();const work=Promise.
+all(this.blocks).then(async hashes=>{if(this.cancelled||this.owner.disposed)return;const length=hashes.
+length*32;this.owner.reserveDigest(length);this.metadataBytes+=length;const combined=new Uint8Array(
+length);hashes.forEach((hash,index)=>combined.set(new Uint8Array(hash),index*32));const result=await this.
+owner.hash(combined);if(!this.cancelled&&!this.owner.disposed)this.publish(`${this.length}:${hex(result)}`)}).
+catch(()=>{this.owner.failures++}).finally(()=>{this.blocks.length=0;this.owner.digestBytes-=this.metadataBytes;
+this.metadataBytes=0});this.owner.join(work)}releaseScratch(){if(!this.scratch)return;this.scratch=null;
+this.owner.scratchBytes-=BLOCK_BYTES}abort(){this.cancelled=true;this.releaseScratch();if(this.closed)
+return;this.closed=true;const work=Promise.allSettled(this.blocks).then(()=>{this.blocks.length=0;this.
+owner.digestBytes-=this.metadataBytes;this.metadataBytes=0});this.owner.join(work)}};var BoxParser=class{constructor(owner,onPayload,onFailure){
+this.owner=owner;this.onPayload=onPayload;this.onFailure=onFailure;this.header=new Uint8Array(16);this.
+headerLength=0;this.headerNeeded=8;this.remaining=0;this.payload=null;this.boxes=0;if(owner.parsers.
+size>=owner.limits.parsers)throw new Error("Media parser limit exceeded.");owner.parsers.add(this)}write(value){
+if(this.closed||this.owner.disposed)return;try{const bytes=bytesOf(value);if(bytes.length>this.owner.
+limits.boxBytes)throw new Error("Media chunk limit exceeded.");let offset=0;while(offset<bytes.length){
+if(this.remaining){const count2=Math.min(this.remaining,bytes.length-offset);this.payload?.write(bytes.
+subarray(offset,offset+count2));this.remaining-=count2;offset+=count2;if(!this.remaining)this.payload=
+null;continue}const count=Math.min(this.headerNeeded-this.headerLength,bytes.length-offset);this.header.
+set(bytes.subarray(offset,offset+count),this.headerLength);this.headerLength+=count;offset+=count;if(this.
+headerLength<this.headerNeeded)continue;const view=new DataView(this.header.buffer);let length=view.
+getUint32(0);if(length===1&&this.headerNeeded===8){this.headerNeeded=16;continue}if(length===1)length=
+Number(view.getBigUint64(8));if(!Number.isSafeInteger(length)||length<this.headerNeeded||length>this.
+owner.limits.boxBytes||++this.boxes>4096)throw new Error("Unsupported media box.");const type=String.
+fromCharCode(...this.header.subarray(4,8));this.remaining=length-this.headerNeeded;if(type==="mdat"&&
+this.remaining){const publish=this.onPayload();this.payload=new PayloadHash(this.owner,this.remaining,
+publish)}this.headerLength=0;this.headerNeeded=8}}catch{this.owner.failures++;this.abort();this.onFailure()}}close(){
+if(this.closed)return;if(this.remaining||this.headerLength){this.owner.failures++;this.onFailure()}this.
+abort()}abort(){if(this.closed)return;this.closed=true;this.payload?.abort();this.payload=null;this.
+owner.parsers.delete(this)}};var SourceBinding=class{constructor({global:global2=globalThis,limits={},
+onChange=()=>{},digest}={}){this.global=global2;this.limits={...DEFAULT_LIMITS3};for(const[key,value]of Object.
+entries(limits)){if(!Object.hasOwn(DEFAULT_LIMITS3,key)||!Number.isSafeInteger(value)||value<1||value>
+DEFAULT_LIMITS3[key])throw new TypeError("Invalid source binding limit.");this.limits[key]=value}this.
+digest=digest||global2.crypto?.subtle?.digest.bind(global2.crypto.subtle);if(typeof this.digest!=="f\
+unction"||typeof onChange!=="function")throw new TypeError("Source binding requires SHA-256 and a ch\
+ange callback.");this.onChange=onChange;this.WeakRef=global2.WeakRef??globalThis.WeakRef;if(typeof this.
+WeakRef!=="function")throw new TypeError("Source binding requires weak references.");this.playlists=
+new Map;this.playlistVersions=new Map;this.nextPlaylistVersion=0;this.resources=new Map;this.sources=
+new WeakMap;this.sourceStates=new Set;this.sourceBuffers=new WeakMap;this.urls=new Map;this.media=new WeakMap;
+this.mediaRefs=new Set;this.parsers=new Set;this.jobs=new Set;this.restorers=[];this.pendingHashBytes=
+0;this.peakPendingHashBytes=0;this.scratchBytes=0;this.peakScratchBytes=0;this.digestBytes=0;this.peakDigestBytes=
+0;this.failures=0;this.nextSource=0;this.disposed=false}account(){this.peakPendingHashBytes=Math.max(
+this.peakPendingHashBytes,this.pendingHashBytes);this.peakScratchBytes=Math.max(this.peakScratchBytes,
+this.scratchBytes);this.peakDigestBytes=Math.max(this.peakDigestBytes,this.digestBytes)}reserveDigest(bytes){
+if(this.digestBytes+bytes>this.limits.digestBytes)throw new Error("Digest metadata limit exceeded.");
+this.digestBytes+=bytes;this.account()}join(promise){this.jobs.add(promise);promise.finally(()=>this.
+jobs.delete(promise)).catch(()=>{});return promise}hash(bytes){const length=bytes.byteLength;if(this.
+pendingHashBytes+length>this.limits.pendingHashBytes)throw new Error("Pending hash input limit excee\
+ded.");this.pendingHashBytes+=length;this.account();let promise;try{promise=this.digest("SHA-256",bytes)}catch(cause){
+this.pendingHashBytes-=length;throw cause}return this.join(Promise.resolve(promise).finally(()=>{this.
+pendingHashBytes-=length}))}playlist(url,text){if(this.disposed)return false;url=mediaUrl2(url,void 0,
+this.limits.urlCharacters);if(!url||typeof text!=="string"||text.length>this.limits.playlistCharacters||
+!text.startsWith("#EXTM3U")||!/^#EXT-X-ENDLIST\s*$/m.test(text)||/^#EXT-X-(?:KEY|STREAM-INF|BYTERANGE):/m.
+test(text))return false;const segments=new Set;let characters=url.length;let expectedSegment=false;for(const line of text.
+split(/\r?\n/)){if(line.startsWith("#EXTINF:"))expectedSegment=true;if(!line.trim()||line.startsWith(
+"#"))continue;if(!expectedSegment)return false;const child=mediaUrl2(line.trim(),url,this.limits.urlCharacters);
+if(!child||segments.size>=this.limits.segments)return false;if(!segments.has(child))characters+=child.
+length;if(characters>this.limits.playlistUrlCharacters)return false;segments.add(child);expectedSegment=
+false}if(!segments.size||expectedSegment)return false;const previous=this.playlists.get(url);if(previous&&
+previous.size===segments.size&&[...previous].every(segment=>segments.has(segment)))return true;const previousCharacters=previous?
+url.length+[...previous].reduce((total,value)=>total+value.length,0):0;if(this.urlCharacterCount()-previousCharacters+
+characters>this.limits.playlistUrlCharacters)return false;if(!this.playlists.has(url)&&this.playlists.
+size>=this.limits.playlists){const active=new Set(this.mediaEntries().map(([media])=>this.resolve(media).
+playlistUrl));const oldest=[...this.playlists.keys()].find(candidate=>!active.has(candidate));if(!oldest)
+return false;this.playlists.delete(oldest);this.playlistVersions.delete(oldest)}this.playlists.set(url,
+segments);this.playlistVersions.set(url,++this.nextPlaylistVersion);for(const resource of this.resources.
+keys())if(!this.knownResource(resource))this.resources.delete(resource);this.notify();return true}knownResource(url){
+return[...this.playlists.values()].some(segments=>segments.has(url))}urlCharacterCount(){let total=0;
+for(const[url,segments]of this.playlists){total+=url.length;for(const segment of segments)total+=segment.
+length}return total}response(url){if(this.disposed)return null;url=mediaUrl2(url,void 0,this.limits.
+urlCharacters);if(!url||!this.knownResource(url))return null;let active=true;let complete=false;let pendingKey;
+let byteCount=0;const publish=()=>{if(!active||!complete||!pendingKey||this.disposed||!this.knownResource(
+url))return;if(!this.resources.has(url)&&this.resources.size>=this.limits.resources)this.resources.delete(
+this.resources.keys().next().value);this.resources.set(url,pendingKey);this.notify()};const parser=new BoxParser(
+this,()=>key=>{pendingKey=key;publish()},()=>{active=false;this.resources.delete(url);this.notify()});
+return Object.freeze({write:value=>{byteCount+=value?.byteLength||0;if(byteCount>this.limits.boxBytes){
+active=false;parser.abort();this.failures++;return}parser.write(value)},close:()=>{parser.close();complete=
+true;publish()},abort:()=>{if(complete)return;active=false;parser.abort()}})}objectUrl(url,mediaSource){
+if(this.disposed||typeof url!=="string"||!url.startsWith("blob:")||url.length>this.limits.urlCharacters)
+return;let state=this.sources.get(mediaSource);if(!state){if(this.sourceStates.size>=this.limits.sources)
+return;state={id:++this.nextSource,serial:0,proof:null,buffers:0,closed:false};this.sources.set(mediaSource,
+state);this.sourceStates.add(state)}if(this.urls.size>=this.limits.sources*2&&!this.urls.has(url))return;
+this.urls.set(url,state)}sourceBuffer(mediaSource,sourceBuffer,mime){const state=this.sources.get(mediaSource);
+if(!state||this.disposed)return;state.buffers++;if(state.buffers!==1||!/^audio\/mp4\s*;\s*codecs\s*=\s*"?mp4a\.40\.2"?\s*$/i.
+test(mime)){state.closed=true;state.proof=null;state.parser?.abort();this.notify();return}const parser=new BoxParser(
+this,()=>{const serial=++state.serial;state.proof=null;this.notify();return key=>{if(state.closed||state.
+serial!==serial||this.disposed)return;state.proof={serial,key,matches:new Map};this.notify()}},()=>{
+state.closed=true;state.proof=null;this.notify()});state.parser=parser;this.sourceBuffers.set(sourceBuffer,
+{state,parser})}append(sourceBuffer,value){const owned=this.sourceBuffers.get(sourceBuffer);if(!owned||
+owned.state.closed||this.disposed)return;owned.parser.write(value)}closeSource(mediaSource){const state=this.
+sources.get(mediaSource);if(!state)return;state.closed=true;state.proof=null;state.parser?.abort();this.
+sourceStates.delete(state);for(const[url,source2]of this.urls)if(source2===state)this.urls.delete(url);
+state.removeClose?.();this.notify()}observe(media){if(this.media.has(media))return this.media.get(media);
+this.mediaEntries();if(this.mediaRefs.size>=this.limits.media)return null;const state={reference:new this.
+WeakRef(media),generation:0,src:media.currentSrc,minimumSerial:0,blockedSource:null,lastStatus:""};this.
+media.set(media,state);this.mediaRefs.add(state.reference);return state}mediaEntries(){const entries=[];
+for(const reference of this.mediaRefs){const media=reference.deref();const state=media&&this.media.get(
+media);if(!state||state.reference!==reference){this.mediaRefs.delete(reference);continue}entries.push(
+[media,state])}return entries}invalidate(media){if(this.disposed)return;const state=this.observe(media);
+if(!state)return;state.generation++;state.minimumSerial=this.urls.get(media.currentSrc)?.serial||0;state.
+blockedSource=this.urls.get(media.currentSrc)?.id??state.blockedSource;this.notify()}resolve(media){
+if(this.disposed)return Object.freeze({status:"unbound",reason:"disposed"});const state=this.observe(
+media);if(!state)return Object.freeze({status:"unavailable",reason:"media-limit"});const src=media.currentSrc;
+if(src!==state.src){state.src=src;state.generation++;state.minimumSerial=0}const source2=this.urls.get(
+src);const base={generation:state.generation,sourceId:source2?.id??null};const reason=!source2?"sour\
+ce-not-observed":source2.closed?"unsupported-source":source2.id===state.blockedSource?"source-invali\
+dated":!source2.proof||source2.proof.serial<=state.minimumSerial?"waiting-for-payload-proof":null;if(reason)
+return Object.freeze({...base,status:"unbound",reason});const matches=[];for(const[url,version]of source2.
+proof.matches)if(this.playlistVersions.get(url)!==version)source2.proof.matches.delete(url);for(const[
+url,segments]of this.playlists){if(source2.proof.matches.get(url)===this.playlistVersions.get(url)||
+[...segments].some(segment=>this.resources.get(segment)===source2.proof.key)){matches.push(url);source2.
+proof.matches.set(url,this.playlistVersions.get(url))}}if(matches.length!==1)return Object.freeze({...base,
+status:matches.length?"ambiguous":"unbound",reason:matches.length?"multiple-playlists":"no-matching-\
+playlist"});return Object.freeze({...base,status:"bound",playlistUrl:matches[0],proof:"sha256-mdat-b\
+locks",proofSerial:source2.proof.serial})}release(media){const state=this.media.get(media);if(state)
+this.mediaRefs.delete(state.reference);this.media.delete(media)}notify(){for(const[media,state]of this.
+mediaEntries()){if(this.media.get(media)!==state)continue;const result=this.resolve(media);const signature=JSON.
+stringify(result);if(signature===state.lastStatus)continue;state.lastStatus=signature;try{this.onChange(
+media,result)}catch{this.failures++}}}patch(target,key,replacement){const descriptor=Object.getOwnPropertyDescriptor(
+target,key);if(!descriptor||descriptor.configurable===false)throw new Error(`Cannot observe ${key}.`);
+const next=replacement(descriptor);Object.defineProperty(target,key,next);this.restorers.push(()=>{const current=Object.
+getOwnPropertyDescriptor(target,key);if(current?.value===next.value&&current?.get===next.get&&current?.
+set===next.set)Object.defineProperty(target,key,descriptor)})}install(){if(this.installed||this.disposed)
+return false;const owner=this;const realm=this.global;const safe=work=>{try{return work()}catch{owner.
+failures++;return null}};const streams=new WeakMap;const readers=new WeakMap;const responses=new WeakMap;
+const observeResponse=(url,value)=>{if(typeof value==="string")return owner.playlist(url,value);if(!(value instanceof
+ArrayBuffer)&&!ArrayBuffer.isView(value))return;const parser=owner.response(url);if(!parser)return;try{
+parser.write(value);parser.close()}finally{parser.abort()}};const method2=(target,key,handler)=>owner.
+patch(target,key,descriptor=>({...descriptor,value:function(...args){return handler.call(this,descriptor.
+value,args)}}));try{for(const key of["response","responseText"])this.patch(realm.XMLHttpRequest.prototype,
+key,descriptor=>({...descriptor,get(){const value=Reflect.apply(descriptor.get,this,[]);if(this.readyState===
+4&&this.status>=200&&this.status<300)safe(()=>{if(responses.get(this)===value)return;responses.set(this,
+value);observeResponse(this.responseURL,value)});return value}}));for(const key of["text","arrayBuff\
+er"])method2(realm.Response.prototype,key,function(original,args){const promise=Reflect.apply(original,
+this,args);if(!mediaUrl2(this.url,void 0,owner.limits.urlCharacters))return promise;return promise.then(
+value=>{if(this.ok)safe(()=>observeResponse(this.url,value));return value})});this.patch(realm.Response.
+prototype,"body",descriptor=>({...descriptor,get(){const value=Reflect.apply(descriptor.get,this,[]);
+if(value&&owner.knownResource(this.url))safe(()=>streams.set(value,this.url));return value}}));method2(
+realm.ReadableStream.prototype,"getReader",function(original,args){const reader=Reflect.apply(original,
+this,args);const parser=safe(()=>owner.response(streams.get(this)));if(parser)readers.set(reader,parser);
+return reader});method2(realm.ReadableStreamDefaultReader.prototype,"read",function(original,args){const promise=Reflect.
+apply(original,this,args);const parser=readers.get(this);if(!parser)return promise;return promise.then(
+result=>{safe(()=>result.done?parser.close():parser.write(result.value));return result},cause=>{safe(
+()=>parser.abort());throw cause})});method2(realm.ReadableStreamDefaultReader.prototype,"cancel",function(original,args){
+safe(()=>readers.get(this)?.abort());return Reflect.apply(original,this,args)});method2(realm.ReadableStreamDefaultReader.
+prototype,"releaseLock",function(original,args){const value=Reflect.apply(original,this,args);safe(()=>readers.
+get(this)?.abort());return value});method2(realm.URL,"createObjectURL",function(original,args){const url=Reflect.
+apply(original,this,args);if(args[0]instanceof realm.MediaSource)safe(()=>{owner.objectUrl(url,args[0]);
+const state=owner.sources.get(args[0]);if(!state||state.removeClose)return;const close=()=>owner.closeSource(
+args[0]);args[0].addEventListener("sourceclose",close,{once:true});state.removeClose=()=>{args[0].removeEventListener(
+"sourceclose",close);state.removeClose=null}});return url});method2(realm.MediaSource.prototype,"add\
+SourceBuffer",function(original,args){const value=Reflect.apply(original,this,args);safe(()=>owner.sourceBuffer(
+this,value,args[0]));return value});method2(realm.SourceBuffer.prototype,"appendBuffer",function(original,args){
+const value=Reflect.apply(original,this,args);safe(()=>owner.append(this,args[0]));return value});this.
+patch(realm.HTMLMediaElement.prototype,"src",descriptor=>({...descriptor,set(value){if(owner.media.has(
+this)&&descriptor.get.call(this)!==value)safe(()=>owner.invalidate(this));return Reflect.apply(descriptor.
+set,this,[value])}}));this.installed=true;return true}catch{for(const restore of this.restorers.splice(
+0).reverse())restore();this.failures++;return false}}async settle(){while(this.jobs.size)await Promise.
+allSettled([...this.jobs])}stats(){return Object.freeze({disposed:this.disposed,installed:!!this.installed,
+playlists:this.playlists.size,playlistUrlCharacters:this.urlCharacterCount(),resources:this.resources.
+size,sources:this.sourceStates.size,media:this.mediaEntries().length,parsers:this.parsers.size,pendingHashBytes:this.
+pendingHashBytes,peakPendingHashBytes:this.peakPendingHashBytes,scratchBytes:this.scratchBytes,peakScratchBytes:this.
+peakScratchBytes,digestBytes:this.digestBytes,peakDigestBytes:this.peakDigestBytes,failures:this.failures})}dispose(){
+if(this.disposal)return this.disposal;this.disposed=true;for(const restore of this.restorers.splice(
+0).reverse()){try{restore()}catch{this.failures++}}for(const parser of this.parsers)parser.abort();for(const state of this.
+sourceStates)state.removeClose?.();this.playlists.clear();this.playlistVersions.clear();this.resources.
+clear();this.urls.clear();this.sourceStates.clear();this.notify();this.media=new WeakMap;this.mediaRefs.
+clear();this.installed=false;this.disposal=this.settle().then(()=>this.stats());return this.disposal}};
+function createSourceBinding(options){const binding=new SourceBinding(options);return Object.freeze(
+{install:()=>binding.install(),playlist:(url,text)=>binding.playlist(url,text),response:url=>binding.
+response(url),objectUrl:(url,source2)=>binding.objectUrl(url,source2),sourceBuffer:(source2,buffer,mime)=>binding.
+sourceBuffer(source2,buffer,mime),append:(buffer,bytes)=>binding.append(buffer,bytes),closeSource:source2=>binding.
+closeSource(source2),resolve:media=>binding.resolve(media),invalidate:media=>binding.invalidate(media),
+release:media=>binding.release(media),settle:()=>binding.settle(),stats:()=>binding.stats(),dispose:()=>binding.
+dispose()})}var preserve_worklet_default='"use strict";(()=>{var SignalsmithStretch=(()=>{var _scriptName=typeof\
+ document!="undefined"?document.currentScript?.src:void 0;return(function(moduleArg={}){var moduleRt\
+n;var Module=moduleArg;var readyPromiseResolve,readyPromiseReject;var readyPromise=new Promise((reso\
+lve,reject)=>{readyPromiseResolve=resolve;readyPromiseReject=reject});var ENVIRONMENT_IS_WEB=typeof \
+window=="object";var ENVIRONMENT_IS_WORKER=typeof WorkerGlobalScope!="undefined";var ENVIRONMENT_IS_\
+NODE=typeof process=="object"&&typeof process.versions=="object"&&typeof process.versions.node=="str\
+ing"&&process.type!="renderer";var ENVIRONMENT_IS_SHELL=!ENVIRONMENT_IS_WEB&&!ENVIRONMENT_IS_NODE&&!\
+ENVIRONMENT_IS_WORKER;var crypto=globalThis?.crypto||{getRandomValues:array=>{for(var i=0;i<array.le\
+ngth;i++)array[i]=Math.random()*256|0}};var performance=globalThis?.performance||{now:_=>Date.now()}\
+;var moduleOverrides=Object.assign({},Module);var arguments_=[];var quit_=(status,toThrow)=>{throw t\
+oThrow};var scriptDirectory="";var readAsync,readBinary;if(ENVIRONMENT_IS_SHELL){readBinary=f=>{if(t\
+ypeof readbuffer=="function"){return new Uint8Array(readbuffer(f))}let data=read(f,"binary");assert(\
+typeof data=="object");return data};readAsync=f=>new Promise((resolve,reject)=>{setTimeout(()=>resol\
+ve(readBinary(f)))});globalThis.clearTimeout??=id=>{};globalThis.setTimeout??=f=>f();arguments_=glob\
+alThis.arguments||globalThis.scriptArgs;if(typeof quit=="function"){quit_=(status,toThrow)=>{setTime\
+out(()=>{if(!(toThrow instanceof ExitStatus)){let toLog=toThrow;if(toThrow&&typeof toThrow=="object"\
+&&toThrow.stack){toLog=[toThrow,toThrow.stack]}err(`exiting due to exception: ${toLog}`)}quit(status\
+)});throw toThrow}}if(typeof print!="undefined"){globalThis.console??={};console.log=print;console.w\
+arn=console.error=globalThis.printErr??print}}else if(ENVIRONMENT_IS_WEB||ENVIRONMENT_IS_WORKER){if(\
+ENVIRONMENT_IS_WORKER){scriptDirectory=self.location.href}else if(typeof document!="undefined"&&docu\
+ment.currentScript){scriptDirectory=document.currentScript.src}if(_scriptName){scriptDirectory=_scri\
+ptName}if(scriptDirectory.startsWith("blob:")){scriptDirectory=""}else{scriptDirectory=scriptDirecto\
+ry.substr(0,scriptDirectory.replace(/[?#].*/,"").lastIndexOf("/")+1)}{if(ENVIRONMENT_IS_WORKER){read\
+Binary=url=>{var xhr=new XMLHttpRequest;xhr.open("GET",url,false);xhr.responseType="arraybuffer";xhr\
+.send(null);return new Uint8Array(xhr.response)}}readAsync=url=>fetch(url,{credentials:"same-origin"\
+}).then(response=>{if(response.ok){return response.arrayBuffer()}return Promise.reject(new Error(res\
+ponse.status+" : "+response.url))})}}else{}var out=console.log.bind(console);var err=console.error.b\
+ind(console);Object.assign(Module,moduleOverrides);moduleOverrides=null;var wasmBinary;if(typeof ato\
+b=="undefined"){if(typeof global!="undefined"&&typeof globalThis=="undefined"){globalThis=global}glo\
+balThis.atob=function(input){var keyStr="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456\
+789+/=";var output="";var chr1,chr2,chr3;var enc1,enc2,enc3,enc4;var i=0;input=input.replace(/[^A-Za\
+-z0-9\\+\\/\\=]/g,"");do{enc1=keyStr.indexOf(input.charAt(i++));enc2=keyStr.indexOf(input.charAt(i++));\
+enc3=keyStr.indexOf(input.charAt(i++));enc4=keyStr.indexOf(input.charAt(i++));chr1=enc1<<2|enc2>>4;c\
+hr2=(enc2&15)<<4|enc3>>2;chr3=(enc3&3)<<6|enc4;output=output+String.fromCharCode(chr1);if(enc3!==64)\
+{output=output+String.fromCharCode(chr2)}if(enc4!==64){output=output+String.fromCharCode(chr3)}}whil\
+e(i<input.length);return output}}function intArrayFromBase64(s){var decoded=atob(s);var bytes=new Ui\
+nt8Array(decoded.length);for(var i=0;i<decoded.length;++i){bytes[i]=decoded.charCodeAt(i)}return byt\
+es}function tryParseAsDataURI(filename){if(!isDataURI(filename)){return}return intArrayFromBase64(fi\
+lename.slice(dataURIPrefix.length))}var wasmMemory;var ABORT=false;var EXITSTATUS;var HEAP8,HEAPU8,H\
+EAP16,HEAPU16,HEAP32,HEAPU32,HEAPF32,HEAPF64;function updateMemoryViews(){var b=wasmMemory.buffer;Mo\
+dule["HEAP8"]=HEAP8=new Int8Array(b);HEAP16=new Int16Array(b);HEAPU8=new Uint8Array(b);HEAPU16=new U\
+int16Array(b);HEAP32=new Int32Array(b);HEAPU32=new Uint32Array(b);HEAPF32=new Float32Array(b);HEAPF6\
+4=new Float64Array(b)}var __ATPRERUN__=[];var __ATINIT__=[];var __ATMAIN__=[];var __ATPOSTRUN__=[];v\
+ar runtimeInitialized=false;function preRun(){callRuntimeCallbacks(__ATPRERUN__)}function initRuntim\
+e(){runtimeInitialized=true;callRuntimeCallbacks(__ATINIT__)}function preMain(){callRuntimeCallbacks\
+(__ATMAIN__)}function postRun(){callRuntimeCallbacks(__ATPOSTRUN__)}function addOnInit(cb){__ATINIT_\
+_.unshift(cb)}var runDependencies=0;var runDependencyWatcher=null;var dependenciesFulfilled=null;fun\
+ction addRunDependency(id){runDependencies++}function removeRunDependency(id){runDependencies--;if(r\
+unDependencies==0){if(runDependencyWatcher!==null){clearInterval(runDependencyWatcher);runDependency\
+Watcher=null}if(dependenciesFulfilled){var callback=dependenciesFulfilled;dependenciesFulfilled=null\
+;callback()}}}function abort(what){what="Aborted("+what+")";err(what);ABORT=true;what+=". Build with\
+ -sASSERTIONS for more info.";var e=new WebAssembly.RuntimeError(what);readyPromiseReject(e);throw e\
+}var dataURIPrefix="data:application/octet-stream;base64,";var isDataURI=filename=>filename.startsWi\
+th(dataURIPrefix);function findWasmBinary(){var f="data:application/octet-stream;base64,AGFzbQEAAAAB\
+eBVgAX8AYAJ/fwBgAABgAX8Bf2ACf38Bf2ADf39/AGAAAX9gAX0BfWAEf39/fwBgAXwBfWABfAF8YAl/f39/f39/f38AYAF9AGAH\
+f39/f39/fwBgAn9/AX1gAn1/AGACfX0AYAJ/fQBgAnx/AXxgAn1/AX9gAn98AAIZBAFhAWEABAFhAWIAAwFhAWMABQFhAWQAAgM8\
+OwAEAQMBBwcJCQICCAMKEgULCwwAAQgCBQMHCgUTDQ0BAQEBBgQCAwAABAAAARQMDw8QEAgAERECBgYGBAUBcAEFBQUGAQEIgIAC\
+BggBfwFB4LgECwdVFQFlAgABZgAaAWcBAAFoACgBaQAnAWoAPgFrAD0BbAA8AW0AOwFuADoBbwA5AXAANwFxADYBcgA1AXMANAF0\
+ADMBdQAyAXYAMQF3ADABeAAuAXkALQkKAQBBAQsEOC8sKwqfzQM73gsBB38CQCAARQ0AIABBCGsiAyAAQQRrKAIAIgJBeHEiAGoh\
+BQJAIAJBAXENACACQQJxRQ0BIAMgAygCACIEayIDQfA0KAIASQ0BIAAgBGohAAJAAkACQEH0NCgCACADRwRAIAMoAgwhASAEQf8B\
+TQRAIAEgAygCCCICRw0CQeA0QeA0KAIAQX4gBEEDdndxNgIADAULIAMoAhghBiABIANHBEAgAygCCCICIAE2AgwgASACNgIIDAQL\
+IAMoAhQiAgR/IANBFGoFIAMoAhAiAkUNAyADQRBqCyEEA0AgBCEHIAIiAUEUaiEEIAEoAhQiAg0AIAFBEGohBCABKAIQIgINAAsg\
+B0EANgIADAMLIAUoAgQiAkEDcUEDRw0DQeg0IAA2AgAgBSACQX5xNgIEIAMgAEEBcjYCBCAFIAA2AgAPCyACIAE2AgwgASACNgII\
+DAILQQAhAQsgBkUNAAJAIAMoAhwiBEECdEGQN2oiAigCACADRgRAIAIgATYCACABDQFB5DRB5DQoAgBBfiAEd3E2AgAMAgsCQCAD\
+IAYoAhBGBEAgBiABNgIQDAELIAYgATYCFAsgAUUNAQsgASAGNgIYIAMoAhAiAgRAIAEgAjYCECACIAE2AhgLIAMoAhQiAkUNACAB\
+IAI2AhQgAiABNgIYCyADIAVPDQAgBSgCBCIEQQFxRQ0AAkACQAJAAkAgBEECcUUEQEH4NCgCACAFRgRAQfg0IAM2AgBB7DRB7DQo\
+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\
+BCgCACEFAkACQCABQQRPBEAgAyAFckEDcQ0BA0AgAygCACAFKAIARw0CIAVBBGohBSADQQRqIQMgAUEEayIBQQNLDQALCyABRQ0B\
+CwNAIAMtAAAiCSAFLQAAIgpGBEAgBUEBaiEFIANBAWohAyABQQFrIgENAQwCCwsgCSAKawwBC0EACyIBDQBBACEBIAAoAgwiAyAE\
+KAIEIgVGDQBBf0EBIAMgBUkbIQELIAZBEGokACABRSEDCyAEQRBqJAAgAEEgaiQAIANFBEAjAEEQayIFJABBuggQHCEEAn8gAi0A\
+C0EHdgRAIAIoAgQMAQsgAi0AC0H/AHELIQMCfwJ/IwBBEGsiByQAIAhBBGohASADIARqIgBB9////wdNBEACQCAAQQtJBEAgAUIA\
+NwIAIAFBADYCCCABIAEtAAtBgAFxIABB/wBxcjoACyABIAEtAAtB/wBxOgALDAELIABBC08EfyAAQQhqQXhxIgYgBkEBayIGIAZB\
+C0YbBUEKC0EBaiIGEAchCCABIAEoAghBgICAgHhxIAZB/////wdxcjYCCCABIAEoAghBgICAgHhyNgIIIAEgCDYCACABIAA2AgQL\
+IAdBEGokACABDAELEA0ACyIALQALQQd2BEAgACgCAAwBCyAACyIAQboIIAQQGyAAIARqIgACfyACLQALQQd2BEAgAigCAAwBCyAC\
+CyADEBsgACADaiECIwBBEGsiACQAIABBADoAD0EBIQQDQCAEBEAgAiAALQAPOgAAIARBAWshBCACQQFqIQIMAQsLIABBEGokACAF\
+QRBqJAACfyABLQALQQd2BEAgASgCAAwBC0EACxoQDgALIAhBEGokACAHLAAPQQBIBEAgBygCBBAECyMAQRBrIgIkACMAQRBrIgEk\
+ACACQQxqQQQQACIABH9B3DQgADYCAEF/BUEACyABKAIMGiABQRBqJAAEQEHcNCgCABoQDgALIAIoAgwhASACQRBqJABBkDRBASAB\
+Qf////8HcCICIAJBAU0bNgIAQZw0QgA3AgBBlDRCADcCAEGoNEIANwMAQbA0QgA3AwAgB0EQaiQAQbg0QgA3AgBBwDRBADYCAEHE\
+NEIANwIAQcw0QQA2AgBB0DRCADcCAEHYNEEANgIAC+gBAQR/IwBBEGsiBiQAIwBBIGsiAyQAIwBBEGsiBCQAIAQgATYCDCAEIAEg\
+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\
+IQECQCACIAdPDQAgAkEBaiEFIAogBkECdGohB0HoMigCACEIQbwyKAIAIQkgASACIgRrQQFxBEAgCCAHIAJBAnQiBGoqAgAgBCAJ\
+aioCAJQ4AgAgBSEECyABIAVGDQADQCAIIAQgAmtBAnRqIAcgBEECdCIFaioCACAFIAlqKgIAlDgCACAIIARBAWoiBSACa0ECdGog\
+ByAFQQJ0IgVqKgIAIAUgCWoqAgCUOAIAIARBAmoiBCABRw0ACwsCQCABIA9PDQAgAUEBaiEEIAogBiADa0ECdGohBUHoMigCACED\
+QbwyKAIAIQYgDyABa0EBcQRAIAMgASACa0ECdGogBSABQQJ0IgFqKgIAIAEgBmoqAgCUOAIAIAQhAQsgBCAPRg0AA0AgAyABIAJr\
+QQJ0aiAFIAFBAnQiBGoqAgAgBCAGaioCAJQ4AgAgAyABQQFqIgQgAmtBAnRqIAUgBEECdCIEaioCACAEIAZqKgIAlDgCACABQQJq\
+IgEgD0cNAAsLQegyKAIAIRMgDyACayIBQbAyKAIAIgQgAmtJBEAgEyABQQJ0aiAEIA9rQQJ0EAUaC0HsMSgCAEHoMSgCAGtBcEcE\
+QEHcMigCAEG0MigCACAAbEEDdGohFEEAIQEDQCMAQRBrIg8kAEHQMCgCACICQZwxKAIAQZgxKAIAbCIGQQJ0IgBqIQUCQCABRQRA\
+IAZFDQFB6DAoAgAhAEEAIQMDQCACIANBAnQiBGogACADQQN0IgpqIgcqAgAiGSAKIBNqIgoqAgAiGpQgByoCBCIbIAoqAgQiHJST\
+OAIAIAQgBWogGyAalCAZIByUkjgCACADQQFqIgMgBkcNAAsMAQsgAEHEMCgCACIAaiEEIAFBAWsiA0HsMSgCAEHoMSgCACIKa0ED\
+dUkEQCAPIAogA0EDdGopAgAiKDcDACAPICg3AwhBACELQaAxKAIAIgZBpDEoAgAgBmtBAXVqIQoCQAJAAkACQAJAAkACQAJAAkAC\
+QAJAAkACQAJAAkAgDygCAA4OAAECAwQFBgcICQoLDA0OC0GQMSgCAEGMMSgCACIDa0EDdSIGQQFNBEAgACACKgIAOAIAIAQgBSoC\
+ADgCAAwOC0GAMSAGQQEgAiAFIAAgBCADIAMgBkECdGoQFQwNC0GYMSgCACIARQ0MIABBAXECQCAAQQFrIghFBEBBACEDDAELIABB\
+fnEhCUEAIQNBACEEA0AgBiADQQJ0aiILIAIgA0EDdGoiDCoCADgCACALIABBAnQiDmogDCoCBDgCACAGIANBAXIiC0ECdGoiDCAC\
+IAtBA3RqIgsqAgA4AgAgDCAOaiALKgIEOAIAIANBAmohAyAEQQJqIgQgCUcNAAsLBEAgBiADQQJ0aiIEIAIgA0EDdGoiAioCADgC\
+ACAEIABBAnRqIAIqAgQ4AgALIABBAXECQCAIRQRAQQAhAwwBCyAAQX5xIQZBACEDQQAhBANAIAogA0ECdGoiByAFIANBA3RqIggq\
+AgA4AgAgByAAQQJ0IglqIAgqAgQ4AgAgCiADQQFyIgdBAnRqIgggBSAHQQN0aiIHKgIAOAIAIAggCWogByoCBDgCACADQQJqIQMg\
+BEECaiIEIAZHDQALC0UNDCAKIANBAnRqIgQgBSADQQN0aiICKgIAOAIAIAQgAEECdGogAioCBDgCAAwMC0GYMSgCACIERQ0LIARB\
+AXEgBEEDdCEHAkAgBEEBayIMRQRAQQAhAwwBCyAEQX5xIQ5BACEDQQAhAANAIAYgA0ECdGoiCCACIANBDGxqIgkqAgA4AgAgCCAE\
+QQJ0Ig1qIAkqAgQ4AgAgByAIaiAJKgIIOAIAIAYgA0EBciIJQQJ0aiIIIAIgCUEMbGoiCSoCADgCACAIIA1qIAkqAgQ4AgAgByAI\
+aiAJKgIIOAIAIANBAmohAyAAQQJqIgAgDkcNAAsLBEAgBiADQQJ0aiIAIAIgA0EMbGoiAioCADgCACAAIARBAnRqIAIqAgQ4AgAg\
+ACAHaiACKgIIOAIACyAEQQFxAkAgDEUEQEEAIQMMAQsgBEF+cSEJQQAhA0EAIQADQCAKIANBAnRqIgIgBSADQQxsaiIGKgIAOAIA\
+IAIgBEECdCILaiAGKgIEOAIAIAIgB2ogBioCCDgCACAKIANBAXIiBkECdGoiAiAFIAZBDGxqIgYqAgA4AgAgAiALaiAGKgIEOAIA\
+IAIgB2ogBioCCDgCACADQQJqIQMgAEECaiIAIAlHDQALC0UNCyAKIANBAnRqIgAgBSADQQxsaiICKgIAOAIAIAAgBEECdGogAioC\
+BDgCACAAIAdqIAIqAgg4AgAMCwtBmDEoAgAiA0UNCiADQQxsIQkgA0EDdCELQQAhAEEAIQQDQCAGIARBAnRqIgcgAiAEQQR0aiII\
+KgIAOAIAIAcgA0ECdGogCCoCBDgCACAHIAtqIAgqAgg4AgAgByAJaiAIKgIMOAIAIARBAWoiBCADRw0ACwNAIAogAEECdGoiBCAF\
+IABBBHRqIgIqAgA4AgAgBCADQQJ0aiACKgIEOAIAIAQgC2ogAioCCDgCACAEIAlqIAIqAgw4AgAgAEEBaiIAIANHDQALDAoLQZgx\
+KAIAIgBFDQkgAEEEdCEJIABBDGwhCyAAQQN0IQxBACEDQQAhBANAIAYgBEECdGoiByACIARBFGxqIggqAgA4AgAgByAAQQJ0aiAI\
+KgIEOAIAIAcgDGogCCoCCDgCACAHIAtqIAgqAgw4AgAgByAJaiAIKgIQOAIAIARBAWoiBCAARw0ACwNAIAogA0ECdGoiBCAFIANB\
+FGxqIgIqAgA4AgAgBCAAQQJ0aiACKgIEOAIAIAQgDGogAioCCDgCACAEIAtqIAIqAgw4AgAgBCAJaiACKgIQOAIAIANBAWoiAyAA\
+Rw0ACwwJC0GcMSgCACIERQ0IQZgxKAIAIgdFDQggBEF+cSENIARBAXEhEEEAIQADQCAKIABBAnQiA2ohCCADIAZqIQkgBSAAIARs\
+QQJ0IgNqIQsgAiADaiEMQQAhA0EAIQ4gBEEBRwRAA0AgCSADIAdsQQJ0IhFqIAwgA0ECdCISaioCADgCACAIIBFqIAsgEmoqAgA4\
+AgAgCSADQQFyIhEgB2xBAnQiEmogDCARQQJ0IhFqKgIAOAIAIAggEmogCyARaioCADgCACADQQJqIQMgDkECaiIOIA1HDQALCyAQ\
+BEAgCSADIAdsQQJ0Ig5qIAwgA0ECdCIDaioCADgCACAIIA5qIAMgC2oqAgA4AgALIABBAWoiACAHRw0ACwwIC0GQMSgCAEGMMSgC\
+ACICa0EDdSIFQQFNBEAgACAGKgIAOAIAIAQgCioCADgCAAwIC0GAMSAFQQEgBiAKIAAgBCACIAIgBUECdGoQFQwHCyAKIA8oAgRB\
+AnQiAmohBSACIAZqIQMgAiAEaiEEIAAgAmohAEGQMSgCAEGMMSgCACICa0EDdSIGQQFNBEAgACADKgIAOAIAIAQgBSoCADgCAAwH\
+C0GAMSAGQQEgAyAFIAAgBCACIAIgBkECdGoQFQwGC0GYMSgCACICQZwxKAIAQQFrbCIFRQ0FIAQgAkECdCICaiEDIAAgAmohAkHE\
+MSgCACEGQbgxKAIAIQpBACEAA0AgAiAAQQJ0IgRqIgcgBCAKaioCACIZIAcqAgAiGpQgBCAGaioCACIbIAMgBGoiBCoCACIclJM4\
+AgAgBCAbIBqUIBwgGZSSOAIAIABBAWoiACAFRw0ACwwFC0GYMSgCACIFRQ0EIAQgBUECdCICaiEGIAAgAmohCkEAIQMDQCAGIANB\
+AnQiAmoiByoCACEZIAIgBGoiCCoCACEaIAAgAmoiCSACIApqIgIqAgAiGyAJKgIAIhySOAIAIAggGSAakjgCACACIBwgG5M4AgAg\
+ByAaIBmTOAIAIANBAWoiAyAFRw0ACwwEC0GYMSgCACIFRQ0DIAQgBUEDdCICaiEGIAAgAmohCiAEIAVBAnQiAmohByAAIAJqIQhB\
+ACEDA0AgBiADQQJ0IgJqIgkqAgAhGSACIAdqIgsqAgAhGiACIARqIgwqAgAhGyAAIAJqIg4gAiAIaiINKgIAIhwgDioCACIdkiAC\
+IApqIgIqAgAiHpI4AgAgDCAZIBogG5KSOAIAIA0gHSAcQwAAAL+UkiIdIBpD17Ndv5QiH5MgHkMAAAC/lCIgkiAZQ9ezXb+UIiGS\
+OAIAIAsgGyAaQwAAAL+UkiIaIBxD17Ndv5QiG5IgHkPXs12/lCIckyAZQwAAAL+UIhmSOAIAIAIgHSAfkiAgkiAhkzgCACAJIBog\
+G5MgHJIgGZI4AgAgA0EBaiIDIAVHDQALDAMLQZgxKAIAIgVFDQIgBCAFQQxsIgJqIQYgACACaiEKIAQgBUEDdCICaiEHIAAgAmoh\
+CCAEIAVBAnQiAmohCSAAIAJqIQtBACEDA0AgBiADQQJ0IgJqIgwqAgAhGSACIAlqIg4qAgAhGiACIAdqIg0qAgAhGyACIARqIhAq\
+AgAhHCAAIAJqIhEgAiAKaiISKgIAIh4gAiALaiIVKgIAIh2SIh8gAiAIaiICKgIAIiAgESoCACIhkiIkkjgCACAQIBkgGpIiIiAb\
+IBySIiOSOAIAIBUgGiAZkyIZICEgIJMiGpI4AgAgDiAcIBuTIhsgHSAekyIckzgCACACICQgH5M4AgAgDSAjICKTOAIAIBIgGiAZ\
+kzgCACAMIBwgG5I4AgAgA0EBaiIDIAVHDQALDAILQQAhA0GYMSgCACIFBEAgBCAFQQR0IgJqIQYgACACaiEKIAQgBUEMbCICaiEH\
+IAAgAmohCCAEIAVBA3QiAmohCSAAIAJqIQsgBCAFQQJ0IgJqIQwgACACaiEOA0AgBCADQQJ0IgJqIg0qAgAhGSACIAdqIhAqAgAh\
+GiACIAlqIhEqAgAhGyACIAZqIhIqAgAhHCACIAxqIhUqAgAhHiAAIAJqIhYgAiAIaiIXKgIAIiIgAiALaiIYKgIAIiOSIh0gFioC\
+ACIfkiACIApqIhYqAgAiJSACIA5qIgIqAgAiJpIiIJI4AgAgDSAZIBogG5IiIZIgHCAekiIkkjgCACACIB8gIEN6N54+lCAdQ70b\
+Tz+Uk5IiJyAaIBuTIhpDGHkWv5QgHCAekyIbQ3F4cz+UkyIckjgCACAVIBkgJEN6N54+lCAhQ70bTz+Uk5IiHiAjICKTIiJDGHkW\
+v5QgJiAlkyIjQ3F4cz+UkyIlkjgCACAYIB8gHUN6N54+lCAgQ70bTz+Uk5IiHSAbQxh5Fr+UIBpDcXhzP5SSIhqSOAIAIBEgGSAh\
+Q3o3nj6UICRDvRtPP5STkiIZICNDGHkWv5QgIkNxeHM/lJIiG5I4AgAgFyAdIBqTOAIAIBAgGSAbkzgCACAWICcgHJM4AgAgEiAe\
+ICWTOAIAIANBAWoiAyAFRw0ACwsMAQtBACEDQQAhAgJAQZgxKAIAIgVFDQBB3DEoAgAiBkGcMSgCACIHQQJ0aiEKIAdBAk8EQCAH\
+QX5xIQwgB0EBcSEOA0AgBCALQQJ0IgJqIQggACACaiEJQwAAAAAhGUEAIQNDAAAAACEaQQAhAgNAIAYgA0ECdCINaiAJIAMgBWxB\
+AnQiEGoqAgAiGzgCACAKIA1qIAggEGoqAgAiHDgCACAGIANBAXIiDUECdCIQaiAJIAUgDWxBAnQiDWoqAgAiHjgCACAKIBBqIAgg\
+DWoqAgAiHTgCACAeIBsgGpKSIRogHSAcIBmSkiEZIANBAmohAyACQQJqIgIgDEcNAAsgDgRAIAYgA0ECdCICaiAJIAMgBWxBAnQi\
+A2oqAgAiGzgCACACIApqIAMgCGoqAgAiHDgCACAbIBqSIRogHCAZkiEZCyAJIBo4AgAgCCAZOAIAQdAxKAIAIQ1BASECA0AgCioC\
+ACEZIAYqAgAhGkEBIQMDQCAGIANBAnQiEGoqAgAiGyANIAIgA2wgB3BBA3RqIhEqAgQiHJQgGZIgCiAQaioCACIeIBEqAgAiHZSS\
+IRkgGyAdlCAakiAcIB6UkyEaIANBAWoiAyAHRw0ACyAJIAIgBWxBAnQiA2ogGjgCACADIAhqIBk4AgAgAkEBaiICIAdHDQALIAtB\
+AWoiCyAFRw0ACwwBCyAHBEAgBUEBRwRAIAVBfnEhCANAIAYgACADQQJ0IgdqIgkqAgAiGTgCACAKIAQgB2oiCyoCACIaOAIAIAkg\
+GTgCACALIBo4AgAgBiAAIAdBBHIiB2oiCSoCACIZOAIAIAogBCAHaiIHKgIAIho4AgAgCSAZOAIAIAcgGjgCACADQQJqIQMgAkEC\
+aiICIAhHDQALCyAFQQFxRQ0BIAYgACADQQJ0IgJqIgAqAgAiGTgCACAKIAIgBGoiBCoCACIaOAIAIAAgGTgCACAEIBo4AgAMAQsg\
+BUEETwRAIAVBfHEhB0EAIQoDQCAAIANBAnQiBmpBADYCACAEIAZqQQA2AgAgACAGQQRyIghqQQA2AgAgBCAIakEANgIAIAAgBkEI\
+ciIIakEANgIAIAQgCGpBADYCACAAIAZBDHIiBmpBADYCACAEIAZqQQA2AgAgA0EEaiEDIApBBGoiCiAHRw0ACwsgBUEDcSIFRQ0A\
+A0AgACADQQJ0IgZqQQA2AgAgBCAGakEANgIAIANBAWohAyACQQFqIgIgBUcNAAsLCwwBCyAGQQF2IQJBACEDA0AgFCADQQN0IgVq\
+IgogBCAGIANBf3NqIgdBAnQiCGoqAgAiGSAEIANBAnQiCWoqAgAiGpJDAAAAP5QiG0HcMCgCACAFaiIFKgIAIhyUIAAgCWoqAgAi\
+HiAAIAhqKgIAIh2TQwAAAD+UIh8gBSoCBCIglJIiISAaIBmTQwAAAD+UIhmSOAIEIAogHyAclCAbICCUkyIaIB0gHpJDAAAAP5Qi\
+G5I4AgAgFCAHQQN0aiIFICEgGZM4AgQgBSAbIBqTOAIAIAIgA0cgA0EBaiEDDQALCyAPQRBqJAAgAUEBaiIBQewxKAIAQegxKAIA\
+a0EDdUECakkNAAsLC+IIAwd8B38BfUG4MiAANgIAAkAgAUUNAEHYMkGsMigCACIJQQF2Igo2AgBB1DIgCjYCAAJAAkACQCABQQFr\
+DgIAAQILIAm4IgdEjuM4juM45j+iIAC4oyICmiIDEBEhBCACRAAAAAAAACLAohARIQUgCUEATA0BRAAAAAAAAPA/IAejIQdEAAAA\
+AAAA8D9EAAAAAAAA8D8gAkQAAAAAAAAQwKIQESAEIAUgBKCjIgIgAqCioaMhBUG8MigCACEKQQAhAQNAIAFBAXRBAXK4IAeiIgRE\
+AAAAAAAACMCgIgYgBqIgA6IQESEGIAREAAAAAAAA8D+gIgggCKIgA6IQESEIIAogAUECdGogBEQAAAAAAADwv6AiBCAEoiADohAR\
+IAYgCKAgAqKhIAWitjgCACABQQFqIgEgCUcNAAsMAQtEAAAAAAAAAEBEAAAAAAAAIEAgCbgiBSAAuKMiAkQAAAAAAAAIQKAiBCAE\
+oqMgAqBEAAAAAAAAAABEAAAAAAAACEAgAqEiAiACRAAAAAAAAAAAYxtEAAAAAAAA0D+ioCICIAJEAAAAAAAAAEBjGyICIAKiRAAA\
+AAAAANA/okQAAAAAAADwv6CfRBgtRFT7IQlAoiIHIAeiIQZEAAAAAAAA8D8hAkQAAAAAAAAAACEEA0AgBCACoCEEIAYgAqIgA0QA\
+AAAAAADwP6AiAyADokQAAAAAAAAQQKKjIgJELUMc6+I2Gj9kDQALIAlBAEwNAEQAAAAAAADwPyAEoyEGRAAAAAAAAPA/IAWjIQVB\
+vDIoAgAhCkEAIQEDQEQAAAAAAADwPyABQQF0QQFyuCAFokQAAAAAAADwv6AiAyADoqGfIAeiIgMgA6IhCEQAAAAAAAAAACEDRAAA\
+AAAAAPA/IQJEAAAAAAAAAAAhBANAIAQgAqAhBCAIIAKiIANEAAAAAAAA8D+gIgMgA6JEAAAAAAAAEECioyICRC1DHOviNho/ZA0A\
+CyAKIAFBAnRqIAQgBqK2OAIAIAFBAWoiASAJRw0ACwsgAEEASgRAQbwyKAIAIQtBACEKA0BEAAAAAAAAAAAhAyAJIAoiAUoEQANA\
+IAMgCyABQQJ0aioCACIQIBCUu6AhAyAAIAFqIgEgCUgNAAtEAAAAAAAA8D8gA5+jIQMgCiEBA0AgCyABQQJ0aiIMIAwqAgC7IAOi\
+tjgCACAAIAFqIgEgCUgNAAsLIApBAWoiCiAARw0ACwsgCUUNAEHIMigCACEAQbwyKAIAIQtBACEBIAlBBE8EQCAJQXxxIQ9BACEK\
+A0AgACABQQJ0IgxqIAsgDGoqAgA4AgAgACAMQQRyIg1qIAsgDWoqAgA4AgAgACAMQQhyIg1qIAsgDWoqAgA4AgAgACAMQQxyIgxq\
+IAsgDGoqAgA4AgAgAUEEaiEBIApBBGoiCiAPRw0ACwsgCUEDcSIKRQ0AA0AgACABQQJ0IglqIAkgC2oqAgA4AgAgAUEBaiEBIA5B\
+AWoiDiAKRw0ACwsLgwcBBn9B0DMoAgAiA0HIMygCACICa0EcbSAATwRAAkBBzDMoAgAgAmtBHG0iBSAAIAAgBUsbIgRFDQACQCAE\
+QQNxIgZFBEAgBCEDDAELIAQhAwNAIAIgASkCADcCACACIAEoAhg2AhggAiABKQIQNwIQIAIgASkCCDcCCCADQQFrIQMgAkEcaiEC\
+IAdBAWoiByAGRw0ACwsgBEEESQ0AA0AgAiABKQIANwIAIAIgASgCGDYCGCACIAEpAhA3AhAgAiABKQIINwIIIAIgASgCGDYCNCAC\
+IAEpAhA3AiwgAiABKQIINwIkIAIgASkCADcCHCACIAEoAhg2AlAgAiABKQIQNwJIIAJBQGsgASkCCDcCACACIAEpAgA3AjggAiAB\
+KQIANwJUIAIgASkCCDcCXCACIAEpAhA3AmQgAiABKAIYNgJsIAJB8ABqIQIgA0EEayIDDQALCyAAIAVLBEBBzDMoAgAiAiAAIAVr\
+QRxsaiEAA0AgAiABKQIANwIAIAIgASgCGDYCGCACIAEpAhA3AhAgAiABKQIINwIIIAJBHGoiAiAARw0AC0HMMyAANgIADwtBzDNB\
+yDMoAgAgAEEcbGo2AgAPCyACBEBBzDMgAjYCACACEARB0DNBADYCAEHIM0IANwIAQQAhAwsCQCAAQcqkkskATw0AQcmkkskAIANB\
+HG0iA0EBdCIEIAAgACAESRsgA0GkkskkTxsiA0HKpJLJAE8NAEHMMyADQRxsIgMQByIENgIAQcgzIAQ2AgBB0DMgAyAEajYCACAE\
+IQIgAEEcbCIAQRxrIgVBHG4iA0EDcUEDRwRAIANBAWpBA3EhBkEAIQMDQCACIAEpAgA3AgAgAiABKAIYNgIYIAIgASkCEDcCECAC\
+IAEpAgg3AgggAkEcaiECIANBAWoiAyAGRw0ACwsgACAEaiEAIAVB1ABPBEADQCACIAEpAgA3AgAgAiABKAIYNgIYIAIgASkCEDcC\
+ECACIAEpAgg3AgggAiABKAIYNgI0IAIgASkCEDcCLCACIAEpAgg3AiQgAiABKQIANwIcIAIgASgCGDYCUCACIAEpAhA3AkggAkFA\
+ayABKQIINwIAIAIgASkCADcCOCACIAEpAgA3AlQgAiABKQIINwJcIAIgASkCEDcCZCACIAEoAhg2AmwgAkHwAGoiAiAARw0ACwtB\
+zDMgADYCAA8LEA0AC40dAw5/AX0CfCAAQTBqIgMgAUEBdiIJIgU2AiggA0EBNgIkIAMoAmgiAiADKAJsRwRAIAMgAjYCbAsgAygC\
+XCICIAMoAmBHBEAgAyACNgJgCyADKAJ0IgIgAygCeEcEQCADIAI2AngLAkAgBUUNAEEBIQQCQCAFQQFxDQAgBSECA0AgAkEBTSAE\
+QR9LcQ0BIAMgAkEBdiIGNgIoIAMgBEEBdCIENgIkIAJBAnEgBiECRQ0ACwsCQCADKAIwIAMoAiwiBmtBA3UiAiAFSQRAIANBLGog\
+BSACaxAIIAMoAiQhBAwBCyACIAVNDQAgAyAGIAVBA3RqNgIwCyADQQxqIQUCQCAEQQNsIgZBAnYiAiADKAIQIAMoAgwiCGtBA3Ui\
+B0sEQCAFIAIgB2sQCAwBCyACIAdPDQAgAyAIIAJBA3RqNgIQCwJAIAZBBEkNAEEBIAIgAkEBTRsiB0EBcSAEuCERQQAhAiAGQQhP\
+BEBEAAAAAAAA8D8gEaMhEiAHQf7///8DcSEHQQAhBgNAIAUoAgAgAkEDdGoiCiACuEQYLURU+yEZwKIgEqK2IhAQCTgCBCAKIBAQ\
+CjgCACAFKAIAIAJBAXIiCkEDdGoiCyAKuEQYLURU+yEZwKIgEqK2IhAQCTgCBCALIBAQCjgCACACQQJqIQIgBkECaiIGIAdHDQAL\
+C0UNACAFKAIAIAJBA3RqIgUgArhEGC1EVPshGcCiIBGjtiIQEAk4AgQgBSAQEAo4AgALAkAgAygCHCADKAIYIgVrQQN1IgIgBEkE\
+QCADQRhqIAQgAmsQCAwBCyACIARNDQAgAyAFIARBA3RqNgIcCwJAIAMoAgQgAygCACIFa0EDdSICIARJBEAgAyAEIAJrEAgMAQsg\
+AiAESwRAIAMgBSAEQQN0ajYCBAsLAkAgAygCJCICIAMoAihBAWtsIgQgAygCPCADKAI4IgZrQQN1IgVLBEAgA0E4aiAEIAVrEAgg\
+AygCJCICIAMoAihBAWtsIQQMAQsgBCAFTw0AIAMgBiAEQQN0ajYCPAsgA0HEAGohBwJAIAMoAkggAygCRCIGa0ECdSIFIARJBEAg\
+ByAEIAVrEAYgAygCJCICIAMoAihBAWtsIQQMAQsgBCAFTw0AIAMgBiAEQQJ0ajYCSAsgA0HQAGohBQJAIAMoAlQgAygCUCIIa0EC\
+dSIGIARJBEAgBSAEIAZrEAYgAygCJCECDAELIAQgBk8NACADIAggBEECdGo2AlQLAkAgAkUNACADKAIoIgRBAkkNAEEAIQYDQCAE\
+QQJPBEAgBrhEGC1EVPshGcCiIRFBASECA0AgAygCOCAGQQN0aiADKAIkIgggAkEBa2xBA3RqIgogESACuKIgCLggBLiio7YiEBAJ\
+OAIEIAogEBAKOAIAIAJBAWoiAiADKAIoIgRJDQALIAMoAiQhAgsgBkEBaiIGIAJJDQALCwJAIAMoAjwiAiADKAI4IgRGDQBBASAC\
+IARrQQN1IgYgBkEBTRsiCEEBcSAFKAIAIQUgBygCACEHQQAhAiAGQQJPBEAgCEF+cSEIQQAhBgNAIAcgAkECdCILaiAEIAJBA3Rq\
+Ig0qAgA4AgAgBSALaiANKgIEOAIAIAcgAkEBciILQQJ0Ig1qIAQgC0EDdGoiCyoCADgCACAFIA1qIAsqAgQ4AgAgAkECaiECIAZB\
+AmoiBiAIRw0ACwtFDQAgByACQQJ0IgZqIAQgAkEDdGoiAioCADgCACAFIAZqIAIqAgQ4AgALIAMoAnwhBCADKAJ4IQICQAJAIAMo\
+AigiBUECSQRAIAIgBEkEQCACQgA3AgAgAyACQQhqNgJ4DAQLIAIgAygCdCIFa0EDdSIHQQFqIgZBgICAgAJPDQFB/////wEgBCAF\
+ayIEQQJ1IgggBiAGIAhJGyAEQfj///8HTxsiBgR/IAZBgICAgAJPDQMgBkEDdBAHBUEACyIIIAdBA3RqIgRCADcCACAEQQhqIQcg\
+AiAFRwRAA0AgBEEIayIEIAJBCGsiAikCADcCACACIAVHDQALIAMoAnQhBQsgAyAIIAZBA3RqNgJ8IAMgBzYCeCADIAQ2AnQgBQRA\
+IAUQBAsgAyAHNgJ4DAMLQQRBA0ECQQFBBSAFQQJGIgobIAVBA0YiCxsgBUEERiINGyAFQQVGIg8bIQgCQCACIARJBEAgAiAIrTcC\
+ACACQQhqIQQMAQsgAiADKAJ0IgZrQQN1IgxBAWoiBUGAgICAAk8NAUH/////ASAEIAZrIgRBAnUiByAFIAUgB0kbIARB+P///wdP\
+GyIHBH8gB0GAgICAAk8NAyAHQQN0EAcFQQALIg4gDEEDdGoiBSAIrTcCACAFQQhqIQQgAiAGRwRAA0AgBUEIayIFIAJBCGsiAikC\
+ADcCACACIAZHDQALIAMoAnQhBgsgAyAOIAdBA3RqNgJ8IAMgBDYCeCADIAU2AnQgBkUNACAGEAQLIAMgBDYCeAJAIAMoAnwiBSAE\
+SwRAIARCBjcCACAEQQhqIQIMAQsgBCADKAJ0IgZrQQN1IghBAWoiAkGAgICAAk8NAUH/////ASAFIAZrIgVBAnUiByACIAIgB0kb\
+IAVB+P///wdPGyIHBH8gB0GAgICAAk8NAyAHQQN0EAcFQQALIgwgCEEDdGoiBUIGNwIAIAVBCGohAiAEIAZHBEADQCAFQQhrIgUg\
+BEEIayIEKQIANwIAIAQgBkcNAAsgAygCdCEGCyADIAwgB0EDdGo2AnwgAyACNgJ4IAMgBTYCdCAGRQ0AIAYQBAsgAyACNgJ4QQEh\
+BiADKAIoQQFLBEADQCADKAIkIAZsIQggAwJ/IAMoAnwiByACSwRAIAIgCK1CIIZCB4Q3AgAgAkEIagwBCyACIAMoAnQiBWtBA3Ui\
+DEEBaiIEQYCAgIACTw0DQf////8BIAcgBWsiB0ECdSIOIAQgBCAOSRsgB0H4////B08bIgcEfyAHQYCAgIACTw0FIAdBA3QQBwVB\
+AAsiDiAMQQN0aiIEIAitQiCGQgeENwIAIARBCGohCCACIAVHBEADQCAEQQhrIgQgAkEIayICKQIANwIAIAIgBUcNAAsgAygCdCEF\
+CyADIA4gB0EDdGo2AnwgAyAINgJ4IAMgBDYCdCAFBEAgBRAECyAICyICNgJ4IAZBAWoiBiADKAIoSQ0ACwsCQCADKAJ8IgUgAksE\
+QCACQgg3AgAgAkEIaiEEDAELIAIgAygCdCIGa0EDdSIIQQFqIgRBgICAgAJPDQFB/////wEgBSAGayIFQQJ1IgcgBCAEIAdJGyAF\
+Qfj///8HTxsiBwR/IAdBgICAgAJPDQMgB0EDdBAHBUEACyIMIAhBA3RqIgVCCDcCACAFQQhqIQQgAiAGRwRAA0AgBUEIayIFIAJB\
+CGsiAikCADcCACACIAZHDQALIAMoAnQhBgsgAyAMIAdBA3RqNgJ8IAMgBDYCeCADIAU2AnQgBkUNACAGEAQLQQxBC0EKQQlBDSAK\
+GyALGyANGyAPGyEHIAMgBDYCeAJAIAMoAnwiBiAESwRAIAQgB603AgAgBEEIaiEGDAELIAQgAygCdCIFa0EDdSIKQQFqIgJBgICA\
+gAJPDQFB/////wEgBiAFayIGQQJ1IgggAiACIAhJGyAGQfj///8HTxsiCAR/IAhBgICAgAJPDQMgCEEDdBAHBUEACyILIApBA3Rq\
+IgIgB603AgAgAkEIaiEGIAQgBUcEQANAIAJBCGsiAiAEQQhrIgQpAgA3AgAgBCAFRw0ACyADKAJ0IQULIAMgCyAIQQN0ajYCfCAD\
+IAY2AnggAyACNgJ0IAVFDQAgBRAECyADIAY2AnggB0ENRw0CAkAgAygCKCIEIAMoAmwgAygCaCIFa0EDdSICSwRAIANB6ABqIAQg\
+AmsQCCADKAIoIQQMAQsgAiAETQ0AIAMgBSAEQQN0ajYCbAsCQCADKAJgIAMoAlwiBWtBA3UiAiAESQRAIANB3ABqIAQgAmsQCCAD\
+KAIoIQQMAQsgAiAETQ0AIAMgBSAEQQN0ajYCYAsgBEUNAkEAIQIDQCADKAJcIAJBA3RqIgUgArhEGC1EVPshGcCiIAS4o7YiEBAJ\
+OAIEIAUgEBAKOAIAIAJBAWoiAiADKAIoIgRJDQALDAILEA0ACxAOAAsCQCAAKAIEIAAoAgAiA2tBA3UiAiAJSQRAIAAgCSACaxAI\
+DAELIAIgCU0NACAAIAMgCUEDdGo2AgQLAkAgACgCECAAKAIMIgNrQQN1IgIgCUkEQCAAQQxqIAkgAmsQCAwBCyACIAlNDQAgACAD\
+IAlBA3RqNgIQCyABQQJ2IgZBAWohAwJAIAYgACgCHCICIAAoAhgiBWtBA3UiBE8EQCAAQRhqIAMgBGsQCCAAKAIYIQUgACgCHCEC\
+DAELIAMgBE8NACAAIAUgA0EDdGoiAjYCHAsgAiAFRwRARAAAAAAAAPA/IAG4oyERQQAhAgNAIAUgAkEDdGoiAyACuEQYLURU+yEZ\
+wKJEGC1EVPshCcCgIBGiRBgtRFT7Ifm/oLYiEBAJOAIEIAMgEBAKOAIAIAJBAWoiAiAAKAIcIAAoAhgiBWtBA3VJDQALCyAAQSRq\
+IQMCQCAAKAIoIAAoAiQiBGtBA3UiAiAJSQRAIAMgCSACaxAIDAELIAIgCU0NACAAIAQgCUEDdGo2AigLAkAgAUECSQ0AIAG4IRFB\
+ACECIAlBAUcEQEQAAAAAAADwPyARoyESIAlB/v///wdxIQRBACEAA0AgAygCACACQQN0aiIFIAK4RBgtRFT7IRnAoiASorYiEBAJ\
+OAIEIAUgEBAKOAIAIAMoAgAgAkEBciIFQQN0aiIGIAW4RBgtRFT7IRnAoiASorYiEBAJOAIEIAYgEBAKOAIAIAJBAmohAiAAQQJq\
+IgAgBEcNAAsLIAFBAnFFDQAgAygCACACQQN0aiIAIAK4RBgtRFT7IRnAoiARo7YiEBAJOAIEIAAgEBAKOAIACwsIAEGsMigCAAu1\
+BQEJfwJAIAAgAWxBAXQiAkG8NCgCAEG4NCgCACIIa0ECdSIDSwRAQbg0IAIgA2sQBkG4NCgCACEIDAELIAIgA08NAEG8NCAIIAJB\
+AnRqNgIAC0HENCgCACICQcg0KAIARwRAQcg0IAI2AgALQdA0KAIAIgJB1DQoAgBHBEBB1DQgAjYCAAsCQAJAIABBAEoEQANAIAgg\
+ASAJbEECdGohBgJAQcg0KAIAIgJBzDQoAgAiBEkEQCACIAY2AgAgAkEEaiEGDAELIAJBxDQoAgAiA2tBAnUiCkEBaiIFQYCAgIAE\
+Tw0DQf////8DIAQgA2siBEEBdSIHIAUgBSAHSRsgBEH8////B08bIgQEfyAEQYCAgIAETw0FIARBAnQQBwVBAAsiByAKQQJ0aiIF\
+IAY2AgAgBUEEaiEGIAIgA0cEQANAIAVBBGsiBSACQQRrIgIoAgA2AgAgAiADRw0AC0HENCgCACEDC0HMNCAHIARBAnRqNgIAQcg0\
+IAY2AgBBxDQgBTYCACADRQ0AIAMQBAtByDQgBjYCACAIIAAgCWogAWxBAnRqIQYCQEHUNCgCACICQdg0KAIAIgRJBEAgAiAGNgIA\
+IAJBBGohBgwBCyACQdA0KAIAIgNrQQJ1IgpBAWoiBUGAgICABE8NA0H/////AyAEIANrIgRBAXUiByAFIAUgB0kbIARB/P///wdP\
+GyIEBH8gBEGAgICABE8NBSAEQQJ0EAcFQQALIgcgCkECdGoiBSAGNgIAIAVBBGohBiACIANHBEADQCAFQQRrIgUgAkEEayICKAIA\
+NgIAIAIgA0cNAAtB0DQoAgAhAwtB2DQgByAEQQJ0ajYCAEHUNCAGNgIAQdA0IAU2AgAgA0UNACADEAQLQdQ0IAY2AgAgCUEBaiIJ\
+IABHDQALCyAIDwsQDQALEA4ACwUAEA4AC9onAQt/IwBBEGsiCiQAAkACQAJAAkACQAJAAkACQAJAAkAgAEH0AU0EQEHgNCgCACIE\
+QRAgAEELakH4A3EgAEELSRsiBkEDdiIAdiIBQQNxBEACQCABQX9zQQFxIABqIgJBA3QiAUGINWoiACABQZA1aigCACIBKAIIIgVG\
+BEBB4DQgBEF+IAJ3cTYCAAwBCyAFIAA2AgwgACAFNgIICyABQQhqIQAgASACQQN0IgJBA3I2AgQgASACaiIBIAEoAgRBAXI2AgQM\
+CwsgBkHoNCgCACIITQ0BIAEEQAJAQQIgAHQiAkEAIAJrciABIAB0cWgiAUEDdCIAQYg1aiICIABBkDVqKAIAIgAoAggiBUYEQEHg\
+NCAEQX4gAXdxIgQ2AgAMAQsgBSACNgIMIAIgBTYCCAsgACAGQQNyNgIEIAAgBmoiByABQQN0IgEgBmsiBUEBcjYCBCAAIAFqIAU2\
+AgAgCARAIAhBeHFBiDVqIQFB9DQoAgAhAgJ/IARBASAIQQN2dCIDcUUEQEHgNCADIARyNgIAIAEMAQsgASgCCAshAyABIAI2Aggg\
+AyACNgIMIAIgATYCDCACIAM2AggLIABBCGohAEH0NCAHNgIAQeg0IAU2AgAMCwtB5DQoAgAiC0UNASALaEECdEGQN2ooAgAiAigC\
+BEF4cSAGayEDIAIhAQNAAkAgASgCECIARQRAIAEoAhQiAEUNAQsgACgCBEF4cSAGayIBIAMgASADSSIBGyEDIAAgAiABGyECIAAh\
+AQwBCwsgAigCGCEJIAIgAigCDCIARwRAIAIoAggiASAANgIMIAAgATYCCAwKCyACKAIUIgEEfyACQRRqBSACKAIQIgFFDQMgAkEQ\
+agshBQNAIAUhByABIgBBFGohBSAAKAIUIgENACAAQRBqIQUgACgCECIBDQALIAdBADYCAAwJC0F/IQYgAEG/f0sNACAAQQtqIgFB\
+eHEhBkHkNCgCACIHRQ0AQR8hCEEAIAZrIQMgAEH0//8HTQRAIAZBJiABQQh2ZyIAa3ZBAXEgAEEBdGtBPmohCAsCQAJAAkAgCEEC\
+dEGQN2ooAgAiAUUEQEEAIQAMAQtBACEAIAZBGSAIQQF2a0EAIAhBH0cbdCECA0ACQCABKAIEQXhxIAZrIgQgA08NACABIQUgBCID\
+DQBBACEDIAEhAAwDCyAAIAEoAhQiBCAEIAEgAkEddkEEcWooAhAiAUYbIAAgBBshACACQQF0IQIgAQ0ACwsgACAFckUEQEEAIQVB\
+AiAIdCIAQQAgAGtyIAdxIgBFDQMgAGhBAnRBkDdqKAIAIQALIABFDQELA0AgACgCBEF4cSAGayICIANJIQEgAiADIAEbIQMgACAF\
+IAEbIQUgACgCECIBBH8gAQUgACgCFAsiAA0ACwsgBUUNACADQeg0KAIAIAZrTw0AIAUoAhghCCAFIAUoAgwiAEcEQCAFKAIIIgEg\
+ADYCDCAAIAE2AggMCAsgBSgCFCIBBH8gBUEUagUgBSgCECIBRQ0DIAVBEGoLIQIDQCACIQQgASIAQRRqIQIgACgCFCIBDQAgAEEQ\
+aiECIAAoAhAiAQ0ACyAEQQA2AgAMBwsgBkHoNCgCACIFTQRAQfQ0KAIAIQACQCAFIAZrIgFBEE8EQCAAIAZqIgIgAUEBcjYCBCAA\
+IAVqIAE2AgAgACAGQQNyNgIEDAELIAAgBUEDcjYCBCAAIAVqIgEgASgCBEEBcjYCBEEAIQJBACEBC0HoNCABNgIAQfQ0IAI2AgAg\
+AEEIaiEADAkLIAZB7DQoAgAiAkkEQEHsNCACIAZrIgE2AgBB+DRB+DQoAgAiACAGaiICNgIAIAIgAUEBcjYCBCAAIAZBA3I2AgQg\
+AEEIaiEADAkLQQAhACAGQS9qIgMCf0G4OCgCAARAQcA4KAIADAELQcQ4Qn83AgBBvDhCgKCAgICABDcCAEG4OCAKQQxqQXBxQdiq\
+1aoFczYCAEHMOEEANgIAQZw4QQA2AgBBgCALIgFqIgRBACABayIHcSIBIAZNDQhBmDgoAgAiBQRAQZA4KAIAIgggAWoiCSAITQ0J\
+IAUgCUkNCQsCQEGcOC0AAEEEcUUEQAJAAkACQAJAQfg0KAIAIgUEQEGgOCEAA0AgACgCACIIIAVNBEAgBSAIIAAoAgRqSQ0DCyAA\
+KAIIIgANAAsLQQAQECICQX9GDQMgASEEQbw4KAIAIgBBAWsiBSACcQRAIAEgAmsgAiAFakEAIABrcWohBAsgBCAGTQ0DQZg4KAIA\
+IgAEQEGQOCgCACIFIARqIgcgBU0NBCAAIAdJDQQLIAQQECIAIAJHDQEMBQsgBCACayAHcSIEEBAiAiAAKAIAIAAoAgRqRg0BIAIh\
+AAsgAEF/Rg0BIAZBMGogBE0EQCAAIQIMBAtBwDgoAgAiAiADIARrakEAIAJrcSICEBBBf0YNASACIARqIQQgACECDAMLIAJBf0cN\
+AgtBnDhBnDgoAgBBBHI2AgALIAEQECECQQAQECEAIAJBf0YNBSAAQX9GDQUgACACTQ0FIAAgAmsiBCAGQShqTQ0FC0GQOEGQOCgC\
+ACAEaiIANgIAQZQ4KAIAIABJBEBBlDggADYCAAsCQEH4NCgCACIDBEBBoDghAANAIAIgACgCACIBIAAoAgQiBWpGDQIgACgCCCIA\
+DQALDAQLQfA0KAIAIgBBACAAIAJNG0UEQEHwNCACNgIAC0EAIQBBpDggBDYCAEGgOCACNgIAQYA1QX82AgBBhDVBuDgoAgA2AgBB\
+rDhBADYCAANAIABBA3QiAUGQNWogAUGINWoiBTYCACABQZQ1aiAFNgIAIABBAWoiAEEgRw0AC0HsNCAEQShrIgBBeCACa0EHcSIB\
+ayIFNgIAQfg0IAEgAmoiATYCACABIAVBAXI2AgQgACACakEoNgIEQfw0Qcg4KAIANgIADAQLIAIgA00NAiABIANLDQIgACgCDEEI\
+cQ0CIAAgBCAFajYCBEH4NCADQXggA2tBB3EiAGoiATYCAEHsNEHsNCgCACAEaiICIABrIgA2AgAgASAAQQFyNgIEIAIgA2pBKDYC\
+BEH8NEHIOCgCADYCAAwDC0EAIQAMBgtBACEADAQLQfA0KAIAIAJLBEBB8DQgAjYCAAsgAiAEaiEFQaA4IQACQANAIAUgACgCACIB\
+RwRAIAAoAggiAA0BDAILCyAALQAMQQhxRQ0DC0GgOCEAA0ACQCAAKAIAIgEgA00EQCADIAEgACgCBGoiBUkNAQsgACgCCCEADAEL\
+C0HsNCAEQShrIgBBeCACa0EHcSIBayIHNgIAQfg0IAEgAmoiATYCACABIAdBAXI2AgQgACACakEoNgIEQfw0Qcg4KAIANgIAIAMg\
+BUEnIAVrQQdxakEvayIAIAAgA0EQakkbIgFBGzYCBCABQag4KQIANwIQIAFBoDgpAgA3AghBqDggAUEIajYCAEGkOCAENgIAQaA4\
+IAI2AgBBrDhBADYCACABQRhqIQADQCAAQQc2AgQgAEEIaiAAQQRqIQAgBUkNAAsgASADRg0AIAEgASgCBEF+cTYCBCADIAEgA2si\
+AkEBcjYCBCABIAI2AgACfyACQf8BTQRAIAJBeHFBiDVqIQACf0HgNCgCACIBQQEgAkEDdnQiAnFFBEBB4DQgASACcjYCACAADAEL\
+IAAoAggLIQEgACADNgIIIAEgAzYCDEEMIQJBCAwBC0EfIQAgAkH///8HTQRAIAJBJiACQQh2ZyIAa3ZBAXEgAEEBdGtBPmohAAsg\
+AyAANgIcIANCADcCECAAQQJ0QZA3aiEBAkACQEHkNCgCACIFQQEgAHQiBHFFBEBB5DQgBCAFcjYCACABIAM2AgAMAQsgAkEZIABB\
+AXZrQQAgAEEfRxt0IQAgASgCACEFA0AgBSIBKAIEQXhxIAJGDQIgAEEddiEFIABBAXQhACABIAVBBHFqIgQoAhAiBQ0ACyAEIAM2\
+AhALIAMgATYCGEEIIQIgAyIBIQBBDAwBCyABKAIIIgAgAzYCDCABIAM2AgggAyAANgIIQQAhAEEYIQJBDAsgA2ogATYCACACIANq\
+IAA2AgALQew0KAIAIgAgBk0NAEHsNCAAIAZrIgE2AgBB+DRB+DQoAgAiACAGaiICNgIAIAIgAUEBcjYCBCAAIAZBA3I2AgQgAEEI\
+aiEADAQLQdw0QTA2AgBBACEADAMLIAAgAjYCACAAIAAoAgQgBGo2AgQgAkF4IAJrQQdxaiIIIAZBA3I2AgQgAUF4IAFrQQdxaiIE\
+IAYgCGoiA2shBwJAQfg0KAIAIARGBEBB+DQgAzYCAEHsNEHsNCgCACAHaiIANgIAIAMgAEEBcjYCBAwBC0H0NCgCACAERgRAQfQ0\
+IAM2AgBB6DRB6DQoAgAgB2oiADYCACADIABBAXI2AgQgACADaiAANgIADAELIAQoAgQiAEEDcUEBRgRAIABBeHEhCSAEKAIMIQIC\
+QCAAQf8BTQRAIAQoAggiASACRgRAQeA0QeA0KAIAQX4gAEEDdndxNgIADAILIAEgAjYCDCACIAE2AggMAQsgBCgCGCEGAkAgAiAE\
+RwRAIAQoAggiACACNgIMIAIgADYCCAwBCwJAIAQoAhQiAAR/IARBFGoFIAQoAhAiAEUNASAEQRBqCyEBA0AgASEFIAAiAkEUaiEB\
+IAAoAhQiAA0AIAJBEGohASACKAIQIgANAAsgBUEANgIADAELQQAhAgsgBkUNAAJAIAQoAhwiAEECdEGQN2oiASgCACAERgRAIAEg\
+AjYCACACDQFB5DRB5DQoAgBBfiAAd3E2AgAMAgsCQCAEIAYoAhBGBEAgBiACNgIQDAELIAYgAjYCFAsgAkUNAQsgAiAGNgIYIAQo\
+AhAiAARAIAIgADYCECAAIAI2AhgLIAQoAhQiAEUNACACIAA2AhQgACACNgIYCyAHIAlqIQcgBCAJaiIEKAIEIQALIAQgAEF+cTYC\
+BCADIAdBAXI2AgQgAyAHaiAHNgIAIAdB/wFNBEAgB0F4cUGINWohAAJ/QeA0KAIAIgFBASAHQQN2dCICcUUEQEHgNCABIAJyNgIA\
+IAAMAQsgACgCCAshASAAIAM2AgggASADNgIMIAMgADYCDCADIAE2AggMAQtBHyECIAdB////B00EQCAHQSYgB0EIdmciAGt2QQFx\
+IABBAXRrQT5qIQILIAMgAjYCHCADQgA3AhAgAkECdEGQN2ohAAJAAkBB5DQoAgAiAUEBIAJ0IgVxRQRAQeQ0IAEgBXI2AgAgACAD\
+NgIADAELIAdBGSACQQF2a0EAIAJBH0cbdCECIAAoAgAhAQNAIAEiACgCBEF4cSAHRg0CIAJBHXYhASACQQF0IQIgACABQQRxaiIF\
+KAIQIgENAAsgBSADNgIQCyADIAA2AhggAyADNgIMIAMgAzYCCAwBCyAAKAIIIgEgAzYCDCAAIAM2AgggA0EANgIYIAMgADYCDCAD\
+IAE2AggLIAhBCGohAAwCCwJAIAhFDQACQCAFKAIcIgFBAnRBkDdqIgIoAgAgBUYEQCACIAA2AgAgAA0BQeQ0IAdBfiABd3EiBzYC\
+AAwCCwJAIAUgCCgCEEYEQCAIIAA2AhAMAQsgCCAANgIUCyAARQ0BCyAAIAg2AhggBSgCECIBBEAgACABNgIQIAEgADYCGAsgBSgC\
+FCIBRQ0AIAAgATYCFCABIAA2AhgLAkAgA0EPTQRAIAUgAyAGaiIAQQNyNgIEIAAgBWoiACAAKAIEQQFyNgIEDAELIAUgBkEDcjYC\
+BCAFIAZqIgQgA0EBcjYCBCADIARqIAM2AgAgA0H/AU0EQCADQXhxQYg1aiEAAn9B4DQoAgAiAUEBIANBA3Z0IgJxRQRAQeA0IAEg\
+AnI2AgAgAAwBCyAAKAIICyEBIAAgBDYCCCABIAQ2AgwgBCAANgIMIAQgATYCCAwBC0EfIQAgA0H///8HTQRAIANBJiADQQh2ZyIA\
+a3ZBAXEgAEEBdGtBPmohAAsgBCAANgIcIARCADcCECAAQQJ0QZA3aiEBAkACQCAHQQEgAHQiAnFFBEBB5DQgAiAHcjYCACABIAQ2\
+AgAgBCABNgIYDAELIANBGSAAQQF2a0EAIABBH0cbdCEAIAEoAgAhAQNAIAEiAigCBEF4cSADRg0CIABBHXYhASAAQQF0IQAgAiAB\
+QQRxaiIHKAIQIgENAAsgByAENgIQIAQgAjYCGAsgBCAENgIMIAQgBDYCCAwBCyACKAIIIgAgBDYCDCACIAQ2AgggBEEANgIYIAQg\
+AjYCDCAEIAA2AggLIAVBCGohAAwBCwJAIAlFDQACQCACKAIcIgFBAnRBkDdqIgUoAgAgAkYEQCAFIAA2AgAgAA0BQeQ0IAtBfiAB\
+d3E2AgAMAgsCQCACIAkoAhBGBEAgCSAANgIQDAELIAkgADYCFAsgAEUNAQsgACAJNgIYIAIoAhAiAQRAIAAgATYCECABIAA2AhgL\
+IAIoAhQiAUUNACAAIAE2AhQgASAANgIYCwJAIANBD00EQCACIAMgBmoiAEEDcjYCBCAAIAJqIgAgACgCBEEBcjYCBAwBCyACIAZB\
+A3I2AgQgAiAGaiIFIANBAXI2AgQgAyAFaiADNgIAIAgEQCAIQXhxQYg1aiEAQfQ0KAIAIQECf0EBIAhBA3Z0IgcgBHFFBEBB4DQg\
+BCAHcjYCACAADAELIAAoAggLIQQgACABNgIIIAQgATYCDCABIAA2AgwgASAENgIIC0H0NCAFNgIAQeg0IAM2AgALIAJBCGohAAsg\
+CkEQaiQAIAALGQBB0DQoAgAiAARAQdQ0IAA2AgAgABAECwsZAEHENCgCACIABEBByDQgADYCACAAEAQLCwQAQQALvhACF38CfSAA\
+IQoCQEGsMigCACIIQYQyKAIAIg9rIgkgCCAIIAlLGyICRQ0AQZQyKAIAIA9BAnRqIQQgAkEETwRAIAJBfHEhCwNAIAQgAUECdGoi\
+ACAYIAAqAgAiGSAYIBleGyIYOAIAIAAgGCAAKgIEIhkgGCAZXhsiGDgCBCAAIBggACoCCCIZIBggGV4bIhg4AgggACAYIAAqAgwi\
+GSAYIBleGyIYOAIMIAFBBGohASADQQRqIgMgC0cNAAsLIAJBA3EiAEUNAANAIAQgAUECdGoiAyAYIAMqAgAiGSAYIBleGyIYOAIA\
+IAFBAWohASAFQQFqIgUgAEcNAAsLAkAgCCAJTQ0AQZQyKAIAIA8gCGtBAnRqIQUCQCAIIAJrQQNxIglFBEAgAiEBDAELQQAhACAC\
+IQEDQCAFIAFBAnRqIgQgGCAEKgIAIhkgGCAZXhsiGDgCACABQQFqIQEgAEEBaiIAIAlHDQALCyACIAhrQXxLDQAgBUEMaiECIAVB\
+CGohCSAFQQRqIQQDQCAFIAFBAnQiAGoiAyAYIAMqAgAiGSAYIBleGyIYOAIAIAAgBGoiAyAYIAMqAgAiGSAYIBleGyIYOAIAIAAg\
+CWoiAyAYIAMqAgAiGSAYIBleGyIYOAIAIAAgAmoiACAYIAAqAgAiGSAYIBleGyIYOAIAIAFBBGoiASAIRw0ACwtBtDMoAgBBAEoE\
+QCAIIAggCiAIIApIGyIFayIAIAogACAKSBsiCUH+////B3EhFCAJQQFxIRUgBUH8////B3EhFiAFQQNxIRIgCUEBayETIAVBAWsh\
+F0GoMygCACEBQQAhCwNAAkBBrDMoAgAgAWtBAnUiACAFSQRAQagzIAUgAGsQBkGEMigCACEPQawyKAIAIQhBqDMoAgAhAQwBCyAA\
+IAVNDQBBrDMgASAFQQJ0ajYCAAtBiDIoAgAiDCAIIAtsIhFBAnRqIQMCQCAIIA8gCHAiBmsiDSAFIAUgDUsbIgJFDQBBlDIoAgAh\
+B0EAIQAgAkEBRwRAIAJBfnEhDkEAIQQDQCABIABBAnRqIAMgACAGakECdCIQaioCACAHIBBqKgIAlTgCACABIABBAXIiEEECdGog\
+AyAGIBBqQQJ0IhBqKgIAIAcgEGoqAgCVOAIAIABBAmohACAEQQJqIgQgDkcNAAsLIAJBAXFFDQAgASAAQQJ0aiADIAAgBmpBAnQi\
+AGoqAgAgACAHaioCAJU4AgALAkAgBSANTQ0AIAYgCGshBEGUMigCACEGIAUgAiIAa0EBcQRAIAEgAEECdGogAyAAIARqQQJ0Igdq\
+KgIAIAYgB2oqAgCVOAIAIABBAWohAAsgAiAXRg0AIARBAWohAgNAIAEgAEECdGoiByADIAAgBGpBAnQiDWoqAgAgBiANaioCAJU4\
+AgAgByADIAAgAmpBAnQiB2oqAgAgBiAHaioCAJU4AgQgAEECaiIAIAVJDQALC0HQNCgCACALQQJ0aiENAkAgBUEATA0AIA0oAgAh\
+AkEAIQNBACEAQQAhBCAFQQNLBEADQCACIABBAnQiBmogASAGaioCADgCACACIAZBBHIiB2ogASAHaioCADgCACACIAZBCHIiB2og\
+ASAHaioCADgCACACIAZBDHIiBmogASAGaioCADgCACAAQQRqIQAgBEEEaiIEIBZHDQALCyASRQ0AA0AgAiAAQQJ0IgRqIAEgBGoq\
+AgA4AgAgAEEBaiEAIANBAWoiAyASRw0ACwsCQEGsMygCACABa0ECdSIAIAlJBEBBqDMgCSAAaxAGQawyKAIAIgggC2whEUGEMigC\
+ACEPQYgyKAIAIQxBqDMoAgAhAQwBCyAAIAlNDQBBrDMgASAJQQJ0ajYCAAsgDCARQQJ0aiEDAkAgCCAFIA9qIAhwIgZrIgwgCSAJ\
+IAxLGyICRQ0AQZQyKAIAIQdBACEAIAJBAUcEQCACQX5xIRFBACEEA0AgASAAQQJ0aiADIAAgBmpBAnQiDmoqAgAgByAOaioCAJU4\
+AgAgASAAQQFyIg5BAnRqIAMgBiAOakECdCIOaioCACAHIA5qKgIAlTgCACAAQQJqIQAgBEECaiIEIBFHDQALCyACQQFxRQ0AIAEg\
+AEECdGogAyAAIAZqQQJ0IgBqKgIAIAAgB2oqAgCVOAIACwJAIAkgDE0NACAGIAhrIQRBlDIoAgAhBiAJIAIiAGtBAXEEQCABIABB\
+AnRqIAMgACAEakECdCIHaioCACAGIAdqKgIAlTgCACAAQQFqIQALIAIgE0YNACAEQQFqIQIDQCABIABBAnRqIgcgAyAAIARqQQJ0\
+IgxqKgIAIAYgDGoqAgCVOAIAIAcgAyAAIAJqQQJ0IgdqKgIAIAYgB2oqAgCVOAIEIABBAmoiACAJSQ0ACwsCQCAJQQBMDQAgDSgC\
+ACAKQQJ0aiEEQQAhAEEAIQIgEwRAA0AgBCAAQX9zQQJ0aiIDIAMqAgAgASAAQQJ0aiIDKgIAkzgCACAEIABB/v///wNzQQJ0aiIG\
+IAYqAgAgAyoCBJM4AgAgAEECaiEAIAJBAmoiAiAURw0ACwsgFUUNACAEIABBf3NBAnRqIgIgAioCACABIABBAnRqKgIAkzgCAAsg\
+C0EBaiILQbQzKAIASA0ACwtDzczMPRAWAkBBtDMoAgAiBUEATA0AQQAhAkG4MygCACIAQQBMDQADQEEAIQEgAEEASgRAQcgzKAIA\
+IAAgAmxBHGxqIQoDQCAKIAFBHGxqIgBCADcCCCAAQgA3AhAgAUEBaiIBQbgzKAIAIgBIDQALQbQzKAIAIQULIAJBAWoiAiAFSA0A\
+CwsLGQBBuDQoAgAiAARAQbw0IAA2AgAgABAECwvNkgEEHn8TfQF+AXwjAEEQayIWJAAgFkEANgIMIBZBxDQ2AgggFkH4LzYCACAW\
+IBZBDGo2AgQCQAJAAkACQEG0MygCACIKQQBMDQAgAEEATA0AQcQ0KAIAIQcgAEH8////B3EhBiAAQQNxIQsgAEEESSEFA0AgByAE\
+QQJ0aigCACEIQQAhA0EAIQIgBUUEQANAIAggA0ECdGoiDCoCDCIgICCUIAwqAggiICAglCAMKgIEIiAgIJQgDCoCACIgICCUICSS\
+kpKSISQgA0EEaiEDIAJBBGoiAiAGRw0ACwtBACECIAsEQANAIAggA0ECdGoqAgAiICAglCAkkiEkIANBAWohAyACQQFqIgIgC0cN\
+AAsLIARBAWoiBCAKRw0ACyAkQ30dkCZgDQELQZAwKAIAIgNBrDIoAgBBAXRPBEACQEGUMC0AAEEBRw0AQYAwQgA3AwBB/C9BfzYC\
+AEGUMEEAOgAAQYgwQgA3AwBByDMoAgAiA0HMMygCACICRg0AA0AgA0IANwIIIANCADcCECADQQA2AhggA0IANwIAIANBHGoiAyAC\
+Rw0ACwsCQCAAQQBMBEBBtDMoAgAiB0EATA0BIAFBAEwNAUHQNCgCACECIAFBAnQhCkEAIQRBACEDIAdBBE8EQCAHQfz///8HcSEB\
+QQAhBQNAIAIgA0ECdGoiBigCACAKEAUaIAYoAgQgChAFGiAGKAIIIAoQBRogBigCDCAKEAUaIANBBGohAyAFQQRqIgUgAUcNAAsL\
+IAdBA3EiAUUNAQNAIAIgA0ECdGooAgAgChAFGiADQQFqIQMgBEEBaiIEIAFHDQALDAELIAFBAEwNAEG0MygCACINQQBMDQBB0DQo\
+AgAhDkHENCgCACEMIA1B/v///wdxIQggDUEBcSEKQQAhBEEAIQUDQEEAIQNBACECIA1BAUcEQANAIAVBAnQiBiAOIANBAnQiC2oo\
+AgBqIARBAnQiByALIAxqKAIAaioCADgCACAGIA4gC0EEciIGaigCAGogBiAMaigCACAHaioCADgCACADQQJqIQMgAkECaiICIAhH\
+DQALCyAKBEAgDiADQQJ0IgNqKAIAIAVBAnRqIAMgDGooAgAgBEECdGoqAgA4AgALIARBAWoiA0EAIAAgA0cbIQQgBUEBaiIFIAFH\
+DQALCyAWIAAQGAwDC0GQMCAAIANqNgIADAELQZQwQQE6AABBkDBBADYCAAsgAUEASgRAQwAAgD8gAbOVITAgALIhMQNAQQAhGEH8\
+LygCAEG4MigCAE8EQEGEMEEANgIAQfwvQgA3AgACfyAZsyAxlCAwlBAdIiCLQwAAAE9dBEAgIKgMAQtBgICAgHgLIQVBvDMoAgAh\
+BEG8MyAFNgIAIBYgBRAYQfwyQfQxKAIANgIAQYAzQfgxKAIAIgJB/DEoAgAiAyADIAJrQQJ1EA9B+C8tAABBAUYEQEGMM0GEMigC\
+ADYCAEGQM0GIMigCACICQYwyKAIAIgMgAyACa0ECdRAPQZwzQZQyKAIAIgJBmDIoAgAiAyADIAJrQQJ1EA9BuDIoAgAQFwtBiDBB\
+wDMtAAAiByAFIARrIgZBAEpyIgM6AABBijBBsDAoAgBBAEdBmDAqAgBDAACAP1xyIgU6AAAgA0EBcSIEBEBBgDACfwJAIAdBAXFF\
+BEBBiTAgBkG4MigCAGsiAyADQR91IgNzIANrQQFLIgM6AAAgAw0BQaAyKAIAQQFqIQJBgDAoAgAMAgtBiTBBAToAAAtBoDIoAgBB\
+AWoiAkGAMCgCAGoLIAJqNgIAC0GLMEG8MCoCAEMAAIA/WwR/QbgwLQAAIAVxBUEBC0EBcSICOgAAAn0gB0EBcQRAQcQzKgIADAEL\
+QbgyKAIAsyAGsiIgQwAAgD8gIEMAAIA/XhuVCyEgQcAzQQA6AABBjDAgIDgCAEGUNEG0MygCACIDQQpBCSAEG2ogA0EAIAQbIgNB\
+BGogAyAFG2oiA0EDaiADIAIbIgM2AgBBgDBBpDIoAgAgA0GAMCgCAGpqQQFqIhg2AgALQfgvLQAAIgJBAUYEQAJ/QYAwKAIAIgSz\
+Q3e+fz+SQfwvKAIAQQFqs5RBuDIoAgCzlSIgQwAAgE9dICBDAAAAAGBxBEAgIKkMAQtBAAshAyAEIAMgAyAESxshGAsCQAJAIBhB\
+hDAoAgAiA0sEQANAQYQwIANBAWo2AgACQEGIMC0AAEEBRgRAQaAyKAIAIQJBiTAtAABBAUYEQCACIANLBEBB/DIpAgAhM0H8MkH0\
+MSkCADcCAEH0MSAzNwIAQYQzKQIAITNBhDNB/DEpAgA3AgBB/DEgMzcCACADQbgyKAIAECNB/DIpAgAhM0H8MkH0MSkCADcCAEH0\
+MSAzNwIAQYQzKQIAITNBhDNB/DEpAgA3AgBB/DEgMzcCAAwDCyACIANGBEBBtDMoAgAiA0EATA0DQbgzKAIAIQJBACEFA0AgAkEA\
+SgRAQcgzKAIAIAIgBWxBHGxqIQZB3DIoAgBBtDIoAgAgBWxBA3RqIQRBACEDA0AgBiADQRxsaiAEIANBA3RqKQIANwIIIANBAWoi\
+A0G4MygCACICSA0AC0G0MygCACEDCyAFQQFqIgUgA0gNAAsMAwsgAyACQX9zaiEDCyACIANLBEBB/DIpAgAhM0H8MkH0MSkCADcC\
+AEH0MSAzNwIAQYQzKQIAITNBhDNB/DEpAgA3AgBB/DEgMzcCACADQQAQI0H8MikCACEzQfwyQfQxKQIANwIAQfQxIDM3AgBBhDMp\
+AgAhM0GEM0H8MSkCADcCAEH8MSAzNwIADAILIAIgA0YEQEG0MygCACIDQQBMDQJBuDMoAgAhAkEAIQUDQCACQQBKBEBByDMoAgAg\
+AiAFbEEcbGohBkHcMigCAEG0MigCACAFbEEDdGohBEEAIQMDQCAGIANBHGxqIAQgA0EDdGopAgA3AgAgA0EBaiIDQbgzKAIAIgJI\
+DQALQbQzKAIAIQMLIAVBAWoiBSADSA0ACwwCCyADIAJBf3NqIQMLQZQ0KAIAIgIgA0sEQEEAIQVBACEEQQAhCUGMMCoCACElQYgw\
+LQAAIgZBAUchAgJ/QbAyKAIAsyIjQbgyKAIAsyIilSIhEB0iIItDAAAAT10EQCAgqAwBC0GAgICAeAshFAJAIAJFBEBBtDMoAgAi\
+AiADSwRAQbgzKAIAIQRByDMoAgAgIkPbD8lAlCIiQwAAwD8gI5VDAAAAPyAjlSIhk5QiIBAJISUgIBAKISMgBEEATA0CIAMgBGxB\
+HGxqIQNBACECICIgIZQiIBAKISYgIBAJIScDQCADIAJBHGxqIgQgBCoCFCIhICaUIAQqAhAiICAnlJI4AhQgBCAgICaUICEgJ5ST\
+OAIQIAQgBCoCCCIhICaUIAQqAgwiICAnlJM4AgggBCAgICaUICEgJ5SSOAIMICYgJZQgJiAjlCAnICWUkyEmICcgI5SSIScgAkEB\
+aiICQbgzKAIASA0ACwwCCyADIAJrIQMLAkACQEGKMC0AAEEBRgRAIANBAk0EQCADRQRAQeAzKAIAIg5B5DMoAgAiA0cEQCAOIAMg\
+DmtBBGtBfHFBBGoQBRoLAkACQEG0MygCACIIQQBMBEBBuDMoAgAhBQwBC0G4MygCACIFQQBMDQFByDMoAgAhCiAFQf7///8HcSEH\
+IAVBAXEhBgNAIAogBCAFbEEcbGohDEEAIQNBACEJIAVBAUcEQANAIAwgA0EcbGoiAiACKgIEIiAgIJQgAioCACIgICCUkiIgOAIY\
+IA4gA0ECdGoiAiACKgIAICCSOAIAIAwgA0EBciICQRxsaiILIAsqAgQiICAglCALKgIAIiAgIJSSIiA4AhggDiACQQJ0aiICIAIq\
+AgAgIJI4AgAgA0ECaiEDIAlBAmoiCSAHRw0ACwsgBgRAIAwgA0EcbGoiAiACKgIEIiAgIJQgAioCACIgICCUkiIgOAIYIA4gA0EC\
+dGoiAyADKgIAICCSOAIACyAEQQFqIgQgCEcNAAsLIAVBAEwNAEHsMygCACEKQQAhCUEAIQMgBUEETwRAIAVB/P///wdxIQRBACEG\
+A0AgCiADQQJ0IgdqIAcgDmoqAgA4AgAgCiAHQQRyIgJqIAIgDmoqAgA4AgAgCiAHQQhyIgJqIAIgDmoqAgA4AgAgCiAHQQxyIgJq\
+IAIgDmoqAgA4AgAgA0EEaiEDIAZBBGoiBiAERw0ACwsgBUEDcSIERQ0AA0AgCiADQQJ0IgJqIAIgDmoqAgA4AgAgA0EBaiEDIAlB\
+AWoiCSAERw0ACwtBmDRBADYCAAwHC0GYNCoCACEiAkBBuDMoAgAiAkEATA0AQwAAgD8gIUMAAAA/lEMAAIA/kpUhIUHsMygCACEI\
+AkAgAkEDcSIGRQRAIAIhAwwBCyACIQMDQCAIIANBAWsiA0ECdGoiBSAFKgIAICKTICGUICKSIiI4AgAgBEEBaiIEIAZHDQALCyAC\
+QQRJIgpFBEAgCEEIayEHIAhBBGshBgNAIAYgA0ECdCIFaiIEIAQqAgAgIpMgIZQgIpIiIDgCACAFIAdqIgQgBCoCACAgkyAhlCAg\
+kiIgOAIAIAggA0EDayIFQQJ0aiIEIAQqAgAgIJMgIZQgIJIiIDgCACAIIANBBGsiA0ECdGoiBCAEKgIAICCTICGUICCSIiI4AgAg\
+BUEBSw0ACwsgAkEDcSEGQewzKAIAIQVBACEEAkAgCgRAQQAhAwwBCyACQfz///8HcSECQQAhAwNAIAUgA0ECdGoiByAHKgIAICKT\
+ICGUICKSIiA4AgAgByAHKgIEICCTICGUICCSIiA4AgQgByAHKgIIICCTICGUICCSIiA4AgggByAHKgIMICCTICGUICCSIiI4Agwg\
+A0EEaiEDIAlBBGoiCSACRw0ACwsgBkUNAANAIAUgA0ECdGoiAiACKgIAICKTICGUICKSIiI4AgAgA0EBaiEDIARBAWoiBCAGRw0A\
+CwtBmDQgIjgCAAwGCyADQQNGBEAjAEEQayIIJABB2DMoAgAiA0HUMygCACICRwRAQdgzIAI2AgAgAiEDCwJAAkACQEG4MygCACIC\
+QQBKBEADQEHgMygCACIHIAVBAnQiBGoqAgAgBEHsMygCACIGaioCAF9FBEBDAADAfyEhQwAAAAAhIkMAAAAAISQgAiAFSgRAAkAD\
+QCAHIAVBAnQiBGoqAgAiICAEIAZqKgIAXw0BICAgIpIhIiAgIAWylCAkkiEkIAVBAWoiBSACRw0ACyACIQULICQgIpUhIQsgIUMA\
+AAA/kkGwMigCALMiIpUhJQJAQbAwKAIAIgIEQCAIICU4AgwgAiAIQQxqIAIoAgAoAhgRDgAhJEHYMygCACEDQbAyKAIAsyEiDAEL\
+QZgwKgIAISMgJUGcMCoCACIgX0UEQCAjQwAAgL+SICCUICWSISQMAQsgIyAllCEkCyAkICKUQwAAAL+SISBB2DMCf0HcMygCACIE\
+IANLBEAgAyAgOAIEIAMgITgCACADQQhqDAELIANB1DMoAgAiAmtBA3UiB0EBaiIKQYCAgIACTw0EQf////8BIAQgAmsiBkECdSIE\
+IAogBCAKSxsgBkH4////B08bIgoEfyAKQYCAgIACTw0GIApBA3QQBwVBAAsiBiAHQQN0aiIEICA4AgQgBCAhOAIAIARBCGohByAC\
+IANHBEADQCAEQQhrIgQgA0EIayIDKQIANwIAIAIgA0cNAAtB1DMoAgAhAgtB3DMgBiAKQQN0ajYCAEHYMyAHNgIAQdQzIAQ2AgAg\
+AgRAIAIQBAsgBwsiAzYCAEG4MygCACECCyAFQQFqIgUgAkgNAAsLIAhBEGokAAwCCxANAAsQDgALDAYLIANBBGsiAkUNASADQQVr\
+IQQMAgsgAwRAIANBAWshBCADIQIMAgsCQEG0MygCACIKQQBMBEBBuDMoAgAhAgwBC0G4MygCACICQQBMDQNByDMoAgAhByACQf7/\
+//8HcSEGIAJBAXEhBQNAIAcgAiAEbEEcbGohC0EAIQNBACEJIAJBAUcEQANAIAsgA0EcbGoiCCAIKgIEIiAgIJQgCCoCACIgICCU\
+kjgCGCALIANBAXJBHGxqIgggCCoCBCIgICCUIAgqAgAiICAglJI4AhggA0ECaiEDIAlBAmoiCSAGRw0ACwsgBQRAIAsgA0EcbGoi\
+AyADKgIEIiAgIJQgAyoCACIgICCUkjgCGAsgBEEBaiIEIApHDQALCyACQQBMDQJB+DMoAgAhCkEAIQlBACEDIAJBBE8EQCACQfz/\
+//8HcSEHQQAhBQNAIAogA0EDdGoiBEGAgID8AzYCBCAEIAOzOAIAIAogA0EBciIGQQN0aiIEQYCAgPwDNgIEIAQgBrM4AgAgCiAD\
+QQJyIgZBA3RqIgRBgICA/AM2AgQgBCAGszgCACAKIANBA3IiBkEDdGoiBEGAgID8AzYCBCAEIAazOAIAIANBBGohAyAFQQRqIgUg\
+B0cNAAsLIAJBA3EiBEUNAgNAIAogA0EDdGoiAkGAgID8AzYCBCACIAOzOAIAIANBAWohAyAJQQFqIgkgBEcNAAsMAgtBACEDAkBB\
+1DMoAgAiC0HYMygCACIIRgRAQbgzKAIAIgdBAEwNAUH4MygCACEKIAdBBE8EQCAHQfz///8HcSEGA0AgCiADQQN0aiICQYCAgPwD\
+NgIEIAIgA7M4AgAgCiADQQFyIgVBA3RqIgJBgICA/AM2AgQgAiAFszgCACAKIANBAnIiBUEDdGoiAkGAgID8AzYCBCACIAWzOAIA\
+IAogA0EDciIFQQN0aiICQYCAgPwDNgIEIAIgBbM4AgAgA0EEaiEDIAlBBGoiCSAGRw0ACwsgB0EDcSIFRQ0BA0AgCiADQQN0aiIC\
+QYCAgPwDNgIEIAIgA7M4AgAgA0EBaiEDIARBAWoiBCAFRw0ACwwBCyALKgIAISJBuDMoAgAiDAJ/IAsqAgQiIY0iIItDAAAAT10E\
+QCAgqAwBC0GAgICAeAsiAiACIAxKG0EASgRAICIgIZMhIUH4MygCACEEA0AgBCADQQN0aiICQYCAgPwDNgIEIAIgISADs5I4AgAg\
+A0EBaiIDIAwCfyALKgIEjSIgi0MAAABPXQRAICCoDAELQYCAgIB4CyICIAIgDEobSA0ACwsgCCALa0EDdSIHQQJPBEBB+DMoAgAh\
+BkEBIQQDQCAMAn8gCyAEQQN0aiICKgIEIiGNIiCLQwAAAE9dBEAgIKgMAQtBgICAgHgLIgMgAyAMShshCiAKAn8gAkEEayIFKgIA\
+IiKNIiCLQwAAAE9dBEAgIKgMAQtBgICAgHgLIgNBACADQQBKGyIDSgRAIAJBCGsqAgAiICAikyElQwAAgD8gISAik5UiIyAiICEg\
+IJKTIAIqAgCSIiKUQwAAwECUISEDQCAGIANBA3RqIgIgISADsyIgIAUqAgCTICOUIiiUQwAAgD8gKJOUQwAAgD+SOAIEIAIgJSAg\
+kiAoICiUICKUQwAAQEAgKCAokpOUkjgCACADQQFqIgMgCkcNAAsLIARBAWoiBCAHRw0ACwsgCEEIayoCAEEAIQQCfyAIQQRrKgIA\
+IiGLQwAAAE9dBEAgIagMAQtBgICAgHgLIgNBACADQQBKGyICIAxODQAgIZMhIEH4MygCACEHIAwgAiIDa0EDcSIGBEADQCAHIANB\
+A3RqIgVBgICA/AM2AgQgBSAgIAOzkjgCACADQQFqIQMgBEEBaiIEIAZHDQALCyACIAxrQXxLDQADQCAHIANBA3RqIgJBgICA/AM2\
+AgQgAiAgIAOzkjgCACAHIANBAWoiBEEDdGoiAkGAgID8AzYCBCACICAgBLOSOAIAIAcgA0ECaiIEQQN0aiICQYCAgPwDNgIEIAIg\
+ICAEs5I4AgAgByADQQNqIgRBA3RqIgJBgICA/AM2AgQgAiAgIASzkjgCACADQQRqIgMgDEcNAAsLDAMLQYswLQAAQQFGBEAgAkED\
+TQRAQwAAAAAhJCMAQRBrIgwkAAJAAkACQAJAIAQOAgIBAAtBuDMoAgAiA0EATA0CQbAyKAIAIQoDQCAJs0MAAAA/kiAKsyIilSEk\
+AkBBuDAtAABBAUcNAEGwMCgCACICBEAgDCAkOAIMIAIgDEEMaiACKAIAKAIYEQ4AISRBuDMoAgAhA0GwMigCACIKsyEiDAELQZgw\
+KgIAISEgJEGcMCoCACIgX0UEQCAhQwAAgL+SICCUICSSISQMAQsgISAklCEkC0MAAAAAISFBqDQoAgAiAiAJQQJ0aioCACElQwAA\
+gD9BvDAqAgCTQZwwKgIAIiOUICSSQcAwKgIAICSUIiAgICAjXhsgIpRDAAAAv5IiIkMAAAAAXUUEQCADsiIgICIgICAiXRsiICAg\
+jiIgkyACAn8gIItDAAAAT10EQCAgqAwBC0GAgICAeAtBAnRqIgIqAgQgAioCACIgk5QgIJIhIQsCQEG0MygCACIIQQBMDQAgISAl\
+Q2BCog2SlSIgICCUISBByDMoAgAgCUEcbGpBGGohC0EAIQVBACECIAhBBE8EQCAIQfz///8HcSEHQQAhBANAIAsgAiADbEEcbGoi\
+BiAgIAYqAgCUOAIAIAsgAyACQQFybEEcbGoiBiAgIAYqAgCUOAIAIAsgAyACQQJybEEcbGoiBiAgIAYqAgCUOAIAIAsgAyACQQNy\
+bEEcbGoiBiAgIAYqAgCUOAIAIAJBBGohAiAEQQRqIgQgB0cNAAsLIAhBA3EiBkUNAANAIAsgAiADbEEcbGoiBCAgIAQqAgCUOAIA\
+IAJBAWohAiAFQQFqIgUgBkcNAAsLIAlBAWoiCSADSA0ACwwCC0G4MygCACICQQBMDQFEAAAAAAAA8D9BpDQqAgC7RAAAAAAAAOA/\
+okQAAAAAAADwP6CjtiEhQag0KAIAIQgCQCACQQNxIgZFBEAgAiEDDAELIAIhAwNAIAggA0EBayIDQQJ0aiIEIAQqAgAgJJMgIZQg\
+JJIiJDgCACAFQQFqIgUgBkcNAAsLIAJBBEkiCkUEQCAIQQhrIQcgCEEEayEGA0AgBiADQQJ0IgVqIgQgBCoCACAkkyAhlCAkkiIg\
+OAIAIAUgB2oiBCAEKgIAICCTICGUICCSIiA4AgAgCCADQQNrIgVBAnRqIgQgBCoCACAgkyAhlCAgkiIgOAIAIAggA0EEayIDQQJ0\
+aiIEIAQqAgAgIJMgIZQgIJIiJDgCACAFQQFLDQALCyACQQNxIQdBACEFAkAgCgRAQQAhAwwBCyACQfz///8HcSEGQQAhA0EAIQQD\
+QCAIIANBAnRqIgogCioCACAkkyAhlCAkkiIgOAIAIAogCioCBCAgkyAhlCAgkiIgOAIEIAogCioCCCAgkyAhlCAgkiIgOAIIIAog\
+CioCDCAgkyAhlCAgkiIkOAIMIANBBGohAyAEQQRqIgQgBkcNAAsLIAcEQANAIAggA0ECdGoiBCAEKgIAICSTICGUICSSIiQ4AgAg\
+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\
+AkEBaiIHQQJ0IgZqIgQgBCoCACAIIAcgBWtBAnRqKgIAIAYgCmoqAgCUkjgCACACQQJqIgIgA0cNAAsLAkAgCyAPTw0AIANBAWoh\
+AiAQIBMgD2tBAnRqIQhB6DIoAgAhCkHIMigCACEHIA8gA2tBAXEEQCAIIANBAnQiBmoiBCAEKgIAIAogAyAFa0ECdGoqAgAgBiAH\
+aioCAJSSOAIAIAIhAwsgAiAPRg0AA0AgCCADQQJ0IgRqIgIgAioCACAKIAMgBWtBAnRqKgIAIAQgB2oqAgCUkjgCACAIIANBAWoi\
+BkECdCIEaiICIAIqAgAgCiAGIAVrQQJ0aioCACAEIAdqKgIAlJI4AgAgA0ECaiIDIA9HDQALCwtBhDAoAgAiAyAYSQ0AC0H8L0H8\
+LygCAEEBajYCAEH4Ly0AAEEBcQ0BDAILQfwvQfwvKAIAQQFqNgIAIAJFDQELQYwzKQIAITNBjDNBhDIpAgA3AgBBhDIgMzcCAEGU\
+MykCACEzQZQzQYwyKQIANwIAQYwyIDM3AgBBnDMpAgAhM0GcM0GUMikCADcCAEGUMiAzNwIAQaQzKAIAIQNBpDNBnDIoAgA2AgBB\
+nDIgAzYCAAsCQEG0MygCACILQQBMDQBBhDIoAgBBrDIoAgAiCHBBAnQiA0GUMigCAGohCkGIMigCACADaiEHQdA0KAIAIQZBACED\
+IAtBAUcEQCALQf7///8HcSEFQQAhGANAIBlBAnQiBCAGIANBAnRqKAIAaiAHIAMgCGxBAnRqKgIAIAoqAgCVOAIAIAQgBiADQQFy\
+IgJBAnRqKAIAaiAHIAIgCGxBAnRqKgIAIAoqAgCVOAIAIANBAmohAyAYQQJqIhggBUcNAAsLIAtBAXFFDQAgBiADQQJ0aigCACAZ\
+QQJ0aiAHIAMgCGxBAnRqKgIAIAoqAgCVOAIAC0EBEBdB+C8tAAAEQEGMMykCACEzQYwzQYQyKQIANwIAQYQyIDM3AgBBlDMpAgAh\
+M0GUM0GMMikCADcCAEGMMiAzNwIAQZwzKQIAITNBnDNBlDIpAgA3AgBBlDIgMzcCAEGkMygCACEDQaQzQZwyKAIANgIAQZwyIAM2\
+AgALIBlBAWoiGSABRw0ACwsgFiAAEBhBvDNBvDMoAgAgAGs2AgALIBZBEGokAAvLDwMbfwV9AXwgACEJQawzKAIAIgBBqDMoAgAi\
+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";return f}var wasmB\
+inaryFile;function getBinarySync(file){if(file==wasmBinaryFile&&wasmBinary){return new Uint8Array(wa\
+smBinary)}var binary=tryParseAsDataURI(file);if(binary){return binary}if(readBinary){return readBina\
+ry(file)}throw"both async and sync fetching of the wasm failed"}function getBinaryPromise(binaryFile\
+){return Promise.resolve().then(()=>getBinarySync(binaryFile))}function instantiateArrayBuffer(binar\
+yFile,imports,receiver){return getBinaryPromise(binaryFile).then(binary=>WebAssembly.instantiate(bin\
+ary,imports)).then(receiver,reason=>{err(`failed to asynchronously prepare wasm: ${reason}`);abort(r\
+eason)})}function instantiateAsync(binary,binaryFile,imports,callback){return instantiateArrayBuffer\
+(binaryFile,imports,callback)}function getWasmImports(){return{a:wasmImports}}function createWasm(){\
+function receiveInstance(instance,module){wasmExports=instance.exports;wasmMemory=wasmExports["e"];u\
+pdateMemoryViews();addOnInit(wasmExports["f"]);removeRunDependency("wasm-instantiate");return wasmEx\
+ports}addRunDependency("wasm-instantiate");function receiveInstantiationResult(result){receiveInstan\
+ce(result["instance"])}var info=getWasmImports();wasmBinaryFile??=findWasmBinary();instantiateAsync(\
+wasmBinary,wasmBinaryFile,info,receiveInstantiationResult).catch(readyPromiseReject);return{}}class \
+ExitStatus{name="ExitStatus";constructor(status){this.message=`Program terminated with exit(${status\
+})`;this.status=status}}var callRuntimeCallbacks=callbacks=>{while(callbacks.length>0){callbacks.shi\
+ft()(Module)}};var __abort_js=()=>abort("");var __emscripten_memcpy_js=(dest,src,num)=>HEAPU8.copyWi\
+thin(dest,src,src+num);var getHeapMax=()=>2147483648;var alignMemory=(size,alignment)=>Math.ceil(siz\
+e/alignment)*alignment;var abortOnCannotGrowMemory=requestedSize=>{abort("OOM")};var growMemory=size\
+=>{var b=wasmMemory.buffer;var pages=(size-b.byteLength+65535)/65536|0;try{wasmMemory.grow(pages);up\
+dateMemoryViews();return 1}catch(e){}};var _emscripten_resize_heap=requestedSize=>{var oldSize=HEAPU\
+8.length;requestedSize>>>=0;var maxHeapSize=getHeapMax();if(requestedSize>maxHeapSize){abortOnCannot\
+GrowMemory(requestedSize)}for(var cutDown=1;cutDown<=4;cutDown*=2){var overGrownHeapSize=oldSize*(1+\
+.5/cutDown);overGrownHeapSize=Math.min(overGrownHeapSize,requestedSize+100663296);var newSize=Math.m\
+in(maxHeapSize,alignMemory(Math.max(requestedSize,overGrownHeapSize),65536));var replacement=growMem\
+ory(newSize);if(replacement){return true}}abortOnCannotGrowMemory(requestedSize)};var initRandomFill\
+=()=>{if(typeof crypto=="object"&&typeof crypto["getRandomValues"]=="function"){return view=>crypto.\
+getRandomValues(view)}else abort("initRandomDevice")};var randomFill=view=>(randomFill=initRandomFil\
+l())(view);var _random_get=(buffer,size)=>{randomFill(HEAPU8.subarray(buffer,buffer+size));return 0}\
+;var keepRuntimeAlive=()=>true;var _proc_exit=code=>{EXITSTATUS=code;if(!keepRuntimeAlive()){ABORT=t\
+rue}quit_(code,new ExitStatus(code))};var exitJS=(status,implicit)=>{EXITSTATUS=status;_proc_exit(st\
+atus)};var handleException=e=>{if(e instanceof ExitStatus||e=="unwind"){return EXITSTATUS}quit_(1,e)\
+};var UTF8Decoder=typeof TextDecoder!="undefined"?new TextDecoder:void 0;var UTF8ArrayToString=(heap\
+OrArray,idx=0,maxBytesToRead=NaN)=>{var endIdx=idx+maxBytesToRead;var endPtr=idx;while(heapOrArray[e\
+ndPtr]&&!(endPtr>=endIdx))++endPtr;if(endPtr-idx>16&&heapOrArray.buffer&&UTF8Decoder){return UTF8Dec\
+oder.decode(heapOrArray.subarray(idx,endPtr))}var str="";while(idx<endPtr){var u0=heapOrArray[idx++]\
+;if(!(u0&128)){str+=String.fromCharCode(u0);continue}var u1=heapOrArray[idx++]&63;if((u0&224)==192){\
+str+=String.fromCharCode((u0&31)<<6|u1);continue}var u2=heapOrArray[idx++]&63;if((u0&240)==224){u0=(\
+u0&15)<<12|u1<<6|u2}else{u0=(u0&7)<<18|u1<<12|u2<<6|heapOrArray[idx++]&63}if(u0<65536){str+=String.f\
+romCharCode(u0)}else{var ch=u0-65536;str+=String.fromCharCode(55296|ch>>10,56320|ch&1023)}}return st\
+r};var UTF8ToString=(ptr,maxBytesToRead)=>ptr?UTF8ArrayToString(HEAPU8,ptr,maxBytesToRead):"";var wa\
+smImports={d:__abort_js,c:__emscripten_memcpy_js,b:_emscripten_resize_heap,a:_random_get};var wasmEx\
+ports=createWasm();var ___wasm_call_ctors=()=>(___wasm_call_ctors=wasmExports["f"])();var _setBuffer\
+s=Module["_setBuffers"]=(a0,a1)=>(_setBuffers=Module["_setBuffers"]=wasmExports["h"])(a0,a1);var _bl\
+ockSamples=Module["_blockSamples"]=()=>(_blockSamples=Module["_blockSamples"]=wasmExports["i"])();va\
+r _intervalSamples=Module["_intervalSamples"]=()=>(_intervalSamples=Module["_intervalSamples"]=wasmE\
+xports["j"])();var _inputLatency=Module["_inputLatency"]=()=>(_inputLatency=Module["_inputLatency"]=\
+wasmExports["k"])();var _outputLatency=Module["_outputLatency"]=()=>(_outputLatency=Module["_outputL\
+atency"]=wasmExports["l"])();var _reset=Module["_reset"]=()=>(_reset=Module["_reset"]=wasmExports["m\
+"])();var _presetDefault=Module["_presetDefault"]=(a0,a1)=>(_presetDefault=Module["_presetDefault"]=\
+wasmExports["n"])(a0,a1);var _presetCheaper=Module["_presetCheaper"]=(a0,a1)=>(_presetCheaper=Module\
+["_presetCheaper"]=wasmExports["o"])(a0,a1);var _configure=Module["_configure"]=(a0,a1,a2,a3)=>(_con\
+figure=Module["_configure"]=wasmExports["p"])(a0,a1,a2,a3);var _setTransposeFactor=Module["_setTrans\
+poseFactor"]=(a0,a1)=>(_setTransposeFactor=Module["_setTransposeFactor"]=wasmExports["q"])(a0,a1);va\
+r _setTransposeSemitones=Module["_setTransposeSemitones"]=(a0,a1)=>(_setTransposeSemitones=Module["_\
+setTransposeSemitones"]=wasmExports["r"])(a0,a1);var _setFormantFactor=Module["_setFormantFactor"]=(\
+a0,a1)=>(_setFormantFactor=Module["_setFormantFactor"]=wasmExports["s"])(a0,a1);var _setFormantSemit\
+ones=Module["_setFormantSemitones"]=(a0,a1)=>(_setFormantSemitones=Module["_setFormantSemitones"]=wa\
+smExports["t"])(a0,a1);var _setFormantBase=Module["_setFormantBase"]=a0=>(_setFormantBase=Module["_s\
+etFormantBase"]=wasmExports["u"])(a0);var _seek=Module["_seek"]=(a0,a1)=>(_seek=Module["_seek"]=wasm\
+Exports["v"])(a0,a1);var _process=Module["_process"]=(a0,a1)=>(_process=Module["_process"]=wasmExpor\
+ts["w"])(a0,a1);var _flush=Module["_flush"]=a0=>(_flush=Module["_flush"]=wasmExports["x"])(a0);var _\
+main=Module["_main"]=(a0,a1)=>(_main=Module["_main"]=wasmExports["y"])(a0,a1);Module["UTF8ToString"]\
+=UTF8ToString;var calledRun;dependenciesFulfilled=function runCaller(){if(!calledRun)run();if(!calle\
+dRun)dependenciesFulfilled=runCaller};function callMain(){var entryFunction=_main;var argc=0;var arg\
+v=0;try{var ret=entryFunction(argc,argv);exitJS(ret,true);return ret}catch(e){return handleException\
+(e)}}function run(){if(runDependencies>0){return}preRun();if(runDependencies>0){return}function doRu\
+n(){if(calledRun)return;calledRun=true;Module["calledRun"]=true;if(ABORT)return;initRuntime();preMai\
+n();readyPromiseResolve(Module);if(shouldRunNow)callMain();postRun()}{doRun()}}var shouldRunNow=true\
+;run();moduleRtn=readyPromise;return moduleRtn})})();var wasm_factory_default=SignalsmithStretch;fun\
+ction registerPreserveProcessor(Module,name){const QUANTUM=128;const fail=message=>{throw new Error(\
+message)};const frame=value=>Number.isSafeInteger(value)&&value>=0;class PreserveProcessor extends A\
+udioWorkletProcessor{constructor(options){super();const settings=options.processorOptions;this.sourc\
+eRate=settings.sourceSampleRate;this.maxBytes=settings.maxBufferBytes;this.maxWindows=settings.maxWi\
+ndows;this.generation=settings.generation;this.windows=[];this.buffers=[];this.bufferBytes=0;this.pe\
+akBufferBytes=0;this.ready=false;this.disposed=false;this.failed=false;this.lastEnd=null;this.totalF\
+rames=void 0;if(!Number.isInteger(this.sourceRate)||this.sourceRate<8e3||this.sourceRate>192e3||!fra\
+me(this.generation)||!Number.isSafeInteger(this.maxBytes)||this.maxBytes<8192||!Number.isSafeInteger\
+(this.maxWindows)||this.maxWindows<1||this.maxWindows>32)fail("Invalid preserved processor configura\
+tion");this.port.onmessage=event=>this.message(event.data);Module().then(wasm=>{if(this.disposed)ret\
+urn;this.wasm=wasm;wasm._main();wasm._configure(2,Math.round(sampleRate*.12),Math.round(sampleRate*.\
+03),true);wasm._reset();this.inputLatency=wasm._inputLatency();this.outputLatency=wasm._outputLatenc\
+y();this.historyLength=this.inputLatency+this.outputLatency;if(!frame(this.inputLatency)||!frame(thi\
+s.outputLatency)||this.historyLength<QUANTUM||this.historyLength>sampleRate)fail("Invalid Signalsmit\
+h working-buffer size");this.pointer=wasm._setBuffers(2,this.historyLength);wasm._setTransposeFactor\
+(this.sourceRate/sampleRate,8e3/sampleRate);wasm._setFormantSemitones(0,false);wasm._setFormantBase(\
+0);this.ready=true;this.port.postMessage({type:"ready",...this.stats()})}).catch(error=>this.fatal(e\
+rror))}stats(){return{generation:this.generation,disposed:this.disposed,failed:this.failed,bufferByt\
+es:this.bufferBytes,peakBufferBytes:this.peakBufferBytes,buffers:this.buffers.length,windows:this.wi\
+ndows.length,inputLatencyFrames:this.inputLatency,outputLatencyFrames:this.outputLatency,historyFram\
+es:this.historyLength,heapBytes:this.wasm?.HEAP8.buffer.byteLength,bufferStartFrame:this.buffers[0]?\
+.start,bufferEndFrame:this.buffers.at(-1)?.end}}fatal(error){this.failed=true;this.windows.length=0;\
+this.dropBuffers();this.port.postMessage({type:"failure",generation:this.generation,message:error.me\
+ssage})}dropBuffers(before){while(this.buffers.length&&(before===void 0||this.buffers[0].end<=before\
+)){const block=this.buffers.shift();this.bufferBytes-=(block.end-block.start)*8;block.channels.lengt\
+h=0}}addBuffers(start,channels){if(!channels.length)return;if(!frame(start)||channels.length!==2||ch\
+annels.some(channel=>!(channel instanceof Float32Array)||channel.byteOffset!==0||channel.byteLength!\
+==channel.buffer.byteLength)||!channels[0].length||channels[0].length!==channels[1].length)fail("Inv\
+alid preserved PCM block");const length=channels[0].length;const end=start+length;if(!frame(end)||ch\
+annels.some(channel=>!channel.every(Number.isFinite)))fail("Preserved PCM must be finite and frame-b\
+ounded");const previous=this.buffers.at(-1);if(previous&&previous.end!==start)fail("Preserved PCM bl\
+ocks must be contiguous");if(this.bufferBytes+length*8>this.maxBytes)fail("Preserved PCM byte budget\
+ exceeded");this.buffers.push({start,end,channels});this.bufferBytes+=length*8;this.peakBufferBytes=\
+Math.max(this.peakBufferBytes,this.bufferBytes)}validateWindow(window2){const{outputStartFrame:start\
+,outputEndFrame:end,sourceStartFrame,sourceEndFrame,intervals}=window2;if(!frame(start)||start%QUANT\
+UM||!Number.isFinite(end)||end<=start||end-start>sampleRate*2||start<currentFrame+this.outputLatency\
++QUANTUM||!Number.isFinite(sourceStartFrame)||sourceStartFrame<0||!Number.isFinite(sourceEndFrame)||\
+sourceEndFrame<=sourceStartFrame||sourceEndFrame>this.sourceRate*86400||!Array.isArray(intervals)||!\
+intervals.length||intervals.length>Math.ceil(sampleRate*2/QUANTUM))fail("Invalid or late preserved p\
+layback window");let position=sourceStartFrame;for(let index=0;index<intervals.length;index++){const\
+ interval=intervals[index];const effective=interval.rate*this.sourceRate/sampleRate;if(interval.outp\
+utFrame!==start+index*QUANTUM||interval.sourceFrame!==position||!Number.isFinite(interval.rate)||int\
+erval.rate<.025||interval.rate>4||Math.fround(interval.rate)!==interval.rate||interval.sourceFramesP\
+erOutputFrame!==effective)fail("Invalid preserved rate-clock interval");position+=QUANTUM*effective}\
+if(start+intervals.length*QUANTUM<end||Math.abs(this.sourceAt(window2,end)-sourceEndFrame)>1e-6)fail\
+("Preserved rate-clock endpoint mismatch");if(this.lastEnd!==null&&start<this.lastEnd)fail("Preserve\
+d windows overlap");if(this.windows.length>=this.maxWindows)fail("Preserved schedule budget exceeded\
+")}sourceAt(window2,outputFrame){const index=Math.max(0,Math.min(window2.intervals.length-1,Math.flo\
+or((outputFrame-window2.outputStartFrame)/QUANTUM)));const interval=window2.intervals[index];return \
+interval.sourceFrame+(outputFrame-interval.outputFrame)*interval.sourceFramesPerOutputFrame}message(\
+message){const{id,generation,method,value}=message;try{if(!this.ready||this.disposed||this.failed&&m\
+ethod!=="dispose")fail("Preserved processor is not available");if(method==="reset"||method==="dispos\
+e"){if(!frame(generation)||generation<=this.generation)fail("Invalid preserved reset generation");th\
+is.generation=generation;this.windows.length=0;this.dropBuffers();this.lastEnd=null;this.totalFrames\
+=void 0;this.wasm._reset();this.disposed=method==="dispose"}else{if(generation!==this.generation)fai\
+l("Stale preserved processor generation");if(method==="schedule"){this.validateWindow(value.window);\
+if(value.totalSourceFrames!==void 0){if(!frame(value.totalSourceFrames)||!value.totalSourceFrames||t\
+his.totalFrames!==void 0&&this.totalFrames!==value.totalSourceFrames)fail("Invalid preserved EOF");t\
+his.totalFrames=value.totalSourceFrames}this.addBuffers(value.pcmStartFrame,value.channels);this.win\
+dows.push(value.window);this.lastEnd=value.window.outputEndFrame}else if(method==="truncate"){const \
+cut=value;if(!frame(cut)||cut%QUANTUM||cut<currentFrame+this.outputLatency+QUANTUM||!this.windows.so\
+me(window2=>window2.outputStartFrame<=cut&&cut<=window2.outputEndFrame))fail("Invalid or late preser\
+ved truncation");this.windows=this.windows.filter(window2=>window2.outputStartFrame<cut);const last=\
+this.windows.at(-1);if(last&&last.outputEndFrame>cut){last.sourceEndFrame=this.sourceAt(last,cut);la\
+st.outputEndFrame=cut}this.lastEnd=cut}else fail("Unknown preserved processor method")}this.port.pos\
+tMessage({type:"reply",id,generation,value:this.stats()})}catch(error){this.port.postMessage({type:"\
+reply",id,generation,error:error.message})}}updateViews(){const heap=this.wasm.HEAP8.buffer;if(heap=\
+==this.heap)return;this.heap=heap;this.inputViews=[0,1].map(channel=>new Float32Array(heap,this.poin\
+ter+channel*this.historyLength*4,this.historyLength));this.outputViews=[0,1].map(channel=>new Float3\
+2Array(heap,this.pointer+(channel+2)*this.historyLength*4,QUANTUM))}copyHistory(end){const start=end\
+-this.historyLength;this.updateViews();const channels=this.inputViews;const requiredStart=Math.max(0\
+,start);const requiredEnd=this.totalFrames===void 0?end:Math.min(end,this.totalFrames);for(const cha\
+nnel of channels){if(start<0)channel.fill(0,0,Math.min(this.historyLength,-start));if(requiredEnd<en\
+d)channel.fill(0,Math.max(0,requiredEnd-start))}let cursor=requiredStart;for(const block of this.buf\
+fers){if(block.end<=cursor)continue;if(block.start>=requiredEnd)break;if(block.start>cursor)fail("Pr\
+eserved PCM history has a coverage gap");const to=Math.min(block.end,requiredEnd);const offset=curso\
+r-start;const length=to-cursor;if(offset<0||offset+length>this.historyLength)fail("Preserved history\
+ cursor is out of bounds");for(let channel=0;channel<2;channel++)channels[channel].set(block.channel\
+s[channel].subarray(cursor-block.start,to-block.start),offset);cursor=to;if(cursor>=requiredEnd)brea\
+k}if(cursor<requiredEnd)fail("Preserved PCM history is incomplete");this.dropBuffers(requiredStart-Q\
+UANTUM)}process(inputs,outputs){const channels=outputs[0];if(!channels?.length)return false;for(cons\
+t channel of channels)channel.fill(0);if(this.disposed)return false;if(!this.ready||this.failed||!th\
+is.windows.length)return true;try{if(channels.length!==2||channels.some(channel=>channel.length!==QU\
+ANTUM))fail("Preserved output must remain stereo render quanta");while(this.windows.length&&this.win\
+dows[0].outputEndFrame<=currentFrame)this.windows.shift();if(!this.windows.length){this.wasm._reset(\
+);this.port.postMessage({type:"stats",value:this.stats()});return true}const analysisFrame=currentFr\
+ame+this.outputLatency;const first=this.windows[0];if(analysisFrame<first.outputStartFrame)return tr\
+ue;const window2=this.windows.findLast(value=>value.outputStartFrame<=analysisFrame);const index=Mat\
+h.max(0,Math.min(window2.intervals.length-1,Math.floor((analysisFrame-window2.outputStartFrame)/QUAN\
+TUM)));const rate=window2.intervals[index].rate*this.sourceRate/sampleRate;const sourceEnd=Math.roun\
+d(this.sourceAt(window2,analysisFrame)+this.inputLatency);this.copyHistory(sourceEnd);this.wasm._see\
+k(this.historyLength,rate);this.wasm._process(0,QUANTUM);this.updateViews();for(let channel=0;channe\
+l<2;channel++){const result=this.outputViews[channel];if(!result.every(Number.isFinite))fail("Preser\
+ved output is not finite");channels[channel].set(result)}}catch(error){for(const channel of channels\
+)channel.fill(0);this.fatal(error)}return true}}registerProcessor(name,PreserveProcessor)}registerPr\
+eserveProcessor(wasm_factory_default,"soundcloud-preserve-buffered-v1");})();\n';var PROCESSOR="soundcloud-preserve-buffered-v1";var MODULES=new WeakMap;var QUANTUM4=128;var abortError3=()=>new DOMException(
+"Preserved output operation cancelled","AbortError");function listenUntil(promise,signal){if(!signal)
+return promise;return new Promise((resolve,reject)=>{const abort=()=>reject(signal.reason||abortError3());
+if(signal.aborted)return abort();signal.addEventListener("abort",abort,{once:true});Promise.resolve(
+promise).then(resolve,reject).finally(()=>signal.removeEventListener("abort",abort))})}function createPreserveOutput({
+context,destination,moduleSource,limits={}}){if(!context?.audioWorklet||!destination||destination.context!==
+context||typeof context.createGain!=="function"||!Number.isInteger(context.sampleRate)||context.sampleRate<
+8e3||context.sampleRate>192e3)throw new TypeError("A supported audio context and destination are req\
+uired");if(typeof moduleSource!=="string"||!moduleSource.length)throw new TypeError("A compiled pres\
+erved worklet source is required");const budget={maxBufferBytes:8*1024*1024,maxWindows:8,maxAheadSeconds:4,
+...limits};if(Object.keys(limits).some(key=>!["maxBufferBytes","maxWindows","maxAheadSeconds"].includes(
+key))||!Number.isSafeInteger(budget.maxBufferBytes)||budget.maxBufferBytes<8192||!Number.isSafeInteger(
+budget.maxWindows)||budget.maxWindows<1||budget.maxWindows>32||!Number.isFinite(budget.maxAheadSeconds)||
+budget.maxAheadSeconds<=0)throw new RangeError("Invalid preserved output limits");const gate=context.
+createGain();gate.gain.value=0;gate.connect(destination);const failures=new Set;const requests=new Map;
+let node,sourceRate,initialization,cachedEnd,lastEnd,totalFrames,disposing;let readyResolve,readyReject,
+initTimer;let generation=0,nextId=0;let disposed=false,operation=false;let failure2=null;let resetBarrier=Promise.
+resolve();let processorStats={windows:0,buffers:0,bufferBytes:0,peakBufferBytes:0};function mute(){gate.
+gain.cancelScheduledValues(0);gate.gain.value=0}function fail(error2){if(failure2||disposed)return;failure2=
+error2;mute();for(const request of requests.values()){clearTimeout(request.timer);request.reject(error2)}
+requests.clear();readyReject?.(error2);for(const callback of failures){try{callback(error2)}catch{}}}
+function available(){if(disposed)throw new Error("Preserved output is disposed");if(failure2)throw failure2;
+if(context.state==="closed")throw new Error("Audio context is closed")}function receive(event){const message=event.
+data;if(message.type==="ready"){clearTimeout(initTimer);processorStats=message;readyResolve(message)}else if(message.
+type==="failure")fail(new Error(message.message));else if(message.type==="stats"&&message.value.generation===
+generation)processorStats=message.value;else if(message.type==="reply"){const request=requests.get(message.
+id);if(!request)return;clearTimeout(request.timer);requests.delete(message.id);if(message.generation!==
+request.generation)request.reject(new Error("Preserved reply generation mismatch"));else if(message.
+error)request.reject(new Error(message.error));else{if(message.generation===generation)processorStats=
+message.value;request.resolve(message.value)}}}function post(method2,value,transfer=[],revision=generation){
+if(!node)return Promise.reject(new Error("Preserved output is not initialized"));const id=nextId++;return new Promise(
+(resolve,reject)=>{const timer=setTimeout(()=>{requests.delete(id);const error2=new Error("Preserved\
+ processor response timed out");reject(error2);fail(error2)},2e3);requests.set(id,{resolve,reject,timer,
+generation:revision});try{node.port.postMessage({id,generation:revision,method:method2,value},transfer)}catch(error2){
+clearTimeout(timer);requests.delete(id);reject(error2)}})}async function initialize({sourceSampleRate,
+signal}={}){available();if(!Number.isInteger(sourceSampleRate)||sourceSampleRate<8e3||sourceSampleRate>
+192e3)throw new RangeError("Unsupported preserved source sample rate");if(sourceRate!==void 0&&sourceRate!==
+sourceSampleRate)throw new Error("Source sample rate changed without replacing the renderer");sourceRate=
+sourceSampleRate;const initialGeneration=generation;if(!initialization)initialization=(async()=>{if(!MODULES.
+has(context)){const loading=(async()=>{const url=URL.createObjectURL(new Blob([moduleSource],{type:"\
+text/javascript"}));try{await context.audioWorklet.addModule(url)}finally{URL.revokeObjectURL(url)}})();
+MODULES.set(context,loading);loading.catch(()=>MODULES.delete(context))}await MODULES.get(context);available();
+const ready=new Promise((resolve,reject)=>{readyResolve=resolve;readyReject=reject;initTimer=setTimeout(
+()=>fail(new Error("Preserved processor initialization timed out")),3e3)});node=new AudioWorkletNode(
+context,PROCESSOR,{numberOfInputs:0,numberOfOutputs:1,outputChannelCount:[2],processorOptions:{sourceSampleRate:sourceRate,
+generation:initialGeneration,maxBufferBytes:budget.maxBufferBytes,maxWindows:budget.maxWindows}});node.
+port.onmessage=receive;node.addEventListener("processorerror",processorFailed);node.connect(gate);await ready;
+return stats()})().catch(error2=>{fail(error2);throw error2});return listenUntil(initialization,signal)}
+function minimumLead(){return(processorStats.outputLatencyFrames??0)/context.sampleRate+.06}function requiredPcmRange(clock){
+available();if(!node||!processorStats.historyFrames)throw new Error("Initialize preserved output bef\
+ore requesting PCM");if(clock.sourceSampleRate!==sourceRate||clock.outputSampleRate!==context.sampleRate)
+throw new RangeError("Preserved clock sample rates do not match");return Object.freeze({startFrame:Math.
+max(0,Math.floor(clock.sourceStartFrame)-processorStats.outputLatencyFrames-QUANTUM4),endFrame:Math.
+ceil(clock.sourceEndFrame)+processorStats.inputLatencyFrames+Math.ceil(4*sourceRate/context.sampleRate*
+processorStats.outputLatencyFrames)+QUANTUM4})}function readWindow(input){const{clock,sampleRate:sampleRate3,
+pcmStartFrame,channels,totalSourceFrames}=input;const range=requiredPcmRange(clock);if(sampleRate3!==
+sourceRate||!Number.isSafeInteger(pcmStartFrame)||pcmStartFrame<0||!Array.isArray(channels)||channels.
+length!==2||channels.some(channel=>!(channel instanceof Float32Array))||!channels[0].length||channels[0].
+length!==channels[1].length)throw new TypeError("Invalid preserved stereo PCM lease");if(totalSourceFrames!==
+void 0&&(!Number.isSafeInteger(totalSourceFrames)||totalSourceFrames<=clock.sourceStartFrame||totalFrames!==
+void 0&&totalFrames!==totalSourceFrames))throw new RangeError("Invalid or changing preserved EOF");const end=totalSourceFrames===
+void 0?range.endFrame:Math.min(range.endFrame,totalSourceFrames);if(pcmStartFrame>range.startFrame||
+pcmStartFrame+channels[0].length<end)throw new RangeError("PCM lease does not cover preserved histor\
+y and lookahead");const sourceEndFrame=totalSourceFrames===void 0?clock.sourceEndFrame:Math.min(clock.
+sourceEndFrame,totalSourceFrames);const outputEndFrame=sourceEndFrame<clock.sourceEndFrame?clock.outputAt(
+sourceEndFrame):clock.outputEndFrame;return{window:{outputStartFrame:clock.outputStartFrame,outputEndFrame,
+sourceStartFrame:clock.sourceStartFrame,sourceEndFrame,intervals:clock.intervals.map(interval=>({...interval}))},
+range:{startFrame:range.startFrame,endFrame:end}}}async function schedule(input){available();if(operation)
+throw new Error("A preserved scheduling operation is already active");operation=true;const revision=generation;
+try{await resetBarrier;available();if(revision!==generation)throw abortError3();const{window:window2,
+range}=readWindow(input);const now=context.currentTime*context.sampleRate;if(window2.outputStartFrame<
+now+processorStats.outputLatencyFrames+2*QUANTUM4||(window2.outputEndFrame-now)/context.sampleRate>budget.
+maxAheadSeconds||lastEnd!==void 0&&window2.outputStartFrame<lastEnd)throw new RangeError("Preserved \
+output timing is outside its scheduling window");const start=Math.max(range.startFrame,cachedEnd??range.
+startFrame);const length=Math.max(0,range.endFrame-start);if(processorStats.bufferBytes+length*8>budget.
+maxBufferBytes)throw new RangeError("Preserved PCM byte budget exceeded");const channels=length?input.
+channels.map(channel=>channel.slice(start-input.pcmStartFrame,start-input.pcmStartFrame+length)):[];
+const result=await post("schedule",{window:window2,pcmStartFrame:start,channels,totalSourceFrames:input.
+totalSourceFrames},channels.map(channel=>channel.buffer));if(revision!==generation)throw abortError3();
+available();if(window2.outputStartFrame<Math.ceil(context.currentTime*context.sampleRate)+QUANTUM4)throw new Error(
+"Preserved schedule acknowledgement missed its activation deadline");cachedEnd=result.bufferEndFrame;
+lastEnd=window2.outputEndFrame;totalFrames=input.totalSourceFrames;const startTime=Math.max(0,(window2.
+outputStartFrame-.5)/context.sampleRate);gate.gain.cancelScheduledValues(startTime);gate.gain.setValueAtTime(
+1,startTime);gate.gain.setValueAtTime(0,window2.outputEndFrame/context.sampleRate);return Object.freeze(
+{generation,...window2,intervals:void 0})}catch(error2){if(revision===generation)fail(error2);throw error2}finally{
+operation=false}}async function truncate(outputFrame){available();if(operation)throw new Error("A pr\
+eserved scheduling operation is already active");if(!Number.isSafeInteger(outputFrame)||outputFrame%
+QUANTUM4||outputFrame/context.sampleRate<context.currentTime+minimumLead())throw new RangeError("Pre\
+served truncation needs a future latency-safe quantum");operation=true;const revision=generation;try{
+const time=Math.max(0,(outputFrame-.5)/context.sampleRate);gate.gain.cancelScheduledValues(time);gate.
+gain.setValueAtTime(0,time);await post("truncate",outputFrame);if(revision!==generation)throw abortError3();
+lastEnd=outputFrame;return stats()}catch(error2){if(revision===generation)fail(error2);throw error2}finally{
+operation=false}}function reset(){available();generation++;mute();cachedEnd=void 0;lastEnd=void 0;totalFrames=
+void 0;const revision=generation;resetBarrier=initialization?Promise.all([initialization,resetBarrier]).
+then(()=>post("reset",void 0,[],revision)).then(()=>stats()):Promise.resolve(stats());resetBarrier.catch(
+error2=>fail(error2));return resetBarrier}function stats(){return Object.freeze({...processorStats,generation,
+disposed,error:failure2,nodes:disposed?0:node?2:1,pendingRequests:requests.size,minimumLeadSeconds:minimumLead(),
+sourceSampleRate:sourceRate,outputSampleRate:context.sampleRate,sampleRatePitchFactor:sourceRate/context.
+sampleRate})}function dispose(){if(disposing)return disposing;disposed=true;mute();generation++;disposing=
+(async()=>{try{if(node){await resetBarrier.catch(()=>{});await post("dispose")}}finally{clearTimeout(
+initTimer);readyReject?.(abortError3());for(const request of requests.values()){clearTimeout(request.
+timer);request.reject(abortError3())}requests.clear();if(node){node.removeEventListener("processorer\
+ror",processorFailed);node.disconnect();node.port.onmessage=null;node.port.close()}gate.disconnect();
+context.removeEventListener("statechange",stateChanged);failures.clear();moduleSource=null}return stats()})();
+return disposing}function processorFailed(){fail(new Error("Preserved audio worklet failed"))}function stateChanged(){
+if(context.state==="closed")fail(new Error("Audio context is closed"))}context.addEventListener("sta\
+techange",stateChanged);return Object.freeze({initialize,requiredPcmRange,get minimumLeadSeconds(){return minimumLead()},
+schedule,truncate,reset,dispose,stats,subscribeFailure(callback){if(typeof callback!=="function")throw new TypeError(
+"A failure callback is required");failures.add(callback);if(failure2)callback(failure2);return()=>failures.
+delete(callback)}})}function createBundledPreserveOutput(options){return createPreserveOutput({...options,moduleSource:preserve_worklet_default})}async function loadAudioDependencies({signal}={}){signal?.throwIfAborted();const{Mediabunny:Mediabunny2}=await Promise.resolve().then(()=>(init_decoder(),decoder_exports));
+signal?.throwIfAborted();return Object.freeze({Mediabunny:Mediabunny2})}var abortError4=()=>new DOMException("Playback ownership changed","AbortError");function waitFor(promise,signal){
+if(!signal)return promise;return new Promise((resolve,reject)=>{const abort=()=>reject(abortError4());
+Promise.resolve(promise).then(resolve,reject).finally(()=>signal.removeEventListener("abort",abort));
+if(signal.aborted)abort();else signal.addEventListener("abort",abort,{once:true})})}function lazyEngine({
+ready,resolveSource,createEngine,context,destination,audio,mode}){const lifetime=new AbortController;
+const listeners=new Set;const cleanups=new Map;let engine,loading,subscription;let closed=false;function check(){
+if(closed)throw abortError4()}function ensure(){check();if(loading)return loading;loading=(async()=>{
+await ready;check();const source2=await resolveSource(audio,{signal:lifetime.signal});check();engine=
+await createEngine({context,destination,source:source2,mode,signal:lifetime.signal});check();if(!engine?.
+provider||!engine?.output)throw new TypeError("The playback engine must own a provider and output");
+subscription=engine.output.subscribeFailure?.(error2=>{for(const listener of listeners)listener(error2)});
+return engine})();loading.catch(()=>{if(!closed&&!engine)loading=null});return loading}function disposePart(key){
+if(cleanups.has(key))return cleanups.get(key);closed=true;lifetime.abort();if(key==="output"){subscription?.();
+subscription=null;listeners.clear()}let cleanup;try{cleanup=engine?.[key]?Promise.resolve(engine[key].
+dispose()):Promise.resolve(loading).catch(()=>{}).then(()=>engine?.[key]?.dispose())}catch(error2){cleanup=
+Promise.reject(error2)}cleanups.set(key,cleanup);cleanup.catch(()=>{});return cleanup}const provider={
+async info({signal}={}){const value=await waitFor(ensure(),signal);if(signal?.aborted)throw abortError4();
+return value.provider.info({signal})},acquire:(...args)=>engine.provider.acquire(...args),reset:()=>engine?.
+provider?.reset(),dispose:()=>disposePart("provider")};const output={async initialize(options){const value=await waitFor(
+ensure(),options.signal);if(options.signal?.aborted)throw abortError4();return value.output.initialize?.(
+options)},requiredPcmRange:clock=>engine.output.requiredPcmRange?.(clock),get minimumLeadSeconds(){return engine?.
+output?.minimumLeadSeconds},schedule:input=>engine.output.schedule(input),truncate:frame=>engine.output.
+truncate(frame),reset:()=>engine?.output?.reset(),dispose:()=>disposePart("output"),subscribeFailure(listener){
+listeners.add(listener);return()=>listeners.delete(listener)}};return{provider,output}}function createPlaybackOwner({
+prototype=globalThis.HTMLMediaElement?.prototype,acquireGraph,resolveSource,createEngine,hostClock=null,
+onChange=()=>{},onError=()=>{},enqueue,timers}={}){if(!prototype||hostClock!==null&&typeof hostClock?.
+prepare!=="function"||[acquireGraph,resolveSource,createEngine,onChange,onError].some(value=>typeof value!==
+"function"))throw new TypeError("Playback ownership requires media, graph, source and engine adapter\
+s");const descriptors=Object.getOwnPropertyDescriptors(prototype);const raw=(audio,name)=>descriptors[name]?.
+get?.call(audio);const nativeState=audio=>({position:raw(audio,"currentTime")||0,playing:!raw(audio,
+"paused"),ended:raw(audio,"ended")===true});const owners=new Map;const closingOwners=new Map;const revisions=new WeakMap;
+const releases=new WeakMap;const pauses=new WeakMap;let closed=false;let disposal;const facade=createMediaFacade(
+{prototype,enqueue,onError:report});function report(error2){if(error2?.name==="AbortError")return;try{
+onError(error2)}catch{}}function publish(audio,state){try{onChange(audio,state)}catch(error2){report(
+error2)}}function snapshot(entry,state=entry.transport.snapshot()){const requestedRate=typeof entry.
+rate==="function"?entry.rate(state.position):entry.rate;if(!Number.isFinite(requestedRate)||requestedRate<
+.025||requestedRate>4)throw new RangeError("Playback rate must be between 0.025 and 4");return Object.
+freeze({...state,requestedRate})}function trackRelease(audio,promise){releases.set(audio,promise);const clear=()=>{
+if(releases.get(audio)===promise)releases.delete(audio)};promise.then(clear,clear);return promise}function sourceMatches(entry){
+return entry.src===raw(entry.audio,"src")&&entry.srcObject===raw(entry.audio,"srcObject")}function valid(entry,signal){
+if(signal.aborted||closed||!sourceMatches(entry))throw abortError4()}function releaseResult(entry){return{
+position:entry.final.position,ended:entry.final.ended,playing:entry.final.playing&&entry.final.pauseRevision===
+(pauses.get(entry.audio)??0),track:entry.track,restored:entry.restored}}async function handBack(entry){
+const restore=entry.restore&&!closed&&sourceMatches(entry);if(entry.lease.context.state==="closed"){
+entry.restored=false;return}try{await entry.lease.release(restore?entry.final.position:void 0,{restore});
+entry.restored=restore}catch(error2){if(!restore||!closed&&sourceMatches(entry))throw error2;await entry.
+lease.release(void 0,{restore:false});entry.restored=false}}function releaseHost(entry){if(entry.hostRestoration)
+return entry.hostRestoration;try{entry.host?.release();entry.hostRestoration=Promise.resolve(entry.host?.
+restoration)}catch(error2){entry.hostRestoration=Promise.reject(error2)}entry.hostRestoration.catch(
+()=>{});return entry.hostRestoration}function handBackAndRestoreHost(entry){entry.nativeHandBack=handBack(
+entry);return Promise.allSettled([entry.nativeHandBack]).then(async results=>{const failures=results.
+filter(result=>result.status==="rejected").map(result=>result.reason);try{await releaseHost(entry)}catch(error2){
+failures.push(error2)}if(failures.length)throw new AggregateError(failures,"Native playback restorat\
+ion failed")})}function hostFailure(entry,error2){if(entry.hostFailure||owners.get(entry.audio)!==entry)
+return(entry.nativeHandBack??Promise.resolve()).catch(()=>{});entry.hostFailure=error2;report(error2);
+try{entry.transport.pause()}catch(failure2){report(failure2)}const state={...entry.lastState,state:"\
+error",paused:true,error:error2,hostFailure:true};entry.binding.update(state);publish(entry.audio,state);
+entry.restore=true;entry.binding.release().catch(report);return entry.nativeHandBack.catch(()=>{})}function updateHost(entry){
+if(!entry.host||entry.closing||entry.hostFailure)return;try{if(entry.host.update()===false&&!entry.host.
+active)release(entry.audio,{restore:false}).catch(report)}catch(error2){hostFailure(entry,error2)}}function trackClosing(entry,operation){
+const closing=Promise.resolve(operation).then(()=>{if(closingOwners.get(entry.audio)===entry)closingOwners.
+delete(entry.audio);return releaseResult(entry)},error2=>{entry.closePromise=null;throw error2});entry.
+closePromise=closing;trackRelease(entry.audio,closing);closing.catch(report);return closing}function retryClosing(entry){
+if(entry.closePromise)return entry.closePromise;const operation=Promise.allSettled([entry.transportDisposal,
+handBackAndRestoreHost(entry)]).then(results=>{const errors=results.filter(result=>result.status==="\
+rejected").map(result=>result.reason);if(errors.length)throw new AggregateError(errors,"Playback own\
+ership cleanup failed")});return trackClosing(entry,operation)}function disposeTransport(entry){if(entry.
+transportDisposal)return entry.transportDisposal;try{entry.transportDisposal=Promise.resolve(entry.transport?.
+dispose())}catch(error2){entry.transportDisposal=Promise.reject(error2)}entry.transportDisposal.catch(
+()=>{});return entry.transportDisposal}function activate(audio,settings,initial,preparedHost){const entry={
+audio,...settings,src:raw(audio,"src"),srcObject:raw(audio,"srcObject"),restore:false,closing:false};
+owners.set(audio,entry);let lease,transport,binding;try{lease=acquireGraph(audio,{parkNative({signal}){
+valid(entry,signal);if(owners.get(audio)!==entry)throw abortError4();descriptors.pause.value.call(audio)},
+restoreNative({position,restore,signal}){if(!restore)return;valid(entry,signal);if(owners.has(audio)&&
+owners.get(audio)!==entry)throw abortError4();descriptors.currentTime.set.call(audio,position)}});lease.
+ready.catch(()=>{});const engine=lazyEngine({ready:lease.ready,resolveSource,createEngine,context:lease.
+context,destination:lease.input,audio,mode:settings.mode});transport=createBufferedTransport({context:lease.
+context,...engine,rate:settings.rate,initialPosition:initial.position,initiallyEnded:initial.ended,timers,
+onChange(state){const value=snapshot(entry,state);entry.lastState=value;binding?.update(value);if(state.
+state!=="disposed"&&!entry.closing)updateHost(entry);if(state.state==="disposed"&&binding?.active){binding.
+release().catch(report);return}if(owners.get(audio)===entry)publish(audio,value)}});entry.lease=lease;
+entry.transport=transport;entry.lastState=snapshot(entry);entry.host=preparedHost?.bind({snapshot:()=>snapshot(
+entry),sourceMatches:()=>sourceMatches(entry),onFailure:error2=>hostFailure(entry,error2)});if(preparedHost&&
+(!entry.host||typeof entry.host.update!=="function"||typeof entry.host.release!=="function"||typeof entry.
+host.active!=="boolean"))throw new TypeError("Invalid host clock binding");binding=facade.bind(audio,
+{transport:{...transport,snapshot:()=>snapshot(entry),dispose:()=>disposeTransport(entry)},onDetach({
+state,reason}){entry.closing=true;if(owners.get(audio)===entry)owners.delete(audio);entry.restore=entry.
+restore&&reason==="release";entry.final={position:state.position,ended:state.ended,playing:!state.paused,
+pauseRevision:pauses.get(audio)??0};closingOwners.set(audio,entry);const releasing=handBackAndRestoreHost(
+entry);trackClosing(entry,entry.binding.release());publish(audio,null);return releasing}});entry.binding=
+binding;updateHost(entry);if(entry.hostFailure)throw entry.hostFailure;publish(audio,entry.lastState);
+const playing=initial.playing?transport.play():Promise.resolve();entry.ready=Promise.all([lease.ready,
+playing]).then(()=>{if(owners.get(audio)!==entry)throw abortError4();return snapshot(entry)});entry.
+ready.catch(report);return entry}catch(error2){if(owners.get(audio)===entry)owners.delete(audio);if(binding)
+binding.release().catch(report);else{if(lease){lease.ready.catch(()=>{});entry.lease=lease;entry.transport=
+transport;entry.final={position:initial.position,ended:initial.ended,playing:initial.playing,pauseRevision:pauses.
+get(audio)??0};closingOwners.set(audio,entry);disposeTransport(entry);retryClosing(entry)}}throw error2}}
+async function use(audio,settings){if(closed)throw new Error("Playback owner is disposed");if(!prototype.
+isPrototypeOf(audio)||!settings||typeof settings.track!=="string"||!settings.track||!["natural","pre\
+serve"].includes(settings.mode)||!(typeof settings.rate==="function"||Number.isFinite(settings.rate)))
+throw new TypeError("A media element, track, rate and pitch mode are required");const firstRate=typeof settings.
+rate==="function"?settings.rate(audio.currentTime):settings.rate;if(!Number.isFinite(firstRate)||firstRate<
+.025||firstRate>4)throw new RangeError("Playback rate must be between 0.025 and 4");const revision=(revisions.
+get(audio)??0)+1;revisions.set(audio,revision);const pauseRevision=pauses.get(audio)??0;const identity={
+src:raw(audio,"src"),srcObject:raw(audio,"srcObject")};let initial=nativeState(audio);let restored=false;
+const previous=owners.get(audio);if(previous&&previous.track===settings.track&&previous.mode===settings.
+mode){if(previous.rate!==settings.rate){previous.rate=settings.rate;await previous.transport.setRate(
+settings.rate)}await previous.ready;if(closed||revisions.get(audio)!==revision||owners.get(audio)!==
+previous||!sourceMatches(previous))throw abortError4();return snapshot(previous)}if(previous){const sameTrack=previous.
+track===settings.track;const released=await release(audio,{restore:sameTrack,invalidate:false});restored=
+Boolean(released?.restored&&released.track===settings.track);initial=restored?released:nativeState(audio)}else if(releases.
+has(audio)||closingOwners.has(audio)){const released=await(releases.get(audio)??retryClosing(closingOwners.
+get(audio)));restored=Boolean(released?.restored&&released.track===settings.track);initial=restored?
+released:nativeState(audio)}if(closed||revisions.get(audio)!==revision||identity.src!==raw(audio,"sr\
+c")||identity.srcObject!==raw(audio,"srcObject"))throw abortError4();if((pauses.get(audio)??0)!==pauseRevision)
+initial.playing=false;if(owners.size+closingOwners.size>=2)throw new Error("Buffered media ownership\
+ limit reached");const preparedHost=hostClock?await hostClock.prepare(audio):null;if(closed||revisions.
+get(audio)!==revision||identity.src!==raw(audio,"src")||identity.srcObject!==raw(audio,"srcObject"))
+throw abortError4();if(hostClock&&typeof preparedHost?.bind!=="function")throw new TypeError("Host c\
+lock preparation did not return a binding");if(hostClock&&!restored)initial=nativeState(audio);if((pauses.
+get(audio)??0)!==pauseRevision)initial.playing=false;if(owners.size+closingOwners.size>=2)throw new Error(
+"Buffered media ownership limit reached");return activate(audio,settings,initial,preparedHost).ready}
+function release(audio,{restore=true,invalidate=true}={}){if(invalidate)revisions.set(audio,(revisions.
+get(audio)??0)+1);const entry=owners.get(audio);if(!entry){const closing=closingOwners.get(audio);if(!closing)
+return releases.get(audio)??Promise.resolve(null);closing.restore=restore;return retryClosing(closing)}
+entry.restore=restore;entry.binding.release().catch(report);return entry.closePromise}function pause(audio){
+if(!prototype.isPrototypeOf(audio))throw new TypeError("A media element is required");pauses.set(audio,
+(pauses.get(audio)??0)+1);return owners.get(audio)?.transport.pause()??null}function dispose(){if(disposal)
+return disposal;closed=true;let resolve,reject;disposal=new Promise((yes,no)=>{resolve=yes;reject=no});
+const closing=[facade.dispose()];for(const entry of closingOwners.values()){entry.restore=false;closing.
+push(retryClosing(entry))}Promise.allSettled(closing).then(results=>{const errors=results.filter(result=>result.
+status==="rejected").map(result=>result.reason);if(errors.length)reject(new AggregateError(errors,"P\
+layback owner disposal failed"));else resolve()});return disposal}return Object.freeze({use,pause,release,
+dispose,owns:audio=>owners.has(audio),snapshot:audio=>{const entry=owners.get(audio);return entry?snapshot(
+entry):null}})}var nativeResult=Symbol("native host result");var own=(value,key)=>Object.getOwnPropertyDescriptor(value,
+key);var inherits=(prototype,value)=>Object.prototype.isPrototypeOf.call(prototype,value);var sameDescriptor=(left,right)=>Boolean(
+left&&right)&&["value","get","set","writable","enumerable","configurable"].every(key=>left[key]===right[key]);
+var validDuration=value=>value===null||value===Infinity||Number.isFinite(value)&&value>=0;function method(prototype,name){
+const descriptor=own(prototype,name);if(!descriptor||typeof descriptor.value!=="function"||!descriptor.
+configurable||!descriptor.writable)throw new TypeError(`Unsupported host method: ${name}`);return descriptor}
+function inheritedDescriptor(value,name){for(let depth=0;value&&depth<16;depth++){const descriptor=own(
+value,name);if(descriptor)return descriptor;value=Object.getPrototypeOf(value)}return null}function snapshotOf(value){
+if(!value||!Number.isFinite(value.position)||value.position<0||typeof value.ended!=="boolean"||typeof value.
+paused!=="boolean"||value.ended&&!value.paused||value.ended&&(!Number.isFinite(value.duration)||value.
+position!==value.duration)||value.duration!==null&&value.duration!==void 0&&(!Number.isFinite(value.
+duration)||value.duration<0)||value.durationHint!==null&&value.durationHint!==void 0&&(!Number.isFinite(
+value.durationHint)||value.durationHint<0))throw new TypeError("Invalid owned playback snapshot");return value}
+function createHostClock({basePrototype,mediaPrototype,leafPrototypes=[],onFailure,enqueue=queueMicrotask,
+maxDepth=8}){if(!basePrototype||!mediaPrototype||!inherits(basePrototype,mediaPrototype)||!Array.isArray(
+leafPrototypes)||leafPrototypes.some(prototype=>!inherits(mediaPrototype,prototype))||typeof onFailure!==
+"function"||typeof enqueue!=="function"||!Number.isInteger(maxDepth)||maxDepth<1||maxDepth>16)throw new TypeError(
+"Invalid host clock configuration");const baseEnded=method(basePrototype,"_updateEndedInState");const mediaClock=method(
+mediaPrototype,"_getTruePosition");const durationChange=method(mediaPrototype,"_handleDurationChange");
+method(mediaPrototype,"getMediaElement");const endedPrototypes=[mediaPrototype,...leafPrototypes];if(new Set(
+endedPrototypes).size!==endedPrototypes.length)throw new TypeError("Duplicate host player prototypes");
+const endedMethods=endedPrototypes.map(prototype=>({prototype,descriptor:method(prototype,"_shouldBe\
+Ended")}));const records=new Map;const pendingRestorations=new Set;const patches=[];let installed=false;
+let disposed=false;let disposal;let restorationFailed=false;let restorationFailure;let hostDepth=0;function report(media,error2){
+return onFailure(media,error2)}function restore(patch){if(!sameDescriptor(own(patch.target,patch.name),
+patch.replacement))return false;Object.defineProperty(patch.target,patch.name,patch.original);return true}
+function unpatch(){if(!installed||records.size)return;installed=false;for(const patch of patches.toReversed())
+restore(patch);patches.length=0}function detachLeaf(record,leaf){record.leaves.delete(leaf.player);const original={
+...leaf.original,value:leaf.hostDuration};return restore({...leaf,target:leaf.player,name:"_duration",
+original})}function restoreDuration(record,leaves){if(records.has(record.media))return;if(!restorationMatches(
+record))return;for(const leaf of leaves){if(!restorationMatches(record,leaf.player))continue;const state=own(
+leaf.player,"_mediaElementAndState")?.value;if(own(state??{},"element")?.value!==record.media)continue;
+if(!sameDescriptor(own(leaf.player,"_duration"),{...leaf.original,value:leaf.hostDuration}))continue;
+Reflect.apply(durationChange.value,leaf.player,[])}}function restorationMatches(record,player){try{return record.
+sourceMatches(player)===true}catch(error2){if(error2?.code==="SOUNDCLOUD_HOST_UNSUPPORTED")return false;
+throw error2}}function reserveRestoration(record){let resolveCompletion;let rejectCompletion;const operation=new Promise(
+(resolve2,reject)=>{resolveCompletion=resolve2;rejectCompletion=reject});record.restoration=operation;
+pendingRestorations.add(operation);operation.then(()=>pendingRestorations.delete(operation),error2=>{
+pendingRestorations.delete(operation);if(restorationFailed)return;restorationFailed=true;restorationFailure=
+error2});return{resolve:resolveCompletion,reject:rejectCompletion}}function startRestoration(record,leaves,completion,deferred2=false,reservation=reserveRestoration(
+record)){const restoreLater=()=>new Promise((resolve2,reject)=>{enqueue(()=>{try{restoreDuration(record,
+leaves);resolve2()}catch(error2){reject(error2)}})});try{if(completion!==void 0)reservation.resolve(
+Promise.resolve(completion).then(restoreLater));else if(deferred2||hostDepth)reservation.resolve(restoreLater());else{
+restoreDuration(record,leaves);reservation.resolve()}}catch(error2){reservation.reject(error2)}}function deactivate(record){
+if(!record.active)return null;record.active=false;if(records.get(record.media)===record)records.delete(
+record.media);const restored=[];for(const leaf of record.leaves.values())if(detachLeaf(record,leaf))
+restored.push(leaf);unpatch();return restored}function release(record,synchronize=true){const restored=deactivate(
+record);if(!restored)return false;if(synchronize)startRestoration(record,restored);return true}function fail(record,error2){
+const restored=deactivate(record);if(!restored)return;const reservation=reserveRestoration(record);let completion;
+try{completion=report(record.media,error2)}catch(cause){completion=Promise.reject(cause)}startRestoration(
+record,restored,completion,true,reservation)}function read2(record,player){if(!record.active||records.
+get(record.media)!==record)return null;try{if(record.sourceMatches()!==true){release(record,false);return null}
+if(player&&record.sourceMatches(player)!==true)return null;return snapshotOf(record.snapshot())}catch(error2){
+fail(record,error2);return null}}function rejectChain(root,message){const error2=new TypeError(message);
+for(const record of[...records.values()]){try{if(record.sourceMatches(root)===true)fail(record,error2)}catch(cause){
+fail(record,cause)}}return null}function resolve(player){const root=player;const seen=new Set;let synchronized=true;
+for(let depth=0;player&&depth<maxDepth;depth++){if(!inherits(basePrototype,player))return null;if(seen.
+has(player))return rejectChain(root,"Cyclic host player chain");seen.add(player);const mediaState=own(
+player,"_mediaElementAndState");if(mediaState){if(!("value"in mediaState)||!inherits(mediaPrototype,
+player))return rejectChain(root,"Unsupported host media state");if(!mediaState.value)return null;const element=own(
+mediaState.value,"element");if(!element||!("value"in element))return rejectChain(root,"Unsupported h\
+ost media identity");const record=records.get(element.value);return record?{record,player,state:mediaState.
+value,synchronized}:null}const child=own(player,"_player");if(!child)return null;if(!("value"in child))
+return rejectChain(root,"Unsupported host player link");const sync=own(player,"_synced");if(!sync||typeof sync.
+value!=="boolean")return rejectChain(root,"Unsupported host synchronization state");synchronized&&=sync.
+value;player=child.value}return player?rejectChain(root,"Host player chain exceeds depth limit"):null}
+function duration(leaf,snapshot){if(Number.isFinite(snapshot.duration)&&snapshot.duration>=0)return snapshot.
+duration*1e3;if(Number.isFinite(snapshot.durationHint)&&snapshot.durationHint>0)return snapshot.durationHint*
+1e3;return leaf.hostDuration}function queueUpdate(record){if(!record.active||record.queued)return;record.
+queued=true;try{enqueue(()=>{record.queued=false;update(record)})}catch(error2){record.queued=false;
+fail(record,error2)}}function attach(resolved){const{record,player}=resolved;if(record.leaves.has(player))
+return record.leaves.get(player);if(record.leaves.size>=8)throw new RangeError("Owned host player li\
+mit exceeded");const original=own(player,"_duration");if(!original||!("value"in original)||!original.
+configurable||!original.writable||!validDuration(original.value)||inheritedDescriptor(player,"_handl\
+eDurationChange")?.value!==durationChange.value||!patches.some(patch=>patch.name==="_getTruePosition"&&
+inheritedDescriptor(player,patch.name)?.value===patch.replacement.value)||!patches.some(patch=>patch.
+name==="_shouldBeEnded"&&inheritedDescriptor(player,patch.name)?.value===patch.replacement.value))throw new TypeError(
+"Unsupported owned host player");const leaf={player,original,hostDuration:original.value,providedDuration:void 0,
+replacement:null};leaf.replacement={configurable:true,enumerable:original.enumerable,get(){const snapshot=read2(
+record,player);return snapshot?duration(leaf,snapshot):leaf.hostDuration},set(value){leaf.hostDuration=
+value;if(!validDuration(value)){fail(record,new TypeError("Invalid host duration assignment"));return}
+queueUpdate(record)}};Object.defineProperty(player,"_duration",leaf.replacement);record.leaves.set(player,
+leaf);queueUpdate(record);return leaf}function owned(player){const resolved=resolve(player);if(!resolved)
+return null;const snapshot=read2(resolved.record,resolved.player);if(!snapshot)return null;try{attach(
+resolved);return{...resolved,snapshot}}catch(error2){fail(resolved.record,error2);return null}}function update(record){
+if(hostDepth||record.updating){queueUpdate(record);return false}const snapshot=read2(record);if(!snapshot)
+return false;if(!patches.every(patch=>sameDescriptor(own(patch.target,patch.name),patch.replacement))){
+fail(record,new TypeError("Host clock methods changed externally"));return false}record.updating=true;
+try{for(const leaf of record.leaves.values()){const resolved=resolve(leaf.player);if(!resolved||resolved.
+record!==record||!read2(record,leaf.player)){detachLeaf(record,leaf);continue}if(!sameDescriptor(own(
+leaf.player,"_duration"),leaf.replacement))throw new TypeError("Owned host duration changed external\
+ly");const next=duration(leaf,snapshot);if(next===leaf.providedDuration)continue;leaf.providedDuration=
+next;Reflect.apply(durationChange.value,leaf.player,[]);if(!record.active)break}return record.active}catch(error2){
+fail(record,error2);return false}finally{record.updating=false}}function guarded2(original,operation){
+return function(...args){hostDepth++;try{let value;try{value=owned(this);if(value){const result=operation(
+value,args);if(result!==nativeResult)return result}}catch(error2){const affected=value?[value.record]:
+[...records.values()];for(const record of affected){try{fail(record,error2)}catch(cleanup){try{Promise.
+resolve(report(record.media,new AggregateError([error2,cleanup],"Host clock recovery failed"))).catch(
+()=>{})}catch{}}}}return Reflect.apply(original,this,args)}finally{hostDepth--}}}function install(){
+if(installed){if(!patches.every(patch=>sameDescriptor(own(patch.target,patch.name),patch.replacement)))
+throw new TypeError("Host clock methods changed externally");return}const pending=[{target:basePrototype,
+name:"_updateEndedInState",original:baseEnded,value:guarded2(baseEnded.value,({snapshot,synchronized},[
+state])=>{const seek=own(state,"seek")?.value;const pending2=seek&&own(seek,"state")?.value==="IN_PR\
+OGRESS";state.ended=Boolean(state.ready&&synchronized&&snapshot.ended&&snapshot.paused&&(!pending2||
+own(seek,"position")?.value===snapshot.duration*1e3))})},{target:mediaPrototype,name:"_getTruePositi\
+on",original:mediaClock,value:guarded2(mediaClock.value,({snapshot,state})=>own(state,"state")?.value===
+"USABLE"?snapshot.position*1e3:nativeResult)},...endedMethods.map(({prototype,descriptor})=>({target:prototype,
+name:"_shouldBeEnded",original:descriptor,value:guarded2(descriptor.value,({snapshot})=>snapshot.ended&&
+snapshot.paused)}))];for(const patch of pending)if(!sameDescriptor(own(patch.target,patch.name),patch.
+original))throw new TypeError(`Host method changed externally: ${patch.name}`);try{for(const patch of pending){
+patch.replacement={...patch.original,value:patch.value};Object.defineProperty(patch.target,patch.name,
+patch.replacement);patches.push(patch)}installed=true}catch(error2){for(const patch of patches.toReversed())
+restore(patch);patches.length=0;throw error2}}function bind(media,{snapshot,sourceMatches}={}){if(disposed||
+!media||records.has(media)||records.size+pendingRestorations.size>=8||typeof snapshot!=="function"||
+typeof sourceMatches!=="function")throw new TypeError("Invalid host clock binding");if(sourceMatches()!==
+true)throw new Error("Playback source changed before host clock binding");snapshotOf(snapshot());install();
+const record={media,snapshot,sourceMatches,active:true,queued:false,updating:false,leaves:new Map,restoration:Promise.
+resolve()};records.set(media,record);return Object.freeze({update:()=>update(record),release:()=>release(
+record),get restoration(){return record.restoration},get active(){return record.active}})}function dispose(){
+if(disposal)return disposal;let resolveDisposal;let rejectDisposal;disposal=new Promise((resolve2,reject)=>{
+resolveDisposal=resolve2;rejectDisposal=reject});disposed=true;try{const restoring=[...records.values()];
+for(const record of restoring)release(record);Promise.all([...pendingRestorations,...restoring.map(record=>record.
+restoration),...restorationFailed?[Promise.reject(restorationFailure)]:[]]).then(resolveDisposal,rejectDisposal)}catch(error2){
+rejectDisposal(error2)}return disposal}return Object.freeze({bind,dispose})}var SDK_EXPORTS=[["100","BasePlayer","Ge","Ze","re"],["572","HTML5PlayerBase","Y","X","W"],["1280","\
+HLSMSEPlayer","Q","q","W"]];var METHODS=[["BasePlayer","_updateEndedInState","4b87488df4fbc669f140bc\
+22b20c3792bde259d13439f87fac2f7e2f4514daa7"],["HTML5PlayerBase","_getTruePosition","d1ddf761395c278e\
+29a3f1428037577d90a00532910bb56f3cd179433023beaa"],["HTML5PlayerBase","_getPosition","ffe339100a024d\
+0cc96f30e5b312852413568700444a2faa368379f4814b53ff"],["HTML5PlayerBase","_shouldBeEnded","f1d923b193\
+23b757380dec055605a85e0734efb9be1f1d1138383f0facf0d15d"],["HTML5PlayerBase","_handleDurationChange",
+"cee858be349e2101d02d6764977cbc6092b102dd8c66be944099067b44bea382"],["HLSMSEPlayer","_shouldBeEnded",
+"81653e3dbff82a7fbb9e22c489ada4893e4d6d17aa23c2049705527a9b33832a"]];var QUEUE_METHODS=[["getCurrent\
+Sound","function(){var e=W.getCurrentQueueItem();return null==e?void 0:e.sound}"],["getCurrentQueueI\
+tem","function(){return P.at(I)}"]];var own2=(value,key)=>Object.getOwnPropertyDescriptor(value,key);
+var object=value=>value!==null&&["object","function"].includes(typeof value);var inherits2=(prototype,value)=>Object.
+prototype.isPrototypeOf.call(prototype,value);var source=value=>Function.prototype.toString.call(value);
+var sameDescriptor2=(a,b)=>Boolean(a&&b)&&["value","get","set","writable","configurable","enumerable"].
+every(key=>a[key]===b[key]);function unsupported(detail,cause){const error2=new Error(`SoundCloud pl\
+ayback integration is unavailable: ${detail}. Update Track Control or use native playback.`,{cause});
+error2.name="SoundCloudHostClockError";error2.code="SOUNDCLOUD_HOST_UNSUPPORTED";return error2}function stale(){
+const error2=new Error("The playing track changed. Try again.");error2.name="SoundCloudHostClockErro\
+r";error2.code="SOUNDCLOUD_HOST_STALE";return error2}function queuePending(message){return Object.assign(
+new Error(message),{code:"SOUNDCLOUD_QUEUE_PENDING"})}function data(value,key){const descriptor=object(
+value)&&own2(value,key);if(!descriptor||!("value"in descriptor))throw unsupported(`unexpected ${key}\
+ descriptor`);return descriptor}function readExport(target,key,descriptor){try{return Reflect.apply(
+descriptor.get,target,[])}catch(error2){throw unsupported(`the ${key} export could not be read`,error2)}}
+function inherited(value,key){for(let depth=0;value&&depth<16;depth++){const descriptor=own2(value,key);
+if(descriptor)return descriptor;value=Object.getPrototypeOf(value)}throw unsupported(`missing ${key}\
+ method`)}function capture(queue,crypto2){const push=data(queue,"push");if(typeof push.value!=="func\
+tion"||push.value===Array.prototype.push||queue.length>8192||!data(queue,"length").writable)throw unsupported(
+"the page runtime is not initialized");for(let index=0;index<queue.length;index++){const descriptor=own2(
+queue,index);if(descriptor&&(!("value"in descriptor)||!descriptor.writable||!descriptor.configurable))
+throw unsupported("the page runtime queue cannot be restored")}const id=`soundcloud-tempo-clock-${crypto2.
+randomUUID()}`;const sentinel=Object.freeze({});let runtime,factories,cache,capturedModule,exportsDescriptor;
+const factory=(module,exports,require2)=>{runtime=require2;factories=data(require2,"m").value;cache=
+data(require2,"c").value;if(!object(factories)||!object(cache))throw unsupported("the runtime cache \
+is unavailable");if(!object(module))throw unsupported("the diagnostic module is unavailable");capturedModule=
+module;exportsDescriptor=own2(module,"exports");if(!exportsDescriptor||!("value"in exportsDescriptor))
+throw unsupported("unexpected diagnostic exports descriptor");if(!exportsDescriptor.writable)throw unsupported(
+"the diagnostic module cannot be restored");const replacement={...exportsDescriptor,value:sentinel};
+Object.defineProperty(module,"exports",replacement);exportsDescriptor=replacement};const packet=[[],
+{[id]:factory},[[id]]];let failure2;try{Reflect.apply(push.value,queue,[packet]);if(typeof runtime!==
+"function"||data(factories,id).value!==factory||data(cache,id).value!==capturedModule||data(capturedModule,
+"exports").value!==sentinel)throw unsupported("the runtime capture did not complete")}catch(error2){
+failure2=error2}finally{const cleanup=[];for(const[target,expected]of[[factories,factory],[cache,capturedModule]]){
+if(!object(target)||!expected)continue;const descriptor=own2(target,id);if(!descriptor||descriptor.value!==
+expected)continue;if(target===cache){const current=own2(expected,"exports");if((current||exportsDescriptor)&&
+!sameDescriptor2(current,exportsDescriptor))continue}if(!descriptor.configurable||!Reflect.deleteProperty(
+target,id))cleanup.push(unsupported("a diagnostic registration could not be removed"))}try{const index=Array.
+prototype.indexOf.call(queue,packet);if(index!==-1)Array.prototype.splice.call(queue,index,1)}catch(error2){
+cleanup.push(error2)}if(cleanup.length)throw unsupported("runtime cleanup failed",new AggregateError(
+[...failure2?[failure2]:[],...cleanup]))}if(failure2)throw unsupported("runtime capture failed",failure2);
+return{runtime,factories,cache,push}}function createSoundCloudHostClock({window:window2=globalThis.window,
+crypto:crypto2=window2?.crypto,mediaPrototype=window2?.HTMLMediaElement?.prototype,createClock=createHostClock,
+timers=globalThis}={}){const readers=new Map;for(const key of["src","currentSrc","srcObject"]){const descriptor=mediaPrototype&&
+own2(mediaPrototype,key);if(typeof descriptor?.get==="function")readers.set(key,descriptor.get)}const bindings=new Map;
+const preloads=new Set;let preparation,context,clock,installedMethods;let preloadRuntime;let disposed=false;
+let disposal;let pending=0;function queueOf(){const queue=data(window2,"webpackJsonp").value;if(!Array.
+isArray(queue))throw unsupported("the page runtime is missing");return queue}function nativeSource(audio){
+if(!mediaPrototype||!inherits2(mediaPrototype,audio)||readers.size!==3)throw unsupported("a native m\
+edia element is required");let src,currentSrc,srcObject;try{src=Reflect.apply(readers.get("src"),audio,
+[]);currentSrc=Reflect.apply(readers.get("currentSrc"),audio,[]);srcObject=Reflect.apply(readers.get(
+"srcObject"),audio,[])}catch(error2){throw unsupported("the native media source could not be read",error2)}
+if(srcObject!==null||typeof src!=="string"||typeof currentSrc!=="string"||!(src||currentSrc))throw unsupported(
+"the playing media source is not available");return src||currentSrc}function sameSource(audio,expected){
+return nativeSource(audio)===expected}function prune(){for(const[audio,entry]of bindings)if(entry.binding&&
+!entry.binding.active)bindings.delete(audio)}function stable(value){if(queueOf()!==value.queue||!sameDescriptor2(
+own2(value.queue,"push"),value.push))throw unsupported("the page runtime changed");for(const check of value.
+checks)if(!sameDescriptor2(own2(check.target,check.key),check.descriptor))throw unsupported(`the ${check.
+key} implementation changed`);for(const check of value.exports)if(readExport(check.target,check.key,
+check.descriptor)!==check.result)throw unsupported(`the ${check.key} export changed`);prune();const live=context===
+value&&installedMethods&&[...bindings.values()].some(entry=>entry.binding?.active);for(let index=0;index<
+value.methods.length;index++){const check=value.methods[index];if(!sameDescriptor2(own2(check.target,
+check.key),live?installedMethods[index]:check.descriptor))throw unsupported(`the ${check.key} implem\
+entation changed`)}}async function discover(queue){if(typeof crypto2?.randomUUID!=="function"||typeof crypto2?.
+subtle?.digest!=="function")throw unsupported("Web Crypto is unavailable");const captured=capture(queue,
+crypto2);const value={...captured,queue,checks:[],exports:[],methods:[],prototypes:{}};const remember=(target,key)=>{
+const descriptor=data(target,key);value.checks.push({target,key,descriptor});return descriptor.value};
+const rememberExport=(target,key,binding)=>{const descriptor=object(target)&&own2(target,key);if(!descriptor||
+"value"in descriptor||descriptor.configurable||!descriptor.enumerable||descriptor.set!==void 0||typeof descriptor.
+get!=="function"||source(descriptor.get)!==`function(){return ${binding}}`)throw unsupported(`unexpe\
+cted ${key} export descriptor`);const result=readExport(target,key,descriptor);value.checks.push({target,
+key,descriptor});value.exports.push({target,key,descriptor,result});return result};remember(captured.
+runtime,"m");remember(captured.runtime,"c");for(const[id,name,version,build,implementation]of[["20",
+null],...SDK_EXPORTS]){const module=remember(captured.cache,id);if(remember(module,"l")!==true)throw unsupported(
+`player module ${id} has not loaded`);const exports=remember(module,"exports");if(!name){value.queueExports=
+exports;continue}if(rememberExport(exports,"version",version)!=="32.0.0"||rememberExport(exports,"bu\
+ildNumber",build)!==2285)throw unsupported("this player SDK version is not supported");const constructor=rememberExport(
+exports,name,implementation);if(typeof constructor!=="function")throw unsupported(`the ${name} const\
+ructor is missing`);value.prototypes[name]=remember(constructor,"prototype")}const{BasePlayer,HTML5PlayerBase,
+HLSMSEPlayer}=value.prototypes;if(!object(BasePlayer)||!inherits2(BasePlayer,HTML5PlayerBase)||!inherits2(
+HTML5PlayerBase,HLSMSEPlayer))throw unsupported("the player inheritance changed");for(const[name,expected]of QUEUE_METHODS){
+const fn=remember(value.queueExports,name);if(typeof fn!=="function"||source(fn)!==expected)throw unsupported(
+`the ${name} accessor changed`);value[name]=fn}const mediaElement=remember(HTML5PlayerBase,"getMedia\
+Element");if(typeof mediaElement!=="function")throw unsupported("the media accessor is missing");const encoder=new TextEncoder;
+for(const[name,key,expected]of METHODS){const target=value.prototypes[name];const descriptor=data(target,
+key);if(typeof descriptor.value!=="function"||!descriptor.configurable||!descriptor.writable)throw unsupported(
+`the ${name}.${key} method cannot be adapted`);value.methods.push({target,key,descriptor});const bytes=new Uint8Array(
+await crypto2.subtle.digest("SHA-256",encoder.encode(source(descriptor.value))));const digest=Array.
+from(bytes,byte=>byte.toString(16).padStart(2,"0")).join("");if(digest!==expected)throw unsupported(
+`the ${name}.${key} fingerprint changed`)}stable(value);return value}function currentChain(value,requireSynchronized=true){
+const item=Reflect.apply(value.getCurrentQueueItem,value.queueExports,[]);const sound=data(item,"sou\
+nd").value;if(!object(sound)||Reflect.apply(value.getCurrentSound,value.queueExports,[])!==sound)throw unsupported(
+"the current queue selection is inconsistent");const wrapper=data(sound,"player").value;let player=data(
+wrapper,"player").value;const nodes=[];while(object(player)&&nodes.length<8){if(nodes.includes(player)||
+!inherits2(value.prototypes.BasePlayer,player))throw unsupported("the player chain is invalid");nodes.
+push(player);const baseMethod=inherited(player,"_updateEndedInState");if(!sameDescriptor2(baseMethod,
+own2(value.prototypes.BasePlayer,"_updateEndedInState")))throw unsupported("the player completion me\
+thod is overridden");const mediaState=own2(player,"_mediaElementAndState");if(mediaState){if(!("valu\
+e"in mediaState)||!inherits2(value.prototypes.HTML5PlayerBase,player))throw unsupported("the media s\
+tate is unsupported");const state=mediaState.value;if(state===null)throw stale();const phase=data(state,
+"state").value;const media=data(state,"element").value;if(phase!=="USABLE"){if(phase==="INITIALIZING"||
+phase==="STABLE")throw stale();throw unsupported("the media player state is unsupported")}for(const key of[
+"_getTruePosition","_getPosition","_handleDurationChange","_shouldBeEnded"]){const prototype=key==="\
+_shouldBeEnded"&&inherits2(value.prototypes.HLSMSEPlayer,player)?value.prototypes.HLSMSEPlayer:value.
+prototypes.HTML5PlayerBase;if(!sameDescriptor2(inherited(player,key),own2(prototype,key)))throw unsupported(
+`the leaf ${key} method is overridden`)}return{item,sound,wrapper,nodes,leaf:player,media}}const synchronized=data(
+player,"_synced").value;if(typeof synchronized!=="boolean"||requireSynchronized&&!synchronized)throw unsupported(
+"the player chain is not synchronized");player=data(player,"_player").value}throw unsupported("the p\
+layer chain exceeds its supported shape")}function selectedChain(value,audio,selected,requireSynchronized=true){
+stable(value);const current=currentChain(value,requireSynchronized);if(current.media!==audio||selected&&
+(current.sound!==selected.sound||current.item!==selected.item))throw stale();return current}function ensureClock(value){
+if(context&&context!==value)throw unsupported("the active runtime was replaced; reload SoundCloud");
+if(clock)return clock;if(typeof createClock!=="function")throw unsupported("the clock adapter is una\
+vailable");const created=createClock({basePrototype:value.prototypes.BasePlayer,mediaPrototype:value.
+prototypes.HTML5PlayerBase,leafPrototypes:[value.prototypes.HLSMSEPlayer],onFailure(audio,error2){const entry=bindings.
+get(audio);if(!entry)throw unsupported("the playback failure owner is missing",error2);bindings.delete(
+audio);return entry.onFailure(error2)}});context=value;clock=created;return clock}async function prepare(audio){
+if(disposed)throw stale();if(pending>=8)throw unsupported("too many playback preparations are pendin\
+g");pending++;try{const originalSource=nativeSource(audio);const queue=queueOf();if(!preparation||preparation.
+queue!==queue){const item={queue,promise:discover(queue)};preparation=item;item.promise.catch(()=>{if(preparation===
+item)preparation=void 0})}const value=await preparation.promise;if(disposed||!sameSource(audio,originalSource))
+throw stale();const selected=selectedChain(value,audio);let used=false;return Object.freeze({bind({snapshot,
+sourceMatches,onFailure}={}){if(used||disposed)throw stale();if([snapshot,sourceMatches,onFailure].some(
+fn=>typeof fn!=="function"))throw new TypeError("A playback snapshot, source guard and failure handl\
+er are required");if(!sameSource(audio,originalSource)||sourceMatches()!==true)throw stale();selectedChain(
+value,audio,selected);prune();if(bindings.has(audio))throw unsupported("this media element is alread\
+y bound");const core=ensureClock(value);const entry={onFailure,binding:null};const matches=player=>{
+if(!sameSource(audio,originalSource)||sourceMatches(player)!==true)return false;let current;try{current=
+selectedChain(value,audio,selected,false)}catch(error2){if(error2.code==="SOUNDCLOUD_HOST_STALE")return false;
+throw error2}return!player||current.nodes.includes(player)};bindings.set(audio,entry);try{entry.binding=
+core.bind(audio,{snapshot,sourceMatches:matches});installedMethods=value.methods.map(({target,key})=>own2(
+target,key));used=true}catch(error2){if(bindings.get(audio)===entry)bindings.delete(audio);throw error2}
+return Object.freeze({update:()=>entry.binding.update(),release(){try{return entry.binding.release()}finally{
+if(bindings.get(audio)===entry)bindings.delete(audio)}},get restoration(){return entry.binding.restoration},
+get active(){return entry.binding.active}})}})}finally{pending--}}async function preloadNext(audio,{
+signal}={}){if(disposed||signal?.aborted)throw stale();nativeSource(audio);const queueRuntime=queueOf();
+if(!preloadRuntime||preloadRuntime.queue!==queueRuntime){const captured=capture(queueRuntime,crypto2);
+const module=data(captured.cache,"20").value;if(data(module,"l").value!==true)throw unsupported("the\
+ play queue has not loaded");preloadRuntime={...captured,queue:queueRuntime,module,manager:data(module,
+"exports").value}}const value=preloadRuntime;const manager=value.manager;const methods=[...QUEUE_METHODS,
+["getQueue","function(){return P}"],["getQueueState","function(){return{currentIndex:I,repeatMode:j}\
+}"]].map(([key,expected])=>{const descriptor=data(manager,key);if(typeof descriptor.value!=="functio\
+n"||source(descriptor.value)!==expected)throw unsupported(`the ${key} accessor changed`);return{key,
+descriptor}});const call=(target,key,...args)=>{const method2=inherited(target,key).value;if(typeof method2!==
+"function")throw unsupported(`missing ${key} method`);return Reflect.apply(method2,target,args)};function check(){
+if(queueOf()!==value.queue||!sameDescriptor2(own2(value.queue,"push"),value.push)||data(value.cache,
+"20").value!==value.module||data(value.module,"exports").value!==manager)throw stale();for(const{key,
+descriptor}of methods)if(!sameDescriptor2(own2(manager,key),descriptor))throw stale()}function mediaOf(sound2){
+const wrapper=data(sound2,"player").value;if(!wrapper)return null;let player=data(wrapper,"player").
+value;const visited=new Set;while(object(player)&&visited.size<8&&!visited.has(player)){visited.add(
+player);const media=own2(player,"_mediaElementAndState");if(media){if(!("value"in media))throw unsupported(
+"unexpected media state accessor");if(!media.value||data(media.value,"state").value!=="USABLE")return null;
+const element=data(media.value,"element").value;nativeSource(element);return element}player=data(player,
+"_player").value}return null}check();const selected=call(manager,"getCurrentQueueItem");const selectedSound=data(
+selected,"sound").value;if(call(manager,"getCurrentSound")!==selectedSound||mediaOf(selectedSound)!==
+audio)throw stale();function next(){check();if(call(manager,"getState","globalPlayLock"))return null;
+const state=call(manager,"getQueueState");if(state.repeatMode==="one"||!Number.isInteger(state.currentIndex))
+return null;const queue=call(manager,"getQueue");if(call(queue,"at",state.currentIndex)!==selected||
+call(manager,"getCurrentQueueItem")!==selected)return null;return call(queue,"at",state.currentIndex+
+1)}if(call(manager,"getState","globalPlayLock"))throw new Error("Crossfade waits until the ad break \
+ends.");if(call(manager,"getQueueState").repeatMode==="one")throw new Error("Turn off repeat-one to \
+crossfade to another track.");let item=next();if(!item&&call(manager,"getState","hasNext")){const pull=data(
+manager,"pullNext");if(source(pull.value)!=="function(e){s&&!s.stream.isEnded()&&(O=Math.max(O,e))>0\
+&&s.stream.resume()}")throw unsupported("the queue loading method changed");const queue=call(manager,
+"getQueue");for(const target of[queue,manager])for(const key of["on","off"])if(typeof inherited(target,
+key).value!=="function")throw unsupported("queue notifications are unavailable");item=await new Promise(
+(resolve,reject)=>{let deadline;let settled=false;const finish=(error2,found)=>{if(settled)return;settled=
+true;timers.clearTimeout(deadline);preloads.delete(abort);signal?.removeEventListener("abort",abort);
+call(queue,"off","add reset update",receive);call(manager,"off","change:currentSound change:repeatMo\
+de change:globalPlayLock",receive);error2?reject(error2):resolve(found)};const abort=()=>finish(stale());
+const receive=()=>{try{if(disposed||signal?.aborted||call(manager,"getCurrentQueueItem")!==selected||
+call(manager,"getState","globalPlayLock")||call(manager,"getQueueState").repeatMode==="one")return abort();
+const found=next();if(found)finish(null,found)}catch(error2){finish(error2)}};try{call(queue,"on","a\
+dd reset update",receive);call(manager,"on","change:currentSound change:repeatMode change:globalPlay\
+Lock",receive);preloads.add(abort);signal?.addEventListener("abort",abort,{once:true});deadline=timers.
+setTimeout(()=>finish(queuePending("The next queue entry did not load in time.")),1e4);Reflect.apply(
+pull.value,manager,[1]);receive()}catch(error2){finish(error2)}})}if(!item)throw queuePending("No ne\
+xt track is queued. Add another track to Next up.");const sound=item&&data(item,"sound").value;if(!sound||
+sound===selectedSound||!call(sound,"isPlayable"))throw queuePending("The next queued track is not pl\
+ayable. Choose another track in Next up.");if(signal?.aborted||disposed||next()!==item)throw stale();
+let held=false,requested=false,released=false;let bufferLimit;function restoreBufferLimit(){if(!bufferLimit)
+return;const{config,descriptor,player,update,value:value2}=bufferLimit;bufferLimit=null;if(sameDescriptor2(
+own2(config,"pausedMaxBufferLength"),{...descriptor,value:value2})){Object.defineProperty(config,"pa\
+usedMaxBufferLength",descriptor);Reflect.apply(update,player,[])}}function reserveBuffer(seconds){const wrapper=data(
+sound,"player").value;let player=wrapper&&data(wrapper,"player").value;for(let depth=0;object(player)&&
+depth<8;depth++){const config=own2(player,"_config")?.value;const descriptor=config&&own2(config,"pa\
+usedMaxBufferLength");if(descriptor){if(!("value"in descriptor)||!descriptor.writable||!Number.isFinite(
+descriptor.value)||descriptor.value<0)throw unsupported("the paused buffer limit cannot be adjusted");
+const update=inherited(player,"_updateMaxBufferLength").value;if(source(update)!=="function(){var e=\
+this._getPlayer(),t=e&&e.getBufferController();t&&(this.isPlaying()?t.setMaxBufferLength(this._confi\
+g.playingMaxBufferLength):t.setMaxBufferLength(this._preloadingEnabled?this._config.pausedMaxBufferL\
+ength:0))}")throw unsupported("the buffer limit update method changed");if(bufferLimit&&bufferLimit.
+player!==player)restoreBufferLimit();if(bufferLimit&&!sameDescriptor2(descriptor,{...bufferLimit.descriptor,
+value:bufferLimit.value}))throw unsupported("the paused buffer limit changed during preloading");const value2=Math.
+max(descriptor.value,seconds*1e3);if(value2!==descriptor.value){if(!bufferLimit)bufferLimit={config,
+descriptor,player,update,value:value2};bufferLimit.value=value2;Object.defineProperty(config,"paused\
+MaxBufferLength",{...descriptor,value:value2});Reflect.apply(update,player,[])}return}player=own2(player,
+"_player")?.value}}function release(){if(released)return;released=true;preloads.delete(release);signal?.
+removeEventListener("abort",release);try{restoreBufferLimit()}finally{try{if(requested)call(sound,"u\
+nrequestPreloading")}finally{if(held)call(sound,"release")}}}function bufferedSeconds(){if(released||
+disposed||next()!==item)return 0;const player=data(sound,"player").value;if(!player)return 0;const range=call(
+player,"getCurrentBufferedTimeRange");return range&&Number.isFinite(range.start)&&range.start>=0&&range.
+start<=50&&Number.isFinite(range.end)?Math.max(0,range.end/1e3):0}try{call(sound,"hold");held=true;requested=
+true;call(sound,"requestPreloading");preloads.add(release);signal?.addEventListener("abort",release,
+{once:true});return Object.freeze({trackUrl:own2(own2(sound,"attributes")?.value||{},"permalink_url")?.
+value,bufferedSeconds,streamUrl(){if(released||disposed||next()!==item)throw stale();const wrapper=data(
+sound,"player").value;let player=wrapper&&data(wrapper,"player").value;for(let depth=0;object(player)&&
+depth<8;depth++){const manager2=own2(player,"_controllerManager")?.value;const entry=manager2&&own2(
+manager2,"_controlledPlayerWithRendition")?.value;const controller=entry&&data(entry,"controlledPlay\
+er").value;if(controller){const getUrl=inherited(controller,"getUrl").value;const getPlayer=inherited(
+controller,"getPlayer").value;if(source(getUrl)!=="function(){return this._currentUrl}"||source(getPlayer)!==
+"function(){return this._player}"||call(controller,"getPlayer")!==data(player,"_player").value)throw unsupported(
+"the next HLS stream controller changed");return call(controller,"getUrl")}player=own2(player,"_play\
+er")?.value}throw unsupported("the next HLS stream is not ready")},matches:()=>!released&&!disposed&&
+next()===item,ready(seconds){if(!Number.isFinite(seconds)||seconds<=0||seconds>44||released||disposed||
+next()!==item)return false;reserveBuffer(seconds);return bufferedSeconds()>=seconds},isCurrent(target){
+if(released||disposed||call(manager,"getState","globalPlayLock"))return false;check();return call(manager,
+"getCurrentQueueItem")===item&&call(manager,"getCurrentSound")===sound&&mediaOf(sound)===target},dispose:release})}catch(error2){
+release();throw error2}}function dispose(){if(disposal)return disposal;disposed=true;preparation=void 0;
+preloadRuntime=void 0;disposal=Promise.resolve().then(()=>Promise.all([...preloads].map(release=>Promise.
+resolve().then(release)))).finally(()=>clock?.dispose()).finally(()=>{bindings.clear();clock=void 0;
+context=void 0;installedMethods=void 0});return disposal}return Object.freeze({prepare,preloadNext,dispose})}function createStarMotion(paint,view=window){let frame=0;let previous=null;let speed=0;let x=0;let y=0;
+let elapsed=0;let period=6+Math.random()*10;let heading=Math.random()*Math.PI*2;let turn=(Math.random()-
+.5)*Math.PI*1.6;function animate(time){const dt=previous===null?0:Math.min((time-previous)/1e3,.05);
+previous=time;elapsed+=dt*speed;if(elapsed>=period){heading=(heading+turn)%(Math.PI*2);elapsed-=period;
+period=6+Math.random()*10;turn=(Math.random()-.5)*Math.PI*1.6}const t=elapsed/period;const angle=heading+
+turn*t*t*(3-2*t);x=(x+Math.cos(angle)*(100/15)*speed*dt)%960;y=(y+Math.sin(angle)*(100/15)*speed*dt)%
+840;paint(x,y);frame=view.requestAnimationFrame(animate)}return function setSpeed(next){view.cancelAnimationFrame(
+frame);frame=0;previous=null;speed=next;if(speed>0)frame=view.requestAnimationFrame(animate)}}function createTempoAppearance({onChange,onError}={}){if(onChange!==void 0&&typeof onChange!=="funct\
+ion"||onError!==void 0&&typeof onError!=="function")throw new TypeError("Invalid appearance change h\
+andler");const key="soundcloud.tempo.appearance";const motionKey="soundcloud.tempo.starMotion";const speedKey="\
+soundcloud.tempo.starSpeed";const reducedMotion=window.matchMedia?.("(prefers-reduced-motion: reduce\
+)");const forcedColors=window.matchMedia?.("(forced-colors: active)");let speed=1.5;const motionModes=new Set(
+["system","on","off"]);let motion="system";const attribute="data-tempo-appearance";const modes=new Set(
+["native","light","charcoal","oled"]);const primary={document};const documents=new Map([[document,primary]]);
+let storage;let selected="native";let css;let disposed=false;try{storage=window.localStorage;const saved=storage.
+getItem(key);if(modes.has(saved))selected=saved;const savedMotion=storage.getItem(motionKey);if(motionModes.
+has(savedMotion))motion=savedMotion;const savedSpeed=Number(storage.getItem(speedKey));if(savedSpeed>=
+.5&&savedSpeed<=4)speed=savedSpeed}catch{}function stylesheet(){const marks=[[38,72,"diamond",.7,0],
+[184,126,"ray",1.15,12],[346,44,"pair",.8,30],[594,118,"diamond",.65,0],[826,64,"ray",.8,0],[912,228,
+"diamond",.8,0],[68,318,"ray",.7,18],[262,246,"diamond",.8,0],[458,198,"pair",.6,-24],[718,286,"ray",
+1.3,0],[846,398,"diamond",.65,0],[144,480,"pair",.7,15],[364,386,"ray",.75,40],[540,454,"diamond",.7,
+0],[64,640,"ray",1.1,0],[282,598,"diamond",.65,0],[462,714,"ray",.65,24],[668,580,"pair",.8,-18],[872,
+678,"ray",1.2,10],[170,776,"diamond",.8,0],[610,794,"diamond",.6,0],[776,758,"ray",.6,45]];const stars=`\
+
+      <svg xmlns="http://www.w3.org/2000/svg" width="960" height="840" viewBox="0 0 960 840">
+        <defs>
+          <path id="ray" d="M0-4 .7-1 3.5 0 .7.8 0 4.5-.7.8-3.5 0-.7-1Z"/>
+          <path id="diamond" d="M0-1.8 1.1 0 0 1.8-1.1 0Z"/>
+          <g id="pair"><circle r=".85"/><path d="M4-3.5 4.65-2.5 4-1.5 3.35-2.5Z"/></g>
+        </defs>
+        ${marks.map(([x,y,shape,scale,rotation],index)=>`
+          <use href="#${shape}" transform="translate(${x} ${y}) rotate(${rotation}) scale(${scale})"\
+
+            fill="${index%3?"#c1ccdf":"#ece2d1"}" opacity="${index%3?.32:.27}"/>
+        `).join("")}
+      </svg>
+    `.replace(/\s+/g," ").trim();const buttonTokens=[["primary","var(--tempo-page-ink)","var(--tempo\
+-page-ground)","var(--tempo-page-raised)","var(--tempo-page-ink)"],["secondary","var(--tempo-page-ra\
+ised)","var(--tempo-page-ink)","var(--tempo-page-surface)","var(--tempo-page-accent)"],["tertiary","\
+transparent","var(--tempo-page-ink)","transparent","var(--tempo-page-accent)"]].flatMap(([name,background,
+foreground,selectedBackground,selectedForeground])=>[["background-color",background],["font-color",foreground],
+["hover-font-color",foreground],["disabled-background-color",background],["disabled-font-color",foreground],
+["selected-background-color",selectedBackground],["selected-font-color",selectedForeground],["select\
+ed-hover-font-color",selectedForeground],["selected-active-background-color",selectedBackground],["s\
+elected-active-font-color",selectedForeground],["loading-background-color",background],["loading-fon\
+t-color",foreground],["loading-icon-color",foreground],["active-background-color",background],["acti\
+ve-font-color",foreground]].map(([state,value])=>`--button-${name}-${state}: ${value};`)).join("\n");
+const linkTokens=[["standard","var(--tempo-page-accent)","var(--tempo-page-accent)"],["primary","var\
+(--tempo-page-ink)","var(--tempo-page-accent)"],["secondary","var(--tempo-page-muted)","var(--tempo-\
+page-ink)"]].flatMap(([name,foreground,hover])=>[["color",foreground],["hover-color",hover],["active\
+-color",hover],["disabled-color","var(--tempo-page-muted)"],["focus-box-shadow","0 0 0 2px var(--tem\
+po-page-accent)"]].map(([state,value])=>`--link-${name}-${state}: ${value};`)).join("\n");const scope=`\
+html:is([${attribute}="light"],[${attribute}="charcoal"],[${attribute}="oled"])`;return`
+      @media (forced-colors: none) {
+        ${scope}[${attribute}="charcoal"] {
+          --tempo-page-ground: #111;
+          --tempo-page-ground-rgb: 17,17,17;
+          --tempo-page-surface: #202020;
+          --tempo-page-raised: #303030;
+          --tempo-page-raised-rgb: 48,48,48;
+        }
+        ${scope}[${attribute}="oled"] {
+          --tempo-page-ground: #000;
+          --tempo-page-ground-rgb: 0,0,0;
+          --tempo-page-surface: #0b0b0b;
+          --tempo-page-raised: #171717;
+          --tempo-page-raised-rgb: 23,23,23;
+        }
+        ${scope}, ${scope} body {
+          --tempo-page-ink: #f4f4f4;
+          --tempo-page-muted: #b2b2b2;
+          --tempo-page-line: #767676;
+          --tempo-page-accent: #ff5500;
+          --surface-color: var(--tempo-page-ground);
+          --surface-rgb: var(--tempo-page-ground-rgb);
+          --primary-color: var(--tempo-page-ink);
+          --primary-rgb: 244,244,244;
+          --secondary-color: var(--tempo-page-muted);
+          --secondary-rgb: 178,178,178;
+          --highlight-color: var(--tempo-page-raised);
+          --highlight-rgb: var(--tempo-page-raised-rgb);
+          --special-color: var(--tempo-page-accent);
+          --special-rgb: 255,85,0;
+          --background-surface-color: var(--tempo-page-ground);
+          --background-highlight-color: var(--tempo-page-raised);
+          --font-primary-color: var(--tempo-page-ink);
+          --font-secondary-color: var(--tempo-page-muted);
+          --font-special-color: var(--tempo-page-accent);
+          --font-link-color: var(--tempo-page-accent);
+          --link-color: var(--tempo-page-accent);
+          --link-rgb: 255,85,0;
+          ${buttonTokens}
+          ${linkTokens}
+          --button-focused-box-shadow: 0 0 0 2px var(--tempo-page-accent) inset;
+          --input-default-background-color: var(--tempo-page-raised);
+          --input-default-border-color: var(--tempo-page-line);
+          --input-default-font-color: var(--tempo-page-ink);
+          --input-placeholder-background-color: var(--tempo-page-raised);
+          --input-placeholder-border-color: var(--tempo-page-line);
+          --input-placeholder-font-color: var(--tempo-page-muted);
+          --input-focused-background-color: var(--tempo-page-raised);
+          --input-focused-border-color: var(--tempo-page-accent);
+          --input-focused-font-color: var(--tempo-page-ink);
+          --input-invalid-background-color: var(--tempo-page-raised);
+          --input-invalid-font-color: var(--tempo-page-ink);
+          --input-disabled-background-color: var(--tempo-page-raised);
+          --input-disabled-font-color: var(--tempo-page-muted);
+          color-scheme: dark;
+          background-color: var(--tempo-page-ground) !important;
+          color: var(--tempo-page-ink);
+          scrollbar-color: var(--tempo-page-line) var(--tempo-page-ground);
+        }
+        ${scope} body {
+          background-image: url("data:image/svg+xml,${encodeURIComponent(stars)}");
+          background-size: 960px 840px;
+          background-repeat: repeat;
+        }
+        ${scope}[${attribute}="light"], ${scope}[${attribute}="light"] body {
+          --tempo-page-ground: #f4f4f4;
+          --tempo-page-ground-rgb: 244,244,244;
+          --tempo-page-surface: #fff;
+          --tempo-page-raised: #e8e8e8;
+          --tempo-page-raised-rgb: 232,232,232;
+          --tempo-page-ink: #171717;
+          --tempo-page-muted: #555;
+          --tempo-page-accent: #b23c00;
+          --primary-rgb: 23,23,23;
+          --secondary-rgb: 85,85,85;
+          --special-rgb: 178,60,0;
+          --link-rgb: 178,60,0;
+          color-scheme: light;
+        }
+        ${scope}[${attribute}="light"] body {
+          background-image: url("data:image/svg+xml,${encodeURIComponent(stars.replaceAll("#c1ccdf",
+"#555").replaceAll("#ece2d1","#666"))}");
+        }
+        ${scope} .l-container {
+          background-color: transparent;
+        }
+        ${scope} .header,
+        ${scope} .header__inner,
+        ${scope} .playControls,
+        ${scope} .playControls__inner,
+        ${scope} .playControls__bg {
+          background-color: var(--tempo-page-surface) !important;
+          border-color: var(--tempo-page-line);
+          color: var(--tempo-page-ink);
+        }
+        ${scope} .playControls {
+          --button-secondary-background-color: var(--tempo-page-surface);
+          --button-secondary-disabled-background-color: var(--tempo-page-surface);
+          --button-secondary-active-background-color: var(--tempo-page-surface);
+          --button-secondary-loading-background-color: var(--tempo-page-surface);
+        }
+        ${scope} .playbackSoundBadge__titleLink,
+        ${scope} .playbackTimeline__timePassed,
+        ${scope} .playbackTimeline__duration,
+        ${scope} .volume__button {
+          color: var(--tempo-page-ink);
+        }
+        ${scope} .playbackSoundBadge__lightLink {
+          color: var(--tempo-page-muted);
+        }
+        ${scope} .playbackTimeline__progressBar {
+          background-color: var(--tempo-page-accent) !important;
+        }
+        ${scope} .playbackTimeline__progressBackground {
+          background-color: var(--tempo-page-line);
+        }
+        ${scope} body::selection {
+          color: var(--tempo-page-ground);
+          background-color: var(--tempo-page-accent);
+        }
+      }
+    `}function restore(entry){const{root,applied,previousAttribute}=entry;try{if(root&&root.getAttribute(
+attribute)===applied){if(previousAttribute===null)root.removeAttribute(attribute);else root.setAttribute(
+attribute,previousAttribute)}}finally{entry.drift?.(0);entry.drift=void 0;entry.style?.remove();entry.
+style=void 0;entry.root=void 0;entry.applied=void 0;if(entry.motion)entry.document.removeEventListener(
+"visibilitychange",entry.motion);entry.motion=void 0}}function sameOrigin(doc){try{const view=doc?.defaultView;
+return Boolean(view&&view.document===doc&&view.location.origin===window.location.origin&&view.location.
+protocol==="https:"&&doc.documentElement)}catch{return false}}function releaseDocument(entry){if(documents.
+get(entry.document)!==entry)return;documents.delete(entry.document);restore(entry)}function renderDocument(entry,next){
+if(next==="native"){restore(entry);return}const doc=entry.document;const target=doc.documentElement;
+if(!target)return;if(entry.root&&entry.root!==target)restore(entry);if(!entry.style){const element=doc.
+createElement("style");element.textContent=css||=stylesheet();const previous=target.getAttribute(attribute);
+let position;try{(doc.head||target).append(element);const index=element.sheet.insertRule(`html[${attribute}\
+] body { background-position: 0 0; }`,element.sheet.cssRules.length);position=element.sheet.cssRules[index].
+style;target.setAttribute(attribute,next)}catch(error2){element.remove();throw error2}entry.style=element;
+entry.root=target;entry.previousAttribute=previous;entry.drift=createStarMotion((x,y)=>{position.backgroundPosition=
+`${x}px ${y}px`},doc.defaultView);entry.motion=()=>{entry.drift(!doc.hidden&&moving()&&!forcedColors?.
+matches?speed:0)};doc.addEventListener("visibilitychange",entry.motion);entry.motion()}else entry.root.
+setAttribute(attribute,next);entry.applied=next}function render(next){const updated=[];try{for(const entry of[
+...documents.values()]){if(entry!==primary&&!sameOrigin(entry.document)){releaseDocument(entry);continue}
+renderDocument(entry,next);updated.push(entry)}}catch(error2){const failures=[error2];for(const entry of updated.
+reverse()){try{renderDocument(entry,selected)}catch(failure2){failures.push(failure2)}}if(failures.length>
+1)throw new AggregateError(failures,"Could not restore the appearance");throw error2}}function attachDocument(doc){
+if(disposed||documents.has(doc)||documents.size>=17||!sameOrigin(doc))throw new TypeError("Invalid a\
+ppearance document");let entry={document:doc};renderDocument(entry,selected);documents.set(doc,entry);
+return()=>{if(!entry)return;const owned=entry;entry=null;releaseDocument(owned)}}function change(next,persist){
+if(disposed||selected===next)return false;render(next);selected=next;let failed=false;let failure2;if(persist){
+try{if(!storage)throw new Error("Appearance storage is unavailable");storage.setItem(key,next)}catch(error2){
+failed=true;failure2=error2}}onChange?.(next);if(failed)onError?.(failure2);return true}function sync(event){
+if(!storage||event.storageArea!==storage)return;if(event.key===speedKey||event.key===null){const value=event.
+key===null?1.5:Number(event.newValue);speed=value>=.5&&value<=4?value:1.5;refreshMotion()}if(event.key===
+motionKey||event.key===null){const next2=motionModes.has(event.newValue)&&event.key!==null?event.newValue:
+"system";if(motion!==next2){motion=next2;for(const entry of documents.values())entry.motion?.();onChange?.(
+selected)}}if(event.key!==key&&event.key!==null)return;const next=event.key===null?"native":event.newValue;
+change(modes.has(next)?next:"native",false)}function ready(){if(!disposed)render(selected)}function moving(){
+return motion==="on"||motion==="system"&&!reducedMotion?.matches}function refreshMotion(){for(const entry of documents.
+values())entry.motion?.();onChange?.(selected)}if(document.documentElement)render(selected);else document.
+addEventListener("DOMContentLoaded",ready,{once:true});window.addEventListener("storage",sync);reducedMotion?.
+addEventListener("change",refreshMotion);forcedColors?.addEventListener("change",refreshMotion);return Object.
+freeze({mode:()=>selected,motion:()=>moving()?"on":"off",speed:()=>speed,setSpeed(next){if(!Number.isFinite(
+next)||next<.5||next>4)throw new TypeError("Star speed must be between 0.5 and 4");speed=next;refreshMotion();
+try{if(!storage)throw new Error("Appearance storage is unavailable");storage.setItem(speedKey,String(
+next))}catch(error2){onError?.(error2)}},setMotion(next){if(!motionModes.has(next))throw new TypeError(
+"Invalid star motion");if(motion===next)return false;motion=next;for(const entry of documents.values())
+entry.motion?.();onChange?.(selected);try{if(!storage)throw new Error("Appearance storage is unavail\
+able");storage.setItem(motionKey,next)}catch(error2){onError?.(error2)}return true},attachDocument,setMode(next){
+if(!modes.has(next))throw new TypeError("Invalid appearance mode");return change(next,true)},dispose(){
+if(disposed)return;disposed=true;window.removeEventListener("storage",sync);reducedMotion?.removeEventListener(
+"change",refreshMotion);forcedColors?.removeEventListener("change",refreshMotion);document.removeEventListener(
+"DOMContentLoaded",ready);selected="native";const failures=[];for(const entry of[...documents.values()]){
+try{releaseDocument(entry)}catch(error2){failures.push(error2)}}css=void 0;if(failures.length)throw new AggregateError(
+failures,"Could not restore the appearance")}})}var import_SignalsmithStretch=__toESM(require_SignalsmithStretch(),1);function createStretchNode(context,options,library=import_SignalsmithStretch.default){
+if(typeof library!=="function"){throw new Error("Signalsmith dependency is unavailable")}const worklet=context.
+audioWorklet;const original=worklet.addModule;const descriptor=Object.getOwnPropertyDescriptor(worklet,
+"addModule");const ownsModuleUrl=!library.moduleUrl;const addModule=function(url,...args){const release=ownsModuleUrl&&
+typeof url==="string"&&url.startsWith("blob:");try{const result=original.call(this,url,...args);return release?
+result.finally(()=>URL.revokeObjectURL(url)):result}catch(error2){if(release)URL.revokeObjectURL(url);
+throw error2}};worklet.addModule=addModule;try{return library(context,options)}finally{if(worklet.addModule===
+addModule){if(descriptor)Object.defineProperty(worklet,"addModule",descriptor);else delete worklet.addModule}}}function createOutputLevel({references,readUI}){const key="soundcloud.tempo.outputDb";const volume=Object.
+getOwnPropertyDescriptor(HTMLMediaElement.prototype,"volume");const muted=Object.getOwnPropertyDescriptor(
+HTMLMediaElement.prototype,"muted");const levels=new WeakMap;const subscriptions=new WeakMap;const subscribed=new Set;
+let db=read2();function read2(){try{const raw=localStorage.getItem(key);const value=raw===null?-6:Number(
+raw);return validOutputDb(value)?value:-6}catch{return-6}}function gain(){return 10**(Math.min(0,db)/
+20)}function attach(audio){if(!(audio instanceof HTMLAudioElement)||!volume?.set||levels.has(audio))
+return;const value=volume.get.call(audio);volume.set.call(audio,value*gain());levels.set(audio,value);
+notify(audio)}function readLevel2(audio){if(!(audio instanceof HTMLAudioElement))throw new TypeError(
+"An audio element is required.");const nativeVolume=volume.get.call(audio);return Object.freeze({volume:levels.
+has(audio)?levels.get(audio):nativeVolume,muted:muted.get.call(audio),outputDb:db})}function call(callback,value){
+try{callback(value)}catch(cause){console.warn(cause)}}function notify(audio){const record=subscriptions.
+get(audio);if(!record)return;const value=readLevel2(audio);const previous=record.last;if(previous.volume===
+value.volume&&previous.muted===value.muted&&previous.outputDb===value.outputDb)return;record.last=value;
+for(const[token,callback]of[...record.callbacks]){if(record.last!==value)break;if(record.callbacks.has(
+token))call(callback,value)}}function subscribeLevel(audio,callback){if(typeof callback!=="function")
+throw new TypeError("A level callback is required.");notify(audio);const value=readLevel2(audio);let record=subscriptions.
+get(audio);if(!record){record={ref:new WeakRef(audio),callbacks:new Map,last:value,listener:event=>notify(
+event.currentTarget)};audio.addEventListener("volumechange",record.listener);subscriptions.set(audio,
+record);subscribed.add(record.ref)}const token={};const ref=record.ref;record.callbacks.set(token,callback);
+call(callback,value);return()=>{const target=ref.deref();const current=target&&subscriptions.get(target);
+if(!current||!current.callbacks.delete(token)||current.callbacks.size)return;target.removeEventListener(
+"volumechange",current.listener);subscriptions.delete(target);subscribed.delete(ref)}}function apply(){
+const seen=new WeakSet;for(const ref of[...references,...subscribed]){const audio=ref.deref();if(!audio){
+subscribed.delete(ref);continue}if(!(audio instanceof HTMLAudioElement))continue;if(seen.has(audio))
+continue;seen.add(audio);attach(audio);volume?.set?.call(audio,levels.get(audio)*gain());notify(audio)}
+syncUI()}function syncUI(){const ui=readUI();if(ui?.outputSlider){ui.outputSlider.max=String(Math.max(
+12,Number(ui.outputSlider.max),db));ui.outputSlider.value=String(db);ui.outputSlider.setAttribute?.(
+"aria-valuetext",`${db} dB`);ui.outputValue.value=String(db);syncTempoRange(ui.outputSlider)}}if(volume?.
+configurable&&volume.set&&volume.get){Object.defineProperty(HTMLMediaElement.prototype,"volume",{...volume,
+get(){return this instanceof HTMLAudioElement&&levels.has(this)?levels.get(this):volume.get.call(this)},
+set(value){if(!(this instanceof HTMLAudioElement))return volume.set.call(this,value);volume.get.call(
+this);const number=+value;if(!Number.isFinite(number)||number<0||number>1)return volume.set.call(this,
+number);volume.set.call(this,number*gain());levels.set(this,number);notify(this)}})}if(muted?.configurable&&
+muted.set&&muted.get){Object.defineProperty(HTMLMediaElement.prototype,"muted",{...muted,set(value){
+muted.set.call(this,value);if(this instanceof HTMLAudioElement)notify(this)}})}window.addEventListener(
+"storage",event=>{if(event.key!==key&&event.key!==null)return;db=read2();apply()});return{attach,readLevel:readLevel2,
+subscribeLevel,syncUI,value:()=>db,reload(){db=read2();apply()},set(value){const next=Number(value);
+if(String(value).trim()===""||!validOutputDb(next))throw new RangeError("Enter a dB value of -24 or \
+higher that Web Audio can represent.");const previous=db;db=next;try{localStorage.setItem(key,String(
+db))}catch{db=previous;apply();throw new Error("Output level could not be saved.")}apply()}}}function createWasmAudio({audioModules,outputLevel,createStretchNode:createStretchNode2,preservesKey,
+readKeyShift=()=>0,readUseWasm,references,updateAll,apply,discover,onGraphReady}){if(!window.AudioContext||
+!window.AudioNode)return{sync:()=>false,active:()=>false,hasGraph:()=>false,crossfadeReady:()=>false,
+acquireBuffered(){throw new Error("Web Audio is unavailable.")},label:()=>preservesKey()?"Browser fa\
+llback \xB7 Web Audio is unavailable.":"Natural pitch follows speed."};const routes=new WeakMap;const connect=AudioNode.
+prototype.connect;const disconnect=AudioNode.prototype.disconnect;const create=AudioContext.prototype.
+createMediaElementSource;const states=new WeakMap;function gains(state,wet){if(state.active===wet)return;
+const starting=wet&&!state.active;state.active=wet;state.wet.gain.cancelScheduledValues(state.source.
+context.currentTime);state.dry.gain.value=wet?0:1;if(starting){const now=state.source.context.currentTime;
+state.input.gain.cancelScheduledValues(now);state.input.gain.setValueAtTime(0,now);state.input.gain.
+setValueAtTime(1,now+state.latency);state.wet.gain.setValueAtTime(0,now);state.wet.gain.setValueAtTime(
+0,now+state.latency*2);state.wet.gain.linearRampToValueAtTime(1,now+state.latency*2+.01)}else state.
+wet.gain.value=wet?1:0}function clear(state){const connected=state.connected;state.epoch++;gains(state,
+false);state.input.gain.cancelScheduledValues(state.source.context.currentTime);state.input.gain.value=
+0;state.needsReset=true;state.applied=null;if(state.node&&connected){try{state.input.disconnect(state.
+node)}catch{}state.node.disconnect();state.connected=false}if(!connected||state.failed||state.stopping)
+return;state.stopping=stop(state.node).catch(error2=>fail(state,error2)).finally(()=>{state.stopping=
+null})}async function stop(node){await timed(node.schedule({active:false}))}function retire(state){state.
+failed=true;clear(state);if(!state.node)return;state.node.disconnect();state.node.port.close();state.
+node=null}function fail(state,error2){if(state.failed)return;retire(state);console.warn("[SoundCloud\
+ Tempo] WASM unavailable; browser fallback.",error2);updateAll()}function ready(state,epoch){const audio=state.
+audio.deref();return epoch===state.epoch&&!state.buffered&&!state.failed&&state.wanted&&audio&&!audio.
+paused&&!audio.seeking&&state.source.context.state!=="closed"}async function timed(promise){let timer;
+try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(
+"WASM processor timed out")),6e3)})])}finally{clearTimeout(timer)}}async function prepare(state){if(state.
+loading||state.failed||state.buffered)return;state.loading=true;const epoch=state.epoch;const speed=state.
+speed;const semitones=readKeyShift()-(preservesKey()?12*Math.log2(speed):0);try{if(!state.node){const pending=createStretchNode2(
+state.source.context,{numberOfInputs:1,numberOfOutputs:1,outputChannelCount:[2]});pending.then(node2=>{
+if(state.failed||state.source.context.state==="closed"){node2.disconnect();node2.port.close();return}
+state.node=node2;const reference=new WeakRef(state);node2.addEventListener("processorerror",()=>{const current=reference.
+deref();if(current?.node===node2)fail(current,new Error("WASM processor stopped"))})},()=>{});await timed(
+pending)}if(!ready(state,epoch))return;if(state.stopping)await state.stopping;if(!ready(state,epoch))
+return;const node=state.node;if(state.needsReset){const sampleRate3=state.source.context.sampleRate;
+await timed(node.configure({blockMs:Math.floor(sampleRate3*.12)/sampleRate3*1e3,intervalMs:Math.floor(
+sampleRate3*.03)/sampleRate3*1e3,splitComputation:false}));state.latency=await timed(node.latency());
+if(!ready(state,epoch))return;if(!Number.isFinite(state.latency)||state.latency<0)throw new Error("W\
+ASM processor returned invalid latency");state.needsReset=false;state.input.connect(node);state.connected=
+true;node.connect(state.wet)}await timed(node.schedule({active:true,semitones}));if(!ready(state,epoch)||
+speed!==state.speed||semitones!==state.semitones)return;state.applied=semitones;gains(state,true)}catch(error2){
+fail(state,error2)}finally{state.loading=false;updateAll()}}function sync(audio,enabled,speed){const state=states.
+get(audio);if(!state)return false;const changed=state.wanted!==enabled;state.wanted=enabled;state.speed=
+speed;state.semitones=readKeyShift()-(preservesKey()?12*Math.log2(speed):0);if(state.buffered)return false;
+if(!enabled||audio.seeking||audio.paused){if(changed||state.connected||state.active)clear(state);return false}
+if(state.failed||state.source.context.state==="closed")return false;if(state.needsReset||state.applied!==
+state.semitones)prepare(state);return state.active}function bufferedHooks(state,name,command){const owner=state.
+buffered;if(!owner)throw new DOMException("Buffered ownership ended","AbortError");if(name==="restor\
+eNative")clear(state);return owner.hooks[name](command)}function makeGate(state){const context=state.
+source.context;const nativeMix=context.createGain();const reference=state.audio;const audio=()=>{const current=reference.
+deref();if(!current)throw new Error("Audio element is unavailable.");return current};let gate;try{gate=
+audioModules.createPlaybackGate({context,nativeInput:nativeMix,destination:state.output,levels:{read:()=>outputLevel.
+readLevel(audio()),subscribe:callback=>outputLevel.subscribeLevel(audio(),callback)},parkNative:command=>bufferedHooks(
+state,"parkNative",command),restoreNative:command=>bufferedHooks(state,"restoreNative",command)});return{
+gate,nativeMix}}catch(error2){try{disconnect.call(nativeMix)}catch(cleanup){throw new AggregateError(
+[error2,cleanup],"Buffered route allocation failed")}throw error2}}function moveNative(state,nativeMix){
+const changed=[];const previous=state.fade||state.output;try{for(const node of[state.dry,state.wet]){
+changed.push({node,removed:false});connect.call(node,nativeMix)}for(const entry of changed){entry.removed=
+true;disconnect.call(entry.node,previous)}}catch(error2){const errors=[error2];for(const{node,removed}of changed){
+try{disconnect.call(node,nativeMix)}catch(cleanup){errors.push(cleanup)}if(!removed)continue;try{connect.
+call(node,previous)}catch(cleanup){errors.push(cleanup)}}if(errors.length>1)throw new AggregateError(
+errors,"Native audio route restoration failed");throw error2}}function acquireBuffered(audio,hooks){
+const state=states.get(audio);if(!state||state.source.context.state==="closed")throw new Error("An a\
+ctive native audio graph is required.");if(!hooks||typeof hooks.parkNative!=="function"||typeof hooks.
+restoreNative!=="function")throw new TypeError("Native ownership hooks are required.");if(state.buffered)
+throw new Error("Buffered playback already has an owner.");const owner={hooks:{parkNative:hooks.parkNative,
+restoreNative:hooks.restoreNative},releasePromise:null};state.buffered=owner;let created;let lease;try{
+if(!state.gate)created=makeGate(state);const gate=state.gate||created.gate;lease=gate.acquire();clear(
+state);if(created){moveNative(state,created.nativeMix);state.gate=created.gate;state.nativeMix=created.
+nativeMix}}catch(error2){state.buffered=null;try{created?.gate.dispose()}catch(cleanup){throw new AggregateError(
+[error2,cleanup],"Buffered route allocation failed")}throw error2}return Object.freeze({context:state.
+source.context,input:lease.input,ready:lease.ready,release(position,options){if(owner.releasePromise)
+return owner.releasePromise;const result=lease.release(position,options);owner.releasePromise=result.
+then(snapshot=>{if(state.buffered===owner)state.buffered=null;return snapshot}).catch(error2=>{owner.
+releasePromise=null;throw error2});owner.releasePromise.catch(()=>{});return owner.releasePromise}})}
+function crossfadeReady(audio,{preserve,shift,rate}){const state=states.get(audio);return Boolean(state&&
+state.source.context.state==="running"&&!state.buffered&&!state.gate&&!state.loading&&!state.stopping&&
+(!(shift||preserve&&rate!==1)||state.active))}function fadeNode(state){if(!state.fade){const fade=state.
+source.context.createGain();connect.call(fade,state.output);try{moveNative(state,fade)}catch(error2){
+disconnect.call(fade);throw error2}state.fade=fade}return state.fade}async function prepareIncoming(audio,buffer,settings,{
+signal}){signal.throwIfAborted();const{rate,preserve,shift}=settings;if(!Number.isFinite(rate)||rate<
+.25||rate>4||!Number.isFinite(shift)||Math.abs(shift)>24)throw new Error("Unsupported incoming tempo\
+ or pitch.");const sampleRate3=states.get(audio).source.context.sampleRate;const duration=buffer.duration/
+rate;const frames=Math.ceil((duration+1)*sampleRate3);if(frames*8>32*1024*1024)throw new Error("The \
+incoming crossfade buffer is too large.");const offline=new OfflineAudioContext(2,frames,sampleRate3);
+const input=offline.createBufferSource();input.buffer=buffer;input.playbackRate.value=rate;let processor;
+let latency=0;try{const semitones=shift-(preserve?12*Math.log2(rate):0);if(semitones){processor=await timed(
+createStretchNode2(offline,{numberOfInputs:1,numberOfOutputs:1,outputChannelCount:[2]}));await timed(
+processor.configure({blockMs:120,intervalMs:30,splitComputation:false}));latency=await timed(processor.
+latency());if(!Number.isFinite(latency)||latency<0||latency>1)throw new Error("Unsupported pitch pro\
+cessor latency.");await timed(processor.schedule({active:true,semitones}));input.connect(processor).
+connect(offline.destination)}else input.connect(offline.destination);signal.throwIfAborted();input.start();
+const rendered=await timed(offline.startRendering());signal.throwIfAborted();const result=offline.createBuffer(
+2,Math.floor(duration*sampleRate3),sampleRate3);const start=Math.round(latency*sampleRate3);for(let channel=0;channel<
+2;channel++)result.copyToChannel(rendered.getChannelData(channel).subarray(start,start+result.length),
+channel);return result}finally{input.disconnect();processor?.disconnect();processor?.port.close()}}function beginCrossfade(audio,buffer,offset,rate,seconds,opening){
+const state=states.get(audio);if(!state||state.buffered||state.gate||state.loading||state.stopping||
+state.source.context.state!=="running"||!Number.isFinite(offset)||offset<0||!Number.isFinite(rate)||
+rate<.25||rate>4||!Number.isFinite(seconds)||seconds<=0||seconds>10||!Number.isFinite(opening?.duration)||
+opening.duration<seconds||opening.duration>19)throw new Error("The player audio connection is not re\
+ady for crossfade.");const context=state.source.context;const nativeFade=fadeNode(state);const tail=context.
+createBufferSource();const level=context.createGain();const envelope=context.createGain();const head=context.
+createBufferSource();const headEnvelope=context.createGain();const headLevel=context.createGain();let processor=null;
+let unsubscribe;let levelAudio;let closed=false;const incoming=new Set([state]);const now=context.currentTime;
+function followLevel(target){if(target===levelAudio)return;unsubscribe?.();unsubscribe=outputLevel.subscribeLevel(
+target,({volume,muted,outputDb})=>{level.gain.value=muted?0:volume*10**(outputDb/20);headLevel.gain.
+value=level.gain.value});levelAudio=target}function restore(target){if(!target.fade||target.source.context.
+state==="closed")return;target.fade.gain.cancelScheduledValues(target.source.context.currentTime);target.
+fade.gain.setValueAtTime(1,target.source.context.currentTime)}function dispose(){if(closed)return;closed=
+true;unsubscribe?.();try{tail.stop()}catch{}try{head.stop()}catch{}for(const node of[tail,head,headEnvelope,
+headLevel,level,envelope,processor]){try{if(node)disconnect.call(node)}catch{}}processor?.port.close();
+for(const target of incoming)restore(target)}try{tail.buffer=buffer;head.buffer=opening;tail.playbackRate.
+value=rate;tail.connect(level);envelope.connect(state.output);followLevel(audio);head.connect(headEnvelope).
+connect(headLevel).connect(state.output);if(state.active&&state.node){processor=state.node;disconnect.
+call(state.input,processor);disconnect.call(processor);level.connect(processor);processor.connect(envelope);
+processor.addEventListener("processorerror",dispose,{once:true});state.node=null;state.connected=false;
+state.active=false;state.applied=null;state.needsReset=true;state.wet.gain.cancelScheduledValues(now);
+state.wet.gain.value=0;state.dry.gain.value=1}else level.connect(envelope);nativeFade.gain.cancelScheduledValues(
+now);nativeFade.gain.setValueAtTime(0,now);envelope.gain.setValueAtTime(1,now);envelope.gain.linearRampToValueAtTime(
+0,now+seconds);headEnvelope.gain.setValueAtTime(0,now);headEnvelope.gain.linearRampToValueAtTime(1,now+
+seconds);tail.start(now,offset);tail.stop(now+seconds);head.start(now)}catch(error2){dispose();throw error2}
+return{endTime:now+opening.duration,overlapEnd:now+seconds,startedAt:now,context,silence(target){const next=states.
+get(target);if(!next||closed)return false;followLevel(target);if(!incoming.has(next)){fadeNode(next).
+gain.setValueAtTime(0,next.source.context.currentTime);incoming.add(next)}return true},position(){return Math.
+max(0,context.currentTime-now)},nativePosition(target){const next=states.get(target);return target.currentTime-
+(next?.active?next.latency*target.playbackRate:0)},fadeIn(target,duration=.08){if(!this.silence(target))
+return false;const next=states.get(target);const at=next.source.context.currentTime;next.fade.gain.cancelScheduledValues(
+at);next.fade.gain.setValueAtTime(0,at);next.fade.gain.linearRampToValueAtTime(1,at+duration);const time=context.
+currentTime;headEnvelope.gain.cancelScheduledValues(time);headEnvelope.gain.setValueAtTime(1,time);headEnvelope.
+gain.linearRampToValueAtTime(0,time+duration);this.endTime=time+duration;return true},dispose}}AudioContext.
+prototype.createMediaElementSource=function(audio){const source2=create.call(this,audio);if(!(audio instanceof
+HTMLAudioElement))return source2;const dry=this.createGain(),wet=this.createGain(),input=this.createGain(),
+output=this.createGain(),boost=this.createGain();wet.gain.value=0;input.gain.value=0;connect.call(source2,
+boost);boost.connect(dry);boost.connect(input);const stopBoost=outputLevel.subscribeLevel(audio,({outputDb})=>{
+boost.gain.value=10**(Math.max(0,outputDb)/20)});dry.connect(output);wet.connect(output);const state={
+source:source2,input,dry,wet,output,audio:new WeakRef(audio),epoch:0,latency:0,active:false,failed:false,
+connected:false,loading:false,needsReset:true};states.set(audio,state);routes.set(source2,output);for(const event of[
+"seeking","emptied","loadstart","pause","ended"]){audio.addEventListener(event,()=>{clear(state)})}const reference=new WeakRef(
+state);const close=()=>{if(this.state!=="closed")return;stopBoost();const current=reference.deref();
+if(current){try{current.gate?.dispose()}catch(error2){console.warn(error2)}current.buffered=null;retire(
+current)}this.removeEventListener("statechange",close)};this.addEventListener("statechange",close);audio.
+addEventListener("seeked",()=>apply(audio));discover(audio);onGraphReady(audio);return source2};AudioNode.
+prototype.connect=function(...args){return connect.apply(routes.get(this)||this,args)};AudioNode.prototype.
+disconnect=function(...args){return disconnect.apply(routes.get(this)||this,args)};return{sync,crossfadeReady,
+beginCrossfade,prepareIncoming,contextFor:audio=>states.get(audio)?.source.context,acquireBuffered,hasGraph:audio=>{
+const state=states.get(audio);return Boolean(state&&state.source.context.state!=="closed")},active:audio=>Boolean(
+states.get(audio)?.active),label:()=>{const shift=readKeyShift();if(!preservesKey()&&!shift)return"N\
+atural pitch follows speed.";if(!readUseWasm()&&!shift)return"Browser pitch preservation.";let paused=false;
+for(const reference of references){const audio=reference.deref();if(!audio)continue;if(audio.paused){
+paused=true;continue}const state=states.get(audio);if(state?.active)return shift?`Key shift ${shift>
+0?"+":""}${shift} semitones.`:"Signalsmith WASM active.";if(state?.loading)return"Loading WASM \xB7 bro\
+wser correction until ready.";if(state?.failed)return shift?"Key shift unavailable. Reload to retry.":
+"WASM unavailable \xB7 browser fallback. Reload to retry."}if(paused)return shift?"Key shift selecte\
+d \xB7 playback paused.":"Preserve key selected \xB7 playback paused.";if(shift)return"Key shift nee\
+ds a player audio connection. Reload SoundCloud if already playing.";return"Browser fallback \xB7 WASM \
+needs a player audio connection. Reload if already playing."}}}function createBufferedPlayback({modules,graph,readSettings,media,applyNative,recoverNative,onState,
+onFailure,prototype=HTMLMediaElement.prototype,timers=globalThis}){const descriptors=Object.getOwnPropertyDescriptors(
+prototype);const raw=(audio,name)=>descriptors[name]?.get?.call(audio);const records=new WeakMap;const sources=new WeakMap;
+const waiters=new Map;const abortError5=()=>new DOMException("Playback changed","AbortError");let closed=false;
+let disposal;let selected;const binding=modules.createSourceBinding({onChange(audio,result){for(const receive of waiters.
+get(audio)||[])receive(result)}});const hostClock=modules.createSoundCloudHostClock({mediaPrototype:prototype});
+const owner=modules.createPlaybackOwner({prototype,hostClock,acquireGraph:(audio,hooks)=>graph.acquireBuffered(
+audio,hooks),resolveSource,createEngine,onChange(audio,state){const record=records.get(audio);if(!record||
+!current(audio,record))return;const previous=record.state?.state;record.state=state;if(state?.error&&
+state.error.name!=="AbortError")return fail(audio,record,state.error,state.hostFailure===true);if(state?.
+state!==previous)onState()},onError(error2){if(error2?.name!=="AbortError")console.warn("[SoundCloud\
+ Tempo]",error2)}});binding.install();function current(audio,record){return!closed&&records.get(audio)===
+record&&raw(audio,"src")===record.src&&raw(audio,"srcObject")===record.srcObject&&readSettings(audio).
+track===record.track}function fail(audio,record,error2,hostFailure=false){if(!current(audio,record)||
+error2?.name==="AbortError")return;if(record.recovery)return;record.error=error2;if((hostFailure||error2?.
+code==="SOUNDCLOUD_HOST_UNSUPPORTED")&&recoverNative){record.nativeFallback=true;record.recovery=owner.
+release(audio).then(async()=>{if(!current(audio,record))throw abortError5();recoverNative(audio);onFailure(
+"Using browser playback at 0.25\xD7. Saved tempo unchanged.");onState();if(record.intent&&!record.playRequest)
+await descriptors.play.value.call(audio)});record.recovery.catch(cause=>{if(!current(audio,record)||
+cause?.name==="AbortError")return;record.error=cause;onFailure(cause.message||"Browser playback coul\
+d not resume.");onState()});return}if(record.required&&!owner.owns(audio))descriptors.pause.value.call(
+audio);onFailure(error2.message||"Buffered playback is unavailable.");onState()}function resolveSource(audio,{
+signal}){return new Promise((resolve,reject)=>{let timer;let settled=false;const finish=(callback,value)=>{
+if(settled)return;settled=true;timers.clearTimeout(timer);signal.removeEventListener("abort",abort);
+const listeners=waiters.get(audio);listeners?.delete(receive);if(!listeners?.size)waiters.delete(audio);
+callback(value)};const abort=()=>finish(reject,abortError5());const receive=result=>{if(result.status===
+"bound")finish(resolve,result);else if(["ambiguous","unavailable"].includes(result.status))finish(reject,
+new Error("Could not identify this track\u2019s audio. Choose 0.25\xD7 or higher to use browser playback."))};
+if(signal.aborted)return abort();if(!waiters.has(audio))waiters.set(audio,new Set);waiters.get(audio).
+add(receive);signal.addEventListener("abort",abort,{once:true});timer=timers.setTimeout(()=>finish(reject,
+new Error("Track audio is not available for buffered playback. Reload the track or choose 0.25\xD7 or h\
+igher.")),1e4);try{receive(binding.resolve(audio))}catch(error2){finish(reject,error2)}})}async function createEngine({
+context,destination,source:source2,mode,signal}){const{Mediabunny:Mediabunny2}=await modules.loadAudioDependencies(
+{signal});if(signal.aborted)throw abortError5();const pcm=modules.createPcmSource({library:Mediabunny2,
+url:source2.playlistUrl});let provider;try{provider=modules.createPcmWindow({source:pcm});const output=mode===
+"preserve"?modules.createPreserveOutput({context,destination}):modules.createNaturalOutput({context,
+destination});return{provider,output}}catch(error2){await(provider||pcm).dispose();throw error2}}function settings(audio){
+const value=readSettings(audio);return{track:value.track,mode:value.mode,wasm:value.wasm,rate:value.
+schedule?.rateAt??value.rate,required:(value.schedule?.minimumRate??value.rate)<.25,src:raw(audio,"s\
+rc"),srcObject:raw(audio,"srcObject")}}function same(left,right){return left&&Object.keys(right).every(
+key=>left[key]===right[key])}function sync(audio){if(closed)return false;if(selected?.deref()!==audio)
+return true;const next=settings(audio);const previous=records.get(audio);const source2=binding.resolve(
+audio);if(!sources.has(audio))sources.set(audio,{track:next.track,id:source2.sourceId});else if(sources.
+get(audio).id===null&&source2.sourceId!==null)sources.set(audio,{track:next.track,id:source2.sourceId});
+if(same(previous,next)&&(previous.pending||previous.error||!next.required||owner.owns(audio)))return next.
+required||Boolean(previous.pending);if(!next.required&&!previous?.pending&&!owner.owns(audio)){records.
+delete(audio);return false}const record={...next,intent:previous?.pending?previous.intent:!audio.paused,
+pending:null,state:null,error:null,manualPlay:false};if(previous?.pending&&previous.playRequest&&!previous.
+playRequest.cancelled&&current(audio,previous)){record.playRequest=previous.playRequest;record.playRequest.
+record=record;record.manualPlay=true}records.set(audio,record);let operation;if(next.required){if(!next.
+track||!graph.hasGraph(audio)||next.mode==="preserve"&&!next.wasm){descriptors.pause.value.call(audio);
+record.waitingGraph=!graph.hasGraph(audio);record.unavailable=true;const message=!next.track?"Load a\
+ track before choosing this tempo.":record.waitingGraph?"The player audio connection is not ready. R\
+eload the track to use speeds below 0.25\xD7.":"Enable WASM to preserve key below 0.25\xD7.";fail(audio,
+record,new Error(message));operation=owner.release(audio).then(()=>{throw record.error})}else operation=
+owner.use(audio,next)}else{operation=owner.release(audio).then(released=>{if(!current(audio,record))
+throw abortError5();applyNative(audio);if(released?.restored&&released.playing&&record.intent&&!record.
+manualPlay)return descriptors.play.value.call(audio)})}const pending=Promise.resolve(operation);record.
+pending=pending;pending.then(()=>{if(record.pending===pending)record.pending=null;if(!current(audio,
+record))return;if(!record.required)applyNative(audio);onState()},error2=>{if(record.pending===pending)
+record.pending=null;fail(audio,record,error2)}).catch(error2=>fail(audio,record,error2));return true}
+async function preparedPlay(audio,request){while(!request.cancelled&&current(audio,request.record)){
+const record=request.record;try{await(record.recovery??record.pending)}catch(error2){if(request.record!==
+record)continue;if(!record.recovery)throw error2;await record.recovery}if(request.record!==record)continue;
+if(!current(audio,record)||!record.intent||request.cancelled)break;if(record.required&&!record.nativeFallback&&
+!owner.owns(audio))break;return request.fallback()}throw abortError5()}function play(audio,fallback){
+const record=records.get(audio);if(!record)return fallback();if(record.playRequest&&!record.playRequest.
+cancelled)return record.playRequest.promise;record.intent=true;record.manualPlay=true;if(record.error&&
+!record.nativeFallback){if(record.unavailable)return Promise.reject(record.error);record.error=null;
+record.state=null;onFailure("");if(!record.required)return fallback();const retry=owner.release(audio).
+then(()=>{if(!current(audio,record)||!record.intent)throw abortError5();return owner.use(audio,record)});
+record.pending=retry;retry.then(()=>{if(record.pending===retry)record.pending=null;if(current(audio,
+record))onState()},error2=>{if(record.pending===retry)record.pending=null;fail(audio,record,error2)})}
+if(!record.pending&&!record.recovery)return fallback();const request={record,fallback,cancelled:false,
+promise:null};record.playRequest=request;request.promise=preparedPlay(audio,request);const clear=()=>{
+if(request.record.playRequest===request)request.record.playRequest=null};request.promise.then(clear,
+clear);return request.promise}function pause(audio){const record=records.get(audio);if(record){record.
+intent=false;if(record.playRequest)record.playRequest.cancelled=true}const owned=owner.owns(audio);owner.
+pause(audio);return owned}function select(audio){const previous=selected?.deref();if(previous===audio||
+closed)return;selected=new WeakRef(audio);if(!previous)return;records.delete(previous);binding.release(
+previous);owner.release(previous,{restore:false}).catch(error2=>{if(error2?.name!=="AbortError")console.
+warn("[SoundCloud Tempo]",error2)})}function changeTrack(previous,next){if(!previous||!next||previous===
+next)return;const audio=selected?.deref();if(audio){const before=sources.get(audio);const source2=binding.
+resolve(audio);if(!before||before.id===source2.sourceId)binding.invalidate(audio);sources.set(audio,
+{track:next,id:source2.sourceId});records.delete(audio);owner.release(audio,{restore:false}).catch(error2=>{
+if(error2?.name!=="AbortError")onFailure(error2.message)})}}function graphReady(audio){if(!selected?.
+deref())select(audio);if(!records.get(audio)?.waitingGraph)return;onFailure("");records.delete(audio);
+sync(audio)}function label(){for(const audio of media()){const record=records.get(audio);if(!record||
+!current(audio,record))continue;if(record.error)return record.error.message;if(!record.required)continue;
+if(record.state?.state==="buffering")return"Buffering audio\u2026";if(record.pending)return"Preparin\
+g audio\u2026";return record.mode==="preserve"?"Buffered playback \xB7 Preserve key.":"Buffered play\
+back \xB7 Natural pitch."}return null}function dispose(){if(disposal)return disposal;closed=true;disposal=
+Promise.allSettled([owner.dispose(),binding.dispose()]).then(async results=>{const host=await Promise.
+allSettled([hostClock.dispose()]);results.push(...host);const errors=results.filter(result=>result.status===
+"rejected").map(result=>result.reason);if(errors.length)throw new AggregateError(errors,"Playback cl\
+eanup failed")});return disposal}return Object.freeze({sourceFor:audio=>binding.resolve(audio),sourceStats:()=>binding.
+stats(),resolveSource,preloadNext:(audio,options)=>hostClock.preloadNext(audio,options),sync,play,pause,
+select,changeTrack,graphReady,label,dispose})}function createCrossfade({modules,graph,sourceFor,resolveSource=sourceFor,sourceStats=()=>null,preloadNext,
+readNextRate=()=>4,readNextSettings,readSettings,readTrack,nextButton,onState,onVisual,storage=localStorage,
+timers=globalThis}){const enabledKey="soundcloud.tempo.crossfade";const secondsKey="soundcloud.tempo\
+.crossfadeSeconds";let enabled=false;let seconds=5;let selected;let job;let timer;let message="";let disposed=false;
+const history=[];const nextSettingsFor=url=>readNextSettings?readNextSettings(url):{...readSettings(
+selected),rate:readNextRate(url)};const clean=value=>String(value).replace(/https?:\/\/\S+/g,"[URL o\
+mitted]").slice(0,300);function visual(state){try{onVisual?.(state)}catch{}}function status(value){value=
+clean(value);if(message===value)return;message=value;history.push({at:new Date().toISOString(),message});
+if(history.length>12)history.shift();onState?.()}function cancel(reason){const previous=job;job=null;
+visual(null);previous?.controller.abort();try{previous?.next?.dispose()}finally{previous?.route?.dispose()}
+if(previous&&reason)status(`Crossfade cancelled: ${reason}.`)}function signature(audio){const settings=readSettings(
+audio);return JSON.stringify([readTrack(),audio.currentSrc,audio.duration,settings.rate,settings.preserve,
+settings.shift,settings.variable])}async function decode(current,url,start,length=Infinity){const{signal}=current.
+controller;const{Mediabunny:Mediabunny2}=await modules.loadAudioDependencies({signal});const provider=modules.
+createPcmWindow({source:modules.createPcmSource({library:Mediabunny2,url})});try{const info=await provider.
+info({signal});const duration=info.totalSourceFrames===void 0?info.durationHint:info.totalSourceFrames/
+info.sampleRate;if(!Number.isFinite(duration)||duration<=0)throw new Error("This stream\u2019s duration i\
+s unavailable.");const first=Math.floor(start*info.sampleRate);const end=Math.floor(Math.min(duration,
+start+length)*info.sampleRate);const frames=end-first;if(frames<=0||frames*8>32*1024*1024)throw new Error(
+"This track\u2019s crossfade buffer is too large.");const buffer=graph.contextFor(current.audio).createBuffer(
+2,frames,info.sampleRate);for(let from=first;from<end;from+=info.sampleRate){const to=Math.min(end,from+
+info.sampleRate);const lease=await provider.acquire(from,to,{signal});try{if(lease.channels.length!==
+2||lease.channels.some(channel=>channel.length!==to-from))throw new Error("The crossfade audio buffe\
+r is incomplete.");for(let channel=0;channel<2;channel++)buffer.copyToChannel(lease.channels[channel],
+channel,from-first)}finally{lease.release()}}return{buffer,duration,start:first/info.sampleRate}}finally{
+await provider.dispose()}}async function prepareOpening(current){current.decodingOpening=true;status(
+"Preparing the next track\u2019s opening\u2026");try{const settings=nextSettingsFor(current.next.trackUrl);
+if(settings.variable)throw new Error("The next track uses a tempo timeline.");const url=current.next.
+streamUrl();const decoded=await decode(current,url,0,(seconds+8)*settings.rate);if(decoded.duration/
+settings.rate<seconds+2)throw new Error("The next track is too short for this crossfade.");const opening=await graph.
+prepareIncoming(current.audio,decoded.buffer,settings,current.controller);if(job!==current||current.
+controller.signal.aborted)return;if(!current.next.matches()||current.next.streamUrl()!==url)throw new Error(
+"The next stream changed during preparation.");current.opening=opening;current.openingUrl=url;current.
+nextSettings=settings;status("Crossfade ready.")}catch(error2){if(job===current&&!current.controller.
+signal.aborted){current.failed=true;current.buffer=null;current.next?.dispose();current.next=null;status(
+`Playing normally. ${error2.message}`)}}finally{current.decodingOpening=false}}async function prepare(current){
+try{const{signal}=current.controller;current.waitingNext=true;current.next=await preloadNext(current.
+audio,{signal});current.waitingNext=false;if(job!==current||signal.aborted){current.next.dispose();return}
+current.waitingSource=true;status("Identifying the current track\u2019s audio\u2026");const source2=await resolveSource(
+current.audio,{signal});if(job!==current||signal.aborted)return;current.waitingSource=false;if(source2.
+status!=="bound")throw new Error("This track\u2019s audio could not be identified.");current.sourceId=
+source2.sourceId;current.generation=source2.generation;const{buffer,duration,start}=await decode(current,
+source2.playlistUrl,current.start);if(!Number.isFinite(duration)||Math.abs(duration-current.audio.duration)>
+.25)throw new Error("This stream\u2019s timing is not suitable for crossfade.");if(job!==current||signal.
+aborted)return;const latest=await resolveSource(current.audio,{signal});if(job!==current||signal.aborted)
+return;if(signature(current.audio)!==current.signature||latest.status!=="bound"||latest.sourceId!==current.
+sourceId||latest.generation!==current.generation)throw new Error("The track changed while preparing \
+crossfade.");current.start=start;current.buffer=buffer;status("Buffering the next track\u2026")}catch(error2){
+if(job===current&&error2.name!=="AbortError"){const waitingSource=current.waitingSource;current.failed=
+true;if(error2.code==="SOUNDCLOUD_QUEUE_PENDING")current.retryPosition=current.audio.currentTime+2*readSettings(
+current.audio).rate;current.waitingNext=false;current.waitingSource=false;current.next?.dispose();current.
+next=null;status(`Playing normally. ${waitingSource?"This track\u2019s audio could not be identified. See\
+ crossfade diagnostics.":error2.message}`)}}}function tick(){const audio=selected;if(!enabled||disposed||
+!audio)return;if(job?.route){const current2=job;visual({nextTrack:current2.next.trackUrl,progress:Math.
+max(0,Math.min(1,1-(current2.route.overlapEnd-current2.route.context.currentTime)/current2.overlapSeconds))});
+const remaining2=current2.route.endTime-current2.route.context.currentTime;if(remaining2<=0||current2.
+route.context.state!=="running"){cancel();status(current2.fading?"Crossfade complete.":"The buffered\
+ opening ended before SoundCloud could synchronize; native playback restored.");return}const track=readTrack();
+if(track&&track!==current2.track){if(current2.incomingTrack&&current2.incomingTrack!==track){cancel();
+return}current2.incomingTrack=track}current2.route.silence(audio);const changed=audio!==current2.audio||
+audio.currentTime<current2.position-.5;if(!current2.fading&&current2.incomingTrack&&changed&&!audio.
+paused&&!audio.seeking&&audio.readyState>=2&&graph.crossfadeReady(audio,readSettings(audio))){if(!current2.
+next.isCurrent(audio)){cancel();status("The queued track changed; playing normally.");return}const actual=readSettings(
+audio);const expected=current2.nextSettings;if(actual.variable||actual.rate!==expected.rate||actual.
+preserve!==expected.preserve||actual.shift!==expected.shift){cancel("incoming tempo or pitch changed");
+return}const now=current2.route.context.currentTime;const desired=current2.route.position()*expected.
+rate;const audible=current2.route.nativePosition(audio);current2.handoffError=audible-desired;if(Math.
+abs(current2.handoffError)>.02*expected.rate){if(now>=(current2.seekAfter??0)){audio.currentTime=desired+
+Math.max(0,audio.currentTime-audible);current2.seekAfter=now+.75;status("Crossfading; synchronizing \
+SoundCloud underneath\u2026")}}else if(now>=current2.route.overlapEnd){current2.fading=current2.route.
+fadeIn(audio);if(current2.fading)status("Returning to synchronized native playback\u2026")}}return}if(audio.
+paused||audio.seeking||!Number.isFinite(audio.duration))return;const settings=readSettings(audio);const currentSignature=signature(
+audio);if(job&&job.signature!==currentSignature)cancel("track or tempo changed");if(job?.next&&!job.
+next.matches())cancel("queue changed");if(job?.failed&&audio.currentTime>=job.retryPosition)cancel();
+const remaining=(audio.duration-audio.currentTime)/settings.rate;if(settings.variable){status("Cross\
+fade waits until the tempo timeline is steady.");return}if(!graph.crossfadeReady(audio,settings)){status(
+"Crossfade needs a ready player audio connection.");return}if(audio.duration/settings.rate<seconds*2+
+2||remaining<.5){status("Playing normally. Not enough track time for crossfade.");return}if(!job&&remaining>
+Math.max(60,seconds+30)){status("Crossfade enabled. Preloading starts near the end of the track.");return}
+if(!job&&remaining<=Math.max(60,seconds+30)){job={audio,track:readTrack(),signature:currentSignature,
+start:Math.max(0,audio.duration-(seconds+2)*settings.rate),controller:new AbortController};status("P\
+reloading the next track\u2026");void prepare(job)}if(!job?.buffer)return;const nextRate=readNextRate(
+job.next.trackUrl);job.requiredSeconds=(seconds+1)*(Number.isFinite(nextRate)&&nextRate>=.25&&nextRate<=
+4?nextRate:4);job.nextReady=job.next.ready(job.requiredSeconds);if(!job.nextReady){status("Buffering\
+ the next track; playback continues normally.");return}if(!job.opening){if(!job.decodingOpening)void prepareOpening(
+job);return}if(JSON.stringify(nextSettingsFor(job.next.trackUrl))!==JSON.stringify(job.nextSettings)||
+job.next.streamUrl()!==job.openingUrl){cancel("next track settings changed");return}status("Crossfad\
+e ready.");if(remaining>seconds)return;const button=nextButton();if(!button){status("Crossfade needs\
+ another track in the queue.");return}const current=job;const source2=sourceFor(audio);if(source2.status===
+"unbound"&&source2.reason==="waiting-for-payload-proof"&&source2.sourceId===current.sourceId&&source2.
+generation===current.generation){status("Waiting for stream verification; playback continues normall\
+y.");return}if(source2.status!=="bound"||source2.sourceId!==current.sourceId||source2.generation!==current.
+generation){cancel("stream identity changed");return}try{current.position=audio.currentTime;current.
+route=graph.beginCrossfade(audio,current.buffer,current.position-current.start,settings.rate,remaining,
+current.opening);current.buffer=null;current.opening=null;current.overlapSeconds=remaining;visual({nextTrack:current.
+next.trackUrl,progress:0});button.click();status("Crossfading buffered audio\u2026")}catch(error2){current.
+route?.dispose();current.route=null;visual(null);status(`Playing normally. ${error2.message}`)}}function safeTick(){
+try{tick()}catch(error2){cancel();status(`Crossfade stopped. ${error2.message}`)}}function reload(){
+cancel();try{enabled=storage.getItem(enabledKey)==="true";const value=Number(storage.getItem(secondsKey));
+seconds=Number.isInteger(value)&&value>=1&&value<=10?value:5}catch{enabled=false}timers.clearInterval(
+timer);timer=enabled?timers.setInterval(safeTick,100):void 0;status(enabled?"Crossfade enabled. Unav\
+ailable streams play normally.":"Crossfade off.");onState?.()}const events=["pause","seeking","playi\
+ng"];function mediaEvent(event){if(event.type==="playing"){safeTick();return}if(job?.route&&!job.fading&&
+(event.type==="seeking"||!job.incomingTrack))return;cancel(`player ${event.type}`)}return{enabled:()=>enabled,
+seconds:()=>seconds,label:()=>message,diagnostics(){const audio=selected;const round2=value=>Number.
+isFinite(value)?Math.round(value*100)/100:null;let player=null;try{const source2=audio&&sourceFor(audio);
+player=audio?{paused:audio.paused,seeking:audio.seeking,readyState:audio.readyState,position:round2(
+audio.currentTime),duration:round2(audio.duration),source:source2.status,sourceReason:source2.reason??
+null,sourceCapture:sourceStats(),graphReady:graph.crossfadeReady(audio,readSettings(audio)),rate:readSettings(
+audio).rate,nextBufferedSeconds:round2(job?.next?.bufferedSeconds?.()),requiredSeconds:round2(job?.requiredSeconds),
+handoffErrorSeconds:round2(job?.handoffError),openingSecondsRemaining:job?.route?round2(job.route.endTime-
+job.route.context.currentTime):null}:null}catch(error2){player={error:clean(error2.message)}}return{
+enabled,overlapSeconds:seconds,status:message,stage:job?.failed?"unavailable":job?.waitingNext?"find\
+ing-next-track":job?.waitingSource?"identifying-source":job?.fading?"handing-off":job?.route?"buffer\
+ed-overlap":job?.decodingOpening?"decoding-incoming":job?.nextReady?"ready":job?.buffer?"waiting-for\
+-next-buffer":job?.next?"decoding-outgoing":"idle",player,history:history.map(entry=>({...entry}))}},
+reload,set(nextEnabled,nextSeconds){if(typeof nextEnabled!=="boolean"||!Number.isInteger(nextSeconds)||
+nextSeconds<1||nextSeconds>10)throw new TypeError("Choose a crossfade between 1 and 10 seconds.");storage.
+setItem(secondsKey,String(nextSeconds));storage.setItem(enabledKey,String(nextEnabled));reload()},select(audio){
+if(selected===audio){job?.route?.silence(audio);return}for(const event of events)selected?.removeEventListener(
+event,mediaEvent);if(!job?.route)cancel("selected player changed");selected=audio;for(const event of events)
+audio.addEventListener(event,mediaEvent);job?.route?.silence(audio)},cancel:()=>cancel("playback con\
+trols changed"),dispose(){disposed=true;cancel();timers.clearInterval(timer);for(const event of events)
+selected?.removeEventListener(event,mediaEvent);selected=null}}}function formatPitchNotice(shift){const values=Array.isArray(shift)?shift:[shift];const min=Math.min(
+...values),max=Math.max(...values);const format=value=>{const rounded=Number(value.toPrecision(4));return`${rounded<
+0?"\u2212":rounded>0?"+":""}${Math.abs(rounded)}`};if(min===0&&max===0)return"";return`Pitch shifted\
+ ${format(min)}${min===max?"":` to ${format(max)}`} st`}function createTrackVisuals({document:document2,readTrack}){let layer,incoming,nextTrack,notice;const avatar=()=>document2.
+querySelector(".playControls__soundBadge .playbackSoundBadge__avatar");const cover=element=>{const image=element?.
+querySelector("img");if(image)return`url(${JSON.stringify(image.currentSrc||image.src)})`;const background=element?.
+querySelector(".image")||element;return background?document2.defaultView.getComputedStyle(background).
+backgroundImage:"none"};const path=url=>new URL(url,document2.location.href).pathname;function overlap(state){
+if(!state){layer?.remove();layer=incoming=nextTrack=null;return}if(!layer){const host2=avatar();if(!host2)
+return;nextTrack=state.nextTrack?path(state.nextTrack):null;layer=document2.createElement("span");layer.
+className="soundcloud-tempo-crossfade-artwork";layer.setAttribute("aria-hidden","true");const outgoing=document2.
+createElement("span");outgoing.style.backgroundImage=cover(host2);incoming=document2.createElement("\
+span");incoming.className="soundcloud-tempo-incoming-artwork";layer.append(outgoing,incoming);host2.
+append(layer);if(nextTrack){for(const link of document2.querySelectorAll("a[href]")){if(path(link.href)!==
+nextTrack)continue;const row=link.closest(".queueItemView, .sound, .playableTile");const image=row?.
+querySelector(".queueItemView__artwork, .sound__coverArt, .playableTile__artwork");const background=cover(
+image);if(background!=="none"){incoming.style.backgroundImage=background;break}}}}const host=avatar();
+if(!host)return;if(layer.parentElement!==host)host.append(layer);if(nextTrack&&readTrack()===nextTrack){
+const background=cover(host);if(background!=="none")incoming.style.backgroundImage=background}const progress=incoming.
+style.backgroundImage?state.progress:0;layer.style.setProperty("--incoming-progress",String(progress));
+layer.style.setProperty("--fade-start",`${110-140*progress}%`);layer.style.setProperty("--fade-end",
+`${130-140*progress}%`)}function pitch(shift){const host=document2.querySelector(".playControls__sou\
+ndBadge .playbackSoundBadge__titleContextContainer");if(!host){notice?.remove();notice=null;return}if(!notice||
+notice.parentElement!==host){notice?.remove();notice=document2.createElement("span");notice.className=
+"soundcloud-tempo-pitch-notice";host.append(notice)}const text=formatPitchNotice(shift);if(notice.textContent!==
+text)notice.textContent=text;notice.hidden=!text}return{overlap,pitch}}function encodeTempoCode(data2){return"SCT1."+btoa(Array.from(new TextEncoder().encode(JSON.stringify(
+data2)),byte=>String.fromCharCode(byte)).join("")).replaceAll("+","-").replaceAll("/","_").replace(/=+$/,
+"")}function tempoShareLink(data2,website=""){const code=encodeTempoCode(data2);const url=website?new URL(
+"share/",website.endsWith("/")?website:website+"/"):new URL("https://soundcloud.com"+data2.track);if(website)
+url.hash="sct="+code;else url.searchParams.set("sct",code);if(url.href.length>8e3)throw new Error("T\
+oo large for a link. Use Copy code instead.");return url.href}function decodeTempoCode(text,validate,parseTrack,website=""){
+let code=text.trim();let linkedTrack=null;if(code.startsWith("https://")){if(code.length>8e3)throw new Error(
+"Link is too long. Ask for the tempo code instead.");const url=new URL(code);const landing=website?new URL(
+"share/",website.endsWith("/")?website:website+"/"):null;if(url.username||url.password)throw new Error(
+"Invalid share link.");if(url.origin==="https://soundcloud.com"){linkedTrack=parseTrack(url.pathname);
+if(!linkedTrack)throw new Error("The link must point to a track.")}else if(!landing||url.origin!==landing.
+origin||url.pathname!==landing.pathname){throw new Error("Use a SoundCloud tempo link or the Track C\
+ontrol share page.")}code=url.searchParams.get("sct")||(url.hash.startsWith("#sct=")?url.hash.slice(
+5):"")}if(code.length>5e4||!/^SCT1\.[A-Za-z0-9_-]+$/.test(code))throw new Error("Paste a valid SCT1 \
+code or tempo link.");const bytes=Uint8Array.from(atob(code.slice(5).replaceAll("-","+").replaceAll(
+"_","/")),character=>character.charCodeAt(0));const data2=validate(JSON.parse(new TextDecoder("utf-8",
+{fatal:true}).decode(bytes)));if(linkedTrack!==null&&linkedTrack!==data2.track)throw new Error("The \
+link and tempo settings refer to different tracks.");return data2}var editorStyle=`
+        .tempo-editor {
+          position: fixed;
+          margin: 0;
+          padding: 16px;
+          max-height: calc(100vh - 84px);
+          overflow: auto;
+          border: 1px solid var(--tempo-track);
+          border-radius: 4px;
+          background: var(--tempo-surface);
+          color: var(--tempo-fg);
+          font:
+            12px/1.5 Arial,
+            sans-serif;
+          z-index: 2147483647;
+        }
+        .tempo-editor[hidden] {
+          display: none;
+        }
+        .tempo-editor header,
+        .editor-actions,
+        .point-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+        .tempo-editor header {
+          justify-content: space-between;
+        }
+        .editor-actions {
+          justify-content: flex-end;
+          margin-top: 16px;
+          padding-top: 12px;
+          border-top: 1px solid var(--tempo-track);
+        }
+        .point-actions {
+          margin: 8px 0;
+        }
+        .editor-actions .editor-revert {
+          margin-right: auto;
+          border-color: transparent;
+        }
+        .playback-state {
+          display: block;
+          margin: 4px 0;
+        }
+        .editor-pitch-label {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin: 12px 0;
+        }
+        .tempo-editor .editor-pitch {
+          width: auto;
+        }
+        .tempo-editor .editor-key-shift {
+          width: 64px;
+        }
+        .editor-sharing .editor-actions {
+          border: 0;
+          margin: 8px 0;
+          padding: 0;
+          justify-content: flex-start;
+        }
+        .editor-sharing label {
+          display: block;
+          margin-top: 12px;
+        }
+        .tempo-editor [hidden] {
+          display: none !important;
+        }
+        .tempo-editor input,
+        .tempo-editor select,
+        .tempo-editor output {
+          font-variant-numeric: tabular-nums;
+        }
+        .tempo-editor header strong {
+          font-size: 14px;
+        }
+        .tempo-editor button {
+          min-height: 28px;
+          border: 1px solid var(--tempo-track);
+          border-radius: 3px;
+          background: transparent;
+          padding: 4px 10px;
+        }
+        .tempo-editor button:hover {
+          background: color-mix(in srgb, var(--tempo-fg) 8%, transparent);
+        }
+        .tempo-editor .primary {
+          color: var(--tempo-accent);
+          border-color: var(--tempo-accent);
+          background: var(--tempo-accent-surface);
+        }
+        .tempo-editor .primary:hover {
+          background: var(--tempo-accent-hover);
+        }
+        .editor-track {
+          display: block;
+          color: inherit;
+          margin: 8px 0;
+          overflow-wrap: anywhere;
+        }
+        .editor-graph {
+          width: 100%;
+          height: 220px;
+          display: block;
+          touch-action: none;
+          user-select: none;
+        }
+        .editor-graph text {
+          fill: var(--tempo-fg);
+          font-size: 11px;
+        }
+        .editor-graph .grid {
+          stroke: var(--tempo-track);
+          stroke-width: 0.5;
+        }
+        .editor-graph .curve {
+          stroke: var(--tempo-accent);
+          stroke-width: 2.5;
+          fill: none;
+        }
+        .editor-graph .point {
+          fill: var(--tempo-surface);
+          stroke: var(--tempo-accent);
+          stroke-width: 2;
+          cursor: grab;
+        }
+        .editor-graph .selected {
+          fill: var(--tempo-accent);
+        }
+        .editor-graph .ramp {
+          cursor: ew-resize;
+        }
+        .editor-graph .ramp-line {
+          stroke: var(--tempo-accent);
+          stroke-width: 1.5;
+          stroke-dasharray: 3 3;
+          pointer-events: none;
+        }
+        .editor-graph .ramp-label {
+          fill: var(--tempo-surface);
+          stroke: var(--tempo-accent);
+          stroke-width: 1;
+        }
+        .editor-graph .ramp-arrow {
+          stroke: var(--tempo-fg);
+          stroke-width: 1.5;
+          fill: none;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+        }
+        .editor-graph .ramp text,
+        .editor-graph .ramp-arrow {
+          pointer-events: none;
+        }
+        .editor-graph .ramp:hover .ramp-label,
+        .editor-graph .ramp:focus-visible .ramp-label {
+          stroke: var(--tempo-fg);
+          stroke-width: 2;
+        }
+        .editor-graph .ramp:focus-visible {
+          outline: none;
+        }
+        .editor-fields {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 12px;
+          margin: 12px 0;
+        }
+        .editor-fields label {
+          display: grid;
+          gap: 4px;
+        }
+        .tempo-editor .editor-fields input,
+        .tempo-editor .speed-min,
+        .tempo-editor .speed-max,
+        .tempo-editor select,
+        .tempo-editor textarea {
+          width: 100%;
+          height: 30px;
+          border: 1px solid var(--tempo-track);
+          border-radius: 3px;
+          background: var(--tempo-surface);
+          color: inherit;
+          padding: 4px 6px;
+          font: inherit;
+        }
+        .tempo-editor textarea {
+          height: 60px;
+          resize: vertical;
+          margin: 8px 0;
+          overflow-wrap: anywhere;
+        }
+        .tempo-editor details {
+          margin-top: 12px;
+        }
+        .tempo-editor summary {
+          cursor: pointer;
+        }
+        .editor-status {
+          min-height: 18px;
+          margin-bottom: 0;
+        }
+        .editor-toolbar {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+          margin: 12px 0 8px;
+        }
+        .editor-toolbar label {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          white-space: nowrap;
+        }
+        .speed-bounds {
+          display: flex;
+          gap: 8px;
+        }
+        .editor-toolbar output {
+          margin-right: auto;
+          font-variant-numeric: tabular-nums;
+        }
+        .tempo-editor .speed-min,
+        .tempo-editor .speed-max {
+          width: 60px;
+        }
+        .timeline-navigation[hidden] {
+          display: none;
+        }
+        .timeline-navigation {
+          margin: 0 0 12px;
+          font-variant-numeric: tabular-nums;
+        }
+        .timeline-navigation .editor-readout {
+          margin: 0;
+        }
+        .editor-pan {
+          cursor: ew-resize;
+        }
+        .editor-pan:active {
+          cursor: grabbing;
+        }
+        .timeline-limits {
+          display: flex;
+          justify-content: space-between;
+          line-height: 1;
+        }
+        .editor-readout {
+          display: flex;
+          justify-content: space-between;
+          gap: 8px;
+          margin: 6px 0;
+          font-variant-numeric: tabular-nums;
+        }
+        .tempo-editor button:disabled {
+          opacity: 0.45;
+          cursor: default;
+        }
+        .tempo-editor :focus-visible {
+          outline: 2px solid var(--tempo-accent);
+          outline-offset: 2px;
+        }
+        .editor-point-picker {
+          max-width: 100%;
+        }
+        .tempo-editor .editor-enable {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        @media (max-width: 540px) {
+          .editor-fields {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+        }
+      `;function editorTemplate(inline=false){return`
+      <style>${editorStyle}${tempoFieldStyle}
+.editor-lanes,.pitch-options{display:flex;align-items:center;gap:8px;margin:12px 0;flex-wrap:wrap}
+.editor-lanes [aria-pressed="true"]{color:var(--tempo-fg);border-color:var(--tempo-accent)}
+</style>
+      <header><strong>Tempo timeline</strong><button class="editor-close" type="button">Close</butto\
+n></header>
+      <a class="editor-track" target="_blank" rel="noopener noreferrer" ${inline?"hidden":""}></a>
+      <output class="playback-state" aria-live="polite" ${inline?"hidden":""}></output>
+      <label class="editor-enable" hidden><input class="editor-enabled" type="checkbox">Use saved ti\
+meline</label>
+      <div class="editor-lanes" role="group" aria-label="Automation lane"><button type="button" data\
+-lane="tempo" aria-pressed="true">Tempo</button><button type="button" data-lane="pitch" aria-pressed\
+="false">Pitch</button></div>
+      <div class="pitch-options" hidden><label>Arrow step <input class="pitch-step" type="number" mi\
+n="0.001" max="12" step="0.1" value="0.5"> st</label><button type="button" class="pitch-clear">Remov\
+e pitch automation</button></div>
+      <div class="editor-toolbar">
+        <button class="zoom-out" type="button" aria-label="Zoom out timeline">\u2212</button>
+        <button class="zoom-in" type="button" aria-label="Zoom in timeline">+</button>
+        <button class="zoom-fit" type="button">Fit</button>
+        <button class="zoom-focus" type="button">Focus fade</button>
+        <output class="zoom-label"></output>
+        <label>Speed range<select class="speed-range" aria-label="Graph speed range"><option value="\
+1">1\xD7</option><option value="2">2\xD7</option><option value="4">4\xD7</option><option value="fine">Close \xB7\
+ 0.1\xD7 grid</option><option value="close">Closer \xB7 0.05\xD7 grid</option><option value="custom" selected\
+>Custom</option></select></label>
+        <div class="speed-bounds">
+          <label>Min <input class="speed-min" type="number" min="0.25" max="4" step="0.001" value="0\
+.75" aria-label="Graph minimum value"><span class="axis-unit">\xD7</span></label>
+          <label>Max <input class="speed-max" type="number" min="0.25" max="4" step="0.001" value="1\
+.5" aria-label="Graph maximum value"><span class="axis-unit">\xD7</span></label>
+        </div>
+      </div>
+      <svg class="editor-graph" viewBox="0 0 660 220" preserveAspectRatio="none" role="group" aria-l\
+abel="Tempo over original song time"></svg>
+      <div class="timeline-navigation" hidden>
+        <div class="editor-readout"><label for="timeline-pan">Scroll timeline</label><output class="\
+view-window" for="timeline-pan"></output></div>
+        <input id="timeline-pan" class="editor-pan" type="range" min="0" max="0" step="0.01" value="\
+0">
+        <div class="timeline-limits" aria-hidden="true"><span>0:00</span><span class="timeline-end">\
+</span></div>
+      </div>
+      <div class="editor-readout"><span class="point-readout"></span></div>
+      ${inline?'<details class="editor-advanced"><summary>Advanced<svg width="16" height="16" viewBo\
+x="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-wid\
+th="1.5"/></svg></summary>':""}
+      <label>Point <select class="editor-point-picker" aria-label="Selected tempo point"></select></\
+label>
+      <div class="editor-fields">
+        <label>Reach at (seconds)<input class="point-time" type="number" min="0" step="0.1"></label>\
+
+        <label><span class="target-label">Target speed</span><input class="point-rate" type="number"\
+ min="0.25" max="4" step="0.025"></label>
+        <label>Fade duration (seconds)<input class="point-duration" type="number" min="0" step="0.1"\
+></label>
+        <label>Transition<select class="point-curve"><option value="instant">Instant</option><option\
+ value="linear">Linear</option><option value="ease-in">Ease-in</option><option value="ease-out">Ease\
+-out</option><option value="smooth">Smooth</option></select></label>
+      </div>
+      <div class="point-actions">
+        <button class="point-add" type="button">Add at playhead</button>
+        <button class="point-remove" type="button">Remove point</button>
+      </div>
+      <label class="editor-pitch-label">Pitch<select class="editor-pitch"><option value="natural">Na\
+tural</option><option value="preserve">Preserve key</option></select></label>
+      <label class="editor-pitch-label">Key shift<input class="editor-key-shift" type="number" min="\
+-12" max="12" step="0.5" value="0"> semitones</label>
+      ${inline?"</details>":""}
+      <div class="editor-actions">
+        <button class="editor-revert" type="button" hidden>Discard edits</button>
+        <button class="editor-link" type="button">Copy link</button>
+        <button class="editor-apply-once" type="button" aria-pressed="false" ${inline?"hidden":""}>A\
+pply once</button>
+        <button class="editor-save primary" type="button">Save timeline</button>
+      </div>
+      <details class="editor-sharing">
+        <summary>Advanced sharing</summary>
+        <button class="editor-copy" type="button">Copy code</button>
+        <label>Import link or code<textarea class="editor-code" spellcheck="false" placeholder="Past\
+e a tempo link or SCT1 code"></textarea></label>
+        <div class="editor-actions">
+          <button class="editor-preview" type="button" disabled>Preview import</button>
+          <button class="editor-import" type="button" hidden>Load preview as draft</button>
+        </div>
+        <p class="import-summary"></p>
+        <label class="editor-output" hidden>Copy manually<textarea class="share-output" readonly spe\
+llcheck="false"></textarea></label>
+      </details>
+      <p class="editor-status" role="status" aria-live="polite"></p>
+    `}var round=value=>Math.round(value*1e3)/1e3;var validKeyShift=value=>Number.isFinite(value)&&Math.abs(
+value)<=12;var curves=["instant","linear","ease-in","ease-out","smooth"];function validatePoints(points,duration,field){
+if(!Array.isArray(points)||!points.length||points.length>200)throw new Error("Use between 1 and 200 \
+points per lane.");const result=points.map((point,index)=>{const previous=points[index-1];if(!point||
+![point.t,point[field],point.d].every(Number.isFinite)||point.t<0||point.t>duration||point.d<0||!curves.
+includes(point.c)||(field==="r"?point.r<.025||point.r>4:!validKeyShift(point.k))||!index&&(point.t!==
+0||point.d!==0)||index&&(point.t<=previous.t||point.t-point.d<previous.t))throw new Error("Invalid p\
+oints: check values, times, and overlapping fades.");return{t:round(point.t),[field]:round(field==="\
+r"?Math.max(.25,point.r):point.k),d:round(point.d),c:point.c}});for(let index=1;index<result.length;index++)
+if(result[index].t<=result[index-1].t||round(result[index].t-result[index].d)<result[index-1].t)throw new Error(
+"Points are too close together.");return result}function validateProfile(value,parseTrack){if(!value||
+value.v!==1||typeof value.track!=="string"||parseTrack(value.track)!==value.track||!Number.isFinite(
+value.duration)||value.duration<1||value.duration>86400)throw new Error("Invalid tempo code or unsup\
+ported version.");if(value.pitch!==void 0&&!["natural","preserve"].includes(value.pitch))throw new Error(
+"Invalid pitch mode.");if(value.keyShift!==void 0&&!validKeyShift(value.keyShift))throw new Error("K\
+ey shift must be between -12 and 12 semitones.");return{v:1,track:value.track,duration:value.duration,
+points:validatePoints(value.points,value.duration,"r"),...value.pitch===void 0?{}:{pitch:value.pitch},
+...value.keyShift===void 0?{}:{keyShift:value.keyShift},...value.pitchPoints===void 0?{}:{pitchPoints:validatePoints(
+value.pitchPoints,value.duration,"k")}}}function evaluatePoints(points,time,field="r"){let previous=points[0];
+for(let index=1;index<points.length;index++){const point=points[index];if(time<point.t){if(!point.d||
+point.c==="instant"||time<=point.t-point.d)return previous[field];let x=Math.max(0,Math.min(1,(time-
+point.t+point.d)/point.d));if(point.c==="ease-in")x*=x;else if(point.c==="ease-out")x=1-(1-x)**2;else if(point.
+c==="smooth")x=x*x*(3-2*x);return previous[field]+(point[field]-previous[field])*x}previous=point}return previous[field]}
+var profilePitchAt=(data2,time)=>data2.pitchPoints?evaluatePoints(data2.pitchPoints,time,"k"):data2.
+keyShift??null;function createTempoEditor(api){const website=api.website??(true?"https://itslush.github.io/soundclo\
+ud-track-control/":"");const PREFIX="soundcloud.tempo.timeline.";let active=null;let key="";let profile=null;
+let scheduleData=null;let scheduleOverride=null;let schedule=null;let suspended=false;let keyOverride=null;
+let lastPitch=null;let panel=null;let syncFields=()=>{};let draft=null;let selected=0;let imported=null;
+let dirty=false;let dragging=null;let dragOffset=0;let zoom=1;let viewStart=0;let lane="tempo";let speedTop=1.5;
+let speedBottom=.75;let speedMode="custom";const laneViews={tempo:[.75,1.5],pitch:[readPitchSettings().
+min,readPitchSettings().max]};const laneField=()=>lane==="pitch"?"k":"r";const laneUnit=()=>lane==="\
+pitch"?" st":"\xD7";const lanePoints=(data2=draft)=>lane==="pitch"?data2.pitchPoints??[{t:0,k:data2.
+keyShift??0,d:0,c:"instant"}]:data2.points;const laneStep=()=>lane==="pitch"?Number(el(".pitch-step").
+value)||.5:readTempoIncrement();let timer=0;let graphWidth=660;function running(){return Boolean(profile?.
+enabled&&!suspended)}function pitchMode(){return running()?profile.data.pitch??null:null}function draftData(){
+return validate({...draft,pitch:draft.pitch??api.defaultPitchMode,keyShift:draft.keyShift??api.keyShift??
+0})}function syncControls(){if(!panel||panel.hidden||!draft)return;const current=draft.track===key;const playing=current&&
+running();let saved=null;try{saved=JSON.parse(localStorage.getItem(storageKey(draft.track))||"null");
+if(saved)validate(saved.data)}catch{saved=null}el(".editor-enable").hidden=!saved||current&&profile?.
+temporary;el(".editor-enabled").checked=Boolean(saved?.enabled&&!(current&&suspended));el(".editor-a\
+pply-once").textContent=playing?"Stop timeline":"Apply once";el(".editor-apply-once").setAttribute("\
+aria-pressed",String(playing));el(".editor-apply-once").disabled=!current;el(".editor-revert").hidden=
+!dirty;el(".editor-import").hidden=!imported;el(".editor-import").disabled=!imported;el(".editor-pre\
+view").disabled=!el(".editor-code").value.trim();el(".playback-state").textContent=!current?"Another\
+ track is playing":playing?`${profile.temporary?"Session":"Saved"} timeline \xB7 ${api.pitchMode==="\
+preserve"?"Preserve key":"Natural"}`:suspended&&profile?.enabled?"Timeline stopped":"Timeline off"}function stop(){
+if(profile?.temporary)load();suspended=true;api.normal();syncControls();wake()}async function copyDraft(kind,button){
+button.disabled=true;try{if(api.canShare===false)throw new Error("Sharing needs a full SoundCloud tr\
+ack.");const data2=draftData();const code=encodeProfile(data2);const text=kind==="link"?tempoShareLink(
+data2,website):code;if(kind==="link"&&text.length>8e3){el(".editor-sharing").open=true;throw new Error(
+"Too large for a link. Use Copy code in Advanced sharing.")}try{await navigator.clipboard.writeText(
+text);status(kind==="link"?"Link copied.":"Code copied.")}catch{el(".editor-sharing").open=true;el("\
+.editor-output").hidden=false;el(".share-output").value=text;el(".share-output").focus();el(".share-\
+output").select();status("Copy unavailable. Press Ctrl+C to copy the selected text.")}}catch(error2){
+status(error2.message)}finally{button.disabled=false}}function setSpeedRange(mode,center){speedMode=
+mode;if(mode==="custom")return;if(mode==="fine"||mode==="close"){const data2=imported||draft;const width=mode===
+"fine"?.5:.2;const step=mode==="fine"?.1:.05;const rate=center??lanePoints(data2)[Math.min(selected,
+lanePoints(data2).length-1)][laneField()];const bottom=Math.max(.25,Math.min(4-width,rate-width/2));
+speedBottom=round2(Math.max(.25,Math.floor(bottom/step+1e-9)*step));speedTop=round2(Math.min(4,Math.
+ceil((bottom+width)/step-1e-9)*step))}else{speedBottom=.25;speedTop=Number(mode)}}function revealSpeed(rate){
+if(speedMode==="custom"||rate>=speedBottom&&rate<=speedTop)return;setSpeedRange(["fine","close"].includes(
+speedMode)?speedMode:rate>2?"4":"2",rate)}function zoomView(factor){const data2=imported||draft;const center=viewStart+
+data2.duration/zoom/2;zoom=Math.max(1,Math.min(data2.duration,zoom*factor));viewStart=Math.max(0,Math.
+min(data2.duration-data2.duration/zoom,center-data2.duration/zoom/2));draw(data2)}function hasTempoLink(){
+return location.hash.startsWith("#sct=")||typeof location.search==="string"&&new URLSearchParams(location.
+search).has("sct")}let pendingLink=hasTempoLink()?location.href:null;window.addEventListener("hashch\
+ange",()=>{if(hasTempoLink())pendingLink=location.href;wake()});const encodeProfile=value2=>encodeTempoCode(
+validate(value2));const decodeProfile=text=>decodeTempoCode(text,validate,api.parseTrack,website);const round2=n=>Math.
+round(n*1e3)/1e3;const storageKey=track=>PREFIX+encodeURIComponent(track);const timeLabel=n=>`${Math.
+floor(n/60)}:${String(Math.floor(n%60)).padStart(2,"0")}`;const preciseTime=n=>timeLabel(n)+(Number.
+isInteger(round2(n))?"":"."+String(Math.round(n*1e3)%1e3).padStart(3,"0").replace(/0+$/,""));const validate=value2=>validateProfile(
+value2,api.parseTrack);function displayedDuration(){const element=document.querySelector(".playbackT\
+imeline__duration");const clock=element?.querySelector('span[aria-hidden="true"]')||element;const text=clock?.
+textContent.trim()||"";if(text.length>32||!/^(?:\d+:[0-5]\d|\d+):[0-5]\d(?:\.\d+)?$/.test(text))return 0;
+const duration=text.split(":").reduce((total,part)=>total*60+Number(part),0);return duration>=1&&duration<=
+86400?duration:0}function playbackDuration(){const duration=active?.duration;return Number.isFinite(
+duration)&&duration>0?duration:displayedDuration()}function shareLink(text,force=false){if(!api.copyLinks&&
+!force||typeof text!=="string"||text.length>8e3)return text;try{const url=new URL(text);if(url.origin!==
+"https://soundcloud.com"||url.username||url.password||url.hash||url.searchParams.has("sct")||api.parseTrack(
+url.pathname)!==key||!key)return text;const duration=playbackDuration();const data2=profile?.enabled&&
+!suspended?profile.data:{v:1,track:key,duration,points:[{t:0,r:api.rate,d:0,c:"instant"}]};url.searchParams.
+set("sct",encodeProfile({...data2,pitch:api.pitchMode,keyShift:keyOverride??data2.keyShift??api.keyShift??
+0,...keyOverride===null?{}:{pitchPoints:void 0}}));if(website)return tempoShareLink(decodeProfile(url.
+href),website);return url.href.length<=8e3?url.href:text}catch{return text}}const evaluate=(data2,time)=>evaluatePoints(
+data2.points,time);function immutableProfile(data2){for(const points of[data2.points,data2.pitchPoints]){
+if(!points)continue;for(const point of points)Object.freeze(point);Object.freeze(points)}return Object.
+freeze(data2)}function playbackSchedule(audio){if(!key||!active||audio!==active||!running())return null;
+const data2=profile.data;if(data2.track!==key)return null;if(scheduleData!==data2||scheduleOverride!==
+keyOverride){const overridden=keyOverride!==null;let minimumRate=data2.points[0].r;for(let index=1;index<
+data2.points.length;index++)minimumRate=Math.min(minimumRate,data2.points[index].r);schedule=Object.
+freeze({isConstantFrom(time){const rate=evaluate(data2,time);const pitch=profilePitchAt(data2,time);
+return data2.points.every(point=>point.t<time||point.r===rate)&&(overridden||!data2.pitchPoints||data2.
+pitchPoints.every(point=>point.t<time||point.k===pitch))},rateAt(sourceSeconds){if(!Number.isFinite(
+sourceSeconds))throw new RangeError("Timeline source time must be finite");return evaluate(data2,sourceSeconds)},
+minimumRate});scheduleData=data2;scheduleOverride=keyOverride}return schedule}function load(){profile=
+null;keyOverride=null;try{const saved=JSON.parse(localStorage.getItem(storageKey(key))||"null");if(saved)
+profile={data:immutableProfile(validate(saved.data)),enabled:saved.enabled===true};if(profile?.data.
+track!==key)profile=null}catch{profile=null}}function observe(audio){if(!active||!audio.paused)active=
+audio;if(audio.dataset.tempoTimelineObserved)return;audio.dataset.tempoTimelineObserved="true";for(const name of[
+"playing","seeking","seeked","timeupdate","loadedmetadata","pause","ended"]){audio.addEventListener(
+name,()=>{if(!audio.paused||!active||active===audio)active=audio;tick()})}}function value(){if(!key||
+!active||!profile?.enabled||suspended)return null;return round2(evaluate(profile.data,active.currentTime||
+0))}function changeTrack(next){if(key===next)return;key=next;keyOverride=null;active=null;suspended=
+api.applySaved===false;load();syncControls();if(panel&&!panel.hidden)status(draft?.track===key?"":"P\
+laying track changed. This draft still belongs to the track shown above.")}function status(message){
+panel.querySelector(".editor-status").textContent=message}function el(selector){return panel.querySelector(
+selector)}function close(){if(!panel)return;panel.hidden=true;panel.hidePopover?.();wake();api.root.
+querySelector(".settings-button").focus()}function fit(){if(!panel||panel.hidden||api.inline)return;
+panel.style.width=`${Math.min(720,innerWidth-24)}px`;panel.style.left=`${Math.max(12,(innerWidth-Math.
+min(720,innerWidth-24))/2)}px`;panel.style.top="50%";panel.style.bottom="auto";panel.style.transform=
+"translateY(-50%)"}function create(){panel=document.createElement("section");panel.className="tempo-\
+editor";panel.setAttribute("role",api.inline?"region":"dialog");panel.setAttribute("aria-label","Tem\
+po timeline editor");if(!api.inline)panel.setAttribute("popover","manual");else panel.classList.add(
+"tempo-editor-inline");panel.hidden=true;panel.innerHTML=editorTemplate(Boolean(api.inline));api.root.
+append(panel);for(const button of panel.querySelectorAll("[data-lane]"))button.onclick=()=>{laneViews[lane]=
+[speedBottom,speedTop];lane=button.dataset.lane;if(lane==="pitch"&&!draft.pitchPoints)draft.pitchPoints=
+lanePoints().map(point=>({...point}));[speedBottom,speedTop]=laneViews[lane];speedMode="custom";selected=
+0;refresh()};el(".pitch-step").value=String(readPitchSettings().step);el(".pitch-step").onchange=()=>{
+const step=Number(el(".pitch-step").value);if(!Number.isFinite(step)||step<.001||step>12){el(".pitch\
+-step").value="0.5";status("Choose a step between 0.001 and 12 semitones.")}try{localStorage.setItem(
+pitchSettingsKey,JSON.stringify({...readPitchSettings(),step:Number(el(".pitch-step").value)}));api.
+pitchControlsChanged?.()}catch{status("Pitch step could not be saved.")}refresh()};el(".pitch-clear").
+onclick=()=>{delete draft.pitchPoints;lane="tempo";[speedBottom,speedTop]=laneViews.tempo;selected=0;
+changed()};el(".zoom-in").onclick=()=>zoomView(2);el(".zoom-out").onclick=()=>zoomView(.5);el(".zoom\
+-focus").onclick=()=>{const data2=imported||draft;const point=lanePoints(data2)[Math.min(selected,lanePoints(
+data2).length-1)];const fade=point.c==="instant"?0:point.d;const span=Math.min(data2.duration,Math.max(
+1,fade*1.5));zoom=data2.duration/span;viewStart=Math.max(0,Math.min(data2.duration-span,point.t-fade/
+2-span/2));draw(data2)};el(".zoom-fit").onclick=()=>{zoom=1;viewStart=0;const values=lanePoints(imported||
+draft).map(p=>p[laneField()]);speedBottom=Math.min(lane==="pitch"?-6:.75,...values);speedTop=Math.max(
+lane==="pitch"?6:1.5,...values);speedMode="custom";draw(imported||draft)};el(".speed-range").onchange=
+()=>{setSpeedRange(el(".speed-range").value);draw(imported||draft)};for(const name of["min","max"])el(
+".speed-"+name).onchange=()=>{const min=el(".speed-min").valueAsNumber;const max=el(".speed-max").valueAsNumber;
+const valid=Number.isFinite(min)&&Number.isFinite(max)&&min>=(lane==="pitch"?-12:.25)&&max<=(lane===
+"pitch"?12:4)&&min<max;for(const bound of["min","max"])el(".speed-"+bound).setAttribute("aria-invali\
+d",String(!valid));if(!valid){status((lane==="pitch"?"Use \u221212 to +12 semitones":"Use 0.25\xD7 to 4\
+\xD7")+", with the minimum below the maximum.");return}speedBottom=min;speedTop=max;speedMode="custo\
+m";laneViews[lane]=[min,max];status("");draw(imported||draft)};el(".editor-pan").oninput=()=>{viewStart=
+Number(el(".editor-pan").value);draw(imported||draft)};el(".editor-point-picker").onchange=()=>{selected=
+Number(el(".editor-point-picker").value);const p=lanePoints()[selected];const span=draft.duration/zoom;
+if(p.t<viewStart||p.t>viewStart+span)viewStart=Math.max(0,Math.min(draft.duration-span,p.t-span/2));
+revealSpeed(p[laneField()]);refresh()};el(".editor-close").onclick=close;el(".editor-close").hidden=
+Boolean(api.inline);panel.addEventListener("keydown",e=>{e.stopPropagation();if(e.key==="Escape"&&!api.
+inline){e.preventDefault();close()}});el(".editor-enabled").onchange=()=>{const enabled=el(".editor-\
+enabled").checked;try{const stored=JSON.parse(localStorage.getItem(storageKey(draft.track))||"null");
+if(!stored)throw new Error("Save this timeline first.");stored.data=validate(stored.data);localStorage.
+setItem(storageKey(draft.track),JSON.stringify({data:stored.data,enabled}));if(draft.track===key){load();
+suspended=false;if(!enabled)api.normal();api.refresh()}status(enabled?"Saved timeline enabled.":"Tim\
+eline disabled. Current track returns to 1\xD7.");syncControls()}catch(e){el(".editor-enabled").checked=
+!enabled;status(e.message)}};for(const name of["time","rate","duration","curve"])el(".point-"+name).
+onchange=updatePoint;el(".point-add").onclick=()=>addPoint(draft.track===key&&active?active.currentTime:
+draft.duration/2,lane==="pitch"?draft.keyShift??0:1);el(".point-remove").onclick=()=>{if(!selected)return;
+lanePoints().splice(selected,1);selected=Math.max(0,selected-1);normalize();changed()};el(".editor-r\
+evert").onclick=()=>{const track=draft.track;dirty=false;draft=null;open(track)};el(".editor-save").
+onclick=()=>{try{const data2=draftData();localStorage.setItem(storageKey(data2.track),JSON.stringify(
+{data:data2,enabled:true}));if(data2.track===key){load();suspended=false;api.refresh()}draft=data2;dirty=
+false;syncControls();status("Timeline saved.")}catch(e){status(`Not saved: ${e.message}`)}};el(".edi\
+tor-apply-once").onclick=()=>{if(draft.track!==key)return;if(running()){stop();status("Timeline stop\
+ped \xB7 1\xD7");return}try{profile={data:immutableProfile(draftData()),enabled:true,temporary:true};
+keyOverride=null;suspended=false;api.refresh();syncControls();status("Applied for this session.")}catch(error2){
+status(error2.message)}};el(".editor-link").onclick=event=>copyDraft("link",event.currentTarget);el(
+".editor-copy").onclick=event=>copyDraft("code",event.currentTarget);el(".editor-pitch").onchange=()=>{
+draft.pitch=el(".editor-pitch").value;changed()};el(".editor-key-shift").onchange=()=>{const value2=Number(
+el(".editor-key-shift").value);if(validKeyShift(value2)){draft.keyShift=value2;changed()}else refresh()};
+el(".editor-code").oninput=()=>{imported=null;el(".editor-import").disabled=true;el(".import-summary").
+textContent="";syncControls();draw()};el(".editor-preview").onclick=()=>{imported=null;syncControls();
+try{imported=decodeProfile(el(".editor-code").value);el(".import-summary").textContent=`${imported.track}\
+ \xB7 ${timeLabel(imported.duration)} \xB7 ${imported.points.length} points \xB7 ${(imported.pitch??
+api.defaultPitchMode)==="preserve"?"Preserve key":"Natural"}`;draw(imported);syncControls();status("\
+Preview only \xB7 playback unchanged.")}catch(e){syncControls();draw();status(`Cannot import: ${e.message}`)}};
+el(".editor-import").onclick=()=>{if(!imported)return;draft=structuredClone(imported);lane="tempo";[
+speedBottom,speedTop]=laneViews.tempo;imported=null;selected=0;dirty=true;el(".editor-import").disabled=
+true;el(".import-summary").textContent="";refresh();status("Draft loaded.")};syncFields=enhanceTempoFields(
+panel);const graph=el(".editor-graph");const coords=event=>{const bounds=graph.getBoundingClientRect();
+const x=(event.clientX-bounds.left)/bounds.width*graphWidth;const y=(event.clientY-bounds.top)/bounds.
+height*220;const time=viewStart+(x-44)/(graphWidth-56)*draft.duration/zoom;const rate=speedTop-(y-12)/
+176*(speedTop-speedBottom);return{t:Math.max(0,Math.min(draft.duration,time)),[laneField()]:Math.max(
+speedBottom,Math.min(speedTop,rate))}};graph.addEventListener("dblclick",e=>{if(!e.target.closest("[\
+data-index]")&&!imported){const p=coords(e);addPoint(p.t,p[laneField()])}});graph.addEventListener("\
+pointerdown",e=>{const target=e.target.closest("[data-index]");if(imported||e.button!==0||!target)return;
+selected=Number(target.dataset.index);dragging=target.dataset.kind;dragOffset=dragging==="ramp"?coords(
+e).t-(lanePoints()[selected].t-lanePoints()[selected].d):0;graph.setPointerCapture(e.pointerId);e.preventDefault();
+refresh()});graph.addEventListener("pointermove",e=>{if(!dragging)return;const p=coords(e),point=lanePoints()[selected];
+const previous=lanePoints()[selected-1];if(dragging==="ramp")point.d=round2(point.t-Math.max(previous.
+t,Math.min(point.t,p.t-dragOffset)));else{if(selected)point.t=round2(Math.max(previous.t+.01,Math.min(
+(lanePoints()[selected+1]?.t??draft.duration+.01)-.01,p.t)));const step=e.shiftKey?laneStep()/5:laneStep();
+point[laneField()]=round2(Math.max(lane==="pitch"?-12:.25,Math.min(lane==="pitch"?12:4,Math.round(p[laneField()]/
+step)*step)))}normalize();changed()});for(const name of["pointerup","pointercancel","lostpointercapt\
+ure"])graph.addEventListener(name,()=>{dragging=null});graph.addEventListener("keydown",e=>{const target=e.
+target.closest("[data-index]");if(!target||imported)return;selected=Number(target.dataset.index);if(target.
+dataset.kind==="ramp"&&adjustFadeStart(e))return;if(target.dataset.kind!=="ramp"&&["ArrowUp","ArrowD\
+own"].includes(e.key)){e.preventDefault();const point=lanePoints()[selected];const step=laneStep()/(e.
+shiftKey?5:1);point[laneField()]=round2(Math.max(lane==="pitch"?-12:.25,Math.min(lane==="pitch"?12:4,
+point[laneField()]+(e.key==="ArrowUp"?step:-step))));changed();el(".point.selected")?.focus({preventScroll:true});
+return}if(["Enter"," "].includes(e.key)){e.preventDefault();refresh();const advanced=panel.querySelector(
+".editor-advanced");if(advanced)advanced.open=true;el(target.dataset.kind==="ramp"?".point-duration":
+selected?".point-time":".point-rate").focus()}});window.addEventListener("resize",()=>{fit();if(panel&&
+!panel.hidden&&draft)draw(imported||draft)})}function normalize(){lanePoints().forEach((p,i)=>{p.d=i?
+round2(Math.min(p.d,p.t-lanePoints()[i-1].t)):0})}function adjustFadeStart(event){const point=lanePoints()[selected];
+const previous=lanePoints()[selected-1];const step=event.shiftKey?.1:1;const start=point.t-point.d;const positions={
+ArrowLeft:start-step,ArrowRight:start+step,Home:previous.t,End:point.t};if(!(event.key in positions))
+return false;event.preventDefault();point.d=round2(point.t-Math.max(previous.t,Math.min(point.t,positions[event.
+key])));const nextStart=point.t-point.d;const span=draft.duration/zoom;if(nextStart<viewStart||nextStart>
+viewStart+span)viewStart=Math.max(0,Math.min(draft.duration-span,nextStart-span/2));changed();el(".r\
+amp")?.focus({preventScroll:true});return true}function drawFadeStart(svg,point,previous,position){const labelX=position+
+100<=graphWidth-12?position+8:position-100;const labelLeft=Math.max(44,Math.min(graphWidth-104,labelX));
+const handle=svg("g",{class:"ramp","data-index":selected,"data-kind":"ramp",tabindex:0,role:"slider",
+"aria-label":"Fade start","aria-orientation":"horizontal","aria-valuemin":previous.t,"aria-valuemax":point.
+t,"aria-valuenow":round2(point.t-point.d),"aria-valuetext":`${preciseTime(round2(point.t-point.d))},\
+ ${point.d} seconds fade`});svg("title",{},"Drag to change fade duration",handle);svg("rect",{x:position-
+12,y:12,width:24,height:176,fill:"transparent"},null,handle);svg("line",{x1:position,x2:position,y1:12,
+y2:188,class:"ramp-line"},null,handle);svg("rect",{x:labelLeft,y:4,width:92,height:44,fill:"transpar\
+ent"},null,handle);svg("rect",{x:labelLeft,y:14,width:92,height:24,rx:3,class:"ramp-label"},null,handle);
+svg("path",{d:`M${labelLeft+8} 26h12m-9 -3-3 3 3 3m6 -6 3 3-3 3`,class:"ramp-arrow"},null,handle);svg(
+"text",{x:labelLeft+26,y:30},"Fade start",handle)}function changed(){dirty=true;imported=null;el(".e\
+ditor-import").disabled=true;el(".editor-output").hidden=true;refresh();status("Unsaved changes");if(api.
+inline)api.refresh()}function updatePoint(){const p=lanePoints()[selected];const t=Number(el(".point\
+-time").value),r=Number(el(".point-rate").value),d=Number(el(".point-duration").value);if([el(".poin\
+t-time"),el(".point-rate"),el(".point-duration")].some(n=>n.value==="")||![t,r,d].every(Number.isFinite)){
+status("Enter valid numbers for time, speed, and duration.");refresh();return}p.t=selected?round2(Math.
+max(lanePoints()[selected-1].t+.01,Math.min((lanePoints()[selected+1]?.t??draft.duration+.01)-.01,t))):
+0;p[laneField()]=round2(Math.max(lane==="pitch"?-12:.25,Math.min(lane==="pitch"?12:4,r)));revealSpeed(
+p[laneField()]);p.d=Math.max(0,d);p.c=el(".point-curve").value;normalize();changed()}function addPoint(time,speed){
+if(lanePoints().length>=200){status("Maximum 200 points per timeline.");return}const t=round2(Math.max(
+.01,Math.min(draft.duration,time)));if(lanePoints().some(p=>Math.abs(p.t-t)<.01)){status("A point al\
+ready exists here. Move it or choose another time.");return}const previous=[...lanePoints()].reverse().
+find(p=>p.t<t);const point={t,[laneField()]:round2(Math.max(lane==="pitch"?-12:.25,Math.min(lane==="\
+pitch"?12:4,Math.round(speed/laneStep())*laneStep()))),d:Math.min(4,t-previous.t),c:"linear"};lanePoints().
+push(point);lanePoints().sort((a,b)=>a.t-b.t);selected=lanePoints().indexOf(point);normalize();changed()}
+function draw(data2=draft){const graph=el(".editor-graph");graphWidth=Math.max(260,graph.clientWidth);
+graph.setAttribute("viewBox",`0 0 ${graphWidth} 220`);const plotWidth=graphWidth-56;zoom=Math.max(1,
+Math.min(data2.duration,zoom));const span=data2.duration/zoom;viewStart=Math.max(0,Math.min(data2.duration-
+span,viewStart));el(".zoom-label").textContent=`Time zoom ${round2(zoom)}\xD7`;el(".zoom-in").disabled=
+zoom>=data2.duration;el(".zoom-out").disabled=zoom<=1;el(".speed-range").value=speedMode;for(const[name,
+value2]of[["min",speedBottom],["max",speedTop]]){el(".speed-"+name).value=String(value2);el(".speed-"+
+name).setAttribute("aria-invalid","false")}const pan=el(".editor-pan");const visibleRange=`${preciseTime(
+round2(viewStart))}\u2013${preciseTime(round2(viewStart+span))}`;pan.max=String(Math.max(0,data2.duration-
+span));pan.value=String(viewStart);syncTempoRange(pan);pan.disabled=zoom===1;pan.setAttribute("aria-\
+valuetext",`Viewing ${visibleRange} of ${timeLabel(data2.duration)}`);el(".timeline-navigation").hidden=
+zoom===1;el(".view-window").textContent=visibleRange;el(".timeline-end").textContent=timeLabel(data2.
+duration);const chosen=lanePoints(data2)[Math.min(selected,lanePoints(data2).length-1)];el(".zoom-fo\
+cus").hidden=!chosen.d||chosen.c==="instant";el(".point-readout").textContent=`${chosen[laneField()]}${laneUnit()}\
+ \xB7 ${chosen.d?chosen.d+"s fade":"Instant"}`;const picker=el(".editor-point-picker");picker.replaceChildren(
+...lanePoints(data2).map((point,index)=>{const option=document.createElement("option");option.value=
+index;option.textContent=`${index+1} \xB7 ${preciseTime(point.t)} \xB7 ${point[laneField()]}${laneUnit()}`;
+return option}));picker.value=String(Math.min(selected,lanePoints(data2).length-1));picker.disabled=
+Boolean(imported);syncFields();graph.replaceChildren();const svg=(name,attrs,label,parent=graph)=>{const node=document.
+createElementNS("http://www.w3.org/2000/svg",name);for(const[k,v]of Object.entries(attrs))node.setAttribute(
+k,String(v));if(label)node.textContent=label;parent.append(node);return node};const x=t=>44+(t-viewStart)/
+span*plotWidth,y=r=>12+(speedTop-r)/(speedTop-speedBottom)*176;const defs=svg("defs",{});const clip=document.
+createElementNS("http://www.w3.org/2000/svg","clipPath");clip.id="tempo-plot-clip";const rect=document.
+createElementNS("http://www.w3.org/2000/svg","rect");for(const[k,v]of Object.entries({x:44,y:12,width:plotWidth,
+height:176}))rect.setAttribute(k,v);clip.append(rect);defs.append(clip);const step=speedMode==="cust\
+om"?[.025,.05,.1,.25,.5,1,2,3,6].find(value2=>value2>=(speedTop-speedBottom)/8):speedMode==="fine"?.1:
+.05;const first=Math.ceil(speedBottom/step-1e-9);const last2=Math.floor(speedTop/step+1e-9);const ticks=[
+"fine","close","custom"].includes(speedMode)?Array.from({length:last2-first+1},(_,i)=>round2((first+
+i)*step)):speedTop<=2?Array.from({length:speedTop*4},(_,i)=>(i+1)/4):[.5,1,1.5,2,2.5,3,3.5,4];if(!ticks.
+includes(speedBottom))ticks.unshift(speedBottom);if(speedMode==="custom"&&!ticks.includes(speedTop))
+ticks.push(speedTop);for(const r of ticks){svg("line",{x1:44,x2:graphWidth-12,y1:y(r),y2:y(r),class:"\
+grid",...r===(lane==="pitch"?0:1)?{style:"stroke:var(--tempo-fg);stroke-width:1;stroke-dasharray:3 4"}:
+{}});if(r===speedBottom||y(speedBottom)-y(r)>=14&&(r===speedTop||y(r)-y(speedTop)>=14))svg("text",{x:2,
+y:y(r)+4},`${r}${laneUnit()}`)}for(let i=0;i<=8;i++){const time=viewStart+span*i/8;svg("line",{x1:x(
+time),x2:x(time),y1:12,y2:188,class:"grid"});if(i%(graphWidth<480?4:2))continue;svg("text",{x:x(time),
+y:212,"text-anchor":i===8?"end":"start"},span<10?preciseTime(round2(time)):timeLabel(time))}let path=`\
+M${x(0)},${y(lanePoints(data2)[0][laneField()])}`;let previous=lanePoints(data2)[0];for(const point of lanePoints(
+data2).slice(1)){const start=point.c==="instant"?point.t:point.t-point.d;path+=` L${x(start)},${y(previous[laneField()])}`;
+for(let i=1;i<=24;i++){const t=start+(point.t-start)*i/24;path+=` L${x(t)},${y(evaluatePoints(lanePoints(
+data2),t,laneField()))}`}previous=point}path+=` L${x(data2.duration)},${y(previous[laneField()])}`;svg(
+"path",{d:path,class:"curve","clip-path":"url(#tempo-plot-clip)"});lanePoints(data2).forEach((p,i)=>{
+if(i===selected&&i&&p.d&&p.c!=="instant")svg("rect",{x:x(p.t-p.d),y:12,width:x(p.t)-x(p.t-p.d),height:176,
+fill:"var(--tempo-accent)",opacity:.08,"clip-path":"url(#tempo-plot-clip)","pointer-events":"none"});
+if(i===selected&&i&&!imported&&p.c!=="instant"&&p.t-p.d>=viewStart&&p.t-p.d<=viewStart+span){drawFadeStart(
+svg,p,lanePoints(data2)[i-1],x(p.t-p.d))}if(p.t<viewStart||p.t>viewStart+span||p[laneField()]>speedTop||
+p[laneField()]<speedBottom)return;if(!imported)svg("ellipse",{cx:x(p.t),cy:y(p[laneField()]),rx:12,ry:12,
+fill:"transparent","data-index":i,"data-kind":"point","aria-hidden":"true",class:"point-hit",style:"\
+cursor:grab"});const dot=svg("circle",{cx:x(p.t),cy:y(p[laneField()]),r:7,class:`point ${i===selected?
+"selected":""}`,"data-index":i,"data-kind":"point",tabindex:imported?-1:0,role:"button","aria-label":`\
+Point ${i+1}: ${p.t} seconds, ${p[laneField()]}${laneUnit()}. Enter to edit.`});const title=document.
+createElementNS("http://www.w3.org/2000/svg","title");title.textContent=`${preciseTime(p.t)} \xB7 ${p[laneField()]}${laneUnit()}`;
+dot.append(title)});svg("line",{class:"playhead",x1:44,x2:44,y1:12,y2:188,stroke:"var(--tempo-fg)","\
+stroke-dasharray":"3 3","pointer-events":"none"})}function refresh(){const p=lanePoints()[selected];
+for(const button of panel.querySelectorAll("[data-lane]"))button.setAttribute("aria-pressed",String(
+button.dataset.lane===lane));el(".pitch-options").hidden=lane!=="pitch";el(".speed-range").closest("\
+label").hidden=lane==="pitch";el(".target-label").textContent=lane==="pitch"?"Target pitch (semitone\
+s)":"Target speed";el(".editor-point-picker").setAttribute("aria-label","Selected "+lane+" point");el(
+".editor-graph").setAttribute("aria-label",lane+" over original song time");for(const selector of[".\
+point-rate",".speed-min",".speed-max"]){el(selector).min=lane==="pitch"?"-12":"0.25";el(selector).max=
+lane==="pitch"?"12":"4"}el(".point-rate").step=String(laneStep());for(const unit of panel.querySelectorAll(
+".axis-unit"))unit.textContent=laneUnit();el(".editor-key-shift").disabled=Boolean(draft.pitchPoints);
+el(".editor-track").textContent=draft.track;el(".editor-track").href="https://soundcloud.com"+draft.
+track;el(".point-time").value=p.t;el(".point-time").disabled=selected===0;el(".point-rate").value=p[laneField()];
+el(".point-duration").value=p.d;el(".point-duration").disabled=selected===0||p.c==="instant";el(".po\
+int-curve").value=p.c;el(".point-curve").disabled=selected===0;el(".point-remove").disabled=selected===
+0;el(".editor-pitch").value=draft.pitch??api.defaultPitchMode;el(".editor-key-shift").value=draft.keyShift??
+0;syncControls();draw()}function open(requested){const target=requested||(dirty&&draft?draft.track:key);
+if(requested&&dirty&&draft?.track!==requested){api.message("An unsaved timeline is open. Finish or d\
+iscard it before editing another track.");return}if(!panel)create();imported=null;el(".editor-import").
+disabled=true;el(".import-summary").textContent="";if(!draft||!dirty){let stored=null;try{stored=JSON.
+parse(localStorage.getItem(storageKey(target))||"null");if(stored)stored.data=validate(stored.data);
+if(stored?.data.track!==target)stored=null}catch{stored=null}const duration=playbackDuration();if(!target){
+api.message("Play a track before opening its tempo editor.");return}if(!stored&&(target!==key||duration<=
+0)){api.message("Track duration is not available yet. Load a track and retry.");return}draft=stored?.
+data||{v:1,track:target,duration,points:[{t:0,r:api.rate,d:0,c:"instant"}],pitch:api.pitchMode,keyShift:api.
+keyShift??0};if(target===key&&keyOverride!==null){draft.keyShift=keyOverride;delete draft.pitchPoints}
+lane="tempo";[speedBottom,speedTop]=laneViews.tempo;selected=0}api.closeSettings?.();panel.hidden=false;
+if(!api.inline)panel.showPopover?.();fit();refresh();status(dirty?"Unsaved draft restored.":"Double-\
+click the graph to add a point.");if(!api.inline)el(".editor-close").focus();wake()}function openPendingLink(){
+if(!pendingLink||!api.ready)return;const link=pendingLink;pendingLink=null;try{const data2=decodeProfile(
+link);if(dirty){api.message("Tempo link received. Your unsaved draft was kept; paste the link in the\
+ editor to preview it.");return}draft=data2;selected=0;dirty=true;open();status("")}catch(error2){api.
+message("Cannot open tempo link: "+error2.message)}}function updatePlayhead(){if(document.hidden||!panel||
+panel.hidden||!draft||imported)return;const line=el(".playhead");if(!line)return;const visible=active&&
+draft.track===key&&active.currentTime>=viewStart&&active.currentTime<=viewStart+draft.duration/zoom;
+line.style.display=visible?"":"none";if(!visible)return;const x=44+(Math.min(draft.duration,active.currentTime)-
+viewStart)/(draft.duration/zoom)*(graphWidth-56);line.setAttribute("x1",x);line.setAttribute("x2",x)}
+function tick(){const nextRate=value();const nextPitch=effectivePitch();const pitchChanged=nextPitch!==
+lastPitch;lastPitch=nextPitch;if(nextRate!==null&&nextRate!==api.rate||pitchChanged)api.refresh();updatePlayhead();
+wake()}function wake(){openPendingLink();const automate=running()&&(profile.data.points.length>1||keyOverride===
+null&&profile.data.pitchPoints?.length>1);const animate=!document.hidden&&panel&&!panel.hidden&&draft&&
+!imported;if(!active||active.paused||active.ended||!automate&&!animate){clearTimeout(timer);timer=0;
+return}if(timer)return;timer=setTimeout(()=>{timer=0;tick()},50)}document.addEventListener("visibili\
+tychange",wake);function refreshSaved(track){if(track===key&&!profile?.temporary){const wasRunning=running();
+load();suspended=api.applySaved===false;if(wasRunning&&!profile?.enabled)api.normal();else api.refresh()}
+syncControls();wake()}window.addEventListener("storage",e=>{if(e.key===null||e.key===storageKey(key)){
+refreshSaved(key)}});function effectivePitch(){return keyOverride??(running()?profilePitchAt(profile.
+data,active?.currentTime||0):null)}return{wake,pitchMode,shareLink,keyShift:effectivePitch,setKeyShift(value2){
+if(!validKeyShift(value2))throw new RangeError("Invalid key shift");keyOverride=value2;if(draft?.track===
+key){draft.keyShift=value2;delete draft.pitchPoints;selected=0;dirty=true;if(panel&&!panel.hidden){refresh();
+status("Pitch changed. Save to keep it for this track.")}}},observe,value,playbackSchedule,changeTrack,
+open,validate,draftProfile:()=>draft?draftData():null,draftPlayback(time){return draft?{rate:evaluate(
+draft,time),pitch:draft.pitch??api.defaultPitchMode,keyShift:profilePitchAt(draft,time)}:null},loadDraft(data2){
+draft=validate(data2);selected=0;lane="tempo";[speedBottom,speedTop]=laneViews.tempo;dirty=true;open()},
+refreshSaved,suspend(){suspended=true;syncControls();wake()},contains(target){return panel?.contains(
+target)}}}function createTempoStore(api){const speedPrefix="soundcloud.tempo.track.";const timelinePrefix="sou\
+ndcloud.tempo.timeline.";const limit=2*1024*1024;const preferences={randomSaved:false,applySaved:true,
+controlStyle:"slider",tempoIncrement:defaultTempoIncrement,showKey:true,crossfade:false,crossfadeSeconds:5,
+keyShift:0,pitchControls:defaultPitchSettings,copyLinks:false,preserveKey:false,useWasm:true,outputDb:-6};
+const storage=()=>api.storage();const round2=value=>Math.round(value*1e3)/1e3;const keyFor=(prefix,track)=>prefix+
+encodeURIComponent(track);function validTrack(track){return typeof track==="string"&&track.length<=800&&
+!/[\u0000-\u0020\u007f<>"\\]/.test(track)&&api.parseTrack(track)===track}function validateSpeed(value){
+const entry=typeof value==="number"?{rate:value,enabled:true}:value;if(!entry||!Number.isFinite(entry.
+rate)||entry.rate<.025||entry.rate>4||typeof entry.enabled!=="boolean")throw new Error("Saved speeds\
+ must be between 0.025 and 4\xD7.");return{rate:round2(Math.max(.25,entry.rate)),enabled:entry.enabled}}
+function validateTimeline(value,track){if(!value||typeof value.enabled!=="boolean")throw new Error("\
+Each timeline needs an on or off state.");const data2=api.validateTimeline(value.data);if(data2.track!==
+track)throw new Error("A timeline belongs to a different track.");return{data:data2,enabled:value.enabled}}
+function read2(prefix,track,validate){const raw=storage().getItem(keyFor(prefix,track));if(raw===null)
+return null;try{return validate(JSON.parse(raw),track)}catch{return null}}function speed(track){return read2(
+speedPrefix,track,validateSpeed)}function timeline(track){return read2(timelinePrefix,track,validateTimeline)}
+function tracks(){const paths=new Set;const source2=storage();for(let index=0;index<source2.length;index++){
+const key=source2.key(index);const prefix=[speedPrefix,timelinePrefix].find(item=>key?.startsWith(item));
+if(!prefix)continue;try{const track=decodeURIComponent(key.slice(prefix.length));if(validTrack(track)&&
+keyFor(prefix,track)===key)paths.add(track)}catch{}}return[...paths].sort((a,b)=>a.localeCompare(b)).
+flatMap(track=>{const savedSpeed=speed(track);const savedTimeline=timeline(track);return savedSpeed||
+savedTimeline?[{track,...savedSpeed&&{speed:savedSpeed},...savedTimeline&&{timeline:savedTimeline}}]:
+[]})}function set(track,type,value){if(!validTrack(track)||!["speed","timeline"].includes(type))throw new Error(
+"Choose a valid saved track.");const key=keyFor(type==="speed"?speedPrefix:timelinePrefix,track);if(value===
+null){storage().removeItem(key);return}const entry=type==="speed"?validateSpeed(value):validateTimeline(
+value,track);storage().setItem(key,JSON.stringify(type==="speed"&&entry.enabled?entry.rate:entry))}function readPreferences(){
+const result={...preferences};for(const[name,fallback]of Object.entries(preferences)){const raw=storage().
+getItem("soundcloud.tempo."+name);if(raw===null)continue;try{const value=JSON.parse(raw);result[name]=
+validPreference(name,value)?value:fallback}catch{}}return result}function validPreference(name,value){
+if(name==="crossfadeSeconds")return Number.isInteger(value)&&value>=1&&value<=10;if(name==="controlS\
+tyle")return["slider","dial","vertical"].includes(value);if(name==="pitchControls")return validPitchSettings(
+value);if(name==="tempoIncrement")return validTempoIncrement(value);if(name==="keyShift")return Number.
+isFinite(value)&&Math.abs(value)<=12;return name==="outputDb"?validOutputDb(value):Object.hasOwn(preferences,
+name)&&typeof value==="boolean"}function validateBackup(text){if(typeof text!=="string"||new TextEncoder().
+encode(text).length>limit)throw new Error("Choose a backup smaller than 2 MB.");let value;try{value=
+JSON.parse(text)}catch{throw new Error("This file is not a valid JSON backup.")}if(value?.format!=="\
+soundcloud-tempo-control"||value.version!==1||!Array.isArray(value.tracks)||value.tracks.length>1e3||
+!value.preferences||typeof value.preferences!=="object"||Array.isArray(value.preferences))throw new Error(
+"Choose a Track Control backup (version 1, up to 1,000 tracks).");const seen=new Set;let pointCount=0;
+const entries=value.tracks.map(entry=>{if(!entry||!validTrack(entry.track)||seen.has(entry.track)||!entry.
+speed&&!entry.timeline)throw new Error("The backup contains an invalid or duplicate track.");seen.add(
+entry.track);const item={track:entry.track};if(entry.speed!==void 0)item.speed=validateSpeed(entry.speed);
+if(entry.timeline!==void 0){item.timeline=validateTimeline(entry.timeline,entry.track);pointCount+=item.
+timeline.data.points.length+(item.timeline.data.pitchPoints?.length??0)}if(pointCount>2e4)throw new Error(
+"Use a backup with at most 20,000 timeline points.");return item});const settings={};for(const[name,
+preference]of Object.entries(value.preferences)){if(!validPreference(name,preference))throw new Error(
+"The backup contains an invalid preference.");settings[name]=preference}return{format:"soundcloud-te\
+mpo-control",version:1,tracks:entries,preferences:settings}}function exportBackup(){const text=JSON.
+stringify({format:"soundcloud-tempo-control",version:1,tracks:tracks(),preferences:readPreferences()},
+null,2);validateBackup(text);return text}function prepare(text){const data2=validateBackup(text);const changes=[];
+for(const entry of data2.tracks){if(entry.speed)changes.push([keyFor(speedPrefix,entry.track),JSON.stringify(
+entry.speed.enabled?entry.speed.rate:entry.speed)]);if(entry.timeline)changes.push([keyFor(timelinePrefix,
+entry.track),JSON.stringify(entry.timeline)])}for(const[name,value]of Object.entries(data2.preferences))
+changes.push(["soundcloud.tempo."+name,JSON.stringify(value)]);const before=new Map(changes.map(([key])=>[
+key,storage().getItem(key)]));return{data:data2,changes,before}}function commit(preview){const source2=storage();
+for(const[key,value]of preview.before){if(source2.getItem(key)!==value)throw new Error("Saved settin\
+gs changed. Preview this file again before importing.")}const written=[];try{for(const[key,value]of preview.
+changes){source2.setItem(key,value);written.push(key)}}catch{let restored=true;for(const key of written.
+reverse()){try{const old=preview.before.get(key);if(old===null)source2.removeItem(key);else source2.
+setItem(key,old)}catch{restored=false}}throw new Error(restored?"Import failed. Your previous settin\
+gs were kept. Free some site storage and retry.":"Import stopped, but some settings could not be res\
+tored. Keep your backup and retry after allowing site storage.")}return preview.changes.map(([key])=>key)}
+return{limit,speed,timeline,tracks,set,exportBackup,validateBackup,prepare,commit}}function createTempoLibrary(api){
+const{store,root}=api;const get=selector=>root.querySelector(selector);let preview=null;let fileRequest=0;
+let shown=100;let previousQuery="";let removed=null;const status=message=>{get(".settings-status").textContent=
+message};function button(text,label,action){const element=document.createElement("button");element.type=
+"button";element.textContent=text;element.setAttribute("aria-label",label);element.addEventListener(
+"click",action);return element}function mutate(track,type,value,message,redraw=true){try{store.set(track,
+type,value);api.changed(track,type);if(redraw)render();status(message);return true}catch{status("Cou\
+ld not update this saved item. Allow site storage or free space and retry.");return false}}function readLatest(track,type){
+try{const value=store[type](track);if(!value){render();status("This saved item was removed in anothe\
+r tab.")}return value}catch{status("Could not read this saved item. Allow site storage and reopen se\
+ttings.");return null}}function removeSetting(track,type,name){const value=readLatest(track,type);if(!value||
+!mutate(track,type,null,`${name} removed.`))return;removed={track,type,value};get(".saved-undo").hidden=
+false;get("#saved-filter").focus()}function appendSetting(row,entry,type){const saved=entry[type];if(!saved)
+return;const line=document.createElement("div");line.className="saved-setting";line.dataset.type=type;
+const label=document.createElement("label");label.className="saved-switch";const enabled=document.createElement(
+"input");enabled.type="checkbox";enabled.checked=saved.enabled;enabled.setAttribute("aria-label",`Us\
+e saved ${type} for ${entry.track}`);const name=type==="speed"?"Speed":"Timeline";label.append(enabled);
+enabled.addEventListener("change",()=>{const previous=!enabled.checked;const latest=readLatest(entry.
+track,type);if(!latest||!mutate(entry.track,type,{...latest,enabled:enabled.checked},`${name} ${enabled.
+checked?"enabled":"disabled"}.${type==="speed"?" Applies next visit.":""}`,false)){enabled.checked=latest?.
+enabled??previous;return}});line.append(label);if(type==="speed"){const input=document.createElement(
+"input");input.type="number";input.min="0.025";input.max="4";input.step="0.001";input.value=String(saved.
+rate);input.setAttribute("aria-label",`Saved speed for ${entry.track}`);const save=()=>{if(!input.value.
+trim()||!input.checkValidity()){input.reportValidity();return}const latest=readLatest(entry.track,type);
+if(!latest){render();return}if(latest.rate===Number(input.value))return;if(!mutate(entry.track,type,
+{...latest,rate:Number(input.value)},"Saved speed updated. Applies next visit.",false))input.value=String(
+latest.rate)};input.addEventListener("change",save);input.addEventListener("keydown",event=>{if(event.
+key!=="Enter")return;event.preventDefault();save()});const value=document.createElement("span");value.
+className="saved-value";const unit=document.createElement("span");unit.textContent="\xD7";unit.setAttribute(
+"aria-hidden","true");value.append(input,unit);line.append(value)}else{line.append(button("Timeline",
+`Edit timeline for ${entry.track}`,()=>api.edit(entry.track)))}const remove=button("",`Remove saved ${type}\
+ for ${entry.track}`,()=>{removeSetting(entry.track,type,name)});remove.className="saved-remove";remove.
+title=`Remove ${type}`;remove.innerHTML='<svg viewBox="0 0 12 12" aria-hidden="true"><path d="m3 3 6\
+ 6M9 3 3 9" /></svg>';line.append(remove);row.append(line)}function render(){const query=get("#saved\
+-filter").value.trim().toLowerCase();if(query!==previousQuery)shown=100;previousQuery=query;let entries;
+try{entries=store.tracks().filter(entry=>entry.track.toLowerCase().includes(query))}catch{status("Sa\
+ved tracks are unavailable. Allow site storage and reopen settings.");return}const list=get(".saved-\
+list");list.replaceChildren();get(".saved-count").textContent=entries.length?`${entries.length} save\
+d ${entries.length===1?"track":"tracks"}`:query?"No saved tracks match.":"No saved tracks yet.";for(const entry of entries.
+slice(0,shown)){const row=document.createElement("div");row.className="saved-row";row.dataset.track=
+entry.track;const link=document.createElement("a");link.href="https://soundcloud.com"+entry.track;link.
+target="_blank";link.rel="noopener noreferrer";link.textContent=entry.track.slice(1).replaceAll("/",
+" / ");link.title=link.textContent;row.append(link);appendSetting(row,entry,"speed");appendSetting(row,
+entry,"timeline");list.append(row)}get(".saved-more").hidden=entries.length<=shown}function clearPreview(){
+fileRequest++;preview=null;get(".backup-preview").hidden=true;get(".backup-file").value=""}function showPreview(value){
+preview=value;const{data:data2}=value;const speeds=data2.tracks.filter(entry=>entry.speed).length;const timelines=data2.
+tracks.filter(entry=>entry.timeline).length;const conflicts=value.changes.filter(([key])=>value.before.
+get(key)!==null).length;get(".backup-summary").textContent=`${speeds} ${speeds===1?"speed":"speeds"}\
+, ${timelines} ${timelines===1?"timeline":"timelines"}. ${conflicts?`Replaces ${conflicts} existing \
+settings.`:"No existing settings replaced."}`;get(".backup-preferences").textContent=Object.keys(data2.
+preferences).length?`Includes preferences${data2.preferences.outputDb===void 0?"":` and ${data2.preferences.
+outputDb} dB output`}. Audio settings apply now.`:"Other saved tracks and preferences stay unchanged\
+.";get(".backup-preview").hidden=false;get(".backup-confirm").focus();status("")}async function readBackup(){
+const file=get(".backup-file").files[0];clearPreview();if(!file)return;const request=fileRequest;if(file.
+size>store.limit){status("Choose a backup smaller than 2 MB.");return}try{const text=await file.text();
+if(request!==fileRequest)return;showPreview(store.prepare(text))}catch(error2){if(request===fileRequest)
+status(error2.message||"Could not read this backup. Choose the file again.")}}get(".backup-file").addEventListener(
+"change",readBackup);get(".backup-import").addEventListener("click",()=>get(".backup-file").click());
+get(".backup-cancel").addEventListener("click",()=>{clearPreview();status("Import cancelled.");get("\
+.backup-import").focus()});get(".backup-confirm").addEventListener("click",()=>{if(!preview)return;try{
+const keys=store.commit(preview);api.imported(keys);removed=null;get(".saved-undo").hidden=true;clearPreview();
+render();status("Backup imported.");get(".backup-import").focus()}catch(error2){status(error2.message)}});
+get(".backup-export").addEventListener("click",()=>{let url;try{url=URL.createObjectURL(new Blob([store.
+exportBackup()],{type:"application/json"}));const link=document.createElement("a");link.href=url;link.
+download=`tempo-control-backup-${new Date().toISOString().slice(0,10)}.json`;link.click();status("Ba\
+ckup downloaded.")}catch(error2){status(error2.message||"Could not export saved tracks. Allow site s\
+torage and retry.")}finally{if(url)setTimeout(()=>URL.revokeObjectURL(url),1e3)}});get(".saved-more").
+addEventListener("click",()=>{shown+=100;render()});get(".saved-undo").addEventListener("click",()=>{
+if(!removed)return;const{track,type,value}=removed;try{if(store[type](track)){status("This track alr\
+eady has a new saved setting. It was kept.");return}if(!mutate(track,type,value,"Saved item restored\
+."))return;removed=null;get(".saved-undo").hidden=true;get("#saved-filter").focus()}catch{status("Co\
+uld not restore the saved item. Allow site storage and retry.")}});return{render,clearPreview}}function createTempoEmbeddedPages(api){const frames=new Map;const headerSelector='section[aria-label\
+="Track header"]';const badgeSelector=".soundcloud-tempo-page-indicator";const relevantSelector=`a[h\
+ref], img, ${headerSelector}`;function trackFromUrl(value){const url=new URL(value);if(url.origin!==
+location.origin||url.protocol!=="https:"||url.username||url.password||!/^\/n\/[^/]+\/[^/]+$/.test(url.
+pathname))return"";return api.parseTrack(url.pathname.slice(2))}function inspect(frame){if(!frame.isConnected||
+frame.hasAttribute("sandbox"))return null;try{if(!trackFromUrl(frame.src))return null;const doc=frame.
+contentDocument;const view=doc?.defaultView;if(!view||!doc.documentElement)return null;const key=trackFromUrl(
+view.location.href);return key?{doc,view,key}:null}catch{return null}}function current(entry){const value=inspect(
+entry.frame);return value?.doc===entry.doc&&value.key===entry.key}function restoreLink(entry){const link=entry.
+contextLink;if(!link)return;if(link.anchor.getAttribute("href")===link.shared)link.anchor.setAttribute(
+"href",link.original);entry.contextLink=null}function cancelIntent(entry){entry.copyUntil=0;restoreLink(
+entry)}function shareText(entry,text){const copyUntil=entry.copyUntil;entry.copyUntil=0;if(!current(
+entry))return text;const shared=api.shareLink(text);if(shared!==text)return shared;if(!api.copyLinks()||
+!copyUntil||copyUntil<performance.now()||entry.key!==api.currentTrack()||typeof text!=="string"||text.
+length>8e3)return text;try{const url=new URL(text);if(url.origin!=="https://on.soundcloud.com"||url.
+username||url.password||url.hash||!/^\/[A-Za-z0-9_-]+\/?$/.test(url.pathname))return text;return api.
+shareLink(`https://soundcloud.com${entry.key}`)}catch{return text}}function listen(entry,target,type,callback,capture2=false){
+target.addEventListener(type,callback,capture2);entry.cleanup.push(()=>target.removeEventListener(type,
+callback,capture2))}function installCopy(entry){const{doc,view}=entry;listen(entry,doc,"pointerdown",
+()=>cancelIntent(entry),true);listen(entry,doc,"keydown",()=>cancelIntent(entry),true);listen(entry,
+doc,"click",event=>{entry.copyUntil=0;if(!event.isTrusted||!api.copyLinks()||!current(entry))return;
+const button=event.composedPath().find(node=>node instanceof view.Element&&node.matches('button[aria\
+-label="Copy link"]'));if(button?.closest(headerSelector)&&entry.key===api.currentTrack())entry.copyUntil=
+performance.now()+5e3},true);listen(entry,doc,"contextmenu",event=>{cancelIntent(entry);if(!api.copyLinks()||
+!current(entry))return;const anchor=event.composedPath().find(node=>node instanceof view.HTMLAnchorElement);
+const original=anchor?.getAttribute("href");if(original===void 0||original===null)return;const shared=api.
+shareLink(anchor.href);if(shared===anchor.href)return;entry.contextLink={anchor,original,shared};anchor.
+setAttribute("href",shared)},true);listen(entry,view,"copy",event=>{if(!api.copyLinks()||!event.clipboardData||
+!current(entry))return;const target=doc.activeElement;const selected=target instanceof view.HTMLInputElement||
+target instanceof view.HTMLTextAreaElement?target.value.slice(target.selectionStart??0,target.selectionEnd??
+0):String(view.getSelection());const original=event.clipboardData.getData("text/plain")||selected;const shared=shareText(
+entry,original);if(shared===original)return;event.clipboardData.setData("text/plain",shared);event.clipboardData.
+clearData("text/html");event.preventDefault()});try{const clipboard=view.navigator.clipboard;if(!clipboard?.
+writeText)return;const original=clipboard.writeText;const writeText=text=>original.call(clipboard,shareText(
+entry,text));clipboard.writeText=writeText;entry.cleanup.push(()=>{if(clipboard.writeText===writeText)
+clipboard.writeText=original})}catch{}}function relevantMutation(mutation){if(mutation.type==="attri\
+butes")return true;if(mutation.target.nodeType===1&&mutation.target.closest(headerSelector))return[...mutation.
+addedNodes,...mutation.removedNodes].some(node=>node.nodeType!==1||!node.matches(badgeSelector));return[
+...mutation.addedNodes,...mutation.removedNodes].some(node=>node.nodeType===1&&!node.matches(badgeSelector)&&
+(node.matches(relevantSelector)||node.querySelector(relevantSelector)))}function detach(entry){cancelIntent(
+entry);entry.observer.disconnect();for(const cleanup of entry.cleanup)cleanup();entry.style.remove();
+entry.doc.querySelectorAll(badgeSelector).forEach(badge=>badge.remove());entry.doc.querySelectorAll(
+".soundcloud-tempo-page-position").forEach(artwork=>artwork.classList.remove("soundcloud-tempo-page-\
+position"))}function attach(frame,value){const entry={frame,...value,cleanup:[],copyUntil:0,contextLink:null};
+const style=entry.doc.createElement("style");style.dataset.soundcloudTempoEmbedded="";style.textContent=
+`
+      .soundcloud-tempo-page-position {
+        position: relative;
+      }
+    `;(entry.doc.head||entry.doc.documentElement).append(style);entry.style=style;const releaseAppearance=api.
+appearance?.(entry.doc);if(releaseAppearance)entry.cleanup.push(releaseAppearance);entry.observer=new MutationObserver(
+mutations=>{if(!current(entry))return sync();if(mutations.some(relevantMutation))api.changed()});entry.
+observer.observe(entry.doc,{childList:true,subtree:true,attributes:true,attributeFilter:["href","src",
+"srcset","alt","sizes","aria-label"]});installCopy(entry);listen(entry,entry.doc,"load",event=>{if(event.
+target instanceof entry.view.HTMLImageElement)api.changed()},true);listen(entry,entry.view,"hashchan\
+ge",sync);listen(entry,entry.view,"popstate",sync);return entry}function sync(){let changed=false;for(const[
+frame,state]of frames){const value=inspect(frame);if(state.entry&&(state.entry.doc!==value?.doc||state.
+entry.key!==value?.key)){detach(state.entry);state.entry=null;changed=true}if(!frame.isConnected){frame.
+removeEventListener("load",sync);frames.delete(frame);continue}if(value&&!state.entry){state.entry=attach(
+frame,value);changed=true}}if(changed)api.changed()}function discover(){for(const frame of document.
+querySelectorAll("iframe")){if(frames.has(frame))continue;frames.set(frame,{entry:null});frame.addEventListener(
+"load",sync)}sync()}new MutationObserver(mutations=>{const changed=mutations.some(mutation=>{if(mutation.
+type==="attributes")return mutation.target.tagName==="IFRAME";return[...mutation.addedNodes,...mutation.
+removedNodes].some(node=>node.nodeType===1&&(node.tagName==="IFRAME"||node.querySelector("iframe")))});
+if(changed)discover()}).observe(document,{childList:true,subtree:true,attributes:true,attributeFilter:[
+"src","sandbox"]});const cancelAll=()=>{for(const{entry}of frames.values())if(entry)cancelIntent(entry)};
+document.addEventListener("pointerdown",cancelAll,true);document.addEventListener("keydown",cancelAll,
+true);window.addEventListener("pagehide",cancelAll);discover();return{documents:()=>[...frames.values()].
+flatMap(({entry})=>entry&&current(entry)?[entry.doc]:[]),key:doc=>{for(const{entry}of frames.values())
+if(entry?.doc===doc&&current(entry))return entry.key;return""}}}var releaseNoticeChecked=false;function showReleaseNotice(ui,VERSION,WEBSITE){if(releaseNoticeChecked||
+!ui?.host.isConnected)return;releaseNoticeChecked=true;const key="soundcloud.tempo.seenVersion";let previous;
+try{previous=localStorage.getItem(key);if(previous===VERSION)return;localStorage.setItem(key,VERSION)}catch{
+return}if(!previous)return;const notice=document.createElement("aside");notice.className="release-no\
+tice";const style=document.createElement("style");style.textContent=`
+    .release-notice {
+      position: fixed;
+      right: 16px;
+      bottom: 108px;
+      z-index: 10001;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      max-width: calc(100vw - 32px);
+      box-sizing: border-box;
+      padding: 12px 16px;
+      border: 1px solid var(--tempo-track, #888);
+      border-radius: 4px;
+      background: var(--tempo-surface, #303030);
+      color: var(--tempo-fg, #fff);
+      font-size: 13px;
+      line-height: 1.5;
+      font-family: inherit;
+    }
+    .release-notice a { color: var(--tempo-accent, #ff7733); }
+    .release-notice button {
+      padding: 6px 9px;
+      border: 1px solid var(--tempo-track, #888);
+      border-radius: 3px;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+    }
+    .release-notice :focus-visible { outline: 2px solid var(--tempo-accent, #ff7733); outline-offset\
+: 3px; }
+  `;const message=document.createElement("span");message.setAttribute("role","status");message.textContent=
+`Track Control updated \xB7 v${VERSION}`;notice.append(message);if(WEBSITE){const link=document.createElement(
+"a");link.textContent="What's new";link.href=new URL("updates/",WEBSITE).href;link.target="_blank";link.
+rel="noopener noreferrer";notice.append(link)}const dismiss=document.createElement("button");dismiss.
+type="button";dismiss.textContent="Dismiss";dismiss.addEventListener("click",()=>{notice.remove();style.
+remove();ui.settingsButton.focus()},{once:true});notice.append(dismiss);ui.root.append(style,notice)}(()=>{"use strict";const KEY="__soundCloudTempoControlV1";if(window[KEY]){return}window[KEY]=true;const VERSION="\
+1.2.3";const WEBSITE="https://itslush.github.io/soundcloud-track-control/";const COPY_STORAGE="sound\
+cloud.tempo.copyLinks";function copyLinksEnabled(){try{return localStorage.getItem(COPY_STORAGE)==="\
+true"}catch{return false}}const PITCH_STORAGE="soundcloud.tempo.preserveKey";const WASM_STORAGE="sou\
+ndcloud.tempo.useWasm";let timeline=null;let contextLink=null;let bufferedAudio=null;let crossfade=null;
+const trackVisuals=createTrackVisuals({document,readTrack:()=>currentTrackKey()});let badgeAnimations=[];
+let appearance=null;const MIN=.25;const MAX=4;const SLIDER_MAX=2;const SLIDER_STEP=.025;const SLIDER_STEPS=Math.
+round((SLIDER_MAX-MIN)/SLIDER_STEP);const TRACK_STORAGE="soundcloud.tempo.track.";migrateTrackStorage();
+function migrateTrackStorage(){try{for(const key of Object.keys(localStorage)){const match=key.match(
+/^[^.]+\.(soundcloud\.tempo\.track\..+)$/);if(!match)continue;const destination=match[1];if(localStorage.
+getItem(destination)===null){localStorage.setItem(destination,localStorage.getItem(key))}localStorage.
+removeItem(key)}}catch{}}const SAVED_STORAGE="soundcloud.tempo.applySaved";const STYLE_STORAGE="soun\
+dcloud.tempo.controlStyle";const SHOW_KEY_STORAGE="soundcloud.tempo.showKey";const KEY_SHIFT_STORAGE="\
+soundcloud.tempo.keyShift";const TRACK_LINK=".playControls__soundBadge .playbackSoundBadge__titleLin\
+k";const proto=HTMLMediaElement.prototype;const pitchNames=["preservesPitch","mozPreservesPitch","we\
+bkitPreservesPitch"];const properties=["playbackRate","defaultPlaybackRate",...pitchNames];const native=Object.
+fromEntries(properties.map(name=>[name,Object.getOwnPropertyDescriptor(proto,name)]));const known=new WeakSet;
+const references=new Set;let ui;let controlSetupShown=false;let mountQueued=false;let savedRefreshFrame=0;
+let failure2="";let storageFailure="";let rate=1;let savedRate=null;let trackKey="";let lastTrackKey="";
+let applySaved=readSavedSetting();let keyShift=readKeyShift();let preserveKey=readPitchSetting();let useWasm=readWasmSetting();
+function readWasmSetting(){try{return localStorage.getItem(WASM_STORAGE)!=="false"}catch{return true}}
+function preservesKey(){const mode=timeline?.pitchMode();return mode?mode==="preserve":preserveKey}const pageArtwork=new Map;
+let embeddedPages;let artworkDirty=true;let artworkFrame=0;function readSavedSetting(){try{return localStorage.
+getItem(SAVED_STORAGE)!=="false"}catch{return true}}function readKeyShift(){try{const value=Number(localStorage.
+getItem(KEY_SHIFT_STORAGE));return Number.isFinite(value)&&Math.abs(value)<=12?value:0}catch{return 0}}
+function readControlStyle(){try{const value=localStorage.getItem(STYLE_STORAGE);return["slider","dia\
+l","vertical"].includes(value)?value:"slider"}catch{return"slider"}}function syncControlStyle(){if(!ui)
+return;const style=readControlStyle();let showKey=true;try{showKey=localStorage.getItem(SHOW_KEY_STORAGE)!==
+"false"}catch{}ui.root.querySelector(".quick-key").hidden=!showKey;ui.root.querySelector("#show-key").
+checked=showKey;ui.root.querySelector(".controls").classList.toggle("hide-key",!showKey);const keySpace=showKey?
+0:136;ui.host.style.flexBasis=`${(style==="slider"?416:312)-keySpace}px`;ui.host.style.minWidth=`${(style===
+"slider"?320:312)-keySpace}px`;ui.host.style.setProperty("--tempo-compact-width",`${308-keySpace}px`);
+ui.root.querySelector(".slider-wrap").dataset.style=style;ui.root.querySelector("#control-style").value=
+style;ui.slider.hidden=style==="dial";ui.slider.max=String(style==="vertical"?MAX:SLIDER_MAX);ui.dial.
+hidden=style!=="dial";ui.verticalToggle.hidden=style!=="vertical";if(style==="vertical")ui.fader.setAttribute(
+"popover","auto");else{if(ui.fader.matches(":popover-open"))ui.fader.hidePopover();ui.fader.removeAttribute(
+"popover")}ui.slider.setAttribute("aria-orientation",style==="vertical"?"vertical":"horizontal");render()}
+function readPitchSetting(){try{return pitchNames.some(name=>native[name]?.set)&&localStorage.getItem(
+PITCH_STORAGE)==="true"}catch{return false}}function clamp2(value){return Math.round(Math.max(MIN,Math.
+min(MAX,value))*1e3)/1e3}function formatRate(value){return`${value.toFixed(3).replace(/(\.\d{2})0$/,
+"$1")}\xD7`}function sliderTicks(){return Array.from({length:SLIDER_STEPS+1},(_,index)=>{const units=Math.
+round(MIN/SLIDER_STEP)+index;const height=units%10===0?5:units%2===0?3:1.5;return`M${index} 0v${height}`}).
+join("")}function tempoLogo(){return`
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <g fill="currentColor">
+          <rect x="5" y="36" width="3" height="10" rx="1.5" />
+          <rect x="10" y="31" width="3" height="18" rx="1.5" />
+          <rect x="15" y="26" width="3" height="23" rx="1.5" />
+          <rect x="20" y="21" width="3" height="28" rx="1.5" />
+          <path d="M26 20C33 9 49 14 49 29C62 27 66 49 51 49H30Q26 49 26 45Z" />
+        </g>
+        <path d="M31 40H54" stroke="var(--logo-cutout)" stroke-width="3" stroke-linecap="round" />
+        <circle cx="45" cy="40" r="4" fill="currentColor" stroke="var(--logo-cutout)" stroke-width="\
+2" />
+      </svg>
+    `}function currentTrackKey(){const anchor=document.querySelector(TRACK_LINK);const href=anchor?.
+getAttribute("href");return parseTrackKey(contextLink?.anchor===anchor&&href===contextLink.shared?contextLink.
+original:href)}function parseTrackKey(href){if(!href){return""}try{const url=new URL(href,"https://s\
+oundcloud.com");if(!["soundcloud.com","www.soundcloud.com","m.soundcloud.com"].includes(url.hostname)||
+url.protocol!=="https:"){return""}const parts=url.pathname.split("/").filter(Boolean);if(parts.length<
+2||parts.length>3||parts.length===3&&!/^s-[\w-]+$/.test(parts[2])){return""}if(["sets","tracks","alb\
+ums","likes","reposts","followers","following"].includes(parts[1])){return""}return`/${parts[0]}/${parts[1]}`}catch{
+return""}}function storageKey(key){return TRACK_STORAGE+encodeURIComponent(key)}function readSavedRate(key){
+try{const saved=tempoStore.speed(key);return saved?.enabled?saved.rate:null}catch{storageFailure="Tr\
+ack memory is unavailable. Allow site storage and reload.";return null}}function announce(message){if(ui&&
+ui.status.textContent!==message){ui.status.textContent=message}}function syncTrack(){const next=currentTrackKey();
+if(next===trackKey){return false}bufferedAudio?.changeTrack(trackKey,next);for(const animation of badgeAnimations)
+animation.cancel();badgeAnimations=[];if(trackKey&&next&&crossfade?.diagnostics().stage!=="buffered-\
+overlap"&&!matchMedia("(prefers-reduced-motion: reduce)").matches){badgeAnimations=[...document.querySelectorAll(
+".playControls__soundBadge .playbackSoundBadge__avatar, .playControls__soundBadge .playbackSoundBadg\
+e__titleContextContainer")].map(element=>element.animate([{opacity:.25},{opacity:1}],{duration:240,easing:"\
+ease-out"}))}trackKey=next;timeline?.changeTrack(next);if(!next){savedRate=null;render();return false}
+storageFailure="";savedRate=readSavedRate(next);if(next===lastTrackKey){render();return false}lastTrackKey=
+next;rate=applySaved?clamp2(savedRate??1):1;if(ui){delete ui.memory.dataset.feedback;ui.editTrack=next;
+ui.rateNumber.value=String(rate)}announce(savedRate===null?"New track. Normal speed.":`Playback spee\
+d: ${formatRate(rate)}.`);render();return true}function rememberTrack(forget=false){if(ui){delete ui.
+memory.dataset.feedback}if(syncTrack()){updateAll();return}if(!trackKey){return}const remove=savedRate!==
+null&&(forget||savedRate===rate);try{if(remove){localStorage.removeItem(storageKey(trackKey))}else{localStorage.
+setItem(storageKey(trackKey),String(rate))}savedRate=remove?null:rate;clearTimeout(ui.feedbackTimer);
+ui.memory.dataset.feedback=remove?"":"saved";ui.feedbackTimer=setTimeout(()=>delete ui.memory.dataset.
+feedback,1e3);storageFailure="";announce(remove?"Saved tempo removed. Playback is unchanged; next vi\
+sit starts at 1\xD7.":`Remembered ${formatRate(rate)} for this track.`)}catch(error2){console.warn("\
+[SoundCloud Tempo] Could not save track tempo.",error2);storageFailure="Could not save track tempo. \
+Allow site storage or free space, then click to retry.";announce(storageFailure)}render()}function closeSettings(restoreFocus=false){
+if(!ui){return}if(ui.settings.hasAttribute("data-choosing-style")){try{localStorage.setItem(STYLE_STORAGE,
+ui.root.querySelector("#control-style").value)}catch{announce("Control style could not be saved. All\
+ow site storage to remember your choice.")}ui.settings.removeAttribute("data-choosing-style");ui.root.
+querySelector(".control-setup-intro").hidden=true;ui.root.querySelector("#settings-title").textContent=
+"Tempo settings";const close=ui.root.querySelector(".close-settings");close.textContent="Close";close.
+setAttribute("aria-label","Close tempo settings")}ui.settings.hidden=true;ui.settings.hidePopover?.();
+ui.memory.setAttribute("aria-expanded","false");ui.settingsButton.setAttribute("aria-expanded","fals\
+e");if(restoreFocus){(ui.settingsTrigger||ui.settingsButton).focus()}}function positionSettings(){if(!ui||
+ui.settings.hidden){return}const width=Math.min(600,Math.max(0,innerWidth-24));ui.settings.style.width=
+`${width}px`;ui.settings.style.left=`${(innerWidth-width)/2}px`;ui.settings.style.top="50%";ui.settings.
+style.bottom="auto";ui.settings.style.transform="translateY(-50%)"}function openSettings(trigger=ui.
+memory){ui.settingsTrigger=trigger;ui.settings.hidden=false;ui.memory.setAttribute("aria-expanded","\
+true");ui.settingsButton.setAttribute("aria-expanded","true");ui.savedToggle.checked=applySaved;ui.pitchToggle.
+checked=preserveKey;ui.settingsStatus.textContent="";ui.savedFilter.value="";ui.library.clearPreview();
+populateSavedTracks();positionSettings();if(ui.settings.showPopover&&!ui.settings.matches(":popover-\
+open")){ui.settings.showPopover()}ui.savedToggle.focus()}function populateSavedTracks(){ui.library.render()}
+function scheduleSavedTracks(){if(!ui||ui.settings.hidden||savedRefreshFrame)return;savedRefreshFrame=
+requestAnimationFrame(()=>{savedRefreshFrame=0;if(!ui.settings.hidden)populateSavedTracks()})}function isAudio(audio){
+return audio instanceof HTMLAudioElement}function discover(audio){if(!isAudio(audio)||known.has(audio)){
+return}outputLevel.attach(audio);known.add(audio);references.add(new WeakRef(audio));for(const event of[
+"play","playing","loadstart","loadedmetadata","ratechange","emptied"]){audio.addEventListener(event,
+()=>apply(audio))}}function setNative(audio,name,value){const descriptor=native[name];if(descriptor?.
+set&&descriptor.get.call(audio)!==value){descriptor.set.call(audio,value)}}function apply(audio){if(!isAudio(
+audio)){return}syncTrack();discover(audio);timeline?.observe(audio);const automated=timeline?.value();
+if(automated!==null&&automated!==void 0){rate=automated}try{if(!bufferedAudio?.sync(audio))applyNative(
+audio)}catch(error2){if(!failure2){console.warn("[SoundCloud Tempo]",error2)}failure2="Could not cha\
+nge playback rate. Reload SoundCloud and retry.";announce(failure2);render()}}function applyNative(audio){
+const wasmActive=wasmAudio.sync(audio,preservesKey()&&useWasm||(timeline.keyShift()??keyShift)!==0,rate);
+for(const name of pitchNames){setNative(audio,name,preservesKey()&&!wasmActive)}setNative(audio,"def\
+aultPlaybackRate",rate);setNative(audio,"playbackRate",rate)}function updateAll(){syncTrack();for(const reference of references){
+const audio=reference.deref();if(!audio)references.delete(reference);else apply(audio)}render();timeline?.
+wake()}function setRate(value){crossfade?.cancel();if(syncTrack()){updateAll();return}if(String(value).
+trim()===""){return}const number=Number(value);if(!Number.isFinite(number)){return}rate=clamp2(number);
+timeline?.suspend();failure2="";updateAll();if(!failure2)announce(`Playback speed ${formatRate(rate)}\
+.`)}function handleShortcut(event){if(!event.altKey||!event.shiftKey||event.ctrlKey||event.metaKey||
+event.isComposing){return false}if(!["ArrowLeft","ArrowRight","ArrowDown"].includes(event.key)){return false}
+event.preventDefault();event.stopPropagation();setRate(event.key==="ArrowDown"?1:rate+(event.key==="\
+ArrowLeft"?-.05:.05));return true}function installGuards(){for(const name of properties){const descriptor=native[name];
+if(!descriptor?.configurable||!descriptor.set){continue}Object.defineProperty(proto,name,{...Object.
+getOwnPropertyDescriptor(proto,name)||descriptor,set(value){if(!isAudio(this)){return descriptor.set.
+call(this,value)}discover(this);if(pitchNames.includes(name)){return descriptor.set.call(this,preservesKey()&&
+!wasmAudio.active(this))}apply(this)}})}const play=proto.play;proto.play=function(...args){if(isAudio(
+this)){bufferedAudio.select(this);crossfade?.select(this);apply(this);return bufferedAudio.play(this,
+()=>Reflect.apply(play,this,args))}return Reflect.apply(play,this,args)};const pause=proto.pause;proto.
+pause=function(...args){if(isAudio(this)&&bufferedAudio.pause(this))return;return Reflect.apply(pause,
+this,args)};for(const event of["play","loadedmetadata"]){document.addEventListener(event,e=>{if(isAudio(
+e.target)){if(e.type==="play"&&e.isTrusted)bufferedAudio.select(e.target);if(e.type==="play")crossfade?.
+select(e.target);apply(e.target)}},true)}document.addEventListener("keydown",event=>{if(event.composedPath().
+some(el=>el instanceof Element&&(el===ui?.host||el.matches("input,textarea,select")||el.isContentEditable))){
+return}handleShortcut(event)},true)}function createUi(){const host=document.createElement("span");host.
+id="soundcloud-tempo-control";host.style.cssText=`
+      display: flex;
+      align-items: center;
+      flex: 0 0 348px;
+      min-width: 348px;
+      margin-inline: 4px;
+    `;const root=host.attachShadow({mode:"open"});root.innerHTML=controlsTemplate({MIN,MAX,SLIDER_MAX,
+SLIDER_STEP,SLIDER_STEPS,sliderTicks});const get=selector=>root.querySelector(selector);ui={host,root,
+rateNumber:get("#rate-number"),slider:get("#rate-slider"),dial:get("#rate-dial"),verticalToggle:get(
+"#vertical-toggle"),fader:get("#tempo-fader"),stepUp:get(".step-up"),stepDown:get(".step-down"),memory:get(
+".memory"),settingsButton:get(".settings-button"),error:get(".error"),unit:get(".unit"),status:get("\
+.status"),editTrack:trackKey,editingNumber:false,settings:get(".settings"),savedToggle:get("#apply-s\
+aved"),copyToggle:get("#copy-tempo-links"),pitchToggle:get("#preserve-key"),savedFilter:get("#saved-\
+filter"),savedList:get(".saved-list"),savedCount:get(".saved-count"),settingsStatus:get(".settings-s\
+tatus"),wasmStatus:get("#wasm-status"),outputSlider:get("#output-level"),outputValue:get("#output-va\
+lue"),outputStatus:get("#output-status"),wasmToggle:get("#use-wasm")};syncControlStyle();ui.fader.addEventListener(
+"beforetoggle",event=>{if(event.newState!=="open")return;const rect=ui.verticalToggle.getBoundingClientRect();
+const footerTop=ui.host.closest(".playControls")?.getBoundingClientRect().top??rect.top;ui.fader.style.
+left=`${Math.max(8,Math.min(innerWidth-104,rect.x+rect.width/2-48))}px`;ui.fader.style.bottom=`${innerHeight-
+Math.min(rect.top,footerTop)+8}px`});ui.fader.addEventListener("toggle",event=>{const open=event.newState===
+"open";ui.verticalToggle.setAttribute("aria-expanded",String(open));if(open)ui.slider.focus()});window.
+addEventListener("resize",()=>{if(ui.fader.matches(":popover-open"))ui.fader.hidePopover()});get(".f\
+ader-reset").addEventListener("click",()=>setRate(1));const starMotion=get("#star-motion");starMotion.
+checked=appearance.motion()==="on";starMotion.addEventListener("change",()=>appearance.setMotion(starMotion.
+checked?"on":"off"));const starSpeed=get("#star-speed");starSpeed.value=String(appearance.speed());starSpeed.
+disabled=!starMotion.checked;syncTempoRange(starSpeed);get("#star-speed-value").value=`${appearance.
+speed()}\xD7`;starSpeed.addEventListener("input",()=>appearance.setSpeed(Number(starSpeed.value)));get(
+"#control-style").addEventListener("change",event=>{try{localStorage.setItem(STYLE_STORAGE,event.target.
+value)}catch{ui.settingsStatus.textContent="Control style could not be saved."}syncControlStyle()});
+const shiftInput=get("#key-shift");for(const id of["#crossfade","#crossfade-seconds"])get(id).addEventListener(
+"change",()=>{try{crossfade.set(get("#crossfade").checked,Number(get("#crossfade-seconds").value))}catch(error2){
+ui.settingsStatus.textContent=`Crossfade could not be saved. ${error2.message}`;render()}});get("#cr\
+ossfade-seconds").addEventListener("input",()=>{get("#crossfade-value").value=`${get("#crossfade-sec\
+onds").value} seconds`});const refreshCrossfadeDebug=()=>{const report=JSON.stringify({version:VERSION,
+...crossfade.diagnostics()},null,2);get("#crossfade-debug-output").textContent=report;return report};
+get(".crossfade-debug").addEventListener("toggle",()=>{if(get(".crossfade-debug").open)refreshCrossfadeDebug()});
+get("#crossfade-debug-refresh").addEventListener("click",refreshCrossfadeDebug);get("#crossfade-debu\
+g-copy").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(refreshCrossfadeDebug());
+get("#crossfade-debug-feedback").textContent="Diagnostics copied. No track links or account details \
+included."}catch{get("#crossfade-debug-feedback").textContent="Could not copy. Select the diagnostic\
+s above and copy them manually."}});get("#show-key").addEventListener("change",event=>{try{localStorage.
+setItem(SHOW_KEY_STORAGE,String(event.target.checked))}catch{ui.settingsStatus.textContent="Key visi\
+bility could not be saved."}syncControlStyle()});shiftInput.value=String(keyShift);for(const input of[
+shiftInput,get("#quick-key-shift")])input.addEventListener("change",()=>{const next=Number(input.value);
+if(input.value===""||!Number.isFinite(next)||Math.abs(next)>12){input.value=String(timeline.keyShift()??
+keyShift);return}try{localStorage.setItem(KEY_SHIFT_STORAGE,String(next))}catch{input.value=String(timeline.
+keyShift()??keyShift);ui.settingsStatus.textContent="Key shift could not be saved.";ui.status.textContent=
+"Key shift could not be saved.";return}keyShift=next;crossfade?.cancel();timeline.setKeyShift(next);
+updateAll()});ui.syncFields=enhanceTempoFields(ui.root);get("#tempo-increment").addEventListener("ch\
+ange",event=>{const increment=Number(event.target.value);if(!validTempoIncrement(increment)){ui.settingsStatus.
+textContent="Choose a tempo increment from 0.001 to 1."}else{try{localStorage.setItem(tempoIncrementKey,
+String(increment));ui.settingsStatus.textContent=""}catch{ui.settingsStatus.textContent="Tempo incre\
+ment could not be saved."}}event.target.value=String(readTempoIncrement());render()});const syncPitchControls=()=>{
+const settings=readPitchSettings();for(const name of["min","max","step"])get("#pitch-"+name).value=String(
+settings[name]);for(const input of[shiftInput,get("#quick-key-shift")]){input.min=String(settings.min);
+input.max=String(settings.max);input.step=String(settings.step)}ui.syncFields()};for(const name of["\
+min","max","step"])get("#pitch-"+name).addEventListener("change",()=>{const settings=Object.fromEntries(
+["min","max","step"].map(name2=>[name2,Number(get("#pitch-"+name2).value)]));if(!validPitchSettings(
+settings)){ui.settingsStatus.textContent="Choose a pitch range inside \u221212 to +12 and a step between \
+0.001 and 12.";syncPitchControls();return}try{localStorage.setItem(pitchSettingsKey,JSON.stringify(settings))}catch{
+ui.settingsStatus.textContent="Pitch controls could not be saved."}syncPitchControls();render()});ui.
+syncPitchControls=syncPitchControls;syncPitchControls();let dialDrag;ui.dial.addEventListener("point\
+erdown",event=>{if(event.button!==0)return;event.preventDefault();ui.dial.focus();ui.dial.setPointerCapture(
+event.pointerId);dialDrag={y:event.clientY,rate,track:trackKey}});ui.dial.addEventListener("pointerm\
+ove",event=>{if(!dialDrag||dialDrag.track!==currentTrackKey())return;const distance=dialDrag.y-event.
+clientY;dialDrag.y=event.clientY;dialDrag.rate=Math.max(MIN,Math.min(MAX,dialDrag.rate*2**(distance/
+(event.shiftKey?800:160))));setRate(dialDrag.rate)});for(const name of["pointerup","pointercancel","\
+lostpointercapture"])ui.dial.addEventListener(name,()=>{dialDrag=null});const stepTempo=event=>{if(event.
+altKey||event.ctrlKey||event.metaKey)return;const limit=event.currentTarget===ui.slider?Number(ui.slider.
+max):MAX;const current=Math.min(rate,limit);const changes={ArrowUp:readTempoIncrement(),ArrowRight:readTempoIncrement(),
+ArrowDown:-readTempoIncrement(),ArrowLeft:-readTempoIncrement(),PageUp:.25,PageDown:-.25};if(event.key===
+"Home"||event.key==="End"||event.key in changes){event.preventDefault();setRate(Math.min(limit,event.
+key==="Home"?MIN:event.key==="End"?limit:current+changes[event.key]*(event.shiftKey?.2:1)))}};ui.dial.
+addEventListener("keydown",stepTempo);ui.slider.addEventListener("keydown",stepTempo);ui.dial.addEventListener(
+"dblclick",()=>setRate(1));for(const input of root.querySelectorAll('[name="appearance"]')){input.checked=
+input.value===appearance.mode();input.addEventListener("change",()=>{if(!input.checked)return;try{appearance.
+setMode(input.value)}catch{for(const option of root.querySelectorAll('[name="appearance"]'))option.checked=
+option.value===appearance.mode();ui.settingsStatus.textContent="Theme could not be saved."}})}ui.library=
+createTempoLibrary({root,store:tempoStore,edit:track=>timeline.open(track),changed:(track,type)=>{if(type===
+"timeline")timeline.refreshSaved(track);if(track===trackKey){savedRate=readSavedRate(trackKey);if(type===
+"speed"&&applySaved)rate=clamp2(savedRate??1)}updateAll()},imported:()=>{ui.syncPitchControls?.();applySaved=
+readSavedSetting();keyShift=readKeyShift();shiftInput.value=String(keyShift);syncControlStyle();preserveKey=
+readPitchSetting();useWasm=readWasmSetting();savedRate=readSavedRate(trackKey);ui.savedToggle.checked=
+applySaved;ui.pitchToggle.checked=preserveKey;ui.wasmToggle.checked=useWasm;ui.copyToggle.checked=copyLinksEnabled();
+outputLevel.reload();crossfade.reload();timeline.refreshSaved(trackKey);rate=applySaved?clamp2(savedRate??
+1):1;updateAll()}});ui.wasmToggle.checked=useWasm;ui.wasmToggle.addEventListener("change",()=>{try{localStorage.
+setItem(WASM_STORAGE,String(ui.wasmToggle.checked));useWasm=ui.wasmToggle.checked;updateAll()}catch{
+ui.wasmToggle.checked=useWasm;ui.settingsStatus.textContent="Audio setting could not be saved."}});outputLevel.
+syncUI();const setOutput=event=>{try{outputLevel.set(event.target.value);ui.settingsStatus.textContent=
+"";render()}catch(error2){ui.settingsStatus.textContent=error2.message;outputLevel.syncUI()}};ui.outputSlider.
+addEventListener("input",setOutput);ui.outputValue.addEventListener("change",setOutput);root.addEventListener(
+"input",event=>{if(event.target.matches("input[type='range']"))syncTempoRange(event.target)});ui.copyToggle.
+checked=copyLinksEnabled();ui.copyToggle.addEventListener("change",()=>{try{localStorage.setItem(COPY_STORAGE,
+String(ui.copyToggle.checked))}catch{ui.copyToggle.checked=copyLinksEnabled();ui.settingsStatus.textContent=
+"Could not save setting."}});ui.settingsButton.addEventListener("click",()=>{ui.copyToggle.checked=copyLinksEnabled();
+if(ui.settings.hidden){openSettings(ui.settingsButton)}else{closeSettings(true)}});get(".open-editor").
+addEventListener("click",()=>timeline.open());if(WEBSITE){const buildSet=document.createElement("but\
+ton");buildSet.type="button";buildSet.className="build-set";buildSet.textContent="Build a set";buildSet.
+addEventListener("click",()=>{const original=trackKey?"https://soundcloud.com"+trackKey:"";const shared=timeline.
+shareLink(original,true);const destination=new URL("set/",WEBSITE);if(shared!==original)destination.
+hash=new URL(shared).hash;window.open(destination.href,"_blank","noopener,noreferrer")});get(".setti\
+ngs-actions").prepend(buildSet)}ui.pitchToggle.setAttribute("aria-describedby","pitch-mode-help");ui.
+pitchToggle.disabled=!pitchNames.some(name=>native[name]?.set);if(ui.pitchToggle.disabled){get("#pit\
+ch-mode-help").textContent="Pitch preservation is unavailable in this browser. Natural mode remains \
+active."}ui.pitchToggle.addEventListener("change",()=>{try{localStorage.setItem(PITCH_STORAGE,String(
+ui.pitchToggle.checked));preserveKey=ui.pitchToggle.checked;updateAll();ui.settingsStatus.textContent=
+timeline.pitchMode()?"Default saved. This timeline keeps its own pitch mode.":preserveKey?wasmAudio.
+label():"Natural pitch restored."}catch{ui.pitchToggle.checked=preserveKey;ui.settingsStatus.textContent=
+"Could not save audio mode. Allow site storage and retry."}});ui.memory.addEventListener("contextmen\
+u",event=>{event.preventDefault();event.stopPropagation();openSettings()});ui.memory.addEventListener(
+"keydown",event=>{if(event.key==="ContextMenu"||event.shiftKey&&event.key==="F10"||event.altKey&&event.
+key==="Enter"){event.preventDefault();event.stopPropagation();openSettings()}});get(".close-settings").
+addEventListener("click",()=>closeSettings(true));ui.savedFilter.addEventListener("input",populateSavedTracks);
+ui.savedToggle.addEventListener("change",()=>{try{localStorage.setItem(SAVED_STORAGE,String(ui.savedToggle.
+checked));applySaved=ui.savedToggle.checked;timeline.changeTrack("");timeline.changeTrack(trackKey);
+rate=applySaved?clamp2(savedRate??1):1;updateAll();ui.settingsStatus.textContent=applySaved?"Saved t\
+empos enabled.":"Saved tempos off."}catch{ui.savedToggle.checked=applySaved;ui.settingsStatus.textContent=
+"Could not save this preference. Allow site storage and retry."}});document.addEventListener("pointe\
+rdown",event=>{if(!event.composedPath().includes(ui.settings)&&!event.composedPath().includes(ui.memory)&&
+!event.composedPath().includes(ui.settingsButton)){closeSettings()}});ui.slider.addEventListener("in\
+put",()=>setRate(ui.slider.value));for(const[button,direction]of[[ui.stepUp,1],[ui.stepDown,-1]]){let timer;
+let repeated=false;let pressedTrack="";const stop=()=>clearTimeout(timer);button.addEventListener("p\
+ointerdown",event=>{if(event.button!==0){return}stop();repeated=false;button.setPointerCapture(event.
+pointerId);const startingTrack=currentTrackKey();pressedTrack=startingTrack;const step=event.shiftKey?
+.01:readTempoIncrement();const repeat=()=>{if(currentTrackKey()!==startingTrack||!button.isConnected||
+button.disabled){stop();return}repeated=true;setRate(rate+direction*step);timer=setTimeout(repeat,100)};
+timer=setTimeout(repeat,400)});for(const type of["pointerup","pointercancel","lostpointercapture"]){
+button.addEventListener(type,stop)}window.addEventListener("blur",stop);document.addEventListener("v\
+isibilitychange",stop);button.addEventListener("click",event=>{event.stopPropagation();if(event.detail!==
+0&&pressedTrack!==currentTrackKey()){return}if(repeated&&event.detail!==0){repeated=false;return}setRate(
+rate+direction*(event.shiftKey?.01:readTempoIncrement()))})}ui.slider.addEventListener("dblclick",()=>setRate(
+1));ui.rateNumber.addEventListener("dblclick",()=>{setRate(1);ui.rateNumber.value=String(rate)});ui.
+slider.addEventListener("pointerdown",()=>{if(ui.root.activeElement===ui.rateNumber){ui.rateNumber.blur()}
+if(rate>Number(ui.slider.max)){setRate(Number(ui.slider.max))}});for(const type of["pointerdown","mo\
+usedown","touchstart","click","dblclick"]){ui.slider.addEventListener(type,event=>event.stopPropagation())}
+ui.rateNumber.addEventListener("focus",()=>{ui.editTrack=trackKey});ui.rateNumber.addEventListener("\
+input",()=>{ui.editingNumber=true});const commitNumber=()=>{const draft=ui.rateNumber.value;ui.editingNumber=
+false;const editingTrack=ui.editTrack;const changed=syncTrack();if(!changed&&editingTrack===trackKey){
+setRate(draft)}else{updateAll()}ui.rateNumber.value=String(rate);render()};ui.rateNumber.addEventListener(
+"change",commitNumber);ui.rateNumber.addEventListener("keydown",event=>{if(event.key==="ArrowUp"||event.
+key==="ArrowDown"){commitNumber();stepTempo(event)}});ui.rateNumber.addEventListener("blur",()=>{ui.
+editingNumber=false;ui.rateNumber.value=String(rate)});ui.memory.addEventListener("click",event=>trackKey?
+rememberTrack(event.shiftKey):openSettings());root.addEventListener("keydown",event=>{if(event.key===
+"Escape"&&ui.fader.matches(":popover-open")){event.preventDefault();event.stopPropagation();ui.fader.
+hidePopover();ui.verticalToggle.focus();return}if(event.key==="Escape"&&!ui.settings.hidden){event.preventDefault();
+event.stopPropagation();closeSettings(true);return}if(ui.settings.contains(event.target)||timeline?.
+contains(event.target)){event.stopPropagation();return}if(handleShortcut(event)){ui.rateNumber.value=
+String(rate);return}if(event.target===ui.rateNumber&&event.key==="Enter"){event.preventDefault();commitNumber()}
+if(event.key==="Escape"){event.preventDefault();ui.rateNumber.value=String(rate);ui.root.activeElement?.
+blur()}event.stopPropagation()});render()}function installFooterStyle(){if(document.getElementById("\
+soundcloud-tempo-footer-style")){return}const style=document.createElement("style");style.id="soundc\
+loud-tempo-footer-style";style.textContent=`
+      .playControls:has(.soundcloud-tempo-footer) .playControls__inner {
+        width: 100%;
+        max-width: none;
+        box-sizing: border-box;
+        padding-inline: 20px;
+      }
+      .playControls__elements.soundcloud-tempo-footer {
+        width: 100%;
+        max-width: none;
+        box-sizing: border-box;
+      }
+      .playControls__elements.soundcloud-tempo-footer > .playControls__timeline {
+        flex: 1 1 240px;
+        min-width: 90px;
+        max-width: 480px;
+        margin-left: 12px !important;
+        margin-right: 8px !important;
+      }
+
+      .soundcloud-tempo-footer .playbackTimeline__progressWrapper {
+        min-width: 24px;
+      }
+
+      .playControls__elements.soundcloud-tempo-footer > .playControls__soundBadge {
+        flex: 1 1 320px;
+        width: auto;
+        min-width: 250px;
+        margin-left: 12px !important;
+      }
+
+      .soundcloud-tempo-footer .playbackSoundBadge__titleContextContainer {
+        flex: 1 1 0;
+        width: auto;
+        max-width: none;
+        min-width: 0;
+        margin-right: 12px !important;
+      }
+
+      .soundcloud-tempo-footer .playbackSoundBadge__avatar {
+        flex-shrink: 0;
+        margin-right: 8px !important;
+      }
+
+      .playbackSoundBadge__avatar.soundcloud-tempo-artwork {
+        position: relative;
+      }
+
+      .soundcloud-tempo-crossfade-artwork,
+      .soundcloud-tempo-crossfade-artwork > span {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background-size: cover;
+        background-position: center;
+      }
+      .soundcloud-tempo-crossfade-artwork {
+        overflow: hidden;
+        z-index: 2;
+      }
+      .soundcloud-tempo-incoming-artwork {
+        mask-image: linear-gradient(to right, transparent var(--fade-start), #000 var(--fade-end));
+      }
+      .soundcloud-tempo-pitch-notice {
+        display: block;
+        font-size: 10px;
+        line-height: 12px;
+        font-variant-numeric: tabular-nums;
+      }
+      .soundcloud-tempo-pitch-notice[hidden] { display: none; }
+      .soundcloud-tempo-footer .playbackSoundBadge__titleContextContainer:has(.soundcloud-tempo-pitc\
+h-notice:not([hidden])) {
+        height: auto;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .soundcloud-tempo-incoming-artwork {
+          mask-image: none;
+          opacity: var(--incoming-progress);
+        }
+      }
+
+      .soundcloud-tempo-page-position {
+        position: relative;
+      }
+
+      .soundcloud-tempo-footer .playbackSoundBadge__actions {
+        flex-shrink: 0;
+      }
+
+      .playControls__elements.soundcloud-tempo-footer > .playControls__volume {
+        flex-shrink: 0;
+      }
+
+      @media (max-width: 1100px) {
+        .playControls__elements.soundcloud-tempo-footer > .playControls__prev,
+        .playControls__elements.soundcloud-tempo-footer > .playControls__play,
+        .playControls__elements.soundcloud-tempo-footer > .playControls__next {
+          margin-right: 8px !important;
+        }
+
+        .soundcloud-tempo-footer .playbackSoundBadge__titleContextContainer {
+          margin-right: 8px !important;
+        }
+      }
+
+      @media (max-width: 1100px) {
+        .playControls__elements.soundcloud-tempo-footer > .playControls__timeline {
+          min-width: 54px;
+        }
+      }
+
+      @media (max-width: 1100px) {
+        .playControls:has(.soundcloud-tempo-footer) {
+          height: auto;
+        }
+
+        .playControls:has(.soundcloud-tempo-footer) .playControls__inner {
+          height: auto;
+          padding-inline: 0;
+        }
+
+        .playControls__elements.soundcloud-tempo-footer {
+          height: auto;
+          min-height: 92px;
+          flex-wrap: wrap;
+          row-gap: 6px;
+          padding: 6px 8px;
+        }
+
+        .playControls__elements.soundcloud-tempo-footer > .playControls__volume {
+          order: 5;
+        }
+
+        .playControls__elements.soundcloud-tempo-footer > .playControls__timeline {
+          order: 6;
+          flex: 1 1 90px;
+          margin: 0 4px !important;
+        }
+
+        .playControls__elements.soundcloud-tempo-footer > #soundcloud-tempo-control {
+          order: 10;
+          flex: 1 1 416px !important;
+          min-width: 292px !important;
+          margin: 0 4px 0 0;
+        }
+
+        .playControls__elements.soundcloud-tempo-footer > .playControls__soundBadge {
+          order: 11;
+          flex: 1 1 250px;
+          width: auto;
+          margin: 0 !important;
+        }
+      }
+    `;(document.head||document.documentElement).append(style)}function syncTheme(){if(!ui?.host.isConnected){
+return}const bar=ui.host.closest(".playControls");const reference=bar?.querySelector(".volume__butto\
+n")||bar||document.body;const foreground=getComputedStyle(reference).color;const values=foreground.match(
+/[\d.]+/g)?.map(Number)||[34,34,34];const dark=values.slice(0,3).reduce((a,b)=>a+b,0)>450;ui.host.style.
+setProperty("--tempo-fg",foreground);const progress=bar?.querySelector(".playbackTimeline__progressB\
+ar");const accent=progress&&getComputedStyle(progress).backgroundColor;const nativeRail=progress?.getBoundingClientRect();
+const controls=ui.root.querySelector(".controls").getBoundingClientRect();const offset=nativeRail?.height?
+nativeRail.y+nativeRail.height/2-controls.y-controls.height/2:0;ui.host.style.setProperty("--tempo-r\
+ail-offset",`${Math.abs(offset)<=8?offset:0}px`);ui.host.style.setProperty("--tempo-accent",accent&&
+accent!=="rgba(0, 0, 0, 0)"?accent:"#ff5500");ui.host.style.setProperty("--tempo-track",dark?"#888":
+"#777");const surface=getComputedStyle(document.documentElement).getPropertyValue("--tempo-page-surf\
+ace").trim();ui.host.style.setProperty("--tempo-surface",surface||(dark?"#303030":"#f2f2f2"));ui.host.
+style.setProperty("--tempo-accent-surface",surface||"#242424");ui.host.style.colorScheme=dark?"dark":
+"light";ui.host.style.fontFamily=getComputedStyle(reference).fontFamily}function syncArtworkIndicator(description){
+const artwork=document.querySelector(".playControls__soundBadge .playbackSoundBadge__avatar");if(ui.
+artwork!==artwork){ui.artwork?.classList.remove("soundcloud-tempo-artwork");ui.artworkIndicator?.remove();
+ui.artwork=artwork;ui.artworkIndicator=null}if(!artwork){return}if(!ui.artworkIndicator?.isConnected){
+artwork.querySelectorAll("#soundcloud-tempo-artwork-indicator").forEach(node=>{node.remove()});const indicator2=document.
+createElement("span");indicator2.id="soundcloud-tempo-artwork-indicator";indicator2.setAttribute("ro\
+le","img");indicator2.attachShadow({mode:"open"}).innerHTML=`
+        <style>
+          :host {
+            position: absolute;
+            inset: auto 1px 1px auto;
+            display: grid;
+            place-items: center;
+            width: 18px;
+            height: 18px;
+            box-sizing: border-box;
+            border: 1px solid #161616;
+            border-radius: 3px;
+            background: #ff5500;
+            color: #fff;
+            --logo-cutout: #ff5500;
+            z-index: 1;
+            line-height: 0;
+          }
+          :host([hidden]) {
+            display: none;
+          }
+          svg {
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+          }
+          @media (forced-colors: active) {
+            :host {
+              background: Canvas;
+              color: CanvasText;
+              border-color: CanvasText;
+            }
+          }
+        </style>
+        ${tempoLogo()}
+      `;artwork.classList.add("soundcloud-tempo-artwork");artwork.append(indicator2);ui.artworkIndicator=
+indicator2}const label=description;const indicator=ui.artworkIndicator;const hidden=rate===1||!trackKey||
+Boolean(failure2);if(indicator.hidden!==hidden){indicator.hidden=hidden}if(indicator.title!==label){
+indicator.title=label;indicator.setAttribute("aria-label",label)}}function embeddedArtwork(image){const artwork=image.
+parentElement;if(!artwork)return null;try{const url=new URL(image.currentSrc||image.src);if(url.protocol!==
+"https:"||!url.hostname.endsWith(".sndcdn.com"))return null;if(url.pathname.startsWith("/artworks-"))
+return artwork;if(!url.pathname.startsWith("/avatars-"))return null;const title=image.closest('secti\
+on[aria-label="Track header"]')?.querySelector("h1")?.textContent.replace(/\s+/gu," ").trim();if(!title||
+image.alt.replace(/\s+/gu," ").trim()!==title)return null;const interactive='a, button, input, selec\
+t, textarea, [role="button"], [role="link"]';if(artwork.tagName!=="DIV"||artwork.textContent.trim()||
+image.closest(interactive)||artwork.querySelector(interactive)||artwork.querySelectorAll("img").length!==
+1)return null;const{width,height}=image.getBoundingClientRect();if(width>=96&&height>=96&&Math.abs(width-
+height)<=1)return artwork;const size=image.sizes.match(/^\s*(\d+(?:\.\d+)?)px\s*$/)?.[1];return width===
+0&&height===0&&Number(size)>=96?artwork:null}catch{return null}}function collectArtworkTargets(page,targets){
+for(const link of page.querySelectorAll("a[href]")){if(link.closest(".playControls")){continue}const key=parseTrackKey(
+link.getAttribute("href"));if(!key){continue}const visual=link.querySelector('.image, [style*="backg\
+round-image"]');if(!visual&&!link.querySelector("img")&&!link.matches('[style*="background-image"], \
+.image')){continue}const artwork=visual&&!["IMG","SVG"].includes(visual.tagName)?visual:link;targets.
+set(artwork,key)}for(const card of page.querySelectorAll(".playableTile, .sound, .queueItemView, .so\
+undBadge, .trackItem")){const title=card.querySelector("a.playableTile__mainHeading, .playableTile__\
+mainHeading a, a.soundTitle__title, a.queueItemView__title, .queueItemView__title a, a.soundBadge__t\
+itleLink, a.trackItem__trackTitle");const key=parseTrackKey(title?.getAttribute("href"));const artwork=card.
+querySelector(".playableTile__artwork .image, .sound__coverArt .image, .queueItemView__artwork .imag\
+e, .soundBadge__avatar .image, .trackItem__artwork .image");if(key&&artwork&&!targets.has(artwork)){
+targets.set(artwork,key)}}const pageKey=page===document?parseTrackKey(location.href):embeddedPages.key(
+page);if(pageKey){page.querySelectorAll(".listenArtworkWrapper .image, .fullHero__artwork .image").forEach(
+artwork=>targets.set(artwork,pageKey));if(page!==document){for(const image of page.querySelectorAll(
+'section[aria-label="Track header"] img')){const artwork=embeddedArtwork(image);if(artwork)targets.set(
+artwork,pageKey)}}}}function collectPageArtwork(){const targets=new Map;for(const page of[document,...embeddedPages?.
+documents()||[]])collectArtworkTargets(page,targets);for(const[artwork,entry]of pageArtwork){if(targets.
+get(artwork)!==entry.key){entry.badge?.remove();if(entry.positioned){artwork.classList.remove("sound\
+cloud-tempo-page-position")}pageArtwork.delete(artwork)}}for(const[artwork,key]of targets){if(!pageArtwork.
+has(artwork)){artwork.classList.remove("soundcloud-tempo-page-position");artwork.querySelectorAll(":\
+scope > .soundcloud-tempo-page-indicator").forEach(badge=>badge.remove());pageArtwork.set(artwork,{key,
+badge:null,positioned:false})}}}function renderPageArtwork(){const saved=new Map;for(const[artwork,entry]of pageArtwork){
+if(!artwork.isConnected){pageArtwork.delete(artwork);continue}if(!saved.has(entry.key)){saved.set(entry.
+key,readSavedRate(entry.key))}const stored=saved.get(entry.key);const active=entry.key===trackKey&&rate!==
+1&&!failure2;const value=active?rate:stored;if(value===null||value===1){if(entry.badge){entry.badge.
+hidden=true}continue}if(!entry.badge?.isConnected){const badge=artwork.ownerDocument.createElement("\
+span");badge.className="soundcloud-tempo-page-indicator";badge.setAttribute("role","img");badge.attachShadow(
+{mode:"open"}).innerHTML=`
+          <style>
+            :host {
+              position: absolute;
+              bottom: 3px;
+              right: 3px;
+              display: grid;
+              place-items: center;
+              width: 24px;
+              height: 24px;
+              box-sizing: border-box;
+              border: 1px solid #ff7733;
+              border-radius: 3px;
+              background: #303030;
+              color: #ff7733;
+              --logo-cutout: #303030;
+              z-index: 5;
+              line-height: 0;
+            }
+
+            :host([data-active='true']) {
+              background: #ff5500;
+              color: #fff;
+              --logo-cutout: #ff5500;
+              border-color: #161616;
+            }
+
+            :host([data-small='true']) {
+              width: 18px;
+              height: 18px;
+              bottom: 1px;
+              right: 1px;
+            }
+
+            :host([hidden]) {
+              display: none;
+            }
+
+            svg {
+              width: 100%;
+              height: 100%;
+              pointer-events: none;
+            }
+
+            @media (forced-colors: active) {
+              :host {
+                background: Canvas;
+                color: CanvasText;
+                border-color: CanvasText;
+              }
+            }
+          </style>
+          ${tempoLogo()}
+        `;entry.positioned=artwork.ownerDocument.defaultView.getComputedStyle(artwork).position==="s\
+tatic";if(entry.positioned){artwork.classList.add("soundcloud-tempo-page-position")}artwork.append(badge);
+entry.badge=badge}const label=active?`Playing at ${formatRate(value)}`:`Saved tempo ${formatRate(value)}`;
+if(entry.badge.hidden){entry.badge.hidden=false}if(entry.badge.dataset.active!==String(active)){entry.
+badge.dataset.active=String(active)}const width=artwork.getBoundingClientRect().width;const small=String(
+width>0&&width<=48);if(entry.badge.dataset.small!==small){entry.badge.dataset.small=small}if(entry.badge.
+title!==label){entry.badge.title=label;entry.badge.setAttribute("aria-label",label)}}}function schedulePageArtwork(){
+if(artworkFrame)return;artworkFrame=requestAnimationFrame(()=>{artworkFrame=0;if(artworkDirty){artworkDirty=
+false;collectPageArtwork()}renderPageArtwork()})}function mount(){const bar=document.querySelector("\
+.playControls__elements");if(!bar){return}installFooterStyle();if(!ui){createUi()}bar.classList.add(
+"soundcloud-tempo-footer");if(ui.host.parentNode!==bar){closeSettings();bar.querySelectorAll("#sound\
+cloud-tempo-control").forEach(node=>{if(node!==ui.host){node.remove()}});const volume=bar.querySelector(
+".playControls__volume");bar.insertBefore(ui.host,volume||bar.querySelector(".playControls__soundBad\
+ge"));syncTheme();showReleaseNotice(ui,VERSION,WEBSITE)}if(!controlSetupShown){controlSetupShown=true;
+try{if(localStorage.getItem(STYLE_STORAGE))return}catch{return}if(new URLSearchParams(location.search).
+has("sct")||location.hash.startsWith("#sct="))return;ui.settings.setAttribute("data-choosing-style",
+"");ui.root.querySelector(".control-setup-intro").hidden=false;ui.root.querySelector("#settings-titl\
+e").textContent="Choose your tempo control";ui.root.querySelector(".appearance-settings").open=true;
+const close=ui.root.querySelector(".close-settings");close.textContent="Use this style";close.setAttribute(
+"aria-label","Use this style");openSettings(ui.settingsButton);ui.root.querySelector("#control-style").
+nextElementSibling?.focus()}}function render(){if(!ui){return}ui.wasmStatus.textContent=bufferedAudio?.
+label()||wasmAudio.label();const increment=readTempoIncrement();const incrementInput=ui.root.querySelector(
+"#tempo-increment");if(ui.root.activeElement!==incrementInput)incrementInput.value=String(increment);
+ui.stepUp.setAttribute("aria-label",`Increase speed by ${increment}\xD7; Shift for 0.01\xD7`);ui.stepDown.
+setAttribute("aria-label",`Decrease speed by ${increment}\xD7; Shift for 0.01\xD7`);ui.root.querySelector(
+"#crossfade").checked=crossfade?.enabled()??false;ui.root.querySelector("#crossfade-seconds").value=
+String(crossfade?.seconds()??5);ui.root.querySelector("#crossfade-seconds").disabled=!crossfade?.enabled();
+syncTempoRange(ui.root.querySelector("#crossfade-seconds"));ui.root.querySelector("#crossfade-value").
+value=`${crossfade?.seconds()??5} seconds`;ui.root.querySelector("#crossfade-status").textContent=crossfade?.
+label()??"";ui.outputStatus.textContent=outputLevel.value()>0&&![...references].some(ref=>{const audio=ref.
+deref();return audio&&wasmAudio.hasGraph(audio)})?"Boost needs the player\u2019s audio connection. Start \
+playback; reload SoundCloud if it stays unavailable.":"";const text=formatRate(rate);const shift=timeline.
+keyShift()??keyShift;trackVisuals.pitch(trackKey&&!failure2?shift:0);const pitch=12*Math.log2(rate)+
+shift;const pitchText=`${pitch>0?"+":""}${pitch.toFixed(2)} st`;const description=preservesKey()?`${text}\
+ \xB7 Preserve key${shift?` \xB7 key shift ${shift>0?"+":""}${shift} st`:""}`:`${text} \xB7 natural pit\
+ch ${pitchText}`;const sliderRate=clamp2(Math.round(Math.min(rate,Number(ui.slider.max))/.025)*.025);
+ui.stepUp.disabled=rate>=MAX;ui.stepDown.disabled=rate<=MIN;if(ui.slider.valueAsNumber!==sliderRate){
+ui.slider.value=String(sliderRate)}syncTempoRange(ui.slider);ui.dial.setAttribute("aria-valuenow",String(
+rate));const shiftField=ui.root.querySelector("#key-shift");if(ui.root.activeElement!==shiftField)shiftField.
+value=String(timeline.keyShift()??keyShift);const quickShift=ui.root.querySelector("#quick-key-shift");
+if(ui.root.activeElement!==quickShift)quickShift.value=String(Math.round(shift*1e3)/1e3);ui.syncFields?.();
+ui.dial.setAttribute("aria-valuetext",description);ui.dial.style.setProperty("--dial-angle",`${Math.
+log2(rate)*67.5}deg`);ui.dial.style.setProperty("--dial-unfilled",String(50-Math.log2(rate)*25));ui.
+root.querySelector(".fader-value").textContent=formatRate(rate);const sliderDescription=rate>Number(
+ui.slider.max)?`Slider limit ${formatRate(SLIDER_MAX)}; current speed ${description}. Use the number\
+ field for speeds above 2\xD7`:`${description} \xB7 slider steps 0.025\xD7`;ui.slider.setAttribute("\
+aria-valuetext",sliderDescription);ui.slider.title="Tempo \xB7 double-click to reset";if(ui.root.activeElement!==
+ui.rateNumber||!ui.editingNumber){ui.rateNumber.value=String(rate)}ui.rateNumber.title=failure2||"Ex\
+act tempo \xB7 double-click to reset";ui.rateNumber.setAttribute("aria-invalid",String(Boolean(failure2)));
+ui.unit.hidden=Boolean(failure2);ui.error.hidden=!failure2;ui.error.title=failure2;const state=savedRate===
+null?"unsaved":savedRate===rate?"saved":"modified";ui.memory.dataset.state=storageFailure?"error":state;
+ui.memory.setAttribute("aria-pressed",String(savedRate!==null));let label=!trackKey?"Settings":state===
+"saved"?"Forget saved tempo":state==="modified"?"Update saved tempo":"Save tempo";if(storageFailure){
+label=storageFailure}ui.memory.title=label;ui.memory.setAttribute("aria-label",label);syncArtworkIndicator(
+`${text} \xB7 ${preservesKey()?"Preserve key":pitchText}`);schedulePageArtwork()}function scheduleRefresh(){
+if(mountQueued)return;mountQueued=true;queueMicrotask(()=>{mountQueued=false;mount();updateAll()})}timeline=
+createTempoEditor({pitchControlsChanged:()=>ui?.syncPitchControls?.(),get applySaved(){return applySaved},
+get keyShift(){return timeline.keyShift()??keyShift},get copyLinks(){return copyLinksEnabled()},get pitchMode(){
+return preservesKey()?"preserve":"natural"},get defaultPitchMode(){return preserveKey?"preserve":"na\
+tural"},get ready(){return Boolean(ui)},get rate(){return rate},get root(){return ui.root},get host(){
+return ui.host},parseTrack:parseTrackKey,refresh:updateAll,normal:()=>setRate(1),closeSettings,message:text=>{
+ui.settingsStatus.textContent=text}});const tempoStore=createTempoStore({storage:()=>localStorage,parseTrack:parseTrackKey,
+validateTimeline:timeline.validate});appearance=createTempoAppearance({onChange(){if(!ui)return;for(const input of ui.
+root.querySelectorAll('[name="appearance"]'))input.checked=input.value===appearance.mode();const moving=appearance.
+motion()==="on";ui.root.querySelector("#star-motion").checked=moving;ui.root.querySelector("#star-sp\
+eed").value=String(appearance.speed());ui.root.querySelector("#star-speed").disabled=!moving;syncTempoRange(
+ui.root.querySelector("#star-speed"));ui.root.querySelector("#star-speed-value").value=`${appearance.
+speed()}\xD7`;ui.settingsStatus.textContent="";syncTheme()},onError(){if(ui)ui.settingsStatus.textContent=
+"Theme applied for this tab. Could not save it."}});embeddedPages=createTempoEmbeddedPages({parseTrack:parseTrackKey,
+currentTrack:()=>trackKey,copyLinks:copyLinksEnabled,shareLink:text=>timeline.shareLink(text),appearance(doc){
+try{return appearance.attachDocument(doc)}catch{if(ui&&appearance.mode()!=="native")ui.settingsStatus.
+textContent="Theme unavailable in this track view."}},changed:()=>{artworkDirty=true;schedulePageArtwork()}});
+const outputLevel=createOutputLevel({references,readUI:()=>ui});const wasmAudio=createWasmAudio({audioModules:audio_exports,
+outputLevel,createStretchNode,preservesKey,readKeyShift:()=>timeline.keyShift()??keyShift,readUseWasm:()=>useWasm,
+references,updateAll,apply,discover,onGraphReady:audio=>{bufferedAudio?.graphReady(audio);if(!audio.
+paused)crossfade?.select(audio)}});bufferedAudio=createBufferedPlayback({modules:audio_exports,graph:wasmAudio,
+readSettings:audio=>({track:trackKey,rate,mode:preservesKey()?"preserve":"natural",wasm:useWasm,schedule:timeline.
+playbackSchedule(audio)}),media:function*(){for(const reference of references){const audio=reference.
+deref();if(audio)yield audio}},applyNative,onState:render,recoverNative(audio){timeline?.suspend();rate=
+.25;applyNative(audio)},onFailure(message){failure2=message;announce(message)}});crossfade=createCrossfade(
+{modules:audio_exports,graph:wasmAudio,sourceFor:audio=>bufferedAudio.sourceFor(audio),resolveSource:(audio,options)=>bufferedAudio.
+resolveSource(audio,options),sourceStats:()=>bufferedAudio.sourceStats(),preloadNext:(audio,options)=>bufferedAudio.
+preloadNext(audio,options),readNextSettings:url=>{const key=parseTrackKey(url);if(!key)throw new Error(
+"The next track identity is unavailable.");return{rate:applySaved?readSavedRate(key)??1:1,preserve:preserveKey,
+shift:keyShift,variable:Boolean(tempoStore.timeline(key)?.enabled)}},readNextRate:url=>{const key=parseTrackKey(
+url);if(!key)return 4;const savedTimeline=tempoStore.timeline(key);if(savedTimeline?.enabled)return Math.
+max(...savedTimeline.data.points.map(point=>Math.max(.25,point.r)));return applySaved?readSavedRate(
+key)??1:1},readTrack:()=>currentTrackKey(),readSettings:audio=>({rate,preserve:preservesKey(),shift:timeline.
+keyShift()??keyShift,variable:timeline.playbackSchedule(audio)?.isConstantFrom(audio.currentTime)===
+false}),nextButton:()=>{const button=document.querySelector(".playControls__next");const repeatOne=document.
+querySelector(".playControls__repeat.m-one");return button&&!button.disabled&&button.getAttribute("a\
+ria-disabled")!=="true"&&!repeatOne?button:null},onState:render,onVisual:trackVisuals.overlap});crossfade.
+reload();document.addEventListener("click",event=>{if(event.isTrusted&&event.target instanceof Element&&
+event.target.closest(".playControls__play,.playControls__next,.playControls__prev,.playControls__rep\
+eat,.playbackTimeline"))crossfade.cancel()},true);document.addEventListener("keydown",event=>{if(event.
+isTrusted&&[" ","ArrowLeft","ArrowRight"].includes(event.key))crossfade.cancel()},true);window.addEventListener(
+"pagehide",()=>crossfade.dispose());installGuards();if(navigator.clipboard?.writeText){const writeText=navigator.
+clipboard.writeText.bind(navigator.clipboard);try{navigator.clipboard.writeText=text=>writeText(timeline.
+shareLink(text))}catch{}}function restoreContextLink(){if(!contextLink)return;const{anchor,original,
+shared}=contextLink;if(anchor.getAttribute("href")===shared)anchor.setAttribute("href",original);contextLink=
+null}document.addEventListener("contextmenu",event=>{restoreContextLink();if(!copyLinksEnabled())return;
+const anchor=event.composedPath().find(node=>node instanceof HTMLAnchorElement);if(!anchor)return;const original=anchor.
+getAttribute("href");if(original===null)return;const shared=timeline.shareLink(anchor.href);if(shared===
+anchor.href)return;contextLink={anchor,original,shared};anchor.setAttribute("href",shared)},true);document.
+addEventListener("pointerdown",restoreContextLink,true);document.addEventListener("keydown",restoreContextLink,
+true);window.addEventListener("pagehide",restoreContextLink);window.addEventListener("copy",event=>{
+if(!copyLinksEnabled()||!event.clipboardData)return;const target=document.activeElement;const selected=target instanceof
+HTMLInputElement||target instanceof HTMLTextAreaElement?target.value.slice(target.selectionStart??0,
+target.selectionEnd??0):String(window.getSelection());const original=event.clipboardData.getData("te\
+xt/plain")||selected;const shared=timeline.shareLink(original);if(shared!==original){event.clipboardData.
+setData("text/plain",shared);event.clipboardData.clearData("text/html");event.preventDefault()}});const relevantNodes="\
+a[href], audio, .image, .playControls, .playControls__elements, .playableTile, .sound, .queueItemVie\
+w, .soundBadge, .trackItem";const ownedNodes="#soundcloud-tempo-control, #soundcloud-tempo-artwork-i\
+ndicator, .soundcloud-tempo-page-indicator";function relevantMutation(mutation){if(mutation.type==="\
+attributes")return true;for(const node of[...mutation.addedNodes,...mutation.removedNodes]){if(!(node instanceof
+Element))continue;if(node===ui?.host){if(!node.isConnected)return true;continue}if(node.matches(ownedNodes)){
+if(!node.isConnected&&mutation.target.isConnected)return true;continue}if(node.matches(relevantNodes)||
+node.querySelector(relevantNodes))return true}return false}new MutationObserver(mutations=>{if(!mutations.
+some(relevantMutation))return;for(const mutation of mutations){for(const node of mutation.addedNodes){
+if(!(node instanceof Element))continue;if(isAudio(node))apply(node);else node.querySelectorAll("audi\
+o").forEach(apply)}}artworkDirty=true;scheduleRefresh()}).observe(document,{childList:true,subtree:true,
+attributes:true,attributeFilter:["href"]});window.addEventListener("storage",event=>{if(event.key===
+null||["soundcloud.tempo.crossfade","soundcloud.tempo.crossfadeSeconds"].includes(event.key))crossfade.
+reload();if(event.key===null||event.key?.startsWith(TRACK_STORAGE)||event.key?.startsWith("soundclou\
+d.tempo.timeline."))scheduleSavedTracks();if(event.key===null||event.key===WASM_STORAGE){useWasm=readWasmSetting();
+if(ui)ui.wasmToggle.checked=useWasm;updateAll()}if(event.key===null||event.key===PITCH_STORAGE){preserveKey=
+readPitchSetting();if(ui){ui.pitchToggle.checked=preserveKey}updateAll()}if(event.key===null||event.
+key?.startsWith(TRACK_STORAGE)){schedulePageArtwork()}if(event.key===null||event.key===SAVED_STORAGE){
+applySaved=readSavedSetting();if(ui){ui.savedToggle.checked=applySaved}timeline.changeTrack("");timeline.
+changeTrack(trackKey);rate=applySaved?clamp2(savedRate??1):1;updateAll()}if(event.key===null||event.
+key===pitchSettingsKey)ui?.syncPitchControls?.();if(event.key===null||event.key===tempoIncrementKey)
+render();if(event.key===null||event.key===STYLE_STORAGE||event.key===SHOW_KEY_STORAGE)syncControlStyle();
+if(event.key===null||event.key===KEY_SHIFT_STORAGE){keyShift=readKeyShift();timeline.setKeyShift(keyShift);
+if(ui)ui.root.querySelector("#key-shift").value=String(keyShift);updateAll()}if(event.key===null||event.
+key===storageKey(trackKey)){storageFailure="";savedRate=trackKey?readSavedRate(trackKey):null;if(applySaved)
+rate=clamp2(savedRate??1);updateAll()}});window.addEventListener("resize",syncTheme);window.addEventListener(
+"resize",positionSettings);document.addEventListener("visibilitychange",()=>{if(document.hidden)return;
+artworkDirty=true;scheduleRefresh();syncTheme()});const themeObserver=new MutationObserver(syncTheme);
+function observeTheme(){for(const element of[document.documentElement,document.body]){if(element)themeObserver.
+observe(element,{attributes:true,attributeFilter:["class","style","data-theme"]})}}document.addEventListener(
+"DOMContentLoaded",observeTheme,{once:true});observeTheme();window.matchMedia?.("(prefers-color-sche\
+me: dark)").addEventListener("change",syncTheme);document.querySelectorAll("audio").forEach(discover);
+mount();updateAll()})();})();

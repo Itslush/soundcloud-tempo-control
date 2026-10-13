@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          SoundCloud Track Control (Natural Pitch)
 // @namespace     soundcloud-tempo-control
-// @version       1.2.7
+// @version       1.2.7.1
 // @description   Playback speed, optional key preservation, saved tempos and shareable timelines.
 // @license       MIT
 // @match         https://soundcloud.com/*
@@ -7683,28 +7683,31 @@ selected?.removeEventListener(event,mediaEvent);selected=null}}}function formatP
 ...values),max=Math.max(...values);const format=value=>{const rounded=Number(value.toPrecision(4));return`${rounded<
 0?"\u2212":rounded>0?"+":""}${Math.abs(rounded)}`};if(min===0&&max===0)return"";return`Pitch shifted\
  ${format(min)}${min===max?"":` to ${format(max)}`} st`}function artworkTransition(value){const position=Number.isFinite(value)?Math.max(0,Math.min(1,value)):
-0;const progress=position*position*(3-2*position);return{progress,start:1-1.5*progress,end:1.5-1.5*progress}}function createTrackVisuals({document:document2,readTrack}){let layer,incoming,nextTrack,notice;const avatar=()=>document2.
-querySelector(".playControls__soundBadge .playbackSoundBadge__avatar");const cover=element=>{const image=element?.
-querySelector("img");if(image)return`url(${JSON.stringify(image.currentSrc||image.src)})`;const background=element?.
-querySelector(".image")||element;return background?document2.defaultView.getComputedStyle(background).
-backgroundImage:"none"};const path=url=>new URL(url,document2.location.href).pathname;function overlap(state){
-if(!state){layer?.remove();layer=incoming=nextTrack=null;return}if(!layer){const host2=avatar();if(!host2)
-return;nextTrack=state.nextTrack?path(state.nextTrack):null;layer=document2.createElement("span");layer.
-className="soundcloud-tempo-crossfade-artwork";layer.setAttribute("aria-hidden","true");const outgoing=document2.
-createElement("span");outgoing.style.backgroundImage=cover(host2);incoming=document2.createElement("\
-span");incoming.className="soundcloud-tempo-incoming-artwork";layer.append(outgoing,incoming);host2.
-append(layer);if(nextTrack){for(const link of document2.querySelectorAll("a[href]")){if(path(link.href)!==
-nextTrack)continue;const row=link.closest(".queueItemView, .sound, .playableTile");const image=row?.
-querySelector(".queueItemView__artwork, .sound__coverArt, .playableTile__artwork");const background=cover(
-image);if(background!=="none"){incoming.style.backgroundImage=background;break}}}}const host=avatar();
-if(!host)return;if(layer.parentElement!==host)host.append(layer);if(nextTrack&&readTrack()===nextTrack){
-const background=cover(host);if(background!=="none")incoming.style.backgroundImage=background}const{
-progress,start,end}=artworkTransition(incoming.style.backgroundImage?state.progress:0);layer.style.setProperty(
-"--tempo-artwork-progress",String(progress));layer.style.setProperty("--tempo-artwork-start",`${start*
-100}%`);layer.style.setProperty("--tempo-artwork-end",`${end*100}%`)}function pitch(shift){const host=document2.
-querySelector(".playControls__soundBadge .playbackSoundBadge__titleContextContainer");if(!host){notice?.
-remove();notice=null;return}if(!notice||notice.parentElement!==host){notice?.remove();notice=document2.
-createElement("span");notice.className="soundcloud-tempo-pitch-notice";host.append(notice)}const text=formatPitchNotice(
+0;const progress=position*position*(3-2*position);return{progress,start:1-1.5*progress,end:1.5-1.5*progress}}function readTrackArtwork(element){if(!element)return"none";const image=element.matches("img")?element:
+element.querySelector("img");const source2=image?.currentSrc||(image?.getAttribute("src")?image.src:
+"");if(source2)return`url(${JSON.stringify(source2)})`;for(const candidate of[...element.querySelectorAll(
+".image__full, .sc-artwork, .image"),element]){const background=element.ownerDocument.defaultView.getComputedStyle(
+candidate).backgroundImage;if(background!=="none")return background}return"none"}function createTrackVisuals({
+document:document2,readTrack}){let layer,incoming,nextTrack,notice;const avatar=()=>document2.querySelector(
+".playControls__soundBadge .playbackSoundBadge__avatar");const path=url=>new URL(url,document2.location.
+href).pathname;function overlap(state){if(!state){layer?.remove();layer=incoming=nextTrack=null;return}
+if(!layer){const host2=avatar();if(!host2)return;nextTrack=state.nextTrack?path(state.nextTrack):null;
+layer=document2.createElement("span");layer.className="soundcloud-tempo-crossfade-artwork";layer.setAttribute(
+"aria-hidden","true");const outgoing=document2.createElement("span");outgoing.style.backgroundImage=
+readTrackArtwork(host2);incoming=document2.createElement("span");incoming.className="soundcloud-temp\
+o-incoming-artwork";layer.append(outgoing,incoming);host2.append(layer);if(nextTrack){for(const link of document2.
+querySelectorAll("a[href]")){if(path(link.href)!==nextTrack)continue;const row=link.closest(".queueI\
+temView, .sound, .playableTile");const image=row?.querySelector(".queueItemView__artwork, .sound__co\
+verArt, .playableTile__artwork");const background=readTrackArtwork(image);if(background!=="none"){incoming.
+style.backgroundImage=background;break}}}}const host=avatar();if(!host)return;if(layer.parentElement!==
+host)host.append(layer);if(nextTrack&&readTrack()===nextTrack){const background=readTrackArtwork(host);
+if(background!=="none")incoming.style.backgroundImage=background}const{progress,start,end}=artworkTransition(
+incoming.style.backgroundImage?state.progress:0);layer.style.setProperty("--tempo-artwork-progress",
+String(progress));layer.style.setProperty("--tempo-artwork-start",`${start*100}%`);layer.style.setProperty(
+"--tempo-artwork-end",`${end*100}%`)}function pitch(shift){const host=document2.querySelector(".play\
+Controls__soundBadge .playbackSoundBadge__titleContextContainer");if(!host){notice?.remove();notice=
+null;return}if(!notice||notice.parentElement!==host){notice?.remove();notice=document2.createElement(
+"span");notice.className="soundcloud-tempo-pitch-notice";host.append(notice)}const text=formatPitchNotice(
 shift);if(notice.textContent!==text)notice.textContent=text;notice.hidden=!text}return{overlap,pitch}}function encodeTempoCode(data2){return"SCT1."+btoa(Array.from(new TextEncoder().encode(JSON.stringify(
 data2)),byte=>String.fromCharCode(byte)).join("")).replaceAll("+","-").replaceAll("/","_").replace(/=+$/,
 "")}function tempoShareLink(data2,website=""){const code=encodeTempoCode(data2);const url=website?new URL(
@@ -9082,152 +9085,7 @@ e.target);if(e.type==="play")readServices().crossfade?.select(e.target);apply(e.
 addEventListener("keydown",event=>{if(event.composedPath().some(el=>el instanceof Element&&(el===readUI()?.
 host||el.matches("input,textarea,select")||el.isContentEditable))){return}handleShortcut(event)},true)}
 return{references,discover,isAudio,applyNative,installGuards,supportsPitch:()=>pitchNames.some(name=>native[name]?.
-set)}}var MAX_JSON_BYTES=128*1024;var MAX_PAGE_BYTES=2*1024*1024;function waveformTrack(value){const url=new URL(
-value,"https://soundcloud.com");if(url.protocol!=="https:"||url.hostname!=="soundcloud.com"||url.username||
-url.password||url.port||url.search||url.hash||!/^\/[^/]+\/[^/]+\/?$/.test(url.pathname))throw new TypeError(
-"A public SoundCloud track is required.");return url.origin+url.pathname.replace(/\/$/,"")}function waveformData(data2){
-if(!data2||!Number.isInteger(data2.width)||data2.width<1||data2.width>16384||!Number.isFinite(data2.
-height)||data2.height<=0||data2.height>65535||!Array.isArray(data2.samples)||data2.samples.length!==
-data2.width||data2.samples.some(value=>!Number.isFinite(value)||value<0||value>data2.height))throw new TypeError(
-"The waveform data is invalid.");return Float32Array.from(data2.samples,value=>value/data2.height)}async function boundedText(response,limit,signal){
-if(!response.ok||Number(response.headers.get("content-length"))>limit||!response.body)throw new Error(
-"Waveform data is unavailable.");const reader=response.body.getReader();const decoder=new TextDecoder;
-let bytes=0,text="";const abort=()=>{void reader.cancel().catch(()=>{})};signal.addEventListener("ab\
-ort",abort,{once:true});try{while(true){signal.throwIfAborted();const chunk=await reader.read();signal.
-throwIfAborted();if(chunk.done)break;bytes+=chunk.value.byteLength;if(bytes>limit)throw new Error("W\
-aveform data exceeds its size limit.");text+=decoder.decode(chunk.value,{stream:true})}return text+decoder.
-decode()}finally{signal.removeEventListener("abort",abort);await reader.cancel().catch(()=>{});reader.
-releaseLock()}}function matchingMetadata(items,track){if(!Array.isArray(items))return null;return items.
-find(item=>{try{return item?.hydratable==="sound"&&waveformTrack(item.data?.permalink_url)===track}catch{
-return false}})?.data||null}function createWaveformLoader({document:document2=globalThis.document,fetch:fetch2=globalThis.
-fetch}={}){const cache=new Map,active=new Set;let disposed=false;return{async load(value,{signal,metadata}={}){
-const track=waveformTrack(value);signal?.throwIfAborted();if(disposed)throw new DOMException("Wavefo\
-rm disposed.","AbortError");if(cache.has(track))return cache.get(track);if([...active].filter(controller2=>!controller2.
-signal.aborted).length>=2)throw new Error("Waveform loading is busy.");const controller=new AbortController;
-const abort=()=>controller.abort(signal.reason);signal?.addEventListener("abort",abort,{once:true});
-const timeout=setTimeout(()=>controller.abort(new Error("Waveform loading timed out.")),8e3);active.
-add(controller);try{if(metadata&&waveformTrack(metadata.permalink_url)!==track)throw new TypeError("\
-Waveform metadata belongs to another track.");metadata||=matchingMetadata(document2?.defaultView?.__sc_hydration,
-track);if(!metadata){if(document2?.location?.origin!=="https://soundcloud.com")throw new Error("Wave\
-form metadata is unavailable.");const response2=await fetch2(track,{signal:controller.signal,credentials:"\
-omit",redirect:"error"});const html=await boundedText(response2,MAX_PAGE_BYTES,controller.signal);const hydration=html.
-match(/window\.__sc_hydration\s*=\s*(\[.*?\]);/s);metadata=hydration&&matchingMetadata(JSON.parse(hydration[1]),
-track)}if(!metadata||!Number.isFinite(metadata.duration)||metadata.duration<=0)throw new Error("Wave\
-form metadata is unavailable.");const url=new URL(metadata.waveform_url);if(url.protocol!=="https:"||
-url.hostname!=="wave.sndcdn.com"||url.username||url.password||url.port||url.search||url.hash||!/^\/[\w-]+\.json$/.
-test(url.pathname))throw new TypeError("The waveform host is unsupported.");const response=await fetch2(
-url.href,{signal:controller.signal,credentials:"omit",redirect:"error"});const text=await boundedText(
-response,MAX_JSON_BYTES,controller.signal);const result={samples:waveformData(JSON.parse(text)),duration:metadata.
-duration/1e3};controller.signal.throwIfAborted();cache.set(track,result);if(cache.size>3)cache.delete(
-cache.keys().next().value);return result}finally{clearTimeout(timeout);active.delete(controller);signal?.
-removeEventListener("abort",abort)}},dispose(){disposed=true;for(const controller of active)controller.
-abort();cache.clear()}}}function envelopeColumns(samples,duration,start,span,columns){const values=new Float32Array(Math.min(
-1024,Math.max(1,Math.floor(columns))));if(!(duration>0)||!(span>0))return values;for(let column=0;column<
-values.length;column++){const from=start+span*column/values.length;const to=start+span*(column+1)/values.
-length;if(to<=0||from>=duration)continue;const first=Math.max(0,Math.floor(from/duration*samples.length));
-const last2=Math.min(samples.length,Math.max(first+1,Math.ceil(to/duration*samples.length)));for(let i=first;i<
-last2;i++)values[column]=Math.max(values[column],samples[i])}return values}function waveformTime(value){
-const seconds=Math.max(0,Math.floor(Number.isFinite(value)?value:0));return`${Math.floor(seconds/60)}\
-:${String(seconds%60).padStart(2,"0")}`}var waveformStyle=`
-.tempo-waveform { min-width:0; color:var(--tempo-fg); background:var(--tempo-surface); }
-.tempo-waveform canvas { display:block; width:100%; height:160px; touch-action:pan-y; cursor:pointer\
-; }
-.tempo-waveform canvas:focus-visible, .tempo-waveform input:focus-visible, .tempo-waveform button:fo\
-cus-visible { outline:2px solid var(--tempo-accent); outline-offset:2px; }
-.tempo-waveform p { margin:.4rem 0; font:inherit; font-size:.85em; }
-.tempo-waveform p[hidden] { display:none; }
-.tempo-waveform form { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; }
-.tempo-waveform form[hidden] { display:none; }
-.tempo-waveform label { display:flex; align-items:center; flex-wrap:wrap; gap:.5rem; }
-.tempo-waveform input { width:6rem; min-height:44px; box-sizing:border-box; border:1px solid var(--t\
-empo-fg); border-radius:4px; background:var(--tempo-surface); color:var(--tempo-fg); padding:.5rem; \
-font:inherit; }
-.tempo-waveform input::placeholder { color:var(--tempo-fg); opacity:1; }
-.tempo-waveform button { min-height:44px; padding:.5rem .8rem; border:1px solid var(--tempo-fg); bor\
-der-radius:4px; color:var(--tempo-fg); background:var(--tempo-surface); font:inherit; }
-.tempo-waveform button:disabled { opacity:.5; cursor:default; }
-@media (min-width:600px) { .tempo-waveform canvas { height:180px; } }
-@media (forced-colors:active) { .tempo-waveform { --tempo-fg:CanvasText; --tempo-surface:Canvas; --t\
-empo-accent:Highlight; --tempo-border:CanvasText; } }
-`;function createTrackWaveform({container,seek,loadWaveform}){const document2=container.ownerDocument,
-window2=document2.defaultView;const loader=loadWaveform?null:createWaveformLoader({document:document2});
-const load=loadWaveform||((track,options)=>loader.load(track,options));const element=document2.createElement(
-"section");element.className="tempo-waveform";element.setAttribute("aria-label","Track waveform");const style2=document2.
-createElement("style");style2.textContent=waveformStyle;const canvas=document2.createElement("canvas");
-canvas.setAttribute("role","slider");canvas.setAttribute("aria-label","Playback position. Arrow keys\
- seek five seconds.");canvas.setAttribute("aria-valuemin","0");canvas.tabIndex=seek?0:-1;const status=document2.
-createElement("p");status.setAttribute("role","status");status.textContent="Choose a track to see it\
-s waveform.";const form=document2.createElement("form"),label=document2.createElement("label");form.
-noValidate=true;label.textContent="Seek to";const input=document2.createElement("input");input.type=
-"text";input.inputMode="decimal";input.placeholder="0:00";input.setAttribute("aria-label","Playback \
-time in minutes and seconds or seconds");const button=document2.createElement("button");button.type=
-"submit";button.textContent="Seek";label.append(input);form.append(label,button);form.hidden=!seek;element.
-append(style2,canvas,status,form);container.append(element);const context=canvas.getContext("2d");const events=new AbortController;
-let state={paused:true,position:0,duration:0},lanes=[],disposed=false;let timer,frame,lastDraw=-Infinity,
-visible=true,signature="";const on=(target,type,listener)=>target.addEventListener(type,listener,{signal:events.
-signal});function cancelDraw(){window2.clearTimeout(timer);window2.cancelAnimationFrame(frame);timer=
-frame=void 0}function schedule(){if(disposed||document2.hidden||!visible||!element.isConnected||element.
-hidden||timer!==void 0||frame!==void 0)return;timer=window2.setTimeout(()=>{timer=void 0;frame=window2.
-requestAnimationFrame(()=>{frame=void 0;draw()})},Math.max(0,50-(window2.performance.now()-lastDraw)))}
-function bars(data2,y,height,start,span,color,width){if(!data2)return;const columns=envelopeColumns(
-data2.samples,data2.duration,start,span,Math.ceil(width/2));context.fillStyle=color;const step=width/
-columns.length;for(let i=0;i<columns.length;i++){const amplitude=columns[i]*(height-6);if(amplitude)
-context.fillRect(i*step,y+(height-amplitude)/2,Math.max(1,step-1),amplitude)}}function draw(){if(disposed||
-document2.hidden||!visible||!element.isConnected||element.hidden||!context)return;const width=Math.min(
-2048,canvas.clientWidth);if(width<=0)return;const height=canvas.clientHeight,dpr=Math.min(2,window2.
-devicePixelRatio||1);if(canvas.width!==Math.round(width*dpr)||canvas.height!==Math.round(height*dpr)){
-canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr)}context.setTransform(dpr,0,0,
-dpr,0,0);context.clearRect(0,0,width,height);const css2=window2.getComputedStyle(element);const fg=css2.
-getPropertyValue("--tempo-fg").trim()||css2.color;const accent=css2.getPropertyValue("--tempo-accent").
-trim()||fg;const position=Number.isFinite(state.position)?state.position:0;const duration=Number.isFinite(
-state.duration)?state.duration:0;const second=Boolean(state.nextTrack),rowHeight=second?44:72;bars(lanes[0]?.
-data,0,24,0,duration,fg,width);bars(lanes[0]?.data,38,rowHeight,position-10,20,accent,width);if(second)
-bars(lanes[1]?.data,90,44,(state.nextPosition||0)-10,20,fg,width);context.fillStyle=fg;context.font=
-`12px ${css2.fontFamily}`;context.fillText(second?"Current":"Now",2,35);if(second)context.fillText("\
-Incoming",2,88);for(let tick=Math.ceil((position-10)/5)*5;tick<=position+10;tick+=5){if(tick<0||tick>
-duration)continue;const x=(tick-position+10)/20*width;context.fillRect(x,height-20,1,4);context.fillText(
-waveformTime(tick),Math.min(width-32,Math.max(0,x-12)),height-3)}context.fillStyle=fg;context.fillRect(
-width/2,32,1,height-54);if(duration>0)context.fillRect(Math.min(width-1,Math.max(0,position/duration*
-width)),0,2,24);lastDraw=window2.performance.now()}function requestLane(index,track,metadata){const old=lanes[index];
-if(old&&old.track===track&&!(old.status==="unavailable"&&metadata?.waveform_url&&old.waveformUrl!==metadata.
-waveform_url))return;old?.controller.abort();const lane={track,controller:new AbortController,data:null,
-status:"loading",waveformUrl:metadata?.waveform_url};lanes[index]=lane;if(!track){lane.status="empty";
-return}Promise.resolve().then(()=>load(track,{signal:lane.controller.signal,metadata})).then(data2=>{
-if(disposed||lane.controller.signal.aborted||lanes[index]!==lane)return;lane.data=data2;lane.status=
-"ready";updateStatus();schedule()}).catch(()=>{if(disposed||lane.controller.signal.aborted||lanes[index]!==
-lane)return;lane.status="unavailable";updateStatus();schedule()})}function updateStatus(){const value=input.
-validationMessage||(!state.track?"Choose a track to see its waveform.":lanes.some(lane=>lane.track&&
-lane.status==="loading")?"Loading waveform\u2026":lanes.some(lane=>lane.track&&lane.status==="unavai\
-lable")?"Waveform unavailable for this track. Playback controls still work.":state.nextTrack?"Crossf\
-ading to the next track.":"");if(status.textContent!==value)status.textContent=value;if(status.hidden!==
-!value)status.hidden=!value}function seekTo(value){if(!seek||!Number.isFinite(value)||!(state.duration>
-0)||state.nextTrack)return;seek(Math.max(0,Math.min(state.duration,value)))}on(canvas,"pointerup",event=>{
-if(event.button!==0)return;const rect=canvas.getBoundingClientRect();if(!rect.width||!rect.height)return;
-const y=(event.clientY-rect.top)*canvas.clientHeight/rect.height;if(y>30)seekTo(state.position+((event.
-clientX-rect.left)/rect.width-.5)*20);else seekTo((event.clientX-rect.left)/rect.width*state.duration)});
-on(canvas,"keydown",event=>{const values={ArrowLeft:state.position-5,ArrowRight:state.position+5,Home:0,
-End:state.duration};if(Object.hasOwn(values,event.key)){event.preventDefault();seekTo(values[event.key])}});
-on(form,"submit",event=>{event.preventDefault();const text=input.value.trim(),match=text.match(/^(\d+):([0-5]\d)(?:\.(\d+))?$/);
-const value=match?Number(match[1])*60+Number(match[2])+Number(`0.${match[3]||0}`):/^\d+(?:\.\d+)?$/.
-test(text)?Number(text):NaN;if(!Number.isFinite(value)){input.setCustomValidity("Enter seconds or a \
-time such as 1:30.");input.setAttribute("aria-invalid","true");updateStatus();input.focus();return}input.
-setCustomValidity("");input.setAttribute("aria-invalid","false");updateStatus();seekTo(value)});on(input,
-"input",()=>{input.setCustomValidity("");input.setAttribute("aria-invalid","false");updateStatus()});
-on(document2,"visibilitychange",()=>{cancelDraw();if(!document2.hidden)schedule()});const resize=new window2.
-ResizeObserver(schedule);resize.observe(element);const intersection=new window2.IntersectionObserver(
-entries=>{visible=entries[0].isIntersecting;cancelDraw();if(visible)schedule()});intersection.observe(
-element);return{element,update(next){if(disposed)return;const duration=Number.isFinite(next.duration)?
-Math.max(0,next.duration):0;const position=Number.isFinite(next.position)?Math.max(0,Math.min(duration,
-next.position)):0;next={...next,duration,position};state=next;requestLane(0,next.track,next.metadata);
-requestLane(1,next.nextTrack,next.nextMetadata);canvas.setAttribute("aria-valuemax",String(Math.max(
-0,next.duration||0)));canvas.setAttribute("aria-valuenow",String(Math.max(0,next.position||0)));canvas.
-setAttribute("aria-valuetext",`${waveformTime(next.position)} of ${waveformTime(next.duration)}`);const disabled=!seek||
-!(next.duration>0)||Boolean(next.nextTrack);canvas.setAttribute("aria-disabled",String(disabled));button.
-disabled=input.disabled=disabled;updateStatus();const key=JSON.stringify([next.track,next.position,next.
-duration,next.paused,next.nextTrack,next.nextPosition,next.nextDuration,next.progress]);if(key!==signature){
-signature=key;schedule()}},refresh:schedule,dispose(){disposed=true;cancelDraw();events.abort();resize.
-disconnect();intersection.disconnect();lanes.forEach(lane=>lane.controller.abort());loader?.dispose();
-element.remove()}}}var attribute="data-track-control-mobile-layout";var prefix=`html[${attribute}]`;var css=`
+set)}}var attribute="data-track-control-mobile-layout";var prefix=`html[${attribute}]`;var css=`
 ${prefix} { --tc-phone-unit:calc(1px * var(--tc-phone-scale)); }
 ${prefix} body { min-width:0 !important; padding-bottom:var(--tc-phone-dock) !important; }
 ${prefix} .playControls,${prefix} .playControls * { visibility:hidden !important; }
@@ -9397,17 +9255,6 @@ max(.01,viewport?.scale||1);const width=(viewport?.width||screenWidth)*scale;ret
 :host { position:relative; }
 .touch-adjustments [hidden] { display:none !important; }
 .touch-transport,.touch-adjustments { display:none; }
-.waveform-panel { position:fixed; right:12px; bottom:var(--waveform-bottom,58px); width:min(680px,ca\
-lc(100vw - 24px)); max-height:calc(100dvh - 120px); overflow:auto; font-size:14px; }
-.waveform-panel > summary { margin-left:auto; width:max-content; min-height:36px; padding:6px 12px; \
-border:1px solid var(--tempo-track); border-radius:4px; color:var(--tempo-fg); background:var(--temp\
-o-surface); cursor:pointer; list-style:none; }
-.waveform-panel > summary::-webkit-details-marker { display:none; }
-.waveform-panel > summary::after { content:' +'; }
-.waveform-panel[open] > summary::after { content:' \u2212'; }
-.waveform-panel[open] { padding:12px; background:var(--tempo-surface); border:1px solid var(--tempo-\
-track); border-radius:4px; }
-.waveform-panel:not([open]) .waveform-content { display:none; }
 :host([data-touch-player]) { position:fixed !important; display:block !important; left:var(--touch-l\
 eft) !important; top:var(--touch-dock-top) !important; bottom:auto !important; right:auto; width:var\
 (--touch-width) !important; max-height:var(--touch-panel-height); overflow:auto; overscroll-behavior\
@@ -9468,11 +9315,6 @@ h:100%; }
 x; }
 .touch-adjustments input[type=range]::-moz-range-thumb { width:20px; height:20px; }
 .touch-tools { display:flex; flex-wrap:wrap; gap:8px; }
-:host([data-touch-player]) .waveform-panel { position:static; width:100%; margin-top:12px; font-size\
-:14px; }
-:host([data-touch-player]:not([data-touch-expanded])) .waveform-panel { display:none; }
-:host([data-touch-player]) .waveform-panel > summary { margin:0; min-height:44px; display:flex; alig\
-n-items:center; }
 :host([data-touch-player]) .settings,:host([data-touch-player]) .tempo-editor,:host([data-touch-play\
 er]) #tempo-fader[popover] { left:var(--touch-left) !important; top:var(--touch-top) !important; bot\
 tom:auto !important; width:var(--touch-width) !important; max-width:none !important; max-height:var(\
@@ -9500,21 +9342,18 @@ n-items:center; }
 :host([data-touch-player]) ::selection { color:var(--tempo-surface); background:var(--tempo-fg); }
 :host([data-touch-player]) :focus-visible { outline:2px solid var(--tempo-fg); outline-offset:2px; }\
 
-`;function createMobilePlayer({host,root,document:document2,media,readTrack,canSeek,changeRate,cancelTransition,
+`;function createMobilePlayer({host,root,document:document2,media,readTrack,changeRate,cancelTransition,
 openSettings}){const window2=document2.defaultView;const pageLayout=createMobileLayout(document2);const events=new AbortController;
 const on=(target,name,listener)=>target?.addEventListener(name,listener,{signal:events.signal});function readPlayback(){
 let audio;for(const reference of media){const candidate=reference.deref();if(candidate&&(!audio||!candidate.
-paused))audio=candidate}return{audio,track:readTrack(),position:audio?.currentTime||0,duration:Number.
-isFinite(audio?.duration)?audio.duration:0,paused:!audio||audio.paused}}function onSeek(position){if(!canSeek()||
-!Number.isFinite(position))return;const state=readPlayback();if(state.audio&&state.duration>0)state.
-audio.currentTime=Math.max(0,Math.min(state.duration,position))}const sheet=document2.createElement(
-"style");sheet.textContent=style;const transport=document2.createElement("div");transport.className=
-"touch-transport";transport.innerHTML=`<div class="touch-art" aria-hidden="true"></div><div class="t\
-ouch-caption"><strong></strong><span></span></div><button type="button" class="touch-play" aria-labe\
-l="Play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4l12 8-12 8Z"/></svg></button><butt\
-on type="button" class="touch-next" aria-label="Next track"><svg viewBox="0 0 24 24" aria-hidden="tr\
-ue"><path d="M4 4l12 8-12 8ZM20 4v16"/></svg></button><button type="button" class="touch-expand" ari\
-a-expanded="false" aria-controls="touch-adjustments">Controls</button>`;const pitchNotice=document2.
+paused))audio=candidate}return{audio,track:readTrack(),paused:!audio||audio.paused}}const sheet=document2.
+createElement("style");sheet.textContent=style;const transport=document2.createElement("div");transport.
+className="touch-transport";transport.innerHTML=`<div class="touch-art" aria-hidden="true"></div><di\
+v class="touch-caption"><strong></strong><span></span></div><button type="button" class="touch-play"\
+ aria-label="Play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4l12 8-12 8Z"/></svg></bu\
+tton><button type="button" class="touch-next" aria-label="Next track"><svg viewBox="0 0 24 24" aria-\
+hidden="true"><path d="M4 4l12 8-12 8ZM20 4v16"/></svg></button><button type="button" class="touch-e\
+xpand" aria-expanded="false" aria-controls="touch-adjustments">Controls</button>`;const pitchNotice=document2.
 createElement("span");const settingsButton=document2.createElement("button");settingsButton.type="bu\
 tton";settingsButton.className="touch-settings";settingsButton.dataset.action="settings";settingsButton.
 textContent="Settings";on(settingsButton,"click",()=>openSettings(settingsButton));transport.append(
@@ -9531,39 +9370,42 @@ in="-12" max="12" step="0.5" value="0" aria-label="Key shift in semitones on mob
 " step="0.01" value="1" aria-label="Volume on mobile"></label><div class="touch-tools"><button type=\
 "button" data-action="previous">Previous</button><button type="button" data-action="reset">Reset tem\
 po</button><button type="button" data-action="pitch-reset">Reset pitch</button><button type="button"\
- data-action="save">Save tempo</button></div>`;const details=document2.createElement("details");details.
-className="waveform-panel";details.innerHTML='<summary>Waveform</summary><div class="waveform-conten\
-t"></div>';root.append(sheet,transport,adjustments,details);const feedback=document2.createElement("\
-p");feedback.className="touch-feedback";adjustments.append(feedback);const waveform=createTrackWaveform(
-{container:details.lastElementChild,seek:onSeek});const syncFields=enhanceTempoFields(adjustments);const native=selector=>document2.
-querySelector(`.playControls ${selector}`);const rate=adjustments.querySelector("#touch-rate"),pitch=adjustments.
-querySelector("#touch-pitch");const rateSlider=adjustments.querySelector("#touch-rate-slider"),pitchSlider=adjustments.
-querySelector("#touch-pitch-slider");const volume=adjustments.querySelector("#touch-volume");const play=transport.
-querySelector(".touch-play"),expand=transport.querySelector(".touch-expand");let overlap,timer,frame,
-disposed=false,touch=false;const coarse=window2.matchMedia("(any-pointer: coarse)");function forward(input,selector){
-const original=root.querySelector(selector);original.value=input.value;original.dispatchEvent(new window2.
-Event("change",{bubbles:true}));refresh()}let editingTrack;on(rate,"focus",()=>{editingTrack=readTrack()});
-adjustments.addEventListener("click",event=>{if(event.target.closest("button")&&rate.closest(".touch\
--number-row").contains(event.target))editingTrack=readTrack()},{capture:true,signal:events.signal});
-on(rate,"change",()=>{if(editingTrack===readTrack())changeRate(rate.value);refresh()});on(rate,"blur",
-refresh);on(rateSlider,"input",()=>{changeRate(rateSlider.value);refresh()});on(pitch,"change",()=>forward(
-pitch,"#quick-key-shift"));on(pitchSlider,"input",()=>forward(pitchSlider,"#quick-key-shift"));on(volume,
-"input",()=>{const audio=readPlayback().audio;if(audio){audio.volume=volume.valueAsNumber;audio.muted=
-false}syncTempoRange(volume)});function nativeTransport(selector){const button=native(selector);if(!button||
-button.disabled||button.getAttribute("aria-disabled")==="true")return;cancelTransition();button.click()}
-on(play,"click",()=>nativeTransport(".playControls__play"));on(transport.querySelector(".touch-next"),
-"click",()=>nativeTransport(".playControls__next"));on(expand,"click",()=>{const expanded=host.toggleAttribute(
-"data-touch-expanded");expand.setAttribute("aria-expanded",String(expanded));expand.textContent=expanded?
-"Close":"Controls";if(!expanded)details.open=false;refresh();layout()});on(adjustments,"click",event=>{
-switch(event.target.closest("[data-action]")?.dataset.action){case"previous":nativeTransport(".playC\
-ontrols__prev");break;case"reset":rate.value="1";changeRate(1);refresh();break;case"pitch-reset":pitch.
-value="0";forward(pitch,"#quick-key-shift");break;case"save":root.querySelector(".memory").click();break}});
-function refresh(){if(disposed)return;const state=readPlayback();const currentRate=root.querySelector(
-"#rate-number");const currentPitch=root.querySelector("#quick-key-shift");for(const[input,source2]of[
-[rate,currentRate],[pitch,currentPitch]]){if(root.activeElement!==input)input.value=source2.value;input.
-min=source2.min;input.max=source2.max}rate.step=root.querySelector("#tempo-increment").value||"0.025";
-pitch.step=currentPitch.step;for(const[slider,input]of[[rateSlider,rate],[pitchSlider,pitch]]){slider.
-min=input.min;slider.max=input.max;if(root.activeElement!==slider)slider.value=input.value;syncTempoRange(
+ data-action="save">Save tempo</button></div>`;root.append(sheet,transport,adjustments);const feedback=document2.
+createElement("p");feedback.className="touch-feedback";adjustments.append(feedback);const syncFields=enhanceTempoFields(
+adjustments);const native=selector=>document2.querySelector(`.playControls ${selector}`);const rate=adjustments.
+querySelector("#touch-rate"),pitch=adjustments.querySelector("#touch-pitch");const rateSlider=adjustments.
+querySelector("#touch-rate-slider"),pitchSlider=adjustments.querySelector("#touch-pitch-slider");const volume=adjustments.
+querySelector("#touch-volume");const play=transport.querySelector(".touch-play"),expand=transport.querySelector(
+".touch-expand");let frame,disposed=false,touch=false;const coarse=window2.matchMedia("(any-pointer:\
+ coarse)");let artworkSource;const artworkObserver=new window2.MutationObserver(refreshArtwork);function refreshArtwork(){
+const source2=native(".playbackSoundBadge__avatar");if(source2!==artworkSource){artworkObserver.disconnect();
+artworkSource=source2;if(source2)artworkObserver.observe(source2,{childList:true,subtree:true,attributes:true,
+attributeFilter:["src","srcset","style","class"]})}const background=readTrackArtwork(source2);if(transport.
+firstElementChild.style.backgroundImage!==background)transport.firstElementChild.style.backgroundImage=
+background}document2.addEventListener("load",event=>{if(artworkSource?.contains(event.target))refreshArtwork()},
+{capture:true,signal:events.signal});function forward(input,selector){const original=root.querySelector(
+selector);original.value=input.value;original.dispatchEvent(new window2.Event("change",{bubbles:true}));
+refresh()}let editingTrack;on(rate,"focus",()=>{editingTrack=readTrack()});adjustments.addEventListener(
+"click",event=>{if(event.target.closest("button")&&rate.closest(".touch-number-row").contains(event.
+target))editingTrack=readTrack()},{capture:true,signal:events.signal});on(rate,"change",()=>{if(editingTrack===
+readTrack())changeRate(rate.value);refresh()});on(rate,"blur",refresh);on(rateSlider,"input",()=>{changeRate(
+rateSlider.value);refresh()});on(pitch,"change",()=>forward(pitch,"#quick-key-shift"));on(pitchSlider,
+"input",()=>forward(pitchSlider,"#quick-key-shift"));on(volume,"input",()=>{const audio=readPlayback().
+audio;if(audio){audio.volume=volume.valueAsNumber;audio.muted=false}syncTempoRange(volume)});function nativeTransport(selector){
+const button=native(selector);if(!button||button.disabled||button.getAttribute("aria-disabled")==="t\
+rue")return;cancelTransition();button.click()}on(play,"click",()=>nativeTransport(".playControls__pl\
+ay"));on(transport.querySelector(".touch-next"),"click",()=>nativeTransport(".playControls__next"));
+on(expand,"click",()=>{const expanded=host.toggleAttribute("data-touch-expanded");expand.setAttribute(
+"aria-expanded",String(expanded));expand.textContent=expanded?"Close":"Controls";refresh();layout()});
+on(adjustments,"click",event=>{switch(event.target.closest("[data-action]")?.dataset.action){case"pr\
+evious":nativeTransport(".playControls__prev");break;case"reset":rate.value="1";changeRate(1);refresh();
+break;case"pitch-reset":pitch.value="0";forward(pitch,"#quick-key-shift");break;case"save":root.querySelector(
+".memory").click();break}});function refresh(){if(disposed)return;const state=readPlayback();const currentRate=root.
+querySelector("#rate-number");const currentPitch=root.querySelector("#quick-key-shift");for(const[input,
+source2]of[[rate,currentRate],[pitch,currentPitch]]){if(root.activeElement!==input)input.value=source2.
+value;input.min=source2.min;input.max=source2.max}rate.step=root.querySelector("#tempo-increment").value||
+"0.025";pitch.step=currentPitch.step;for(const[slider,input]of[[rateSlider,rate],[pitchSlider,pitch]]){
+slider.min=input.min;slider.max=input.max;if(root.activeElement!==slider)slider.value=input.value;syncTempoRange(
 slider)}const hiddenPitch=root.querySelector(".quick-key").hidden;adjustments.querySelector(".touch-\
 pitch").hidden=hiddenPitch;pitchSlider.hidden=hiddenPitch;adjustments.querySelector("[data-action=pi\
 tch-reset]").hidden=hiddenPitch;const nativePlay=native(".playControls__play");play.disabled=!nativePlay||
@@ -9580,46 +9422,34 @@ d-tempo-pitch-notice");pitchNotice.textContent=nativeNotice?.textContent||"";pit
 nativeNotice.hidden;const error2=root.querySelector(".error");feedback.textContent=error2.hidden?root.
 querySelector(".status").textContent:error2.title;const save=adjustments.querySelector("[data-action\
 =save]");save.textContent=root.querySelector(".memory").title||"Save tempo";save.disabled=!state.track;
-const image=native(".playbackSoundBadge__avatar .sc-artwork,.playbackSoundBadge__avatar .image")||native(
-".playbackSoundBadge__avatar");const background=image?window2.getComputedStyle(image).backgroundImage:
-"none";if(transport.firstElementChild.style.backgroundImage!==background)transport.firstElementChild.
-style.backgroundImage=background;if(state.audio&&root.activeElement!==volume)volume.value=String(state.
-audio.muted?0:state.audio.volume);volume.disabled=!state.audio;syncTempoRange(volume);syncFields();tickWaveform()}
-function tickWaveform(){window2.clearTimeout(timer);timer=void 0;if(!details.open||document2.hidden||
-!host.isConnected||touch&&!host.hasAttribute("data-touch-expanded")||!(details.checkVisibility?.({checkVisibilityCSS:true})??
-details.getClientRects().length>0))return;const state=readPlayback();waveform.update(overlap?{...state,
-...overlap}:state);if(!state.paused)timer=window2.setTimeout(tickWaveform,50)}function layout(){if(disposed||
-!host.isConnected)return;const geometry=touchViewport(window2.visualViewport,window2.screen.width,coarse.
-matches,window2.navigator.maxTouchPoints,window2.screen.height);touch=geometry.touch;pageLayout.update(
-geometry,touch?host.offsetHeight:0);host.toggleAttribute("data-touch-player",touch);const bar=host.closest(
-".playControls");if(touch&&!host.matches(":popover-open")){host.setAttribute("popover","manual");host.
-showPopover()}if(!touch){if(host.matches(":popover-open"))host.hidePopover();host.removeAttribute("p\
-opover");const bottom=`${Math.max(8,window2.innerHeight-(bar?.getBoundingClientRect().top??window2.innerHeight-
-50)+8)}px`;if(host.style.getPropertyValue("--waveform-bottom")!==bottom)host.style.setProperty("--wa\
-veform-bottom",bottom);return}for(const[name,value]of Object.entries({"touch-width":`${geometry.width}\
-px`,"touch-inverse":1/geometry.scale,"touch-left":`${geometry.left}px`,"touch-top":`${geometry.top}p\
-x`,"touch-panel-height":`${Math.max(100,geometry.height-16)}px`})){if(host.style.getPropertyValue(`-\
--${name}`)!==String(value))host.style.setProperty(`--${name}`,String(value))}const height=host.offsetHeight;
-const top=`${geometry.top+(geometry.height-height)/geometry.scale}px`;if(host.style.getPropertyValue(
-"--touch-dock-top")!==top)host.style.setProperty("--touch-dock-top",top)}function scheduleLayout(){if(frame||
-disposed)return;frame=window2.requestAnimationFrame(()=>{frame=void 0;layout()})}on(details,"toggle",
-()=>{refresh();scheduleLayout()});on(window2.visualViewport,"resize",scheduleLayout);on(window2.visualViewport,
+refreshArtwork();if(state.audio&&root.activeElement!==volume)volume.value=String(state.audio.muted?0:
+state.audio.volume);volume.disabled=!state.audio;syncTempoRange(volume);syncFields()}function layout(){
+if(disposed||!host.isConnected)return;const geometry=touchViewport(window2.visualViewport,window2.screen.
+width,coarse.matches,window2.navigator.maxTouchPoints,window2.screen.height);touch=geometry.touch;pageLayout.
+update(geometry,touch?host.offsetHeight:0);host.toggleAttribute("data-touch-player",touch);if(touch&&
+!host.matches(":popover-open")){host.setAttribute("popover","manual");host.showPopover()}if(!touch){
+if(host.matches(":popover-open"))host.hidePopover();host.removeAttribute("popover");return}for(const[
+name,value]of Object.entries({"touch-width":`${geometry.width}px`,"touch-inverse":1/geometry.scale,"\
+touch-left":`${geometry.left}px`,"touch-top":`${geometry.top}px`,"touch-panel-height":`${Math.max(100,
+geometry.height-16)}px`})){if(host.style.getPropertyValue(`--${name}`)!==String(value))host.style.setProperty(
+`--${name}`,String(value))}const height=host.offsetHeight;const top=`${geometry.top+(geometry.height-
+height)/geometry.scale}px`;if(host.style.getPropertyValue("--touch-dock-top")!==top)host.style.setProperty(
+"--touch-dock-top",top)}function scheduleLayout(){if(frame||disposed)return;frame=window2.requestAnimationFrame(
+()=>{frame=void 0;layout()})}on(window2.visualViewport,"resize",scheduleLayout);on(window2.visualViewport,
 "scroll",scheduleLayout);on(window2,"resize",scheduleLayout);on(coarse,"change",scheduleLayout);on(document2,
 "visibilitychange",refresh);for(const name of["play","pause","timeupdate","durationchange","volumech\
 ange","emptied"]){document2.addEventListener(name,refresh,{capture:true,signal:events.signal})}const observer=new window2.
-ResizeObserver(()=>{scheduleLayout();tickWaveform()});observer.observe(host);refresh();layout();return{
-refresh(){refresh();waveform.refresh();scheduleLayout()},overlap(state){overlap=state?.nextTrack?state:
-void 0;const source2=native(".soundcloud-tempo-crossfade-artwork");const artwork=transport.firstElementChild;
-let copy=artwork.firstElementChild;if(!state||!source2){copy?.remove()}else{if(!copy){copy=document2.
-createElement("span");copy.className="touch-cover";copy.append(document2.createElement("span"),document2.
-createElement("span"));artwork.append(copy)}for(const name of["--tempo-artwork-start","--tempo-artwo\
-rk-end","--tempo-artwork-progress"])copy.style.setProperty(name,source2.style.getPropertyValue(name));
-[...copy.children].forEach((child,index)=>{child.style.backgroundImage=source2.children[index].style.
-backgroundImage})}refresh()},dispose(){disposed=true;events.abort();observer.disconnect();window2.clearTimeout(
-timer);window2.cancelAnimationFrame(frame);waveform.dispose();pageLayout.dispose();if(host.matches("\
-:popover-open"))host.hidePopover();host.removeAttribute("popover");host.removeAttribute("data-touch-\
-player");host.removeAttribute("data-touch-expanded");sheet.remove();transport.remove();adjustments.remove();
-details.remove()}}}function createMobileAvailability({document:document2,website}){const window2=document2.defaultView,
+ResizeObserver(scheduleLayout);observer.observe(host);refresh();layout();return{refresh(){refresh();
+scheduleLayout()},overlap(state){const source2=native(".soundcloud-tempo-crossfade-artwork");const artwork=transport.
+firstElementChild;let copy=artwork.firstElementChild;if(!state||!source2){copy?.remove()}else{if(!copy){
+copy=document2.createElement("span");copy.className="touch-cover";copy.append(document2.createElement(
+"span"),document2.createElement("span"));artwork.append(copy)}for(const name of["--tempo-artwork-sta\
+rt","--tempo-artwork-end","--tempo-artwork-progress"])copy.style.setProperty(name,source2.style.getPropertyValue(
+name));[...copy.children].forEach((child,index)=>{child.style.backgroundImage=source2.children[index].
+style.backgroundImage})}refresh()},dispose(){disposed=true;events.abort();observer.disconnect();artworkObserver.
+disconnect();window2.cancelAnimationFrame(frame);pageLayout.dispose();if(host.matches(":popover-open"))
+host.hidePopover();host.removeAttribute("popover");host.removeAttribute("data-touch-player");host.removeAttribute(
+"data-touch-expanded");sheet.remove();transport.remove();adjustments.remove()}}}function createMobileAvailability({document:document2,website}){const window2=document2.defaultView,
 events=new AbortController;let notice,dismissed=false;function update(){const geometry=touchViewport(
 window2.visualViewport,window2.screen.width,window2.matchMedia("(any-pointer:coarse)").matches,window2.
 navigator.maxTouchPoints,window2.screen.height);if(!geometry.touch||document2.querySelector(".playCo\
@@ -10973,10 +10803,10 @@ clipboardData.getData("text/plain")||selected;const shared=shareLink(original);i
 event.clipboardData.setData("text/plain",shared);event.clipboardData.clearData("text/html");event.preventDefault()}});
 return{originalLink(anchor){return contextLink?.anchor===anchor&&anchor?.getAttribute("href")===contextLink.
 shared?contextLink.original:null}}}(()=>{"use strict";const KEY="__soundCloudTempoControlV1";if(window[KEY]){return}window[KEY]=true;const VERSION="\
-1.2.7";const WEBSITE="https://itslush.github.io/soundcloud-track-control/";const COPY_STORAGE="sound\
-cloud.tempo.copyLinks";function copyLinksEnabled(){try{return localStorage.getItem(COPY_STORAGE)==="\
-true"}catch{return false}}const PITCH_STORAGE="soundcloud.tempo.preserveKey";const WASM_STORAGE="sou\
-ndcloud.tempo.useWasm";let timeline=null;let clipboardSharing=null;let bufferedAudio=null;let crossfade=null;
+1.2.7.1";const WEBSITE="https://itslush.github.io/soundcloud-track-control/";const COPY_STORAGE="sou\
+ndcloud.tempo.copyLinks";function copyLinksEnabled(){try{return localStorage.getItem(COPY_STORAGE)===
+"true"}catch{return false}}const PITCH_STORAGE="soundcloud.tempo.preserveKey";const WASM_STORAGE="so\
+undcloud.tempo.useWasm";let timeline=null;let clipboardSharing=null;let bufferedAudio=null;let crossfade=null;
 const trackVisuals=createTrackVisuals({document,readTrack:()=>currentTrackKey()});let badgeAnimations=[];
 let appearance=null;const MIN=.25;const MAX=4;const SLIDER_MAX=2;const SLIDER_STEP=.025;const SLIDER_STEPS=Math.
 round((SLIDER_MAX-MIN)/SLIDER_STEP);const TRACK_STORAGE="soundcloud.tempo.track.";migrateTrackStorage();
@@ -11069,23 +10899,22 @@ mobilePlayer?.refresh()}}})}function syncTheme(){footerVisuals.syncTheme()}funct
 footerVisuals.syncArtworkIndicator(description)}function mount(){mobileAvailability.update();const bar=document.
 querySelector(".playControls__elements");if(!bar){return}installFooterStyle();if(!ui){createUi();mobilePlayer=
 createMobilePlayer({host:ui.host,root:ui.root,document,media:references,changeRate:setRate,openSettings,
-cancelTransition:()=>crossfade?.cancel("manual transport"),readTrack:currentTrackKey,canSeek:()=>!["\
-buffered-overlap","handing-off"].includes(crossfade?.diagnostics().stage)})}bar.classList.add("sound\
-cloud-tempo-footer");if(ui.host.parentNode!==bar){closeSettings();bar.querySelectorAll("#soundcloud-\
-tempo-control").forEach(node=>{if(node!==ui.host){node.remove()}});const volume=bar.querySelector(".\
-playControls__volume");bar.insertBefore(ui.host,volume||bar.querySelector(".playControls__soundBadge"));
-syncTheme();showReleaseNotice(ui,VERSION,WEBSITE)}if(!controlSetupShown){controlSetupShown=true;try{
-if(localStorage.getItem(STYLE_STORAGE))return}catch{return}if(new URLSearchParams(location.search).has(
-"sct")||location.hash.startsWith("#sct="))return;ui.settings.setAttribute("data-choosing-style","");
-ui.root.querySelector(".control-setup-intro").hidden=false;ui.root.querySelector("#settings-title").
-textContent="Choose your tempo control";ui.root.querySelector(".appearance-settings").open=true;const close=ui.
-root.querySelector(".close-settings");close.textContent="Use this style";close.setAttribute("aria-la\
-bel","Use this style");openSettings(ui.settingsButton);ui.root.querySelector("#control-style").nextElementSibling?.
-focus()}}function render(){ui?.render()}function scheduleRefresh(){if(mountQueued)return;mountQueued=
-true;queueMicrotask(()=>{mountQueued=false;mount();updateAll()})}timeline=createTempoEditor({pitchControlsChanged:()=>ui?.
-syncPitchControls?.(),get applySaved(){return applySaved},get keyShift(){return timeline.keyShift()??
-keyShift},get copyLinks(){return copyLinksEnabled()},get pitchMode(){return preservesKey()?"preserve":
-"natural"},get defaultPitchMode(){return preserveKey?"preserve":"natural"},get ready(){return Boolean(
+cancelTransition:()=>crossfade?.cancel("manual transport"),readTrack:currentTrackKey})}bar.classList.
+add("soundcloud-tempo-footer");if(ui.host.parentNode!==bar){closeSettings();bar.querySelectorAll("#s\
+oundcloud-tempo-control").forEach(node=>{if(node!==ui.host){node.remove()}});const volume=bar.querySelector(
+".playControls__volume");bar.insertBefore(ui.host,volume||bar.querySelector(".playControls__soundBad\
+ge"));syncTheme();showReleaseNotice(ui,VERSION,WEBSITE)}if(!controlSetupShown){controlSetupShown=true;
+try{if(localStorage.getItem(STYLE_STORAGE))return}catch{return}if(new URLSearchParams(location.search).
+has("sct")||location.hash.startsWith("#sct="))return;ui.settings.setAttribute("data-choosing-style",
+"");ui.root.querySelector(".control-setup-intro").hidden=false;ui.root.querySelector("#settings-titl\
+e").textContent="Choose your tempo control";ui.root.querySelector(".appearance-settings").open=true;
+const close=ui.root.querySelector(".close-settings");close.textContent="Use this style";close.setAttribute(
+"aria-label","Use this style");openSettings(ui.settingsButton);ui.root.querySelector("#control-style").
+nextElementSibling?.focus()}}function render(){ui?.render()}function scheduleRefresh(){if(mountQueued)
+return;mountQueued=true;queueMicrotask(()=>{mountQueued=false;mount();updateAll()})}timeline=createTempoEditor(
+{pitchControlsChanged:()=>ui?.syncPitchControls?.(),get applySaved(){return applySaved},get keyShift(){
+return timeline.keyShift()??keyShift},get copyLinks(){return copyLinksEnabled()},get pitchMode(){return preservesKey()?
+"preserve":"natural"},get defaultPitchMode(){return preserveKey?"preserve":"natural"},get ready(){return Boolean(
 ui)},get rate(){return rate},get root(){return ui.root},get host(){return ui.host},parseTrack:parseTrackKey,
 refresh:updateAll,normal:()=>setRate(1),closeSettings,message:text=>{ui.settingsStatus.textContent=text}});
 const tempoStore=createTempoStore({storage:()=>localStorage,parseTrack:parseTrackKey,validateTimeline:timeline.

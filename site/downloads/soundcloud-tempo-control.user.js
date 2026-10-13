@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          SoundCloud Track Control (Natural Pitch)
 // @namespace     soundcloud-tempo-control
-// @version       1.2.6
+// @version       1.2.7
 // @description   Playback speed, optional key preservation, saved tempos and shareable timelines.
 // @license       MIT
 // @match         https://soundcloud.com/*
@@ -8741,7 +8741,7 @@ tice";const style2=document.createElement("style");style2.textContent=`
       line-height: 1.5;
       font-family: inherit;
     }
-    .release-notice a { color: var(--tempo-accent, #ff7733); }
+    .release-notice a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
     .release-notice button {
       padding: 6px 9px;
       border: 1px solid var(--tempo-track, #888);
@@ -8752,12 +8752,34 @@ tice";const style2=document.createElement("style");style2.textContent=`
     }
     .release-notice :focus-visible { outline: 2px solid var(--tempo-accent, #ff7733); outline-offset\
 : 3px; }
+    :host([data-touch-player]) .release-notice {
+      position: static;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      width: 100%;
+      max-width: none;
+      margin: 0 0 8px;
+      padding: 8px;
+      gap: 8px;
+      font-size: 14px;
+    }
+    :host([data-touch-player]) .release-notice > span { grid-column: 1 / -1; }
+    :host([data-touch-player]) .release-notice :is(a,button) {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 6px 9px;
+      box-sizing: border-box;
+      font: inherit;
+    }
   `;const message=document.createElement("span");message.setAttribute("role","status");message.textContent=
 `Track Control updated \xB7 v${VERSION}`;notice.append(message);if(WEBSITE){const link=document.createElement(
 "a");link.textContent="What's new";link.href=new URL("updates/",WEBSITE).href;link.target="_blank";link.
 rel="noopener noreferrer";notice.append(link)}const dismiss=document.createElement("button");dismiss.
 type="button";dismiss.textContent="Dismiss";dismiss.addEventListener("click",()=>{notice.remove();style2.
-remove();ui.settingsButton.focus()},{once:true});notice.append(dismiss);ui.root.append(style2,notice)}function installFooterStyle(){if(document.getElementById("soundcloud-tempo-footer-style")){return}const style2=document.
+remove();const settings=ui.host.hasAttribute("data-touch-player")?ui.root.querySelector(".touch-sett\
+ings"):ui.settingsButton;settings.focus()},{once:true});notice.append(dismiss);ui.root.prepend(style2,
+notice)}function installFooterStyle(){if(document.getElementById("soundcloud-tempo-footer-style")){return}const style2=document.
 createElement("style");style2.id="soundcloud-tempo-footer-style";style2.textContent=`
     @property --tempo-artwork-start { syntax: '<percentage>'; inherits: true; initial-value: 100%; }\
 
@@ -9248,7 +9270,50 @@ ${prefix} .header__logoLink-iconOnly { display:flex !important; width:calc(44 * 
 ) !important; overflow:hidden; font-size:0 !important; }
 ${prefix} .header__logoLink svg { width:calc(24 * var(--tc-phone-unit)); height:calc(24 * var(--tc-p\
 hone-unit)); }
+${prefix} .header :is(.notificationIcon,.header__moreButtonIcon,.header__userNavUsernameButtonIcon),${prefix}\
+ .header :is(.notificationIcon,.header__moreButtonIcon,.header__userNavUsernameButtonIcon,.headerSea\
+rch__submit) svg { flex:none; width:calc(22 * var(--tc-phone-unit)); height:calc(22 * var(--tc-phone\
+-unit)); }
+${prefix} .header__userNavAvatar { flex:none; width:calc(26 * var(--tc-phone-unit)) !important; heig\
+ht:calc(26 * var(--tc-phone-unit)) !important; }
+${prefix} .header .notificationIcon__badge { width:calc(8 * var(--tc-phone-unit)); height:calc(8 * v\
+ar(--tc-phone-unit)); }
 ${prefix} :is(.header__right,.header__loginMenu,.header__upload) { flex-shrink:0; }
+${prefix} .l-footer { font-size:calc(14 * var(--tc-phone-unit)); line-height:1.5; overflow-wrap:anyw\
+here; }
+${prefix} .l-footer a { display:inline-flex; align-items:center; min-height:calc(44 * var(--tc-phone\
+-unit)); max-width:100%; padding-inline:calc(4 * var(--tc-phone-unit)); font-size:inherit; line-heig\
+ht:inherit; box-sizing:border-box; vertical-align:middle; flex-wrap:wrap; }
+${prefix} .l-footer :is(.footer__localeSelector,.localeSelector_language) { font-size:inherit; line-\
+height:inherit; }
+${prefix} .l-footer .localeSelector { gap:calc(4 * var(--tc-phone-unit)); }
+${prefix} :is(.l-sidebar,.l-sidebar-right) :is(p,.sc-type-small,.sc-type-medium,.sc-text-h4,.sidebar\
+Header__title,.sidebarHeader__actualTitle,.sidebarHeader__more) { font-size:calc(14 * var(--tc-phone\
+-unit)) !important; line-height:1.4 !important; }
+${prefix} .sidebarHeader__more { display:inline-flex; align-items:center; justify-content:center; mi\
+n-width:calc(44 * var(--tc-phone-unit)); min-height:calc(44 * var(--tc-phone-unit)); padding:calc(11\
+ * var(--tc-phone-unit)); box-sizing:border-box; }
+${prefix} .sidebarHeader__more svg { width:calc(22 * var(--tc-phone-unit)); height:calc(22 * var(--t\
+c-phone-unit)); }
+${prefix} .l-product-banners .banner { font-size:calc(14 * var(--tc-phone-unit)); line-height:1.4; p\
+adding:calc(12 * var(--tc-phone-unit)); gap:calc(8 * var(--tc-phone-unit)); }
+${prefix} .l-product-banners :is(.banner__contentContainer,.banner__content) { min-width:0; max-widt\
+h:none; }
+${prefix} .l-product-banners .banner__content { gap:calc(8 * var(--tc-phone-unit)); }
+${prefix} .l-product-banners .banner__content :is(span,strong,a) { font-size:inherit; line-height:in\
+herit; }
+${prefix} .l-product-banners .banner__icon { flex:none; }
+${prefix} .l-product-banners :is(.banner__iconImage,.banner__closeIcon) { width:calc(22 * var(--tc-p\
+hone-unit)); height:calc(22 * var(--tc-phone-unit)); }
+${prefix} .l-product-banners .banner__close { flex:none; display:flex; align-items:center; justify-c\
+ontent:center; min-width:calc(44 * var(--tc-phone-unit)); min-height:calc(44 * var(--tc-phone-unit))\
+; }
+${prefix} .mobileAppsButtons { display:flex; flex-wrap:wrap; gap:calc(8 * var(--tc-phone-unit)); pad\
+ding-inline:0; }
+${prefix} .mobileAppsButtons a { float:none; flex:none; height:calc(44 * var(--tc-phone-unit)); marg\
+in:0; background-size:contain; background-position:center; background-repeat:no-repeat; }
+${prefix} .mobileAppsButtons__appStore { width:calc(132 * var(--tc-phone-unit)); }
+${prefix} .mobileAppsButtons__googlePlay { width:calc(148.5 * var(--tc-phone-unit)); }
 ${prefix} :is(.g-tabs,.g-tabs-wrapper) { min-width:0; max-width:100%; overflow-x:auto; overscroll-be\
 havior-x:contain; }
 ${prefix} .g-tabs { display:flex !important; flex-wrap:nowrap; width:100%; white-space:nowrap; }
@@ -10908,7 +10973,7 @@ clipboardData.getData("text/plain")||selected;const shared=shareLink(original);i
 event.clipboardData.setData("text/plain",shared);event.clipboardData.clearData("text/html");event.preventDefault()}});
 return{originalLink(anchor){return contextLink?.anchor===anchor&&anchor?.getAttribute("href")===contextLink.
 shared?contextLink.original:null}}}(()=>{"use strict";const KEY="__soundCloudTempoControlV1";if(window[KEY]){return}window[KEY]=true;const VERSION="\
-1.2.6";const WEBSITE="https://itslush.github.io/soundcloud-track-control/";const COPY_STORAGE="sound\
+1.2.7";const WEBSITE="https://itslush.github.io/soundcloud-track-control/";const COPY_STORAGE="sound\
 cloud.tempo.copyLinks";function copyLinksEnabled(){try{return localStorage.getItem(COPY_STORAGE)==="\
 true"}catch{return false}}const PITCH_STORAGE="soundcloud.tempo.preserveKey";const WASM_STORAGE="sou\
 ndcloud.tempo.useWasm";let timeline=null;let clipboardSharing=null;let bufferedAudio=null;let crossfade=null;

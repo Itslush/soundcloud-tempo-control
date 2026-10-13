@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          SoundCloud Track Control (Natural Pitch)
 // @namespace     soundcloud-tempo-control
-// @version       1.2.7.1
+// @version       1.2.7.2
 // @description   Playback speed, optional key preservation, saved tempos and shareable timelines.
 // @license       MIT
 // @match         https://soundcloud.com/*

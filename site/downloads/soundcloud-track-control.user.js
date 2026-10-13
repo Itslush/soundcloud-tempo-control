@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          SoundCloud Track Control (Natural Pitch)
 // @namespace     soundcloud-tempo-control
-// @version       1.2.7.1
+// @version       1.2.7.2
 // @description   Playback speed, optional key preservation, saved tempos and shareable timelines.
 // @license       MIT
 // @match         https://soundcloud.com/*
@@ -7144,9 +7144,23 @@ html:is([${attribute2}="light"],[${attribute2}="charcoal"],[${attribute2}="oled"
           scrollbar-color: var(--tempo-page-line) var(--tempo-page-ground);
         }
         ${scope} body {
+          isolation: isolate;
+        }
+        ${scope} .soundcloud-tempo-starfield {
+          position: fixed;
+          inset: 0;
+          overflow: hidden;
+          pointer-events: none;
+          z-index: -1;
+        }
+        ${scope} .soundcloud-tempo-stars {
+          position: absolute;
+          inset: -32px;
           background-image: url("data:image/svg+xml,${encodeURIComponent(stars)}");
           background-size: 960px 840px;
           background-repeat: repeat;
+          background-position: 32px 32px;
+          transform: translate3d(0, 0, 0);
         }
         ${scope}[${attribute2}="light"], ${scope}[${attribute2}="light"] body {
           --tempo-page-ground: #f4f4f4;
@@ -7163,7 +7177,7 @@ html:is([${attribute2}="light"],[${attribute2}="charcoal"],[${attribute2}="oled"
           --link-rgb: 178,60,0;
           color-scheme: light;
         }
-        ${scope}[${attribute2}="light"] body {
+        ${scope}[${attribute2}="light"] .soundcloud-tempo-stars {
           background-image: url("data:image/svg+xml,${encodeURIComponent(stars.replaceAll("#c1ccdf",
 "#555").replaceAll("#ece2d1","#666"))}");
         }
@@ -7205,31 +7219,41 @@ html:is([${attribute2}="light"],[${attribute2}="charcoal"],[${attribute2}="oled"
           background-color: var(--tempo-page-accent);
         }
       }
+      @media (forced-colors: active) {
+        ${scope} .soundcloud-tempo-starfield { display: none; }
+      }
     `}function restore(entry){const{root,applied,previousAttribute}=entry;try{if(root&&root.getAttribute(
 attribute2)===applied){if(previousAttribute===null)root.removeAttribute(attribute2);else root.setAttribute(
-attribute2,previousAttribute)}}finally{entry.drift?.(0);entry.drift=void 0;entry.style?.remove();entry.
-style=void 0;entry.root=void 0;entry.applied=void 0;if(entry.motion)entry.document.removeEventListener(
-"visibilitychange",entry.motion);entry.motion=void 0}}function sameOrigin(doc){try{const view=doc?.defaultView;
-return Boolean(view&&view.document===doc&&view.location.origin===window.location.origin&&view.location.
-protocol==="https:"&&doc.documentElement)}catch{return false}}function releaseDocument(entry){if(documents.
-get(entry.document)!==entry)return;documents.delete(entry.document);restore(entry)}function renderDocument(entry,next){
+attribute2,previousAttribute)}}finally{entry.drift?.(0);entry.drift=void 0;entry.field?.remove();entry.
+field=void 0;entry.style?.remove();entry.style=void 0;entry.root=void 0;entry.applied=void 0;if(entry.
+motion)entry.document.removeEventListener("visibilitychange",entry.motion);entry.motion=void 0;if(entry.
+ready)entry.document.removeEventListener("DOMContentLoaded",entry.ready);entry.ready=void 0}}function sameOrigin(doc){
+try{const view=doc?.defaultView;return Boolean(view&&view.document===doc&&view.location.origin===window.
+location.origin&&view.location.protocol==="https:"&&doc.documentElement)}catch{return false}}function releaseDocument(entry){
+if(documents.get(entry.document)!==entry)return;documents.delete(entry.document);restore(entry)}function renderDocument(entry,next){
 if(next==="native"){restore(entry);return}const doc=entry.document;const target=doc.documentElement;
 if(!target)return;if(entry.root&&entry.root!==target)restore(entry);if(!entry.style){const element=doc.
 createElement("style");element.textContent=css2||=stylesheet();const previous=target.getAttribute(attribute2);
-let position;try{(doc.head||target).append(element);const index=element.sheet.insertRule(`html[${attribute2}\
-] body { background-position: 0 0; }`,element.sheet.cssRules.length);position=element.sheet.cssRules[index].
-style;target.setAttribute(attribute2,next)}catch(error2){element.remove();throw error2}entry.style=element;
-entry.root=target;entry.previousAttribute=previous;entry.drift=createStarMotion((x,y)=>{position.backgroundPosition=
-`${x}px ${y}px`},doc.defaultView);entry.motion=()=>{entry.drift(!doc.hidden&&moving()&&!forcedColors?.
-matches?speed:0)};doc.addEventListener("visibilitychange",entry.motion);entry.motion()}else entry.root.
-setAttribute(attribute2,next);entry.applied=next}function render(next){const updated=[];try{for(const entry of[
-...documents.values()]){if(entry!==primary&&!sameOrigin(entry.document)){releaseDocument(entry);continue}
-renderDocument(entry,next);updated.push(entry)}}catch(error2){const failures=[error2];for(const entry of updated.
-reverse()){try{renderDocument(entry,selected)}catch(failure2){failures.push(failure2)}}if(failures.length>
-1)throw new AggregateError(failures,"Could not restore the appearance");throw error2}}function attachDocument(doc){
-if(disposed||documents.has(doc)||documents.size>=17||!sameOrigin(doc))throw new TypeError("Invalid a\
-ppearance document");let entry={document:doc};renderDocument(entry,selected);documents.set(doc,entry);
-return()=>{if(!entry)return;const owned=entry;entry=null;releaseDocument(owned)}}function change(next,persist){
+try{(doc.head||target).append(element);target.setAttribute(attribute2,next)}catch(error2){element.remove();
+throw error2}entry.style=element;entry.root=target;entry.previousAttribute=previous}else entry.root.
+setAttribute(attribute2,next);entry.applied=next;if(!doc.body){if(!entry.ready){entry.ready=()=>{doc.
+removeEventListener("DOMContentLoaded",entry.ready);entry.ready=void 0;if(!disposed)renderDocument(entry,
+selected)};doc.addEventListener("DOMContentLoaded",entry.ready)}return}if(!entry.field){const field=doc.
+createElement("div");field.className="soundcloud-tempo-starfield";field.setAttribute("aria-hidden","\
+true");const stars=doc.createElement("div");stars.className="soundcloud-tempo-stars";field.append(stars);
+doc.body.prepend(field);entry.field=field;entry.drift=createStarMotion((x,y)=>{const baseX=Math.floor(
+x/32)*32;const baseY=Math.floor(y/32)*32;const position=`${baseX+32}px ${baseY+32}px`;if(stars.style.
+backgroundPosition!==position)stars.style.backgroundPosition=position;stars.style.transform=`transla\
+te3d(${x-baseX}px, ${y-baseY}px, 0)`},doc.defaultView);entry.motion=()=>{entry.drift(!doc.hidden&&moving()&&
+!forcedColors?.matches?speed:0)};doc.addEventListener("visibilitychange",entry.motion);entry.motion()}}
+function render(next){const updated=[];try{for(const entry of[...documents.values()]){if(entry!==primary&&
+!sameOrigin(entry.document)){releaseDocument(entry);continue}renderDocument(entry,next);updated.push(
+entry)}}catch(error2){const failures=[error2];for(const entry of updated.reverse()){try{renderDocument(
+entry,selected)}catch(failure2){failures.push(failure2)}}if(failures.length>1)throw new AggregateError(
+failures,"Could not restore the appearance");throw error2}}function attachDocument(doc){if(disposed||
+documents.has(doc)||documents.size>=17||!sameOrigin(doc))throw new TypeError("Invalid appearance doc\
+ument");let entry={document:doc};renderDocument(entry,selected);documents.set(doc,entry);return()=>{
+if(!entry)return;const owned=entry;entry=null;releaseDocument(owned)}}function change(next,persist){
 if(disposed||selected===next)return false;render(next);selected=next;let failed=false;let failure2;if(persist){
 try{if(!storage)throw new Error("Appearance storage is unavailable");storage.setItem(key,next)}catch(error2){
 failed=true;failure2=error2}}onChange?.(next);if(failed)onError?.(failure2);return true}function sync(event){
@@ -7335,7 +7359,7 @@ deref();if(current?.node===node2)fail(current,new Error("WASM processor stopped"
 pending)}if(!ready(state,epoch))return;if(state.stopping)await state.stopping;if(!ready(state,epoch))
 return;const node=state.node;if(state.needsReset){const sampleRate3=state.source.context.sampleRate;
 await timed(node.configure({blockMs:Math.floor(sampleRate3*.12)/sampleRate3*1e3,intervalMs:Math.floor(
-sampleRate3*.03)/sampleRate3*1e3,splitComputation:false}));state.latency=await timed(node.latency());
+sampleRate3*.03)/sampleRate3*1e3,splitComputation:true}));state.latency=await timed(node.latency());
 if(!ready(state,epoch))return;if(!Number.isFinite(state.latency)||state.latency<0)throw new Error("W\
 ASM processor returned invalid latency");state.needsReset=false;state.input.connect(node);state.connected=
 true;node.connect(state.wet)}await timed(node.schedule({active:true,semitones}));if(!ready(state,epoch)||
@@ -9344,50 +9368,54 @@ n-items:center; }
 
 `;function createMobilePlayer({host,root,document:document2,media,readTrack,changeRate,cancelTransition,
 openSettings}){const window2=document2.defaultView;const pageLayout=createMobileLayout(document2);const events=new AbortController;
-const on=(target,name,listener)=>target?.addEventListener(name,listener,{signal:events.signal});function readPlayback(){
-let audio;for(const reference of media){const candidate=reference.deref();if(candidate&&(!audio||!candidate.
-paused))audio=candidate}return{audio,track:readTrack(),paused:!audio||audio.paused}}const sheet=document2.
-createElement("style");sheet.textContent=style;const transport=document2.createElement("div");transport.
-className="touch-transport";transport.innerHTML=`<div class="touch-art" aria-hidden="true"></div><di\
-v class="touch-caption"><strong></strong><span></span></div><button type="button" class="touch-play"\
- aria-label="Play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4l12 8-12 8Z"/></svg></bu\
-tton><button type="button" class="touch-next" aria-label="Next track"><svg viewBox="0 0 24 24" aria-\
-hidden="true"><path d="M4 4l12 8-12 8ZM20 4v16"/></svg></button><button type="button" class="touch-e\
-xpand" aria-expanded="false" aria-controls="touch-adjustments">Controls</button>`;const pitchNotice=document2.
-createElement("span");const settingsButton=document2.createElement("button");settingsButton.type="bu\
-tton";settingsButton.className="touch-settings";settingsButton.dataset.action="settings";settingsButton.
-textContent="Settings";on(settingsButton,"click",()=>openSettings(settingsButton));transport.append(
-settingsButton);pitchNotice.className="touch-pitch-notice";pitchNotice.hidden=true;transport.querySelector(
-".touch-caption").append(pitchNotice);const adjustments=document2.createElement("div");adjustments.className=
-"touch-adjustments";adjustments.id="touch-adjustments";adjustments.innerHTML=`<label>Tempo <span cla\
-ss="touch-number-row"><input id="touch-rate" type="number" min="0.25" max="4" step="0.025" value="1"\
- aria-label="Exact playback speed on mobile"><span>\xD7</span></span></label><input id="touch-rate-slid\
-er" type="range" min="0.25" max="4" step="0.001" value="1" aria-label="Playback speed on mobile"><la\
-bel class="touch-pitch">Pitch <span class="touch-number-row"><input id="touch-pitch" type="number" m\
-in="-12" max="12" step="0.5" value="0" aria-label="Key shift in semitones on mobile"><span>st</span>\
-</span></label><input id="touch-pitch-slider" type="range" min="-12" max="12" step="0.001" value="0"\
- aria-label="Key shift on mobile"><label>Volume <input id="touch-volume" type="range" min="0" max="1\
-" step="0.01" value="1" aria-label="Volume on mobile"></label><div class="touch-tools"><button type=\
-"button" data-action="previous">Previous</button><button type="button" data-action="reset">Reset tem\
-po</button><button type="button" data-action="pitch-reset">Reset pitch</button><button type="button"\
- data-action="save">Save tempo</button></div>`;root.append(sheet,transport,adjustments);const feedback=document2.
-createElement("p");feedback.className="touch-feedback";adjustments.append(feedback);const syncFields=enhanceTempoFields(
-adjustments);const native=selector=>document2.querySelector(`.playControls ${selector}`);const rate=adjustments.
-querySelector("#touch-rate"),pitch=adjustments.querySelector("#touch-pitch");const rateSlider=adjustments.
-querySelector("#touch-rate-slider"),pitchSlider=adjustments.querySelector("#touch-pitch-slider");const volume=adjustments.
-querySelector("#touch-volume");const play=transport.querySelector(".touch-play"),expand=transport.querySelector(
-".touch-expand");let frame,disposed=false,touch=false;const coarse=window2.matchMedia("(any-pointer:\
- coarse)");let artworkSource;const artworkObserver=new window2.MutationObserver(refreshArtwork);function refreshArtwork(){
-const source2=native(".playbackSoundBadge__avatar");if(source2!==artworkSource){artworkObserver.disconnect();
-artworkSource=source2;if(source2)artworkObserver.observe(source2,{childList:true,subtree:true,attributes:true,
-attributeFilter:["src","srcset","style","class"]})}const background=readTrackArtwork(source2);if(transport.
-firstElementChild.style.backgroundImage!==background)transport.firstElementChild.style.backgroundImage=
-background}document2.addEventListener("load",event=>{if(artworkSource?.contains(event.target))refreshArtwork()},
-{capture:true,signal:events.signal});function forward(input,selector){const original=root.querySelector(
-selector);original.value=input.value;original.dispatchEvent(new window2.Event("change",{bubbles:true}));
-refresh()}let editingTrack;on(rate,"focus",()=>{editingTrack=readTrack()});adjustments.addEventListener(
-"click",event=>{if(event.target.closest("button")&&rate.closest(".touch-number-row").contains(event.
-target))editingTrack=readTrack()},{capture:true,signal:events.signal});on(rate,"change",()=>{if(editingTrack===
+const observedMedia=new WeakSet;const mediaEvents=["play","pause","ended","durationchange","volumech\
+ange","emptied"];const on=(target,name,listener)=>target?.addEventListener(name,listener,{signal:events.
+signal});function refreshDetached(event){if(!event.target.isConnected)refresh()}function readPlayback(){
+let audio;for(const reference of media){const candidate=reference.deref();if(candidate&&!observedMedia.
+has(candidate)){observedMedia.add(candidate);for(const name of mediaEvents)on(candidate,name,refreshDetached)}
+if(candidate&&(!audio||!candidate.paused))audio=candidate}return{audio,track:readTrack(),paused:!audio||
+audio.paused}}const sheet=document2.createElement("style");sheet.textContent=style;const transport=document2.
+createElement("div");transport.className="touch-transport";transport.innerHTML=`<div class="touch-ar\
+t" aria-hidden="true"></div><div class="touch-caption"><strong></strong><span></span></div><button t\
+ype="button" class="touch-play" aria-label="Play"><svg viewBox="0 0 24 24" aria-hidden="true"><path \
+d="M8 4l12 8-12 8Z"/></svg></button><button type="button" class="touch-next" aria-label="Next track"\
+><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4l12 8-12 8ZM20 4v16"/></svg></button><butt\
+on type="button" class="touch-expand" aria-expanded="false" aria-controls="touch-adjustments">Contro\
+ls</button>`;const pitchNotice=document2.createElement("span");const settingsButton=document2.createElement(
+"button");settingsButton.type="button";settingsButton.className="touch-settings";settingsButton.dataset.
+action="settings";settingsButton.textContent="Settings";on(settingsButton,"click",()=>openSettings(settingsButton));
+transport.append(settingsButton);pitchNotice.className="touch-pitch-notice";pitchNotice.hidden=true;
+transport.querySelector(".touch-caption").append(pitchNotice);const adjustments=document2.createElement(
+"div");adjustments.className="touch-adjustments";adjustments.id="touch-adjustments";adjustments.innerHTML=
+`<label>Tempo <span class="touch-number-row"><input id="touch-rate" type="number" min="0.25" max="4"\
+ step="0.025" value="1" aria-label="Exact playback speed on mobile"><span>\xD7</span></span></label><in\
+put id="touch-rate-slider" type="range" min="0.25" max="4" step="0.001" value="1" aria-label="Playba\
+ck speed on mobile"><label class="touch-pitch">Pitch <span class="touch-number-row"><input id="touch\
+-pitch" type="number" min="-12" max="12" step="0.5" value="0" aria-label="Key shift in semitones on \
+mobile"><span>st</span></span></label><input id="touch-pitch-slider" type="range" min="-12" max="12"\
+ step="0.001" value="0" aria-label="Key shift on mobile"><label>Volume <input id="touch-volume" type\
+="range" min="0" max="1" step="0.01" value="1" aria-label="Volume on mobile"></label><div class="tou\
+ch-tools"><button type="button" data-action="previous">Previous</button><button type="button" data-a\
+ction="reset">Reset tempo</button><button type="button" data-action="pitch-reset">Reset pitch</butto\
+n><button type="button" data-action="save">Save tempo</button></div>`;root.append(sheet,transport,adjustments);
+const feedback=document2.createElement("p");feedback.className="touch-feedback";adjustments.append(feedback);
+const syncFields=enhanceTempoFields(adjustments);const native=selector=>document2.querySelector(`.pl\
+ayControls ${selector}`);const rate=adjustments.querySelector("#touch-rate"),pitch=adjustments.querySelector(
+"#touch-pitch");const rateSlider=adjustments.querySelector("#touch-rate-slider"),pitchSlider=adjustments.
+querySelector("#touch-pitch-slider");const volume=adjustments.querySelector("#touch-volume");const play=transport.
+querySelector(".touch-play"),expand=transport.querySelector(".touch-expand");let frame,disposed=false,
+touch=false;const coarse=window2.matchMedia("(any-pointer: coarse)");let artworkSource;const artworkObserver=new window2.
+MutationObserver(refreshArtwork);function refreshArtwork(){const source2=native(".playbackSoundBadge\
+__avatar");if(source2!==artworkSource){artworkObserver.disconnect();artworkSource=source2;if(source2)
+artworkObserver.observe(source2,{childList:true,subtree:true,attributes:true,attributeFilter:["src",
+"srcset","style","class"]})}const background=readTrackArtwork(source2);if(transport.firstElementChild.
+style.backgroundImage!==background)transport.firstElementChild.style.backgroundImage=background}document2.
+addEventListener("load",event=>{if(artworkSource?.contains(event.target))refreshArtwork()},{capture:true,
+signal:events.signal});function forward(input,selector){const original=root.querySelector(selector);
+original.value=input.value;original.dispatchEvent(new window2.Event("change",{bubbles:true}));refresh()}
+let editingTrack;on(rate,"focus",()=>{editingTrack=readTrack()});adjustments.addEventListener("click",
+event=>{if(event.target.closest("button")&&rate.closest(".touch-number-row").contains(event.target))
+editingTrack=readTrack()},{capture:true,signal:events.signal});on(rate,"change",()=>{if(editingTrack===
 readTrack())changeRate(rate.value);refresh()});on(rate,"blur",refresh);on(rateSlider,"input",()=>{changeRate(
 rateSlider.value);refresh()});on(pitch,"change",()=>forward(pitch,"#quick-key-shift"));on(pitchSlider,
 "input",()=>forward(pitchSlider,"#quick-key-shift"));on(volume,"input",()=>{const audio=readPlayback().
@@ -9400,12 +9428,13 @@ on(expand,"click",()=>{const expanded=host.toggleAttribute("data-touch-expanded"
 on(adjustments,"click",event=>{switch(event.target.closest("[data-action]")?.dataset.action){case"pr\
 evious":nativeTransport(".playControls__prev");break;case"reset":rate.value="1";changeRate(1);refresh();
 break;case"pitch-reset":pitch.value="0";forward(pitch,"#quick-key-shift");break;case"save":root.querySelector(
-".memory").click();break}});function refresh(){if(disposed)return;const state=readPlayback();const currentRate=root.
-querySelector("#rate-number");const currentPitch=root.querySelector("#quick-key-shift");for(const[input,
-source2]of[[rate,currentRate],[pitch,currentPitch]]){if(root.activeElement!==input)input.value=source2.
-value;input.min=source2.min;input.max=source2.max}rate.step=root.querySelector("#tempo-increment").value||
-"0.025";pitch.step=currentPitch.step;for(const[slider,input]of[[rateSlider,rate],[pitchSlider,pitch]]){
-slider.min=input.min;slider.max=input.max;if(root.activeElement!==slider)slider.value=input.value;syncTempoRange(
+".memory").click();break}});function text(element,value){if(element.textContent!==value)element.textContent=
+value}function refresh(){if(disposed)return;const state=readPlayback();const currentRate=root.querySelector(
+"#rate-number");const currentPitch=root.querySelector("#quick-key-shift");for(const[input,source2]of[
+[rate,currentRate],[pitch,currentPitch]]){if(root.activeElement!==input)input.value=source2.value;input.
+min=source2.min;input.max=source2.max}rate.step=root.querySelector("#tempo-increment").value||"0.025";
+pitch.step=currentPitch.step;for(const[slider,input]of[[rateSlider,rate],[pitchSlider,pitch]]){slider.
+min=input.min;slider.max=input.max;if(root.activeElement!==slider)slider.value=input.value;syncTempoRange(
 slider)}const hiddenPitch=root.querySelector(".quick-key").hidden;adjustments.querySelector(".touch-\
 pitch").hidden=hiddenPitch;pitchSlider.hidden=hiddenPitch;adjustments.querySelector("[data-action=pi\
 tch-reset]").hidden=hiddenPitch;const nativePlay=native(".playControls__play");play.disabled=!nativePlay||
@@ -9413,15 +9442,16 @@ nativePlay.disabled||nativePlay.getAttribute("aria-disabled")==="true";const nex
 ols__next");transport.querySelector(".touch-next").disabled=!next||next.disabled||next.getAttribute(
 "aria-disabled")==="true";const previous=native(".playControls__prev");adjustments.querySelector("[d\
 ata-action=previous]").disabled=!previous||previous.disabled||previous.getAttribute("aria-disabled")===
-"true";play.setAttribute("aria-label",state.paused?"Play":"Pause");play.querySelector("path").setAttribute(
-"d",state.paused?"M8 4l12 8-12 8Z":"M8 4v16M16 4v16");const title=native(".playbackSoundBadge__title\
-Link");transport.querySelector("strong").textContent=title?.getAttribute("title")||title?.textContent?.
-trim()||"Choose a track";transport.querySelector(".touch-caption span").textContent=native(".playbac\
-kSoundBadge__lightLink")?.textContent?.trim()||state.track||"";const nativeNotice=native(".soundclou\
-d-tempo-pitch-notice");pitchNotice.textContent=nativeNotice?.textContent||"";pitchNotice.hidden=!nativeNotice||
-nativeNotice.hidden;const error2=root.querySelector(".error");feedback.textContent=error2.hidden?root.
-querySelector(".status").textContent:error2.title;const save=adjustments.querySelector("[data-action\
-=save]");save.textContent=root.querySelector(".memory").title||"Save tempo";save.disabled=!state.track;
+"true";const playLabel=state.paused?"Play":"Pause";if(play.getAttribute("aria-label")!==playLabel){play.
+setAttribute("aria-label",playLabel);play.querySelector("path").setAttribute("d",state.paused?"M8 4l\
+12 8-12 8Z":"M8 4v16M16 4v16")}const title=native(".playbackSoundBadge__titleLink");text(transport.querySelector(
+"strong"),title?.getAttribute("title")||title?.textContent?.trim()||"Choose a track");text(transport.
+querySelector(".touch-caption span"),native(".playbackSoundBadge__lightLink")?.textContent?.trim()||
+state.track||"");const nativeNotice=native(".soundcloud-tempo-pitch-notice");text(pitchNotice,nativeNotice?.
+textContent||"");const hideNotice=!nativeNotice||nativeNotice.hidden;if(pitchNotice.hidden!==hideNotice)
+pitchNotice.hidden=hideNotice;const error2=root.querySelector(".error");text(feedback,error2.hidden?
+root.querySelector(".status").textContent:error2.title);const save=adjustments.querySelector("[data-\
+action=save]");text(save,root.querySelector(".memory").title||"Save tempo");save.disabled=!state.track;
 refreshArtwork();if(state.audio&&root.activeElement!==volume)volume.value=String(state.audio.muted?0:
 state.audio.volume);volume.disabled=!state.audio;syncTempoRange(volume);syncFields()}function layout(){
 if(disposed||!host.isConnected)return;const geometry=touchViewport(window2.visualViewport,window2.screen.
@@ -9437,19 +9467,19 @@ height)/geometry.scale}px`;if(host.style.getPropertyValue("--touch-dock-top")!==
 "--touch-dock-top",top)}function scheduleLayout(){if(frame||disposed)return;frame=window2.requestAnimationFrame(
 ()=>{frame=void 0;layout()})}on(window2.visualViewport,"resize",scheduleLayout);on(window2.visualViewport,
 "scroll",scheduleLayout);on(window2,"resize",scheduleLayout);on(coarse,"change",scheduleLayout);on(document2,
-"visibilitychange",refresh);for(const name of["play","pause","timeupdate","durationchange","volumech\
-ange","emptied"]){document2.addEventListener(name,refresh,{capture:true,signal:events.signal})}const observer=new window2.
-ResizeObserver(scheduleLayout);observer.observe(host);refresh();layout();return{refresh(){refresh();
-scheduleLayout()},overlap(state){const source2=native(".soundcloud-tempo-crossfade-artwork");const artwork=transport.
-firstElementChild;let copy=artwork.firstElementChild;if(!state||!source2){copy?.remove()}else{if(!copy){
-copy=document2.createElement("span");copy.className="touch-cover";copy.append(document2.createElement(
-"span"),document2.createElement("span"));artwork.append(copy)}for(const name of["--tempo-artwork-sta\
-rt","--tempo-artwork-end","--tempo-artwork-progress"])copy.style.setProperty(name,source2.style.getPropertyValue(
-name));[...copy.children].forEach((child,index)=>{child.style.backgroundImage=source2.children[index].
-style.backgroundImage})}refresh()},dispose(){disposed=true;events.abort();observer.disconnect();artworkObserver.
-disconnect();window2.cancelAnimationFrame(frame);pageLayout.dispose();if(host.matches(":popover-open"))
-host.hidePopover();host.removeAttribute("popover");host.removeAttribute("data-touch-player");host.removeAttribute(
-"data-touch-expanded");sheet.remove();transport.remove();adjustments.remove()}}}function createMobileAvailability({document:document2,website}){const window2=document2.defaultView,
+"visibilitychange",refresh);for(const name of mediaEvents){document2.addEventListener(name,refresh,{
+capture:true,signal:events.signal})}const observer=new window2.ResizeObserver(scheduleLayout);observer.
+observe(host);refresh();layout();return{refresh(){refresh();scheduleLayout()},overlap(state){const source2=native(
+".soundcloud-tempo-crossfade-artwork");const artwork=transport.firstElementChild;let copy=artwork.firstElementChild;
+if(!state||!source2){copy?.remove()}else{if(!copy){copy=document2.createElement("span");copy.className=
+"touch-cover";copy.append(document2.createElement("span"),document2.createElement("span"));artwork.append(
+copy)}for(const name of["--tempo-artwork-start","--tempo-artwork-end","--tempo-artwork-progress"])copy.
+style.setProperty(name,source2.style.getPropertyValue(name));[...copy.children].forEach((child,index)=>{
+child.style.backgroundImage=source2.children[index].style.backgroundImage})}refresh()},dispose(){disposed=
+true;events.abort();observer.disconnect();artworkObserver.disconnect();window2.cancelAnimationFrame(
+frame);pageLayout.dispose();if(host.matches(":popover-open"))host.hidePopover();host.removeAttribute(
+"popover");host.removeAttribute("data-touch-player");host.removeAttribute("data-touch-expanded");sheet.
+remove();transport.remove();adjustments.remove()}}}function createMobileAvailability({document:document2,website}){const window2=document2.defaultView,
 events=new AbortController;let notice,dismissed=false;function update(){const geometry=touchViewport(
 window2.visualViewport,window2.screen.width,window2.matchMedia("(any-pointer:coarse)").matches,window2.
 navigator.maxTouchPoints,window2.screen.height);if(!geometry.touch||document2.querySelector(".playCo\
@@ -10803,7 +10833,7 @@ clipboardData.getData("text/plain")||selected;const shared=shareLink(original);i
 event.clipboardData.setData("text/plain",shared);event.clipboardData.clearData("text/html");event.preventDefault()}});
 return{originalLink(anchor){return contextLink?.anchor===anchor&&anchor?.getAttribute("href")===contextLink.
 shared?contextLink.original:null}}}(()=>{"use strict";const KEY="__soundCloudTempoControlV1";if(window[KEY]){return}window[KEY]=true;const VERSION="\
-1.2.7.1";const WEBSITE="https://itslush.github.io/soundcloud-track-control/";const COPY_STORAGE="sou\
+1.2.7.2";const WEBSITE="https://itslush.github.io/soundcloud-track-control/";const COPY_STORAGE="sou\
 ndcloud.tempo.copyLinks";function copyLinksEnabled(){try{return localStorage.getItem(COPY_STORAGE)===
 "true"}catch{return false}}const PITCH_STORAGE="soundcloud.tempo.preserveKey";const WASM_STORAGE="so\
 undcloud.tempo.useWasm";let timeline=null;let clipboardSharing=null;let bufferedAudio=null;let crossfade=null;

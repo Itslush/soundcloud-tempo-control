@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          SoundCloud Track Control (Natural Pitch)
 // @namespace     soundcloud-tempo-control
-// @version       1.2.5
+// @version       1.2.6
 // @description   Playback speed, optional key preservation, saved tempos and shareable timelines.
 // @license       MIT
 // @match         https://soundcloud.com/*
@@ -9208,13 +9208,15 @@ disconnect();intersection.disconnect();lanes.forEach(lane=>lane.controller.abort
 element.remove()}}}var attribute="data-track-control-mobile-layout";var prefix=`html[${attribute}]`;var css=`
 ${prefix} { --tc-phone-unit:calc(1px * var(--tc-phone-scale)); }
 ${prefix} body { min-width:0 !important; padding-bottom:var(--tc-phone-dock) !important; }
+${prefix} .playControls,${prefix} .playControls * { visibility:hidden !important; }
 ${prefix} .l-container { width:100% !important; min-width:0 !important; max-width:none !important; b\
 ox-sizing:border-box; padding-inline:calc(12 * var(--tc-phone-unit)) !important; }
-${prefix} .l-main { float:none !important; width:100% !important; min-width:0 !important; padding:0 \
-!important; border-right:0; }
+${prefix} .l-main { float:none !important; width:100% !important; min-width:0 !important; margin:0 !\
+important; padding:0 !important; border-right:0; }
 ${prefix} .l-content { padding-top:calc(12 * var(--tc-phone-unit)) !important; }
-${prefix} .l-sidebar { position:static !important; width:100% !important; margin:0 !important; paddi\
-ng:calc(12 * var(--tc-phone-unit)) 0 !important; }
+${prefix} :is(.l-sidebar,.l-sidebar-right),${prefix} .l-sidebar-right .l-fixed { position:static !im\
+portant; float:none !important; width:100% !important; margin:0 !important; padding:calc(12 * var(--\
+tc-phone-unit)) 0 !important; transform:none !important; }
 ${prefix} .header { position:relative !important; height:auto !important; top:auto !important; }
 ${prefix} .header__inner { display:flex !important; flex-wrap:wrap; height:auto !important; gap:calc\
 (8 * var(--tc-phone-unit)); padding-block:calc(8 * var(--tc-phone-unit)); }
@@ -9242,7 +9244,8 @@ mportant; font-size:calc(14 * var(--tc-phone-unit)); line-height:1.4; padding:ca
 e-unit)); box-sizing:border-box; }
 ${prefix} .header__logo { float:none !important; flex:none; }
 ${prefix} .header__logoLink-wordmark { display:none !important; }
-${prefix} .header__logoLink-iconOnly { width:calc(44 * var(--tc-phone-unit)) !important; }
+${prefix} .header__logoLink-iconOnly { display:flex !important; width:calc(44 * var(--tc-phone-unit)\
+) !important; overflow:hidden; font-size:0 !important; }
 ${prefix} .header__logoLink svg { width:calc(24 * var(--tc-phone-unit)); height:calc(24 * var(--tc-p\
 hone-unit)); }
 ${prefix} :is(.header__right,.header__loginMenu,.header__upload) { flex-shrink:0; }
@@ -9259,11 +9262,42 @@ alc(16 * var(--tc-phone-unit)) !important; line-height:1.4 !important; }
 ${prefix} .l-main :is(button,input,select) { min-height:calc(44 * var(--tc-phone-unit)); font-size:c\
 alc(16 * var(--tc-phone-unit)); }
 ${prefix} .l-main button { min-width:calc(44 * var(--tc-phone-unit)); }
-${prefix} :is(.soundBadgeList,.lazyLoadingList__list):has(.soundBadge:not(.compact)) { display:grid \
-!important; grid-template-columns:repeat(var(--tc-phone-columns),minmax(0,1fr)); gap:calc(16 * var(-\
--tc-phone-unit)) calc(12 * var(--tc-phone-unit)); }
-${prefix} :is(.soundBadgeList,.lazyLoadingList__list):has(.soundBadge:not(.compact)) > li { width:10\
-0% !important; min-width:0; float:none !important; padding:0 !important; margin:0 !important; }
+${prefix} :is(.soundBadgeList,.lazyLoadingList__list,.soundBadgeList:not(.compact) > .sc-list-nostyl\
+e):has(> li > :is(.soundBadge:not(.compact),.playableTile)) { display:grid !important; grid-template\
+-columns:repeat(var(--tc-phone-columns),minmax(0,1fr)); gap:calc(16 * var(--tc-phone-unit)) calc(12 \
+* var(--tc-phone-unit)); }
+${prefix} :is(.soundBadgeList,.lazyLoadingList__list,.soundBadgeList:not(.compact) > .sc-list-nostyl\
+e):has(> li > :is(.soundBadge:not(.compact),.playableTile)) > li { width:100% !important; min-width:\
+0; float:none !important; padding:0 !important; margin:0 !important; }
+${prefix} .tileGallery__slider { width:100% !important; margin:0 !important; padding:0 !important; }\
+
+${prefix} .tileGallery__sliderPanel { display:grid !important; grid-template-columns:repeat(var(--tc\
+-phone-columns),minmax(0,1fr)); transform:none !important; max-height:none !important; height:auto !\
+important; gap:calc(16 * var(--tc-phone-unit)) calc(12 * var(--tc-phone-unit)); padding-bottom:calc(\
+12 * var(--tc-phone-unit)); }
+${prefix} .tileGallery__sliderPanelSlide { width:auto !important; min-width:0; margin:0 !important; \
+padding:0 !important; }
+${prefix} .tileGallery__sliderPanelSlide:empty,${prefix} .tileGallery__sliderPeek { display:none !im\
+portant; }
+${prefix} .tileGallery.m-hasItemsForward .tileGallery__sliderPeekForward { display:block !important;\
+ position:static !important; width:100% !important; height:auto !important; margin:0 !important; }
+${prefix} .tileGallery__slideForwardButton { position:static !important; display:block !important; w\
+idth:calc(44 * var(--tc-phone-unit)) !important; height:calc(44 * var(--tc-phone-unit)) !important; \
+margin:calc(8 * var(--tc-phone-unit)) auto !important; }
+${prefix} .tileGallery__slideForwardButton svg { width:calc(20 * var(--tc-phone-unit)); height:calc(\
+20 * var(--tc-phone-unit)); }
+${prefix} .tileGallery .playableTile { margin-bottom:0 !important; }
+${prefix} .playableTile { width:100% !important; min-width:0; }
+${prefix} .playableTile__description { height:auto !important; padding-top:calc(8 * var(--tc-phone-u\
+nit)); }
+${prefix} .playableTile__heading { height:auto !important; white-space:normal !important; overflow-w\
+rap:anywhere; font-size:calc(16 * var(--tc-phone-unit)) !important; line-height:1.4 !important; }
+${prefix} .playableTile__heading:not(.playableTile__mainHeading) { font-size:calc(14 * var(--tc-phon\
+e-unit)) !important; }
+${prefix} .playableTile__playButton:has(.playButton:not(.sc-button-buffering)) { visibility:visible \
+!important; opacity:1 !important; }
+${prefix} .playableTile__playButton .playButton { min-width:calc(44 * var(--tc-phone-unit)); min-hei\
+ght:calc(44 * var(--tc-phone-unit)); }
 ${prefix} .soundBadge:not(.compact) { width:100% !important; min-width:0; padding:0 !important; }
 ${prefix} .soundBadge:not(.compact) :is(.soundBadge__artwork,.sc-artwork,.image) { display:block; wi\
 dth:100% !important; height:auto !important; aspect-ratio:1; float:none; margin:0 !important; backgr\
@@ -9310,13 +9344,14 @@ o-surface); cursor:pointer; list-style:none; }
 track); border-radius:4px; }
 .waveform-panel:not([open]) .waveform-content { display:none; }
 :host([data-touch-player]) { position:fixed !important; display:block !important; left:var(--touch-l\
-eft) !important; top:var(--touch-dock-top) !important; bottom:auto !important; width:var(--touch-wid\
-th) !important; max-height:var(--touch-panel-height); overflow:auto; overscroll-behavior:contain; mi\
-n-width:0 !important; margin:0 !important; padding:8px 12px max(8px,env(safe-area-inset-bottom)); tr\
-ansform:scale(var(--touch-inverse)); transform-origin:0 0; z-index:2147483646; font:16px/1.4 Arial,s\
-ans-serif; color:var(--tempo-fg); background:var(--tempo-surface); border-top:1px solid var(--tempo-\
-track); visibility:visible !important; box-sizing:border-box; }
+eft) !important; top:var(--touch-dock-top) !important; bottom:auto !important; right:auto; width:var\
+(--touch-width) !important; max-height:var(--touch-panel-height); overflow:auto; overscroll-behavior\
+:contain; min-width:0 !important; margin:0 !important; padding:8px 12px max(8px,env(safe-area-inset-\
+bottom)); transform:scale(var(--touch-inverse)); transform-origin:0 0; z-index:2147483646; font:16px\
+/1.4 Arial,sans-serif; color:var(--tempo-fg); background:var(--tempo-surface); border:0; border-top:\
+1px solid var(--tempo-track); visibility:visible !important; box-sizing:border-box; }
 :host([data-touch-player]) .controls { display:none; }
+:host([data-touch-player])::backdrop { display:none; }
 :host([data-touch-player]) .touch-transport { display:grid; grid-template-columns:44px minmax(0,1fr)\
  44px 44px 64px; align-items:center; gap:6px; }
 .touch-transport button,.touch-adjustments button { display:flex; align-items:center; justify-conten\
@@ -9348,6 +9383,8 @@ line-clamp:2; -webkit-box-orient:vertical; }
 :host([data-touch-player]) .touch-play { grid-column:3; grid-row:2; }
 :host([data-touch-player]) .touch-next { grid-column:4; grid-row:2; }
 :host([data-touch-player]) .touch-expand { grid-column:5; grid-row:2; font-size:14px; }
+:host([data-touch-player]) .touch-settings { grid-column:1 / 3; grid-row:2; font-size:14px; justify-\
+self:start; padding-inline:12px; }
 :host([data-touch-player][data-touch-expanded]) .touch-adjustments { display:grid; gap:12px; padding\
 -top:12px; }
 .touch-adjustments label { display:grid; grid-template-columns:68px minmax(0,1fr); gap:8px; align-it\
@@ -9413,7 +9450,10 @@ l="Play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4l12 8-12 8Z"/>
 on type="button" class="touch-next" aria-label="Next track"><svg viewBox="0 0 24 24" aria-hidden="tr\
 ue"><path d="M4 4l12 8-12 8ZM20 4v16"/></svg></button><button type="button" class="touch-expand" ari\
 a-expanded="false" aria-controls="touch-adjustments">Controls</button>`;const pitchNotice=document2.
-createElement("span");pitchNotice.className="touch-pitch-notice";pitchNotice.hidden=true;transport.querySelector(
+createElement("span");const settingsButton=document2.createElement("button");settingsButton.type="bu\
+tton";settingsButton.className="touch-settings";settingsButton.dataset.action="settings";settingsButton.
+textContent="Settings";on(settingsButton,"click",()=>openSettings(settingsButton));transport.append(
+settingsButton);pitchNotice.className="touch-pitch-notice";pitchNotice.hidden=true;transport.querySelector(
 ".touch-caption").append(pitchNotice);const adjustments=document2.createElement("div");adjustments.className=
 "touch-adjustments";adjustments.id="touch-adjustments";adjustments.innerHTML=`<label>Tempo <span cla\
 ss="touch-number-row"><input id="touch-rate" type="number" min="0.25" max="4" step="0.025" value="1"\
@@ -9426,61 +9466,58 @@ in="-12" max="12" step="0.5" value="0" aria-label="Key shift in semitones on mob
 " step="0.01" value="1" aria-label="Volume on mobile"></label><div class="touch-tools"><button type=\
 "button" data-action="previous">Previous</button><button type="button" data-action="reset">Reset tem\
 po</button><button type="button" data-action="pitch-reset">Reset pitch</button><button type="button"\
- data-action="save">Save tempo</button><button type="button" data-action="settings">Settings</button\
-></div>`;const details=document2.createElement("details");details.className="waveform-panel";details.
-innerHTML='<summary>Waveform</summary><div class="waveform-content"></div>';root.append(sheet,transport,
-adjustments,details);const feedback=document2.createElement("p");feedback.className="touch-feedback";
-adjustments.append(feedback);const waveform=createTrackWaveform({container:details.lastElementChild,
-seek:onSeek});const syncFields=enhanceTempoFields(adjustments);const native=selector=>document2.querySelector(
-`.playControls ${selector}`);const rate=adjustments.querySelector("#touch-rate"),pitch=adjustments.querySelector(
-"#touch-pitch");const rateSlider=adjustments.querySelector("#touch-rate-slider"),pitchSlider=adjustments.
+ data-action="save">Save tempo</button></div>`;const details=document2.createElement("details");details.
+className="waveform-panel";details.innerHTML='<summary>Waveform</summary><div class="waveform-conten\
+t"></div>';root.append(sheet,transport,adjustments,details);const feedback=document2.createElement("\
+p");feedback.className="touch-feedback";adjustments.append(feedback);const waveform=createTrackWaveform(
+{container:details.lastElementChild,seek:onSeek});const syncFields=enhanceTempoFields(adjustments);const native=selector=>document2.
+querySelector(`.playControls ${selector}`);const rate=adjustments.querySelector("#touch-rate"),pitch=adjustments.
+querySelector("#touch-pitch");const rateSlider=adjustments.querySelector("#touch-rate-slider"),pitchSlider=adjustments.
 querySelector("#touch-pitch-slider");const volume=adjustments.querySelector("#touch-volume");const play=transport.
 querySelector(".touch-play"),expand=transport.querySelector(".touch-expand");let overlap,timer,frame,
-disposed=false,touch=false;let hiddenBar,originalVisibility;function restoreBar(){if(hiddenBar)hiddenBar.
-style.visibility=originalVisibility;hiddenBar=void 0}const coarse=window2.matchMedia("(any-pointer: \
-coarse)");function forward(input,selector){const original=root.querySelector(selector);original.value=
-input.value;original.dispatchEvent(new window2.Event("change",{bubbles:true}));refresh()}let editingTrack;
-on(rate,"focus",()=>{editingTrack=readTrack()});adjustments.addEventListener("click",event=>{if(event.
-target.closest("button")&&rate.closest(".touch-number-row").contains(event.target))editingTrack=readTrack()},
-{capture:true,signal:events.signal});on(rate,"change",()=>{if(editingTrack===readTrack())changeRate(
-rate.value);refresh()});on(rate,"blur",refresh);on(rateSlider,"input",()=>{changeRate(rateSlider.value);
-refresh()});on(pitch,"change",()=>forward(pitch,"#quick-key-shift"));on(pitchSlider,"input",()=>forward(
-pitchSlider,"#quick-key-shift"));on(volume,"input",()=>{const audio=readPlayback().audio;if(audio){audio.
-volume=volume.valueAsNumber;audio.muted=false}syncTempoRange(volume)});function nativeTransport(selector){
-const button=native(selector);if(!button||button.disabled||button.getAttribute("aria-disabled")==="t\
-rue")return;cancelTransition();button.click()}on(play,"click",()=>nativeTransport(".playControls__pl\
-ay"));on(transport.querySelector(".touch-next"),"click",()=>nativeTransport(".playControls__next"));
-on(expand,"click",()=>{const expanded=host.toggleAttribute("data-touch-expanded");expand.setAttribute(
-"aria-expanded",String(expanded));expand.textContent=expanded?"Close":"Controls";if(!expanded)details.
-open=false;refresh();layout()});on(adjustments,"click",event=>{switch(event.target.closest("[data-ac\
-tion]")?.dataset.action){case"previous":nativeTransport(".playControls__prev");break;case"reset":rate.
-value="1";changeRate(1);refresh();break;case"pitch-reset":pitch.value="0";forward(pitch,"#quick-key-\
-shift");break;case"save":root.querySelector(".memory").click();break;case"settings":openSettings(event.
-target.closest("[data-action]"));break}});function refresh(){if(disposed)return;const state=readPlayback();
-const currentRate=root.querySelector("#rate-number");const currentPitch=root.querySelector("#quick-k\
-ey-shift");for(const[input,source2]of[[rate,currentRate],[pitch,currentPitch]]){if(root.activeElement!==
-input)input.value=source2.value;input.min=source2.min;input.max=source2.max}rate.step=root.querySelector(
-"#tempo-increment").value||"0.025";pitch.step=currentPitch.step;for(const[slider,input]of[[rateSlider,
-rate],[pitchSlider,pitch]]){slider.min=input.min;slider.max=input.max;if(root.activeElement!==slider)
-slider.value=input.value;syncTempoRange(slider)}const hiddenPitch=root.querySelector(".quick-key").hidden;
-adjustments.querySelector(".touch-pitch").hidden=hiddenPitch;pitchSlider.hidden=hiddenPitch;adjustments.
-querySelector("[data-action=pitch-reset]").hidden=hiddenPitch;const nativePlay=native(".playControls\
-__play");play.disabled=!nativePlay||nativePlay.disabled||nativePlay.getAttribute("aria-disabled")===
-"true";const next=native(".playControls__next");transport.querySelector(".touch-next").disabled=!next||
-next.disabled||next.getAttribute("aria-disabled")==="true";const previous=native(".playControls__pre\
-v");adjustments.querySelector("[data-action=previous]").disabled=!previous||previous.disabled||previous.
-getAttribute("aria-disabled")==="true";play.setAttribute("aria-label",state.paused?"Play":"Pause");play.
-querySelector("path").setAttribute("d",state.paused?"M8 4l12 8-12 8Z":"M8 4v16M16 4v16");const title=native(
-".playbackSoundBadge__titleLink");transport.querySelector("strong").textContent=title?.getAttribute(
-"title")||title?.textContent?.trim()||"Choose a track";transport.querySelector(".touch-caption span").
-textContent=native(".playbackSoundBadge__lightLink")?.textContent?.trim()||state.track||"";const nativeNotice=native(
-".soundcloud-tempo-pitch-notice");pitchNotice.textContent=nativeNotice?.textContent||"";pitchNotice.
-hidden=!nativeNotice||nativeNotice.hidden;const error2=root.querySelector(".error");feedback.textContent=
-error2.hidden?root.querySelector(".status").textContent:error2.title;const save=adjustments.querySelector(
-"[data-action=save]");save.textContent=root.querySelector(".memory").title||"Save tempo";save.disabled=
-!state.track;const image=native(".playbackSoundBadge__avatar .sc-artwork,.playbackSoundBadge__avatar\
- .image")||native(".playbackSoundBadge__avatar");const background=image?window2.getComputedStyle(image).
-backgroundImage:"none";if(transport.firstElementChild.style.backgroundImage!==background)transport.firstElementChild.
+disposed=false,touch=false;const coarse=window2.matchMedia("(any-pointer: coarse)");function forward(input,selector){
+const original=root.querySelector(selector);original.value=input.value;original.dispatchEvent(new window2.
+Event("change",{bubbles:true}));refresh()}let editingTrack;on(rate,"focus",()=>{editingTrack=readTrack()});
+adjustments.addEventListener("click",event=>{if(event.target.closest("button")&&rate.closest(".touch\
+-number-row").contains(event.target))editingTrack=readTrack()},{capture:true,signal:events.signal});
+on(rate,"change",()=>{if(editingTrack===readTrack())changeRate(rate.value);refresh()});on(rate,"blur",
+refresh);on(rateSlider,"input",()=>{changeRate(rateSlider.value);refresh()});on(pitch,"change",()=>forward(
+pitch,"#quick-key-shift"));on(pitchSlider,"input",()=>forward(pitchSlider,"#quick-key-shift"));on(volume,
+"input",()=>{const audio=readPlayback().audio;if(audio){audio.volume=volume.valueAsNumber;audio.muted=
+false}syncTempoRange(volume)});function nativeTransport(selector){const button=native(selector);if(!button||
+button.disabled||button.getAttribute("aria-disabled")==="true")return;cancelTransition();button.click()}
+on(play,"click",()=>nativeTransport(".playControls__play"));on(transport.querySelector(".touch-next"),
+"click",()=>nativeTransport(".playControls__next"));on(expand,"click",()=>{const expanded=host.toggleAttribute(
+"data-touch-expanded");expand.setAttribute("aria-expanded",String(expanded));expand.textContent=expanded?
+"Close":"Controls";if(!expanded)details.open=false;refresh();layout()});on(adjustments,"click",event=>{
+switch(event.target.closest("[data-action]")?.dataset.action){case"previous":nativeTransport(".playC\
+ontrols__prev");break;case"reset":rate.value="1";changeRate(1);refresh();break;case"pitch-reset":pitch.
+value="0";forward(pitch,"#quick-key-shift");break;case"save":root.querySelector(".memory").click();break}});
+function refresh(){if(disposed)return;const state=readPlayback();const currentRate=root.querySelector(
+"#rate-number");const currentPitch=root.querySelector("#quick-key-shift");for(const[input,source2]of[
+[rate,currentRate],[pitch,currentPitch]]){if(root.activeElement!==input)input.value=source2.value;input.
+min=source2.min;input.max=source2.max}rate.step=root.querySelector("#tempo-increment").value||"0.025";
+pitch.step=currentPitch.step;for(const[slider,input]of[[rateSlider,rate],[pitchSlider,pitch]]){slider.
+min=input.min;slider.max=input.max;if(root.activeElement!==slider)slider.value=input.value;syncTempoRange(
+slider)}const hiddenPitch=root.querySelector(".quick-key").hidden;adjustments.querySelector(".touch-\
+pitch").hidden=hiddenPitch;pitchSlider.hidden=hiddenPitch;adjustments.querySelector("[data-action=pi\
+tch-reset]").hidden=hiddenPitch;const nativePlay=native(".playControls__play");play.disabled=!nativePlay||
+nativePlay.disabled||nativePlay.getAttribute("aria-disabled")==="true";const next=native(".playContr\
+ols__next");transport.querySelector(".touch-next").disabled=!next||next.disabled||next.getAttribute(
+"aria-disabled")==="true";const previous=native(".playControls__prev");adjustments.querySelector("[d\
+ata-action=previous]").disabled=!previous||previous.disabled||previous.getAttribute("aria-disabled")===
+"true";play.setAttribute("aria-label",state.paused?"Play":"Pause");play.querySelector("path").setAttribute(
+"d",state.paused?"M8 4l12 8-12 8Z":"M8 4v16M16 4v16");const title=native(".playbackSoundBadge__title\
+Link");transport.querySelector("strong").textContent=title?.getAttribute("title")||title?.textContent?.
+trim()||"Choose a track";transport.querySelector(".touch-caption span").textContent=native(".playbac\
+kSoundBadge__lightLink")?.textContent?.trim()||state.track||"";const nativeNotice=native(".soundclou\
+d-tempo-pitch-notice");pitchNotice.textContent=nativeNotice?.textContent||"";pitchNotice.hidden=!nativeNotice||
+nativeNotice.hidden;const error2=root.querySelector(".error");feedback.textContent=error2.hidden?root.
+querySelector(".status").textContent:error2.title;const save=adjustments.querySelector("[data-action\
+=save]");save.textContent=root.querySelector(".memory").title||"Save tempo";save.disabled=!state.track;
+const image=native(".playbackSoundBadge__avatar .sc-artwork,.playbackSoundBadge__avatar .image")||native(
+".playbackSoundBadge__avatar");const background=image?window2.getComputedStyle(image).backgroundImage:
+"none";if(transport.firstElementChild.style.backgroundImage!==background)transport.firstElementChild.
 style.backgroundImage=background;if(state.audio&&root.activeElement!==volume)volume.value=String(state.
 audio.muted?0:state.audio.volume);volume.disabled=!state.audio;syncTempoRange(volume);syncFields();tickWaveform()}
 function tickWaveform(){window2.clearTimeout(timer);timer=void 0;if(!details.open||document2.hidden||
@@ -9490,21 +9527,21 @@ details.getClientRects().length>0))return;const state=readPlayback();waveform.up
 !host.isConnected)return;const geometry=touchViewport(window2.visualViewport,window2.screen.width,coarse.
 matches,window2.navigator.maxTouchPoints,window2.screen.height);touch=geometry.touch;pageLayout.update(
 geometry,touch?host.offsetHeight:0);host.toggleAttribute("data-touch-player",touch);const bar=host.closest(
-".playControls");if(hiddenBar&&(!touch||hiddenBar!==bar))restoreBar();if(touch&&bar&&hiddenBar!==bar){
-hiddenBar=bar;originalVisibility=bar.style.visibility;bar.style.visibility="hidden"}if(!touch){const bottom=`${Math.
-max(8,window2.innerHeight-(bar?.getBoundingClientRect().top??window2.innerHeight-50)+8)}px`;if(host.
-style.getPropertyValue("--waveform-bottom")!==bottom)host.style.setProperty("--waveform-bottom",bottom);
-return}for(const[name,value]of Object.entries({"touch-width":`${geometry.width}px`,"touch-inverse":1/
-geometry.scale,"touch-left":`${geometry.left}px`,"touch-top":`${geometry.top}px`,"touch-panel-height":`${Math.
-max(100,geometry.height-16)}px`})){if(host.style.getPropertyValue(`--${name}`)!==String(value))host.
-style.setProperty(`--${name}`,String(value))}const height=host.offsetHeight;const top=`${geometry.top+
-(geometry.height-height)/geometry.scale}px`;if(host.style.getPropertyValue("--touch-dock-top")!==top)
-host.style.setProperty("--touch-dock-top",top)}function scheduleLayout(){if(frame||disposed)return;frame=
-window2.requestAnimationFrame(()=>{frame=void 0;layout()})}on(details,"toggle",()=>{refresh();scheduleLayout()});
-on(window2.visualViewport,"resize",scheduleLayout);on(window2.visualViewport,"scroll",scheduleLayout);
-on(window2,"resize",scheduleLayout);on(coarse,"change",scheduleLayout);on(document2,"visibilitychang\
-e",refresh);for(const name of["play","pause","timeupdate","durationchange","volumechange","emptied"]){
-document2.addEventListener(name,refresh,{capture:true,signal:events.signal})}const observer=new window2.
+".playControls");if(touch&&!host.matches(":popover-open")){host.setAttribute("popover","manual");host.
+showPopover()}if(!touch){if(host.matches(":popover-open"))host.hidePopover();host.removeAttribute("p\
+opover");const bottom=`${Math.max(8,window2.innerHeight-(bar?.getBoundingClientRect().top??window2.innerHeight-
+50)+8)}px`;if(host.style.getPropertyValue("--waveform-bottom")!==bottom)host.style.setProperty("--wa\
+veform-bottom",bottom);return}for(const[name,value]of Object.entries({"touch-width":`${geometry.width}\
+px`,"touch-inverse":1/geometry.scale,"touch-left":`${geometry.left}px`,"touch-top":`${geometry.top}p\
+x`,"touch-panel-height":`${Math.max(100,geometry.height-16)}px`})){if(host.style.getPropertyValue(`-\
+-${name}`)!==String(value))host.style.setProperty(`--${name}`,String(value))}const height=host.offsetHeight;
+const top=`${geometry.top+(geometry.height-height)/geometry.scale}px`;if(host.style.getPropertyValue(
+"--touch-dock-top")!==top)host.style.setProperty("--touch-dock-top",top)}function scheduleLayout(){if(frame||
+disposed)return;frame=window2.requestAnimationFrame(()=>{frame=void 0;layout()})}on(details,"toggle",
+()=>{refresh();scheduleLayout()});on(window2.visualViewport,"resize",scheduleLayout);on(window2.visualViewport,
+"scroll",scheduleLayout);on(window2,"resize",scheduleLayout);on(coarse,"change",scheduleLayout);on(document2,
+"visibilitychange",refresh);for(const name of["play","pause","timeupdate","durationchange","volumech\
+ange","emptied"]){document2.addEventListener(name,refresh,{capture:true,signal:events.signal})}const observer=new window2.
 ResizeObserver(()=>{scheduleLayout();tickWaveform()});observer.observe(host);refresh();layout();return{
 refresh(){refresh();waveform.refresh();scheduleLayout()},overlap(state){overlap=state?.nextTrack?state:
 void 0;const source2=native(".soundcloud-tempo-crossfade-artwork");const artwork=transport.firstElementChild;
@@ -9514,9 +9551,10 @@ createElement("span"));artwork.append(copy)}for(const name of["--tempo-artwork-s
 rk-end","--tempo-artwork-progress"])copy.style.setProperty(name,source2.style.getPropertyValue(name));
 [...copy.children].forEach((child,index)=>{child.style.backgroundImage=source2.children[index].style.
 backgroundImage})}refresh()},dispose(){disposed=true;events.abort();observer.disconnect();window2.clearTimeout(
-timer);window2.cancelAnimationFrame(frame);waveform.dispose();pageLayout.dispose();restoreBar();host.
-removeAttribute("data-touch-player");host.removeAttribute("data-touch-expanded");sheet.remove();transport.
-remove();adjustments.remove();details.remove()}}}function createMobileAvailability({document:document2,website}){const window2=document2.defaultView,
+timer);window2.cancelAnimationFrame(frame);waveform.dispose();pageLayout.dispose();if(host.matches("\
+:popover-open"))host.hidePopover();host.removeAttribute("popover");host.removeAttribute("data-touch-\
+player");host.removeAttribute("data-touch-expanded");sheet.remove();transport.remove();adjustments.remove();
+details.remove()}}}function createMobileAvailability({document:document2,website}){const window2=document2.defaultView,
 events=new AbortController;let notice,dismissed=false;function update(){const geometry=touchViewport(
 window2.visualViewport,window2.screen.width,window2.matchMedia("(any-pointer:coarse)").matches,window2.
 navigator.maxTouchPoints,window2.screen.height);if(!geometry.touch||document2.querySelector(".playCo\
@@ -10870,7 +10908,7 @@ clipboardData.getData("text/plain")||selected;const shared=shareLink(original);i
 event.clipboardData.setData("text/plain",shared);event.clipboardData.clearData("text/html");event.preventDefault()}});
 return{originalLink(anchor){return contextLink?.anchor===anchor&&anchor?.getAttribute("href")===contextLink.
 shared?contextLink.original:null}}}(()=>{"use strict";const KEY="__soundCloudTempoControlV1";if(window[KEY]){return}window[KEY]=true;const VERSION="\
-1.2.5";const WEBSITE="https://itslush.github.io/soundcloud-track-control/";const COPY_STORAGE="sound\
+1.2.6";const WEBSITE="https://itslush.github.io/soundcloud-track-control/";const COPY_STORAGE="sound\
 cloud.tempo.copyLinks";function copyLinksEnabled(){try{return localStorage.getItem(COPY_STORAGE)==="\
 true"}catch{return false}}const PITCH_STORAGE="soundcloud.tempo.preserveKey";const WASM_STORAGE="sou\
 ndcloud.tempo.useWasm";let timeline=null;let clipboardSharing=null;let bufferedAudio=null;let crossfade=null;

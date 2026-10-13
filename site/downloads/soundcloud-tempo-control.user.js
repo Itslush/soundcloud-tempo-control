@@ -9287,10 +9287,11 @@ attribute);else root.setAttribute(attribute,originalAttribute);for(const[name,{v
 if(value)root.style.setProperty(name,value,priority);else root.style.removeProperty(name);properties.
 clear()}return{update(geometry,dockHeight=0){if(!geometry.touch){dispose();return}if(!style2.isConnected)
 (document2.head||root).append(style2);if(!root.hasAttribute(attribute))root.setAttribute(attribute,"");
-for(const[name,value]of Object.entries({"--tc-phone-scale":String(1/geometry.scale),"--tc-phone-dock":`${(dockHeight+
-16)/geometry.scale}px`,"--tc-phone-columns":geometry.width>=600?"3":"2"})){if(!properties.has(name))
-properties.set(name,{value:root.style.getPropertyValue(name),priority:root.style.getPropertyPriority(
-name)});if(root.style.getPropertyValue(name)!==value)root.style.setProperty(name,value)}},dispose}}function touchViewport(viewport,screenWidth,coarse,touchPoints=0,screenHeight=screenWidth){const scale=Math.
+for(const[name,value]of Object.entries({"--tc-phone-scale":String(Math.max(1,document2.defaultView.innerWidth/
+geometry.width)),"--tc-phone-dock":`${(dockHeight+16)/geometry.scale}px`,"--tc-phone-columns":geometry.
+width>=600?"3":"2"})){if(!properties.has(name))properties.set(name,{value:root.style.getPropertyValue(
+name),priority:root.style.getPropertyPriority(name)});if(root.style.getPropertyValue(name)!==value)root.
+style.setProperty(name,value)}},dispose}}function touchViewport(viewport,screenWidth,coarse,touchPoints=0,screenHeight=screenWidth){const scale=Math.
 max(.01,viewport?.scale||1);const width=(viewport?.width||screenWidth)*scale;return{touch:(coarse||touchPoints>
 0)&&Math.min(screenWidth||width,screenHeight||width,width)<=600,scale,width,height:(viewport?.height||
 0)*scale,left:viewport?.offsetLeft||0,top:viewport?.offsetTop||0}}var style=`
